@@ -4,7 +4,6 @@ import SwiftUI
 /// Окно из строки меню: большая кнопка, состояние модели, разрешения, последние диктовки.
 struct MenuView: View {
     @Environment(AppModel.self) private var model
-    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -93,10 +92,7 @@ struct MenuView: View {
 
     private var footer: some View {
         HStack {
-            Button("Настройки…") {
-                NSApp.activate()
-                openSettings()
-            }
+            Button("Настройки…") { model.showSettings() }
             .keyboardShortcut(",")
             Spacer()
             Button("Выйти") { NSApp.terminate(nil) }.keyboardShortcut("q")

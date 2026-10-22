@@ -42,15 +42,14 @@ enum DemoUI {
         try? await Task.sleep(for: .milliseconds(300))
         switch screen {
         case "menu":
-            show(MenuView().environment(model), title: "Utter", size: NSSize(width: 360, height: 420), glass: true)
+            model.windows.show("menu", title: "Utter", size: NSSize(width: 360, height: 420)) { MenuView().padding(.top, 18) }
         case "settings", "settings-recognition", "settings-input":
-            // Настоящее окно настроек (сцена Settings) — с панелью вкладок; открывается действием SwiftUI.
-            show(SettingsOpener(), title: "", size: NSSize(width: 1, height: 1))
-            windows.last?.alphaValue = 0
+            model.showSettings()
         case "onboarding":
             model.showOnboarding()
         case "hud":
             let notepad = Notepad(text: "Встреча в четверг\n\n")
+            NSApp.setActivationPolicy(.regular)
             notepad.show()
             model.phase = .listening
             model.speaking = true
@@ -90,6 +89,7 @@ enum DemoUI {
     /// Настоящая диктовка в окно-блокнот.
     private static func dictate(_ model: AppModel) async {
         let notepad = Notepad(text: "")
+        NSApp.setActivationPolicy(.regular)
         notepad.show()
         guard let path = argument(after: "--audio") else {
             notepad.append("Нет звука: --audio <файл.wav>")
@@ -104,7 +104,9 @@ enum DemoUI {
             notepad.append("Не удалось прочитать \(path)")
             return
         }
+        let start = Date()
         Typer.shared.sink = { text, erase in
+            print(String(format: "[%5.1f с] ", Date().timeIntervalSince(start)) + (erase > 0 ? "стереть \(erase)" : "печать «\(text)»"))
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
                     if erase > 0 { notepad.erase(erase) }
@@ -115,11 +117,6 @@ enum DemoUI {
         model.sounds = false
         model.begin(feeding: samples)
     }
-}
-
-private struct SettingsOpener: View {
-    @Environment(\.openSettings) private var openSettings
-    var body: some View { Color.clear.frame(width: 1, height: 1).onAppear { openSettings() } }
 }
 
 /// Окно «чужой программы» для демонстрации: текст появляется так же, как в любом поле ввода.

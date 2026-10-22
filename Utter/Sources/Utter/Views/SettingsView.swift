@@ -5,14 +5,44 @@ struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var tab = DemoUI.settingsTab
 
+    private static let tabs: [(title: String, symbol: String)] = [
+        ("Основное", "keyboard"), ("Распознавание", "waveform"), ("Ввод", "character.cursor.ibeam"), ("История", "clock"),
+    ]
+
     var body: some View {
-        TabView(selection: $tab) {
-            general.tabItem { Label("Основное", systemImage: "keyboard") }.tag(0)
-            recognition.tabItem { Label("Распознавание", systemImage: "waveform") }.tag(1)
-            input.tabItem { Label("Ввод", systemImage: "character.cursor.ibeam") }.tag(2)
-            historyTab.tabItem { Label("История", systemImage: "clock") }.tag(3)
+        VStack(spacing: 0) {
+            // Вкладки — стеклянная панель вверху окна, как в системных настройках программ.
+            HStack(spacing: 4) {
+                ForEach(Self.tabs.indices, id: \.self) { i in
+                    Button { tab = i } label: {
+                        VStack(spacing: 3) {
+                            Image(systemName: Self.tabs[i].symbol).font(.system(size: 16, weight: .medium))
+                            Text(Self.tabs[i].title).font(.system(size: 11, weight: .medium))
+                        }
+                        .frame(width: 108, height: 48)
+                        .foregroundStyle(tab == i ? Color.accentColor : .secondary)
+                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(tab == i ? Color.accentColor.opacity(0.14) : .clear))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(4)
+            .glassEffect(.regular, in: .rect(cornerRadius: 16))
+            .padding(.top, 30)
+            .padding(.bottom, 4)
+
+            Group {
+                switch tab {
+                case 0: general
+                case 1: recognition
+                case 2: input
+                default: historyTab
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(width: 560, height: 470)
+        .frame(width: 600, height: 540)
     }
 
     // MARK: Основное

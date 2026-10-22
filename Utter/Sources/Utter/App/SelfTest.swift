@@ -240,6 +240,7 @@ nonisolated enum SelfTest {
         let commits = Box<[(Double, Int)]>([])
         let finished = Box(false)
         let fed = Box(0.0)
+        let finishedAt = Box(Date.distantFuture)
         var options = Dictation.Options()
         options.sampleRate = rate
         options.pauseMs = 700
@@ -251,6 +252,7 @@ nonisolated enum SelfTest {
             case .backspace(let n):
                 output.value.removeLast(min(n, output.value.count))
             case .finished:
+                finishedAt.value = Date()
                 finished.value = true
             default: break
             }
@@ -264,10 +266,15 @@ nonisolated enum SelfTest {
             fed.value = Double(i) / Double(rate)
             try? await Task.sleep(for: .milliseconds(100))
         }
-        dictation.feed([Float](repeating: 0, count: rate))
+        // Как в жизни: после речи — тишина, детектор сам замечает паузу; затем нажатие «стоп».
+        let speechEnd = Date()
+        for _ in 0..<10 {
+            dictation.feed([Float](repeating: 0, count: step))
+            try? await Task.sleep(for: .milliseconds(100))
+        }
         dictation.stop()
-        while !finished.value && Date().timeIntervalSince(streamStart) < seconds + 30 { try? await Task.sleep(for: .milliseconds(50)) }
-        let tailWait = Date().timeIntervalSince(streamStart) - seconds - 0.1
+        while !finished.value && Date().timeIntervalSince(streamStart) < seconds + 60 { try? await Task.sleep(for: .milliseconds(50)) }
+        let tailWait = finishedAt.value.timeIntervalSince(speechEnd)
         print("  → напечатано: «\(output.value)»")
         let w2 = wer(reference, output.value)
         ok = check(finished.value, "диктовка завершилась") && ok
@@ -276,7 +283,7 @@ nonisolated enum SelfTest {
         let early = commits.value.filter { $0.0 < seconds - 0.2 }.reduce(0) { $0 + $1.1 }
         let total = Committer.words(output.value).count
         ok = check(early > 0, "слова печатаются во время речи: \(early) из \(total) появились, пока звучала речь (проходов: \(dictation.passCount))") && ok
-        print("  после конца речи текст дописан за \(String(format: "%.1f", max(0, tailWait))) с")
+        print("  после конца речи текст дописан за \(String(format: "%.1f", max(0, tailWait))) с (из них пауза конца фразы \(String(format: "%.1f", Double(options.pauseMs) / 1000)) с)")
         if let first = commits.value.first { print("  первое слово напечатано на \(String(format: "%.1f", first.0)) с звука") }
 
         // 7. Голосовая команда отдельной фразой.

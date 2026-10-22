@@ -52,6 +52,8 @@ nonisolated final class Dictation: @unchecked Sendable {
     /// как при распознавании всей записи целиком (подсказка одним текстом не помогала).
     private var previous: (audio: [Float], text: String)?
     private let contextLimit = 8.0
+    /// `UTTER_TRACE=1` — печатать каждый проход распознавания (отладка, демо в CI).
+    static let trace = ProcessInfo.processInfo.environment["UTTER_TRACE"] != nil
     private var passRunning = false
     private var lastPassStart = Date.distantPast
     private var passInterval = 0.45
@@ -183,6 +185,9 @@ nonisolated final class Dictation: @unchecked Sendable {
                 let elapsed = Date().timeIntervalSince(started)
                 // Темп подстраивается под скорость Mac: проход не чаще, чем успевает модель.
                 self.passInterval = max(0.35, min(1.5, elapsed * 1.3))
+                if Self.trace, case .success(let c) = result {
+                    print("[\(final ? "итог" : "проход") \(id), \(String(format: "%.2f", elapsed)) с, звук \(String(format: "%.1f", Double(audio.count) / Double(self.options.sampleRate))) с] «\(prefix)» → «\(c)»")
+                }
                 switch result {
                 case .success(let continuation):
                     let hypothesis = AsrEngine.join(typed, typed.isEmpty ? continuation.trimmingCharacters(in: .whitespaces) : continuation)

@@ -76,7 +76,7 @@ jobs:
             kill $PID 2>/dev/null || true
             sleep 2
           done
-          dist/Utter.app/Contents/MacOS/Utter --demo-ui dictate --audio "$OUT/speech.wav" > "$OUT/dictate.log" 2>&1 &
+          UTTER_TRACE=1 dist/Utter.app/Contents/MacOS/Utter --demo-ui dictate --audio "$OUT/speech.wav" > "$OUT/dictate.log" 2>&1 &
           PID=$!
           for N in $(seq -w 1 14); do
             sleep 3

@@ -19,10 +19,6 @@ struct UtterApp: App {
             MenuBarIcon().environment(AppModel.shared)
         }
         .menuBarExtraStyle(.window)
-
-        Settings {
-            SettingsView().environment(AppModel.shared)
-        }
     }
 }
 
@@ -41,6 +37,7 @@ struct MenuBarIcon: View {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        NSApp.setActivationPolicy(.accessory)
         let model = AppModel.shared
         model.start()
         if DemoUI.isOn {

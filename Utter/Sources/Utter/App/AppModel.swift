@@ -499,26 +499,19 @@ final class AppModel {
 
     // MARK: - Окна
 
-    var onboardingWindow: NSWindow?
+    let windows = WindowPresenter()
 
     func showOnboarding() {
-        if onboardingWindow == nil {
-            let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 640, height: 720),
-                                  styleMask: [.titled, .closable, .fullSizeContentView], backing: .buffered, defer: false)
-            window.titlebarAppearsTransparent = true
-            window.titleVisibility = .hidden
-            window.isReleasedWhenClosed = false
-            window.contentView = NSHostingView(rootView: OnboardingView().environment(self))
-            window.center()
-            onboardingWindow = window
-        }
-        NSApp.activate()
-        onboardingWindow?.makeKeyAndOrderFront(nil)
+        windows.show("onboarding", title: "Utter", size: NSSize(width: 640, height: 720)) { OnboardingView() }
+    }
+
+    func showSettings() {
+        windows.show("settings", title: "Настройки Utter", size: NSSize(width: 600, height: 540)) { SettingsView() }
     }
 
     func closeOnboarding() {
         onboardingDone = true
-        onboardingWindow?.close()
+        windows.close("onboarding")
         if !asrModel.installed { downloadModel() }
     }
 }
