@@ -64,6 +64,16 @@ jobs:
         continue-on-error: true
         run: dist/Utter.app/Contents/MacOS/Utter --selftest-asr-gpu
 
+      # Выход с моделью на видеоядре: без освобождения llama.cpp падает в деструкторе (abort, код 134),
+      # с освобождением — обычный выход с кодом 0.
+      - name: Self-test exit with model on Metal
+        run: |
+          set +e
+          dist/Utter.app/Contents/MacOS/Utter --selftest-exit-raw; echo "без освобождения: код $?"
+          dist/Utter.app/Contents/MacOS/Utter --selftest-exit; CODE=$?
+          echo "с освобождением: код $CODE"
+          exit $CODE
+
       - name: UI screenshots
         run: |
           OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"

@@ -159,6 +159,20 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         }
     }
 
+    /// Освободить модель перед выходом из программы. Иначе при выходе срабатывает проверка llama.cpp:
+    /// у видеоядра остались занятые буферы (ggml_metal_rsets_free → GGML_ASSERT → abort, «программа
+    /// неожиданно завершилась»). Если ядро занято дольше `timeout`, выходим сразу, без деструкторов.
+    func shutdown(timeout: TimeInterval = 3) {
+        stop()
+        let done = DispatchSemaphore(value: 0)
+        queue.async {
+            self.freeAll()
+            llama_backend_free()
+            done.signal()
+        }
+        if done.wait(timeout: .now() + timeout) == .timedOut { _exit(0) }
+    }
+
     func unload() async {
         await withCheckedContinuation { cont in
             queue.async {

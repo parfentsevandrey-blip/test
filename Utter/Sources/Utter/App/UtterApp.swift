@@ -47,4 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             model.showOnboarding()
         }
     }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        AsrEngine.shared.shutdown()
+    }
 }

@@ -17,6 +17,15 @@ nonisolated enum SelfTest {
         case "--selftest-asr": ok = blocking { await asr(gpu: false) }
         case "--selftest-asr-gpu": ok = blocking { await asr(gpu: true) }
         case "--selftest-audio": ok = audio()
+        case "--selftest-exit", "--selftest-exit-raw":
+            // Модель на видеоядре, затем выход: с освобождением (как теперь при выходе из Utter) или без него.
+            let loaded = blocking {
+                (try? await AsrEngine.shared.load(.fast, gpu: true)) != nil
+            }
+            print("модель на Metal загружена: \(loaded)")
+            if mode == "--selftest-exit" { AsrEngine.shared.shutdown() }
+            print("выхожу")
+            exit(0)
         default: print("Неизвестный режим \(mode)")
         }
         print(ok ? "SELFTEST OK" : "SELFTEST FAILED")
