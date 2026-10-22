@@ -130,32 +130,26 @@ struct AddSheet: View {
         for provider in providers {
             if provider.canLoadObject(ofClass: NSImage.self) {
                 _ = provider.loadObject(ofClass: NSImage.self) { image, _ in
-                    guard let image = image as? NSImage else { return }
-                    let codes = QR.read(image)
-                    DispatchQueue.main.async {
-                        MainActor.assumeIsolated {
-                            Task { @MainActor in
-                                if codes.isEmpty { model.flash("На картинке нет QR-кода") } else {
-                                    let message = await model.importText(codes.joined(separator: "\n"))
-                                    model.flash(message)
-                                }
-                            }
-                        }
-                    }
+                    let codes = (image as? NSImage).map { QR.read($0) } ?? []
+                    importDropped(codes.joined(separator: "\n"), empty: "На картинке нет QR-кода")
                 }
             } else if provider.canLoadObject(ofClass: String.self) {
                 _ = provider.loadObject(ofClass: String.self) { text, _ in
-                    guard let text else { return }
-                    DispatchQueue.main.async {
-                        MainActor.assumeIsolated {
-                            Task { @MainActor in
-                                let message = await model.importText(text)
-                                model.flash(message)
-                            }
-                        }
-                    }
+                    importDropped(text ?? "", empty: "Пустой текст")
                 }
             }
+        }
+    }
+
+    nonisolated static func importDropped(_ text: String, empty: String) {
+        Task { @MainActor in
+            let model = AppModel.shared
+            if text.isEmpty {
+                model.flash(empty)
+                return
+            }
+            let message = await model.importText(text)
+            model.flash(message)
         }
     }
 }
