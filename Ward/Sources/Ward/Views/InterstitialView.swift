@@ -30,6 +30,7 @@ struct InterstitialView: View {
                 HStack(spacing: 12) {
                     Button(primaryTitle) { primary() }
                         .buttonStyle(.glassProminent)
+                        .tint(tint)
                         .controlSize(.large)
                         .keyboardShortcut(.defaultAction)
                     if let secondaryTitle {

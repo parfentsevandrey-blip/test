@@ -56,6 +56,9 @@ nonisolated struct FilterSet: Sendable {
     var trackers: [String: TrackerKind] = [:]
     /// Домены, которые списки разрешают целиком (`@@||host^`): их не считаем трекерами.
     var allowedHosts: Set<String> = []
+    /// Домены, у которых блокируются отдельные пути (`||connect.facebook.net/signals/`): если запрос к ним
+    /// не прошёл, это почти наверняка сработал блокировщик.
+    var partialTrackers: [String: TrackerKind] = [:]
     /// Опасные адреса: домен → пути (пусто — весь домен). Для предупреждения до открытия страницы.
     var danger: [String: [String]] = [:]
     /// Метки слежки в ссылках: везде и на отдельных сайтах.
@@ -312,6 +315,10 @@ nonisolated enum FilterParser {
                 set.blocks.append(r)
                 if let host = plainHost(p), r.ifDomains.isEmpty, r.loadType != "first-party" {
                     set.trackers[host] = set.trackers[host] ?? kind
+                } else if p.hasPrefix("||"), r.ifDomains.isEmpty, r.loadType != "first-party" {
+                    let rest = p.dropFirst(2)
+                    let host = String(rest.prefix { $0.isLetter || $0.isNumber || $0 == "." || $0 == "-" }).lowercased()
+                    if host.contains("."), host.count < rest.count { set.partialTrackers[host] = set.partialTrackers[host] ?? kind }
                 }
             }
         }

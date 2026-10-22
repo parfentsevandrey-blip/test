@@ -91,6 +91,7 @@ enum SelfTest {
         ok = check(set.danger.isEmpty, "опасные адреса только из списков вредоносного") && ok
         ok = check(set.trackers["ads.example.com"] == .ads && set.trackers["tracker.example.net"] == .ads, "домены трекеров") && ok
         ok = check(set.allowedHosts.isEmpty, "частичное исключение не разрешает домен целиком") && ok
+        ok = check(set.partialTrackers["cdn.example.org"] == .ads && set.trackers["cdn.example.org"] == nil, "домен с блокировкой путей") && ok
         ok = check(!set.blocks.contains { $0.urlFilter.contains("remove") }, "$badfilter отменяет правило") && ok
         ok = check(!set.blocks.contains { $0.urlFilter.contains("lazy") }, "$csp пропускается") && ok
         ok = check(set.blocks.contains { $0.resourceTypes == ["popup"] }, "$popup") && ok
@@ -289,6 +290,7 @@ enum SelfTest {
         let seen = tab.trackers.keys.sorted()
         info("щит: \(seen.joined(separator: ", "))")
         ok = check(seen.contains { $0.contains("googletagmanager") } && seen.contains { $0.contains("yandex") }, "щит показывает остановленные трекеры (\(seen.count))") && ok
+        ok = check(seen.contains { $0.contains("facebook") }, "щит показывает и заблокированное по пути (пиксель Facebook)") && ok
 
         // 4. Защита выключена на сайте — всё грузится.
         model.setProtection(false, site: "localhost")

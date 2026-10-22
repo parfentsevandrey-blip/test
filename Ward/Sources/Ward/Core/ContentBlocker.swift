@@ -54,7 +54,7 @@ final class ContentBlocker {
     private var probes = 0
 
     /// Версия формата правил: при изменении компилятора всё собирается заново.
-    nonisolated static let formatVersion = "3"
+    nonisolated static let formatVersion = "4"
 
     init(folder: URL = AppPaths.rules) {
         self.folder = folder

@@ -6,6 +6,7 @@ import Foundation
 nonisolated struct ProtectionIndex: Codable, Sendable {
     var trackers: [String: TrackerKind] = [:]
     var allowed: Set<String> = []
+    var partial: [String: TrackerKind] = [:]
     var danger: [String: [String]] = [:]
     var removeParams: Set<String> = []
     var siteRemoveParams: [String: Set<String>] = [:]
@@ -13,9 +14,21 @@ nonisolated struct ProtectionIndex: Codable, Sendable {
 
     init() {}
 
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        trackers = try c.decode([String: TrackerKind].self, forKey: .trackers)
+        allowed = try c.decode(Set<String>.self, forKey: .allowed)
+        partial = (try? c.decodeIfPresent([String: TrackerKind].self, forKey: .partial)) ?? [:]
+        danger = try c.decode([String: [String]].self, forKey: .danger)
+        removeParams = try c.decode(Set<String>.self, forKey: .removeParams)
+        siteRemoveParams = try c.decode([String: Set<String>].self, forKey: .siteRemoveParams)
+        redirectors = try c.decode([String: [RedirectRule]].self, forKey: .redirectors)
+    }
+
     init(_ set: FilterSet) {
         trackers = set.trackers
         allowed = set.allowedHosts
+        partial = set.partialTrackers
         danger = set.danger
         removeParams = set.removeParams
         siteRemoveParams = set.siteRemoveParams
@@ -27,12 +40,14 @@ nonisolated struct ProtectionIndex: Codable, Sendable {
     }
 
     /// Сторонний адрес на странице: реклама/трекер/опасное или nil.
-    func classify(_ host: String, page: String) -> TrackerKind? {
+    /// `failed` — запрос к адресу не прошёл: тогда считаются и домены, у которых блокируются отдельные пути.
+    func classify(_ host: String, page: String, failed: Bool = false) -> TrackerKind? {
         let h = host.lowercased()
         guard !h.isEmpty, Hosts.site(h) != Hosts.site(page) else { return nil }
         let chain = Hosts.chain(h)
         if chain.contains(where: { allowed.contains($0) }) { return nil }
         for c in chain { if let kind = trackers[c] { return kind } }
+        if failed { for c in chain { if let kind = partial[c] { return kind } } }
         return nil
     }
 
@@ -55,7 +70,7 @@ nonisolated enum Companies {
         "googlesyndication.com": "Google", "googleadservices.com": "Google", "google.com": "Google",
         "googletagservices.com": "Google", "app-measurement.com": "Google", "2mdn.net": "Google", "adservice.google.com": "Google",
         "facebook.net": "Meta", "facebook.com": "Meta", "instagram.com": "Meta", "fbsbx.com": "Meta",
-        "yandex.ru": "Яндекс", "yandex.net": "Яндекс", "yandex.com": "Яндекс", "adfox.ru": "Яндекс", "yandexadexchange.net": "Яндекс", "yastatic.net": "Яндекс",
+        "yandex.ru": "Яндекс", "webvisor.org": "Яндекс", "webvisor.com": "Яндекс", "yandex.net": "Яндекс", "yandex.com": "Яндекс", "adfox.ru": "Яндекс", "yandexadexchange.net": "Яндекс", "yastatic.net": "Яндекс",
         "vk.com": "VK", "vk.ru": "VK", "mail.ru": "VK", "userapi.com": "VK", "mycdn.me": "VK", "ok.ru": "VK", "imgsmail.ru": "VK",
         "ads-twitter.com": "X (Twitter)", "twitter.com": "X (Twitter)", "x.com": "X (Twitter)", "t.co": "X (Twitter)",
         "bing.com": "Microsoft", "clarity.ms": "Microsoft", "adnxs.com": "Microsoft", "msn.com": "Microsoft", "linkedin.com": "Microsoft", "licdn.com": "Microsoft",

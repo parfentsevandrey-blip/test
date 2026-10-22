@@ -24,9 +24,15 @@ nonisolated enum Format {
     static func count(_ n: Int) -> String {
         switch n {
         case ..<1000: return "\(n)"
-        case ..<1_000_000: return String(format: "%.1f тыс.", Double(n) / 1000).replacingOccurrences(of: ".0 ", with: " ").replacingOccurrences(of: ".", with: ",")
-        default: return String(format: "%.1f млн", Double(n) / 1_000_000).replacingOccurrences(of: ".", with: ",")
+        case ..<1_000_000: return short(Double(n) / 1000) + " тыс."
+        default: return short(Double(n) / 1_000_000) + " млн"
         }
+    }
+
+    /// 194 → «194», 12.34 → «12,3».
+    private static func short(_ x: Double) -> String {
+        if x >= 100 || x.rounded() == x { return String(Int(x.rounded())) }
+        return String(format: "%.1f", x).replacingOccurrences(of: ".", with: ",")
     }
 
     static func bytes(_ n: Int64) -> String {

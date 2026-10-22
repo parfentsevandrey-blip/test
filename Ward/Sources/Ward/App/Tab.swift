@@ -262,13 +262,15 @@ final class Tab: NSObject, Identifiable {
     // MARK: - Трекеры
 
     fileprivate func received(_ message: WKScriptMessage) {
-        guard message.name == "wardHosts", let body = message.body as? [String: Any], let hosts = body["hosts"] as? [String] else { return }
+        guard message.name == "wardHosts", let body = message.body as? [String: Any] else { return }
+        let hosts = (body["hosts"] as? [String]) ?? []
+        let failed = Set((body["failed"] as? [String]) ?? [])
         let page = url?.host?.lowercased() ?? ""
         guard !page.isEmpty, protectedHere else { return }
         let index = AppModel.shared.blocker.index
-        for host in hosts.prefix(500) {
+        for host in (hosts + failed).prefix(800) {
             let h = host.lowercased()
-            guard trackers[h] == nil, let kind = index.classify(h, page: page) else { continue }
+            guard trackers[h] == nil, let kind = index.classify(h, page: page, failed: failed.contains(host)) else { continue }
             trackers[h] = kind
             if !(browser?.isPrivate ?? false) { AppModel.shared.record(kind, host: h) }
         }

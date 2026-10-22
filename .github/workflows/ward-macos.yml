@@ -46,7 +46,7 @@ jobs:
         run: |
           OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
           # Правила один раз собраны самопроверкой — демо берёт их готовыми.
-          for S in start page shield danger insecure private settings settings-lists settings-data settings-search; do
+          for S in start page shield danger private settings settings-lists settings-data settings-search; do
             HOME_DIR="$RUNNER_TEMP/demo-$S"; mkdir -p "$HOME_DIR"
             cp -R "$RUNNER_TEMP/ward-home/Rules" "$HOME_DIR/" 2>/dev/null || true
             WARD_HOME="$HOME_DIR" dist/Ward.app/Contents/MacOS/Ward --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &

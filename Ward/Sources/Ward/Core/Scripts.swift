@@ -217,14 +217,17 @@ nonisolated enum Scripts {
     static let observer = #"""
     (() => {
       const seen = new Set();
+      const failedSeen = new Set();
+      let failed = [];
       let queue = [];
       let timer = null;
       const flush = () => {
         timer = null;
-        if (!queue.length) return;
-        const hosts = queue;
+        if (!queue.length && !failed.length) return;
+        const hosts = queue, broken = failed;
         queue = [];
-        try { window.webkit.messageHandlers.wardHosts.postMessage({ hosts: hosts, top: window === window.top }); } catch (e) {}
+        failed = [];
+        try { window.webkit.messageHandlers.wardHosts.postMessage({ hosts: hosts, failed: broken, top: window === window.top }); } catch (e) {}
       };
       const add = (value) => {
         if (!value || typeof value !== 'string') return;
@@ -266,6 +269,21 @@ nonisolated enum Scripts {
         new PerformanceObserver((list) => list.getEntries().forEach((entry) => add(entry.name)))
           .observe({ type: 'resource', buffered: true });
       } catch (e) {}
+      // Не загрузившиеся картинки, скрипты и фреймы: так видно запросы, остановленные по пути, а не по домену.
+      document.addEventListener('error', (event) => {
+        const el = event.target;
+        if (!el || !el.getAttribute) return;
+        const value = el.getAttribute('src') || el.getAttribute('href') || el.getAttribute('data');
+        if (!value) return;
+        try {
+          const hostname = new URL(value, location.href).hostname;
+          if (hostname && !failedSeen.has(hostname)) {
+            failedSeen.add(hostname);
+            failed.push(hostname);
+            if (!timer) timer = setTimeout(flush, 600);
+          }
+        } catch (e) {}
+      }, true);
       document.addEventListener('DOMContentLoaded', () => { if (document.documentElement) scanTree(document.documentElement); });
     })();
     """#
