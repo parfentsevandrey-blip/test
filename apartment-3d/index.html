@@ -167,6 +167,7 @@ details:not([open]) summary::after{transform:rotate(-90deg)}
     </details>
 
     <p class="note">Площади и размеры взяты с чертежа, отделка — по рендерам спальни, ванной и гостиной. Окна условно смотрят на юг, во двор; этажом выбран четвёртый.</p>
+    <p class="note">Мебель и текстуры: Poly Haven (CC0); диван GlamVelvetSofa и пуф SpecularSilkPouf — © Wayfair, CC BY 4.0, кресло SheenChair и ваза GlassVaseFlowers — CC0, из Khronos glTF Sample Assets. Деревья — ez-tree (MIT).</p>
   </aside>
 
   <main id="stage">
@@ -196,6 +197,9 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 const msg=document.getElementById('msg');
 const setMsg=t=>{msg.textContent=t;};
@@ -256,25 +260,19 @@ function pix(w,h,fn){const cv=canvasOf(w,h),g=cv.getContext('2d'),img=g.createIm
 function T(cv,{srgb=true,rx=1,ry=1}={}){const t=new THREE.CanvasTexture(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;if(srgb)t.colorSpace=THREE.SRGBColorSpace;
   t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.repeat.set(rx,ry);return t;}
 
+/* ---------- scanned PBR textures (Poly Haven, CC0) ---------- */
+const texLoader=new THREE.TextureLoader();
+function tex(name,{srgb=false,rx=1,ry=1,rot=0}={}){
+  const t=texLoader.load('tex/'+name+'.webp');t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);t.rotation=rot;
+  if(srgb)t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return t;
+}
+function pbr(id,{rx=1,ry=1,map=true,rough=true,normal=true,ns=1}={}){
+  const o={};if(map)o.map=tex(id+'_diffuse',{srgb:true,rx,ry});if(rough)o.roughnessMap=tex(id+'_rough',{rx,ry});
+  if(normal){o.normalMap=tex(id+'_nor_gl',{rx,ry});o.normalScale=new THREE.Vector2(ns,ns);}return o;
+}
+
 const TX={};
 function buildTextures(){
-  // паркет ёлочкой: решётка (1,1)/(k,-k), период 2k досок
-  {const k=5,S=1000,u=S/(2*k),cv=canvasOf(S,S),g=cv.getContext('2d'),r=rng(5),tones=[];for(let i=0;i<2*k*2;i++)tones.push(r());
-    g.fillStyle='#6a4a2c';g.fillRect(0,0,S,S);
-    const plank=(x,y,w,h,tn,horiz)=>{for(const ox of[-S,0,S])for(const oy of[-S,0,S]){const X0=(x+ox)*1,Y0=(y+oy)*1;if(X0>S||Y0>S||X0+w<0||Y0+h<0)continue;
-      g.fillStyle=`hsl(${31+tn*7},${38+tn*12}%,${50+tn*13}%)`;g.fillRect(X0+1,Y0+1,w-2,h-2);
-      const rr=rng(Math.floor(tn*1e6));for(let q=0;q<9;q++){g.strokeStyle=`rgba(80,50,25,${.05+rr()*.08})`;g.lineWidth=.8+rr()*1.4;g.beginPath();
-        if(horiz){const yy=Y0+2+rr()*(h-4);g.moveTo(X0,yy);for(let s=0;s<=w;s+=25)g.lineTo(X0+s,yy+Math.sin(s*.03+q)*1.5);}else{const xx=X0+2+rr()*(w-4);g.moveTo(xx,Y0);for(let s=0;s<=h;s+=25)g.lineTo(xx+Math.sin(s*.03+q)*1.5,Y0+s);}g.stroke();}}};
-    for(let n=-3;n<=3;n++)for(let m=-2*k;m<=4*k;m++){const ox=(m+k*n)*u,oy=(m-k*n)*u;if(ox<-S*1.2||ox>S*1.2||oy<-S*1.2||oy>S*1.2)continue;
-      const key=(((m-k*n)%(2*k))+2*k)%(2*k);plank(ox,S-oy-u,k*u,u,tones[key],true);plank(ox,S-oy-u-k*u,u,k*u,tones[2*k+key],false);}
-    TX.herring=T(cv);}
-  // широкая доска
-  TX.planks=T((()=>{const S=1024,cv=canvasOf(S,S),g=cv.getContext('2d'),r=rng(7),rows=8,rh=S/rows;
-    for(let i=0;i<rows;i++){const off=Math.floor(r()*8)*128,tones=[r(),r()];
-      for(let k=-2;k<2;k++){const x=off+k*512,tn=tones[(k+4)%2];g.fillStyle=`hsl(${30+tn*6},${30+tn*10}%,${56+tn*10}%)`;g.fillRect(x,i*rh,512,rh);
-        for(let j=0;j<14;j++){g.strokeStyle=`rgba(90,60,30,${.04+r()*.07})`;g.lineWidth=.6+r()*1.4;g.beginPath();const yy=i*rh+r()*rh;g.moveTo(x,yy);for(let q=0;q<=512;q+=32)g.lineTo(x+q,yy+Math.sin(q*.02+j)*2.4);g.stroke();}
-        g.fillStyle='rgba(60,40,20,.35)';g.fillRect(x,i*rh,1.5,rh);}
-      g.fillStyle='rgba(60,40,20,.3)';g.fillRect(0,i*rh,S,1.5);}return cv;})());
   // оникс
   {const A=hex('#f6ecdf'),B=hex('#ead2b4'),V=hex('#b07a48'),W=hex('#fffaf3'),o=[0,0,0];
     TX.onyx=T(pix(768,768,(x,y,c)=>{const w=fbm(x,y,3,3,4,11),n=fbm(x+.37*w,y+.21*w,2,2,4,3);
@@ -288,7 +286,7 @@ function buildTextures(){
       const p=fbm(x,y,64,160,1,8);if(p>.86)mix3(c,P,smooth(.86,.95,p)*.45,c);});
     const g=cv.getContext('2d');g.fillStyle='rgba(120,100,70,.35)';g.fillRect(0,0,512,1.2);g.fillRect(0,0,1.2,512);TX.trav=T(cv);}
   // шёлковые обои
-  {const A=hex('#d8d0c1'),B=hex('#cfc6b4'),o=[0,0,0];TX.silk=T(pix(512,512,(x,y,c)=>{const s=fbm(x,y,1,120,2,4),n=fbm(x,y,4,4,3,2);mix3(A,B,s*.8+n*.3,c);}));}
+  {const A=hex('#d8d0c1'),B=hex('#cfc6b4'),o=[0,0,0];TX.silk=T(pix(512,512,(x,y,c)=>{const s=fbm(x,y,2,36,2,4),n=fbm(x,y,4,4,3,2);mix3(A,B,s*.45+n*.35,c);}),{rx:3,ry:1.5});}
   // мрамор/камень прихожей
   TX.stone=T((()=>{const S=1024,cv=canvasOf(S,S),g=cv.getContext('2d'),r=rng(11);g.fillStyle='#a9a398';g.fillRect(0,0,S,S);
     for(let j=0;j<4;j++)for(let i=-1;i<2;i++){const x=i*512+(j%2)*256,v=r()*5;g.fillStyle=`hsl(38,9%,${78+v}%)`;g.fillRect(x+1.5,j*256+1.5,509,253);}
@@ -341,21 +339,30 @@ let mat;
 function buildMaterials(){
   mat={
     wall:M('#efebe4',{roughness:.92}), cap:new THREE.MeshBasicMaterial({color:'#2a2f34'}), facade:M('#e6e0d4',{roughness:.9}),
-    door:M('#b58a62',{roughness:.5}), entry:M('#3e352e',{roughness:.45,metalness:.3}),
+    door:M('#d9b48c',Object.assign({roughness:1},pbr('white_oak_veneer',{rx:1.6,ry:4,ns:.5}))), entry:M('#3e352e',{roughness:.45,metalness:.3}),
     frame:M('#4b3a2d',{roughness:.45,metalness:.4}), sill:M('#ece6dc',{roughness:.35}),
     white:M('#eceae5',{roughness:.45}), greige:M('#d8d2c8',{roughness:.6}), oakCab:M('#ffffff',{map:TX.fluted,roughness:.6}),
     oak:M('#b48a5c',{roughness:.55}), walnut:M('#5e4532',{roughness:.5}), dark:M('#2a2420',{roughness:.5}),
     top:M('#36383a',{roughness:.25}), fabric:M('#cfc6b8',{roughness:1}), fabric2:M('#8e99a2',{roughness:1}),
-    sofa:M('#ffffff',{map:TX.sofaFab,roughness:1}), bedFab:M('#ffffff',{map:TX.bedFab,roughness:1}),
+    sofa:M('#ffffff',{map:TX.sofaFab,roughness:1}),
+    bedFab:M('#ffffff',{map:TX.bedFab,roughness:1,normalMap:tex('wool_boucle_nor_gl',{rx:6,ry:2}),normalScale:new THREE.Vector2(.9,.9)}),
+    sheet:M('#f2efea',Object.assign({side:THREE.DoubleSide},pbr('rough_linen',{rx:7,ry:7,map:false,ns:.6}))),
+    duvet:M('#e3dfd8',Object.assign({side:THREE.DoubleSide},pbr('rough_linen',{rx:8,ry:8,map:false,ns:.8}))),
+    knit:M('#b98b4e',Object.assign({side:THREE.DoubleSide},pbr('wool_boucle',{rx:6,ry:2,map:false,ns:1.2}))),
+    velvet:M('#ece7de',Object.assign({},pbr('velour_velvet',{rx:2,ry:2,map:false,ns:.5}))),
+    plaster:M('#f1efea',Object.assign({side:THREE.DoubleSide},pbr('white_plaster_02',{rx:16,ry:7,map:false,ns:.25}))),
     ochre:M('#b78a4f',{roughness:1}), brown:M('#6b3f2c',{roughness:1}), blue:M('#4b6e95',{roughness:1}),
-    linen:M('#f0ede7',{roughness:1}), duvet:M('#dedbd5',{roughness:1}),
+    linen:M('#f0ede7',{roughness:1}),
     ceramic:M('#fbfbfa',{roughness:.12}), chrome:M('#c2c6ca',{roughness:.2,metalness:1}),
     bronze:M('#9c7448',{roughness:.3,metalness:1}), brass:M('#c8a25e',{roughness:.28,metalness:1}), copper:M('#a0603e',{roughness:.35,metalness:.9}),
     black:M('#1f2124',{roughness:.35}), tv:M('#0b0c0e',{roughness:.08,metalness:.2}), terracotta:M('#8a4535',{roughness:.7}),
     green:M('#5d7b58',{roughness:.9}), pot:M('#c9c1b5',{roughness:.8}), mirror:M('#dfe6ea',{roughness:.02,metalness:1}),
     onyx:M('#ffffff',{map:TX.onyx,roughness:.12}), trav:M('#ffffff',{map:TX.trav,roughness:.55}), silk:M('#ffffff',{map:TX.silk,roughness:.55}),
-    travTop:M('#ffffff',{map:TX.trav,roughness:.35}), rugBed:M('#ffffff',{map:TX.rugBed,roughness:1}), rugLiv:M('#ffffff',{map:TX.rugLiv,roughness:1}),
-    curtain:M('#ffffff',{map:TX.curtain,roughness:1,side:THREE.DoubleSide}), blind:M('#f1ece2',{roughness:1}),
+    travTop:M('#ffffff',{map:TX.trav,roughness:.35}),
+    rugBed:M('#ffffff',{map:TX.rugBed,roughness:1,normalMap:tex('wool_boucle_nor_gl',{rx:9,ry:7}),normalScale:new THREE.Vector2(.7,.7)}),
+    rugLiv:M('#ffffff',{map:TX.rugLiv,roughness:1,normalMap:tex('wool_boucle_nor_gl',{rx:9,ry:7}),normalScale:new THREE.Vector2(.8,.8)}),
+    curtain:M('#ffffff',{map:TX.curtain,roughness:1,side:THREE.DoubleSide,normalMap:tex('rough_linen_nor_gl',{rx:2,ry:10}),normalScale:new THREE.Vector2(.7,.7)}),
+    blind:M('#f1ece2',{roughness:1,normalMap:tex('rough_linen_nor_gl',{rx:6,ry:1}),normalScale:new THREE.Vector2(.6,.6)}),
     sea:M('#ffffff',{map:TX.sea,roughness:.6}), sculpt:M('#2b2522',{roughness:.25,metalness:.2}), flutedGlass:M('#2a2622',{roughness:.2,metalness:.3}),
     tubIn:M('#eef1f2',{roughness:.12}), slab:M('#8d908d',{roughness:.9}), roof:M('#6f7376',{roughness:.95}),
     // светящиеся
@@ -505,7 +512,7 @@ function buildFinishes(){
 }
 
 /* ---------- floors ---------- */
-const FLOOR={herring:{ts:.9,rough:.5,rot:true},planks:{ts:2.4,rough:.55},onyx:{ts:1.5,rough:.14},tile:{ts:1.2,rough:.35},stone:{ts:2.4,rough:.45}};
+const FLOOR={herring:{ts:3.4,rough:1,scan:'herringbone_parquet',ns:.6},planks:{ts:1.7,rough:1,scan:'wood_floor',ns:.5},onyx:{ts:1.5,rough:.14},tile:{ts:1.2,rough:.35},stone:{ts:2.4,rough:.45}};
 function floorGeo(x0,z0,x1,z1,ts,y,rot){
   const g=new THREE.BufferGeometry(),P=[[x0,z0],[x1,z0],[x1,z1],[x0,z1]],uv=[];
   P.forEach(([x,z])=>{if(rot){uv.push((x+z)/Math.SQRT2/ts,(x-z)/Math.SQRT2/ts);}else uv.push(x/ts,-z/ts);});
@@ -527,10 +534,11 @@ const rooms=[
 ];
 const floorMeshes=[];
 function buildFloors(){
-  const maps={herring:TX.herring,planks:TX.planks,onyx:TX.onyx,tile:TX.tile,stone:TX.stone};
+  const maps={onyx:TX.onyx,tile:TX.tile,stone:TX.stone},scans={};
   rooms.forEach((r,i)=>{
     const f=FLOOR[r.floor];
-    r.mat=new THREE.MeshStandardMaterial({map:maps[r.floor],roughness:f.rough,metalness:0,envMapIntensity:.6});
+    const tx=f.scan?(scans[f.scan]??=pbr(f.scan,{ns:f.ns})):{map:maps[r.floor]};
+    r.mat=new THREE.MeshStandardMaterial(Object.assign({roughness:f.rough,metalness:0,envMapIntensity:.6},tx));
     r.m=r.rects.map(q=>[X(q[0]),X(q[2]),Z(q[1]),Z(q[3])]);
     r.m.forEach(b=>{const o=new THREE.Mesh(floorGeo(b[0],b[2],b[1],b[3],f.ts,i*.0002,f.rot),r.mat);o.receiveShadow=true;o.userData.room=r;scene.add(o);floorMeshes.push(o);});
     const b0=r.m[0]; r.c=r.lp?[X(r.lp[0]),Z(r.lp[1])]:[(b0[0]+b0[1])/2,(b0[2]+b0[3])/2];
@@ -540,7 +548,7 @@ function buildFloors(){
   addBox(X(95),X(1215),-.3,-.002,Z(190),Z(690),mat.slab,{parent:scene,pick:false,cut:false});
   addBox(X(496),X(664),-.3,-.001,Z(190),Z(240),mat.roof,{parent:scene,pick:false,cut:false});
   // потолок: видимый в прогулке + невидимая плита, которая отбрасывает тень всегда
-  const ce=new THREE.Mesh(new THREE.PlaneGeometry(X(1212)-X(98),Z(684)-Z(197)),M('#f3f1ec',{roughness:.95}));
+  const ce=new THREE.Mesh(new THREE.PlaneGeometry(X(1212)-X(98),Z(684)-Z(197)),mat.plaster);
   ce.rotation.x=Math.PI/2;ce.position.set((X(98)+X(1212))/2,H,(Z(197)+Z(684))/2);ce.receiveShadow=true;ceilGroup.add(ce);
   const cp=new THREE.Mesh(boxGeo,proxyMat);cp.scale.set(X(1212)-X(98),.25,Z(684)-Z(197));cp.position.set(ce.position.x,H+.13,ce.position.z);cp.castShadow=true;proxyGroup.add(cp);
 }
@@ -562,21 +570,8 @@ function buildFurniture(){
   // обеденная зона
   F([258,435,312,562],.72,.76,m.oak);
   [[262,439],[306,439],[262,556],[306,556]].forEach(p=>F([p[0],p[1],p[0]+4,p[1]+4],0,.72,m.walnut));
-  [458,497,537].forEach(y=>{[[245,-1],[325,1]].forEach(([x,s])=>{
-    cyl(x,y,3,3,0,.42,m.black); F([x-11,y-12,x+11,y+12],.42,.48,m.fabric);
-    const bx=s<0?x-11:x+8; F([bx,y-12,bx+3,y+12],.48,.86,m.fabric);});});
-  {const sh=new THREE.Mesh(new THREE.CylinderGeometry(.08,.26,.22,40,1,true),m.shade);sh.position.set(X(285),1.62,Z(498));furn.add(hang(sh,1.73));
-   F([284,496,286,500],1.73,H,m.black,{shadow:false});}
   // диван с тканью «зебра», журнальный стол из травертина
   F([420,445,585,615],0,.012,m.rugLiv,{shadow:false});
-  F([408,442,457,613],0,.12,m.dark);
-  F([403,438,462,617],.12,.42,m.sofa); F([400,435,416,620],.12,.84,m.sofa);
-  F([400,435,465,452],.12,.64,m.sofa); F([400,603,465,620],.12,.64,m.sofa);
-  F([416,452,460,527],.42,.52,m.sofa); F([416,528,460,603],.42,.52,m.sofa);
-  F([417,458,428,492],.52,.8,m.ochre); F([417,568,428,600],.52,.78,m.brown); F([430,512,445,532],.52,.62,m.brown);
-  cyl(525,520,22,52,.34,.4,m.travTop); cyl(525,520,12,34,0,.34,m.dark);
-  cyl(520,505,6,6,.4,.47,m.dark,{geo:sphGeo}); cyl(530,530,7,5,.4,.46,m.dark,{geo:sphGeo});
-  cyl(530,622,27,23,.1,.42,m.fabric); cyl(530,638,27,9,.42,.78,m.fabric); cyl(530,622,20,18,0,.1,m.dark);
   // ТВ-стена: латунная тумба, ТВ, бра-«листья», LED по контуру
   F([598,445,621,645],.2,.62,m.brass);
   [495,545,595].forEach(y=>F([597.6,y-.5,598,y+.5],.2,.62,m.dark,{shadow:false}));
@@ -584,7 +579,6 @@ function buildFurniture(){
   F([618,497,621,593],1.02,1.64,m.tv);
   [478,612].forEach(y=>{const l=cyl(618.5,y,2,7,1.1,1.75,m.bronze,{geo:sphGeo,shadow:false});l.scale.x=.03;F([617.5,y-1,618,y+1],1.2,1.65,m.glow,{shadow:false});});
   F([618,431,621,434],0,H,m.led,{shadow:false}); F([618,656,621,659],0,H,m.led,{shadow:false});
-  cyl(375,636,10,10,0,.42,m.pot); cyl(375,636,22,22,.55,1.25,m.green,{geo:sphGeo});
   // постирочная
   F([124,252,164,290],0,.85,m.white); F([124,252,164,290],.86,1.7,m.white);
   cyl(166,271,1,13,.3,.55,m.black); cyl(166,271,1,13,1.15,1.4,m.black);
@@ -608,7 +602,6 @@ function buildFurniture(){
   F([843,218,1027,258],0,2.4,m.oakCab);
   F([983,262,1027,350],0,2.4,m.oakCab);
   F([843,218,1027,220],2.4,2.42,m.led,{shadow:false});
-  cyl(905,300,18,18,0,.42,m.fabric2);
   // ванная: отдельностоящая ванна, смеситель с пола, ниша со скульптурой, тумба
   {const prof=[[0,.02],[.42,.02],[.47,.12],[.5,.35],[.5,.57],[.47,.6],[.43,.575],[.42,.35],[.38,.2],[0,.17]].map(([r,y])=>new THREE.Vector2(r,y));
    const tub=new THREE.Mesh(new THREE.LatheGeometry(prof,64),m.ceramic);tub.scale.set((X(1093)-X(1034)),1,(Z(331)-Z(219)));tub.position.set(X(1063.5),0,Z(276));
@@ -618,19 +611,13 @@ function buildFurniture(){
   F([1031.6,232,1033,300],1.3,1.82,m.sea,{shadow:false});
   F([1128,217,1152,227],0,1.05,m.onyx); cyl(1140,242,11,15,.28,.42,m.ceramic); F([1134,215.5,1146,217],.95,1.05,m.bronze,{shadow:false});
   F([1118,215.4,1162,216],1.22,1.98,m.glow,{shadow:false});
-  cyl(1140,222,9,6,1.3,1.66,m.sculpt,{geo:sphGeo}); cyl(1140,222,1,1,1.22,1.3,m.black);
   F([1150,318,1188,414],.45,.85,m.white); F([1148,316,1188,416],.85,.88,m.white); F([1158,345,1182,388],.88,.881,m.tubIn,{shadow:false});
   F([1150,318,1188,414],.43,.45,m.led,{shadow:false});
   F([1187.6,322,1188.8,410],1.1,1.95,m.mirror,{shadow:false});
   F([1150,296,1188,316],0,2.2,m.flutedGlass);
   // спальня
   F([960,470,1120,640],0,.012,m.rugBed,{shadow:false});
-  F([1035,482,1180,612],.1,.34,m.bedFab); F([1040,488,1172,606],.08,.1,m.dark);
-  [[1040,488],[1164,488],[1040,600],[1164,600]].forEach(p=>F([p[0],p[1],p[0]+6,p[1]+6],0,.1,m.dark));
-  F([1040,486,1172,608],.34,.56,m.linen); F([1038,484,1125,610],.56,.61,m.duvet);
-  F([1050,483,1075,611],.61,.63,m.ochre); F([1050,481,1075,483],.25,.63,m.ochre); F([1050,611,1075,613],.25,.63,m.ochre);
-  F([1172,478,1184,616],.1,1.2,m.bedFab);
-  F([1142,495,1168,543],.56,.72,m.linen); F([1142,551,1168,600],.56,.72,m.linen); F([1132,500,1145,545],.56,.68,m.linen);
+  buildBed();
   [[446,476],[618,648]].forEach(([a,b])=>{const c=(a+b)/2;F([1148,a,1186,b],0,.52,m.travTop);
     const b1=new THREE.Mesh(new THREE.CylinderGeometry(.05,.075,.2,32),m.terracotta);b1.position.set(X(1166),.62,Z(c));b1.castShadow=true;furn.add(hang(b1,.72));
     const b2=new THREE.Mesh(new THREE.CylinderGeometry(.065,.05,.14,32),m.terracotta);b2.position.set(X(1166),.79,Z(c));b2.castShadow=true;furn.add(hang(b2,.86));
@@ -638,8 +625,6 @@ function buildFurniture(){
   [500,545,590].forEach(y=>{const x0=1187.5;F([x0,y-12,1189.5,y+12],1.6,1.62,m.copper);F([x0,y-12,1189.5,y+12],1.98,2.0,m.copper);
     F([x0,y-12,1189.5,y-10.8],1.62,1.98,m.copper);F([x0,y+10.8,1189.5,y+12],1.62,1.98,m.copper);F([1188.6,y-6,1189.6,y+6],1.71,1.89,m.glow,{shadow:false});});
   F([886,502,930,648],0,.78,m.walnut); F([884,500,930,650],.78,.8,m.travTop);
-  cyl(945,620,15,15,0,.42,m.fabric);
-  cyl(1175,650,8,8,0,.36,m.pot); cyl(1176,652,17,17,.5,1.0,m.green,{geo:sphGeo});
   // люстра с абажурами
   {const hub=new THREE.Vector3(X(1035),2.76,Z(545));F([1033,543,1037,547],2.74,H,m.black,{shadow:false});
    [[0,.7,2.25],[1.3,.62,2.0],[2.5,.66,2.18],[3.7,.58,1.95],[5.0,.7,2.12]].forEach(([a,r,y])=>{
@@ -678,6 +663,99 @@ function buildFurniture(){
   [[1080,260],[1150,260],[1080,390],[1150,390],[720,250],[790,300],[560,290],[730,390],[900,280],[960,390]].forEach(([x,y])=>{const o=new THREE.Mesh(cylGeo,m.led);o.scale.set(.04,.01,.04);o.position.set(X(x),H-.006,Z(y));ceilGroup.add(o);});
 }
 
+
+/* ---------- soft furnishings: rounded, draped geometry ---------- */
+function RB(r,y0,y1,m,rad=.03,{shadow=true}={}){
+  const w=X(r[2])-X(r[0]),d=Z(r[3])-Z(r[1]),h=y1-y0;
+  const o=new THREE.Mesh(new RoundedBoxGeometry(w,h,d,4,Math.min(rad,w/2-.001,h/2-.001,d/2-.001)),m);
+  o.position.set((X(r[0])+X(r[2]))/2,(y0+y1)/2,(Z(r[1])+Z(r[3]))/2);o.castShadow=shadow;o.receiveShadow=true;
+  furn.add(o);pickables.push(o);cutList.push({o,y0,y1,k:'rb'});return o;
+}
+// подушка: суперэллипсоид — плоские углы, пухлая середина, лёгкие заломы
+function pillow(cx,cz,w,d,h,y,m,tilt=0,seed=1){
+  const g=new THREE.SphereGeometry(1,48,32),p=g.attributes.position,sp=(v,e)=>Math.sign(v)*Math.pow(Math.abs(v),e);
+  for(let i=0;i<p.count;i++){let x=p.getX(i),yv=p.getY(i),z=p.getZ(i);
+    const ex=sp(x,.35),ez=sp(z,.35),r=Math.min(1,Math.max(Math.abs(ex),Math.abs(ez)));
+    const puff=Math.pow(1-r*r,.6),ey=sp(yv,.9)*(.25+.75*puff);
+    const wr=Math.sin(ex*5+seed)*Math.sin(ez*4-seed)*.04*(1-puff*.5);
+    p.setXYZ(i,ex*w/2,(ey+wr*Math.sign(yv))*h/2,ez*d/2);}
+  g.computeVertexNormals();
+  const o=new THREE.Mesh(g,m);o.position.set(cx,y+h*.45,cz);o.rotation.z=tilt;o.castShadow=o.receiveShadow=true;
+  furn.add(o);pickables.push(o);cutList.push({o,y0:y,y1:y+h*1.2,k:'hide'});return o;
+}
+// ткань, накинутая на прямоугольник: верх с мягкими складками, края свисают
+function drape(x0,x1,z0,z1,y,drop,m,{sides=[1,1,1,1],amp=.012,seed=3}={}){
+  const w=x1-x0,d=z1-z0,ext=[sides[0]?drop:0,sides[1]?drop:0,sides[2]?drop:0,sides[3]?drop:0];
+  const W=w+ext[0]+ext[1],D=d+ext[2]+ext[3],g=new THREE.PlaneGeometry(W,D,90,70);g.rotateX(-Math.PI/2);
+  const p=g.attributes.position,cx=(x0-ext[0]+x1+ext[1])/2,cz=(z0-ext[2]+z1+ext[3])/2;
+  for(let i=0;i<p.count;i++){
+    let x=p.getX(i)+cx,z=p.getZ(i)+cz,yy=y;
+    const ox=x<x0?x0-x:x>x1?x-x1:0,oz=z<z0?z0-z:z>z1?z-z1:0,o=Math.max(ox,oz);
+    if(o>0){const t=Math.min(o,drop);yy=y-t-Math.max(0,o-drop)*.2;const bulge=.015+Math.sin(t/drop*Math.PI)*.012;
+      if(ox>=oz)x=x<x0?x0-bulge:x1+bulge; if(oz>ox)z=z<z0?z0-bulge:z1+bulge;
+      if(ox>0&&oz>0){x=x<x0?x0-bulge:x1+bulge;z=z<z0?z0-bulge:z1+bulge;}}
+    const n=Math.sin(x*9+seed)*Math.sin(z*7.3+seed*2)+.6*Math.sin(x*17.1-z*11.3+seed);
+    yy+=n*amp*(o>0?.5:1)+(o>0?0:amp*.6);
+    p.setXYZ(i,x,yy,z);
+  }
+  g.computeVertexNormals();
+  const o=new THREE.Mesh(g,m);o.castShadow=o.receiveShadow=true;furn.add(o);pickables.push(o);
+  cutList.push({o,y0:y-drop,y1:y+.03,k:'hide'});return o;
+}
+function buildBed(){
+  const m=mat;
+  RB([1035,482,1180,612],.12,.36,m.bedFab,.04);
+  [[1040,488],[1172,488],[1040,606],[1172,606]].forEach(([x,y])=>cyl(x,y,2.2,2.2,0,.12,m.dark));
+  RB([1169,476,1185,618],.12,1.22,m.bedFab,.05);
+  RB([1040,487,1168,607],.36,.58,m.sheet,.06);
+  drape(X(1038),X(1128),Z(487),Z(607),.6,.2,m.duvet,{sides:[1,0,1,1],amp:.014,seed:2});
+  drape(X(1046),X(1078),Z(486),Z(608),.655,.24,m.knit,{sides:[0,0,1,1],amp:.005,seed:5});
+  [[519,-.42],[577,-.38]].forEach(([y,t],i)=>pillow(X(1152),Z(y),.34,.62,.2,.58,m.sheet,t,i+1));
+  [[523,-.25],[575,-.28]].forEach(([y,t],i)=>pillow(X(1131),Z(y),.28,.5,.16,.6,m.velvet,t,i+4));
+  pillow(X(1118),Z(549),.18,.42,.13,.6,m.knit,-.15,9);
+}
+
+/* ---------- real models (glTF): Khronos glTF-Sample-Assets + Poly Haven ---------- */
+const gltfLoader=new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
+const modelCache={},glowMats=[];
+const loadModel=name=>modelCache[name]??=gltfLoader.loadAsync('models/'+name+'.json').then(g=>{
+  g.scene.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});return g.scene;});
+async function place(name,px,py,{y=0,rot=0,s=1,tint=null,glow=null,top=null}={}){
+  const o=(await loadModel(name)).clone(true);
+  o.scale.setScalar(s);o.rotation.y=rot;o.position.set(X(px),y,Z(py));
+  if(top!=null){o.updateMatrixWorld(true);const bb=new THREE.Box3().setFromObject(o);o.position.y+=top-bb.max.y;}
+  o.traverse(c=>{if(!c.isMesh)return;
+    if(tint){c.material=c.material.clone();c.material.color.set(tint);}
+    if(glow&&c.material.name.toLowerCase().includes(glow)){c.material=c.material.clone();c.material.emissive.set('#ffd8a0');c.material.userData.glow=1.6;glowMats.push(c.material);c.castShadow=false;}
+    pickables.push(c);});
+  furn.add(o);o.updateMatrixWorld(true);
+  const bb=new THREE.Box3().setFromObject(o);cutList.push({o,y0:bb.min.y,y1:bb.max.y,k:'hide'});
+  return o;
+}
+const MODELS=[ // имя, px, py, параметры
+  ['GlamVelvetSofa',449,527,{rot:Math.PI/2,s:1.15}],
+  ['coffee_table_round_01',542,520,{s:.72}],
+  ['ceramic_vase_03',535,512,{y:.355,s:.6}],
+  ['mid_century_lounge_chair',548,628,{rot:-2.5,s:.82}],
+  ['potted_plant_02',378,630,{s:1.45,rot:.6}],
+  ...[458,497,537].flatMap(y=>[['dining_chair_02',250,y,{rot:Math.PI/2}],['dining_chair_02',320,y,{rot:-Math.PI/2}]]),
+  ['modern_ceiling_lamp_01',285,498,{top:H,glow:'globe'}],
+  ['GlassVaseFlowers',281,500,{y:.76,s:1.6}],
+  ['ceramic_vase_01',610,468,{y:.62,s:1.15}],
+  ['ceramic_vase_03',610,622,{y:.62,s:1.3}],
+  ['brass_vase_01',909,520,{y:.8,s:.55}],
+  ['SheenChair',968,612,{rot:2.2,s:.95}],
+  ['potted_plant_02',1170,647,{s:1.15,rot:2}],
+  ['SpecularSilkPouf',905,300,{s:1.1,tint:'#d8c7ad'}],
+  ['marble_bust_01',1140,224,{y:1.3,s:1.15,tint:'#4a3d35'}],
+  ['potted_plant_04',650,590,{y:.76,s:1.3}],
+];
+async function buildModels(){
+  setMsg('Загружаю мебель…');
+  await Promise.all(MODELS.map(([n,x,y,o])=>place(n,x,y,o).catch(e=>console.warn('model',n,e))));
+  applyCut(mode==='walk'?H:cutH);applyWeather();
+}
+
 /* ---------- interior lights ---------- */
 const WARM=new THREE.Color('#ffc58a');
 const LIGHTS=[ // px, py, высота, кд, радиус, тень
@@ -689,7 +767,7 @@ const LIGHTS=[ // px, py, высота, кд, радиус, тень
 const ilights=[];
 function buildLights(){
   LIGHTS.forEach(([px,py,y,i,d,sh])=>{const l=new THREE.PointLight(WARM,0,d,2);l.position.set(X(px),y,Z(py));l.userData.base=i;
-    if(sh){l.castShadow=true;l.shadow.mapSize.set(512,512);l.shadow.camera.near=.1;l.shadow.camera.far=d;l.shadow.bias=-.006;l.shadow.normalBias=.02;
+    if(sh){l.castShadow=true;l.shadow.mapSize.set(512,512);l.shadow.camera.near=.1;l.shadow.camera.far=d;l.shadow.bias=-.01;l.shadow.normalBias=.06;
       l.shadow.autoUpdate=false;l.shadow.needsUpdate=true;}
     scene.add(l);ilights.push(l);});
 }
@@ -820,7 +898,7 @@ const sun=new THREE.DirectionalLight('#fff3e0',3);
 scene.add(sun,sun.target);sun.target.position.copy(C0);
 sun.castShadow=true;sun.shadow.autoUpdate=false;
 Object.assign(sun.shadow.camera,{left:-22,right:22,top:22,bottom:-22,near:1,far:140});
-sun.shadow.bias=-.0003;sun.shadow.normalBias=.03;
+sun.shadow.bias=-.0006;sun.shadow.normalBias=.07;
 function setShadowRes(){const s=hq?4096:2048;if(sun.shadow.mapSize.x!==s){sun.shadow.mapSize.set(s,s);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}}sun.shadow.needsUpdate=true;}
 const fill=new THREE.AmbientLight('#ffffff',.02);scene.add(fill);
 const bounce=new THREE.HemisphereLight('#e9eef4','#c9a57c',0);scene.add(bounce); // отражённый от пола и стен дневной свет
@@ -869,7 +947,7 @@ function applyWeather(){
   lightsOn=lightMode==='on'||(lightMode==='auto'&&(el<.1||(w.dark>.5&&el<.3)));
   const k=lightsOn?1:0;
   ilights.forEach(l=>l.intensity=l.userData.base*k*.6);
-  mat.shade.emissiveIntensity=k*2.4;mat.led.emissiveIntensity=k*3.5;mat.glow.emissiveIntensity=k*3;
+  mat.shade.emissiveIntensity=k*2.4;glowMats.forEach(g=>g.emissiveIntensity=k*g.userData.glow);mat.led.emissiveIntensity=k*3.5;mat.glow.emissiveIntensity=k*3;
   // двор
   const dusk=smooth(.12,-.06,el);
   mat.lampHead.emissiveIntensity=dusk*6;OUT.lampLights?.forEach(l=>l.intensity=dusk*60);
@@ -891,6 +969,7 @@ function applyCut(h){
   for(const it of cutList){const o=it.o;
     if(it.k==='hide'){o.visible=it.y1<=h+.001;continue;}
     if(it.k==='sy'){o.scale.y=Math.min(1,h/it.y1);continue;}
+    if(it.k==='rb'){if(it.y0>=h-.001){o.visible=false;continue;}o.visible=true;const t=Math.min(it.y1,h),k=(t-it.y0)/(it.y1-it.y0);o.scale.y=k;o.position.y=it.y0+(t-it.y0)/2;continue;}
     if(it.y0>=h-.001){o.visible=false;continue;}
     o.visible=true;const t=Math.min(it.y1,h);o.scale.y=Math.max(1e-3,t-it.y0);o.position.y=(it.y0+t)/2;}
   ilights.forEach(l=>{if(l.castShadow)l.shadow.needsUpdate=true;});
@@ -937,7 +1016,7 @@ function updateLabels(){
 /* ---------- room list ---------- */
 let hoverRoom=null,selRoom=null;
 const hl=new THREE.Color('#2f6fe0');
-function paint(){rooms.forEach(r=>{const k=r===hoverRoom?.22:r===selRoom?.13:0;r.mat.emissive.copy(hl).multiplyScalar(k);
+function paint(){rooms.forEach(r=>{const k=r===hoverRoom?.08:0;r.mat.emissive.copy(hl).multiplyScalar(k);
   r.li.classList.toggle('on',r===selRoom);r.li.classList.toggle('hov',r===hoverRoom);r.label.el.classList.toggle('on',r===selRoom||r===hoverRoom);});}
 function buildList(){
   const listEl=document.getElementById('rooms');
@@ -1095,6 +1174,7 @@ async function main(){
   homeView(1);stepTween(performance.now()+10);tw=null;controls.update();
   msg.hidden=true;window.__plan3dReady=true;
   requestAnimationFrame(frame);
+  await buildModels();
   buildTrees();
 }
 main().catch(e=>{console.error(e);setMsg('Ошибка 3D: '+e.message);});
