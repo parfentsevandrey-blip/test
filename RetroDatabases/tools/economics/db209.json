@@ -30,8 +30,8 @@
     },
     {
       "model": "Guild economy",
-      "best": "Apprenticeship in the medieval and early modern guilds shows regulated apprenticeship terms, a masterpiece for promotion to master in many crafts, and journeymen who usually travelled for at least three years and a day. The guild rules are a patchwork of regional examples, and many figures come from the 1700s.",
-      "worst": "In many crafts promotion needed the approval of all the masters and a payment, and in Arras in 1237 the entry fee was 14 shillings to become a master and 5 shillings for a journeyman, as the case Apprenticeship in the medieval and early modern guilds reports. The guild rules are a patchwork of regional examples, and many figures come from the 1700s. Source: online encyclopaedia (secondary), Wandering journeyman; medievalists.net, How medieval craft guilds worked (2026), citing the Arras shearers' records of 1237"
+      "best": "In Germany's dual vocational training system, the net cost of an apprentice is estimated at roughly 8,000 to 8,300 euros a year, after the apprentice's productive work is counted. The totals conflict between sources, and the years do not line up.",
+      "worst": "Inferred from its principle that craft guilds regulate entry, a learner may need the approval of the existing masters and a payment before entering a trade, so learners who cannot pay or lack a master's approval may be kept out. There is no documented case in the pool. Source: Boileau, Le Livre des métiers (c. 1268)"
     },
     {
       "model": "Mercantilism",
@@ -115,8 +115,8 @@
     },
     {
       "model": "Guild socialism",
-      "best": "Guild-like councils could set apprenticeship terms and standards, as guilds did in the case Apprenticeship in the medieval and early modern guilds, with a masterpiece for promotion in many crafts. The rules were a patchwork of regional examples, and many figures come from the 1700s.",
-      "worst": "Councils that control entry could follow the practice in the case Apprenticeship in the medieval and early modern guilds, where in many crafts promotion needed the approval of all the masters and a payment, and in Arras in 1237 the entry fee was 14 shillings for a master and 5 shillings for a journeyman. The guild rules are a patchwork of regional examples, and many figures come from the 1700s. Source: online encyclopaedia (secondary), Wandering journeyman; medievalists.net, How medieval craft guilds worked (2026), citing the Arras shearers' records of 1237"
+      "best": "Partner firms help shape the higher vocational courses at Mondragon's engineering school and vocational centres, a school started in 1943 that is now a cooperative. The sources give no outcome data and no account of training for worker-members, and are mostly institutional self-description.",
+      "worst": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, councils that control entry may keep outsiders out of a trade, so a learner without a council's backing may be unable to train. There is no documented case in the pool. Source: Cole, Self-Government in Industry (1917)"
     },
     {
       "model": "Command socialism",
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "One apprenticeship scheme for every trade: each apprentice learns inside a firm under published terms and a standard test, with public funds paying for school places and for places that firms cannot offer alone. Entry is open and fee-free, and any levy on employers comes with guaranteed places.",
-    "details": "Keeps: Social market economy's employer-run training with state-paid schools, from Germany's dual vocational training system; Guild economy's regulated terms and masterpiece test, from Apprenticeship in the medieval and early modern guilds; Keynesian welfare capitalism's training places that expand in slumps (inferred). Blocks: Guild economy's entry fees and approval by existing masters, blocked by fee-free entry and a published test open to all; Social market economy's employer levy, blocked by guaranteed places and a review of starts before any new levy; Feudalism's labour services crowding out learning, blocked by protected training hours in every contract. Test: starts by trade, level and firm size, and completion, measured yearly for five years against the three years before the change. Source: BIBB, Dual vocational education and training pays off (GOVET presentation); University of Konstanz study on apprenticeship costs and profits; medievalists.net, How medieval craft guilds worked (2026); Resolution Foundation, Trading up or trading off (2019); Beveridge, Social Insurance and Allied Services (1942); Bloch, Feudal Society (1939-1940)."
+    "details": "Keeps: Social market economy's employer-run training with state-paid schools, from Germany's dual vocational training system; Guild economy's regulated training and quality standards, set under each trade's statutes (inferred); Keynesian welfare capitalism's training places that expand in slumps (inferred). Blocks: Guild economy's entry fees and approval by existing masters, blocked by fee-free entry and a published test open to all; Social market economy's employer levy, blocked by guaranteed places and a review of starts before any new levy; Feudalism's labour services crowding out learning, blocked by protected training hours in every contract. Test: starts by trade, level and firm size, and completion, measured yearly for five years against the three years before the change. Source: BIBB, Dual vocational education and training pays off (GOVET presentation); University of Konstanz study on apprenticeship costs and profits; Boileau, Le Livre des métiers (c. 1268); Resolution Foundation, Trading up or trading off (2019); Beveridge, Social Insurance and Allied Services (1942); Bloch, Feudal Society (1939-1940)."
   }
 }
