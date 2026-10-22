@@ -1,0 +1,87 @@
+{
+  "database": 223,
+  "practice": "Taxation",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "TX1",
+      "case": "Pittsburgh's split-rate land tax",
+      "years": "1913 to 2001; a land-only tax in the central business district from 1997",
+      "claim": "Under Pennsylvania's Graded Tax Law for cities of the second class, Pittsburgh began taxing land at a higher rate than buildings in 1913. Staged increases brought land to twice the building rate by 1925. Sources differ on whether the 2:1 ratio applied from 1913 or only after the phase-in, and they say it held until 1979. One account puts the ratio at 4:1 in 1979, 5:1 in 1980 and almost 6:1 by 1989. Wallace Oates and Robert Schwab (1997) judged the levy a way to raise revenue that appears to leave the urban economy unharmed. A summary of their work reports that Pittsburgh's real building-permit value in the 1980s was roughly 70% above the late 1970s, in a comparison with 15 northeastern and midwestern cities, while the city was losing population and steel jobs; the authors did not claim the tax was the sole cause. Pittsburgh dropped the split rate in 2001, after a county reassessment showed that land values had been under-assessed and tax bills rose. A 2005 piece by Mark Hughes of the University of Pennsylvania calls the reversal a clear case of how little evidence can sway local tax decisions. The city has used a land-only tax in its central business district since 1997.",
+      "source": "Oates and Schwab, The Impact of Urban Land Taxation: The Pittsburgh Experience, National Tax Journal (1997), as reported in secondary summaries; Mark Hughes, University of Pennsylvania (2005)",
+      "url": "https://schalkenbach.org/wp-content/uploads/What-happened-when-PA-taxed-land.pdf",
+      "caveat": "The 1997 paper was not in the results, so its findings come from secondary summaries that disagree on the 1913 start and on the 1979 and 1980 ratios. The linked PDF was not read in full, and the search summary noted that several Pittsburgh sources read as advocacy-leaning. The 70% rise is a building-permit comparison, not a direct measure of the tax's effect on the economy.",
+      "relevant_to": ["Georgism"]
+    },
+    {
+      "id": "TX2",
+      "case": "Denmark's municipal land tax (grundskyld)",
+      "years": "from 1926; changes in 2002, 2007 and 2024",
+      "claim": "Grundskyld is a municipal levy on land that leaves buildings out of its base. A 2000 OECD seminar presentation puts its introduction at 1926. Councils set the rate each year within a statutory band that an older Statistics Denmark excerpt puts at 1.6% to 3.4% of land value. The search summaries report that land tax is by far the largest share of local property-tax revenue, funding services such as schools and roads. A 2002 measure limited yearly growth in the land-tax base. The 2007 municipal mergers led some councils to raise rates and others to lower them. A housing-tax reform in force from 1 January 2024 reworked the rules, rates and valuations.",
+      "source": "OECD seminar presentation (2000), as cited in search results; Statistics Denmark, real property taxes documentation (older excerpt, year not stated); secondary search summaries for the 2002, 2007 and 2024 changes",
+      "url": "https://explorer.dst.dk/en/Statistik/dokumentation/documentationofstatistics/real-property-taxes/statistical-presentation",
+      "caveat": "Mostly older material. The search could not confirm that the 1.6% to 3.4% band still applies, could not find 2026 municipal rates, and found no grundskyld-specific detail of the 2024 reform. The 1926 date rests on one seminar presentation whose link did not appear in the results. Denmark's land tax is one tax among several, unlike the single land tax of Physiocracy.",
+      "relevant_to": ["Georgism", "Physiocracy"]
+    },
+    {
+      "id": "TX3",
+      "case": "Repeal of net wealth taxes in Europe and the OECD",
+      "years": "1994 to 2018",
+      "claim": "Secondary summaries list early repeals of net wealth taxes: Austria in 1994; Denmark and Germany in 1997; the Netherlands in 2001; Finland, Iceland and Luxembourg in 2006; and Sweden in 2007. They give the OECD count of countries still levying a net wealth tax in 2017 as four, naming France, Norway, Spain and Switzerland. France's 2018 reform narrowed its levy to real estate and excluded financial assets, though one account calls it an abolition. Spain's 2008 full tax credit cut liabilities to zero without a formal repeal, and Spain and Iceland later revived the levy as temporary deficit-reduction steps.",
+      "source": "LSE research paper on why most wealth taxes were abandoned (year not stated); secondary summaries of OECD counts (the OECD's 2018 study was not in the results)",
+      "url": "https://researchonline.lse.ac.uk/id/eprint/113332",
+      "caveat": "Secondary summaries only. The summaries disagree on how to classify France's 2018 change, and the results do not give the LSE paper's year. No result states a total number of repeals, so none is given here. Spain's 2008 change was not a formal repeal and should not be counted as one.",
+      "relevant_to": ["Monetarist neoliberalism", "Nordic social democracy"]
+    },
+    {
+      "id": "TX4",
+      "case": "US top federal income tax rate, 1913 to 1987",
+      "years": "1913 to 1987, with a 30% to 40% band since",
+      "claim": "The top federal income tax rate was 7% in 1913 to 1915 (a 1% base plus a 6% surtax) and had climbed to 67% by 1917. It was 94% in 1944, the series high, and 91% from 1945 to 1963. It fell from 77% to below 40% between 1964 and 1987, and since 1987 it has moved in a corridor of about 30% to 40%. Progressive brackets date from the 1913 Revenue Act. An Economic Policy Institute chart pairs the top rate with the top 1% pre-tax income share from 1913 to 2014, and its title ties the rise in that share to steep top-rate cuts. The two sources conflict on 1918 to 1931: the EPI lists 77% for 1918, 43.5% for 1923 and 24% for 1929, while the explainer groups 1918 to 1921 at 73%, 1922 to 1923 at 58% and 1925 to 1931 at 25%.",
+      "source": "Wolters Kluwer, historical income tax rates explainer (updated 29 April 2026); Economic Policy Institute, chart of top marginal rate and top 1% income share (year not stated)",
+      "url": "https://www.wolterskluwer.com/en/expert-insights/whole-ball-of-tax-historical-income-tax-rates",
+      "caveat": "Both sources are secondary. Neither gives bracket counts or effective rates, and the search did not return the 1981 or 1986 rates. The chart's link between the top 1% share and top-rate cuts is its own framing, not a result of this search. The 1918 to 1931 rates conflict and should be checked against the statutes.",
+      "relevant_to": ["Keynesian welfare capitalism", "Monetarist neoliberalism"]
+    },
+    {
+      "id": "TX5",
+      "case": "Tax take in Denmark, Sweden and the United States",
+      "years": "2024",
+      "claim": "Tax Foundation's 2024 figures put tax take at about 45.2% of GDP in Denmark, about 41.4% in Sweden and about 25.6% in the United States. These figures measure taxes raised, not what is spent on social programmes.",
+      "source": "Tax Foundation, how Scandinavian countries pay for their government spending (2024 figures, as summarised in search results)",
+      "url": "https://taxfoundation.org/publications/how-scandinavian-countries-pay-for-their-government-spending",
+      "caveat": "Figures come from search summaries; the Tax Foundation page was not read in full, and tax-take definitions can differ between sources. The results held no current social-spending shares for Denmark or Sweden. Social-spending figures in the results mix years and definitions, so they are not used.",
+      "relevant_to": ["Nordic social democracy"]
+    },
+    {
+      "id": "TX6",
+      "case": "EU VAT gap, the shortfall against expected VAT",
+      "years": "2018 to 2022",
+      "claim": "As the Law Society Gazette reported in December 2024, the EU's VAT gap, the shortfall against expected VAT receipts, was €89.3bn for 2022, about 7% of expected VAT. That was below the 2018 level of €121bn but more than €13bn above 2021. Later trade coverage gives the 2022 gap as €101bn, so the sources disagree.",
+      "source": "Law Society Gazette (Ireland), December 2024, reporting the European Commission's VAT gap report (2022 data); later trade coverage (Shared Services Link, February 2026)",
+      "url": "https://www.lawsociety.ie/gazette/top-stories/2024/december/eu-members-lost-90-billion-in-vat-in-2022/",
+      "caveat": "Newspaper coverage of the Commission report, which was not in the results. The total also absorbs avoidance, bankruptcy losses and calculation mistakes, so it is broader than tax evasion alone. The later trade coverage is a different outlet and edition, and its 2023 figure is not used here.",
+      "relevant_to": ["Redistributive economy", "Nordic social democracy"]
+    },
+    {
+      "id": "TX7",
+      "case": "Turnover tax in the Soviet budget during the war",
+      "years": "late 1941; the baseline year is not given",
+      "claim": "Oleg Khlevnyuk's archival research, as described in a Higher School of Economics (HSE) write-up, says that the turnover tax's share of budget revenue fell from 73.3% to 49.6% by late 1941, as wartime conditions curbed consumer purchases. The excerpt does not date the 73.3% baseline.",
+      "source": "Higher School of Economics (HSE), write-up of Oleg Khlevnyuk's archival research (year not stated)",
+      "url": "https://iq.hse.ru/en/news/396709915.html",
+      "caveat": "A short secondary write-up of archival work, not the study itself, and the baseline year is missing, so the 73.3% share cannot be placed in time. The search found no clean long-run share for the turnover tax. A 1940 budget telegram in the results gives turnover tax and total revenue figures, but the excerpt does not tie them to a clear source, so they are not used. A January 1951 Nature item in the results says the levy again led budget revenue after the war, without figures; it is not part of this case.",
+      "relevant_to": ["Command socialism"]
+    },
+    {
+      "id": "TX8",
+      "case": "China's 1994 tax-sharing reform",
+      "years": "1994 onward; central share below 50% from 1996 to 1998",
+      "claim": "Under the 1994 reform the central government kept 75% of VAT revenue, and local governments received the other 25% of VAT together with the business tax. VAT made up over 60% of mainland China's tax revenue, which made the split especially important. The central share of total fiscal revenue rose quickly; it was below 50% from 1996 to 1998 and generally close to or above 55% in other years. A 'revenue-returned mechanism' sent back 30% of the increase in VAT and excise revenue to the province where it arose. One paper concludes that the reform did not reach its potential target.",
+      "source": "IMF working paper (2004) and academic articles on the 1994 reform, including a 1997 academic article that gives the same VAT split",
+      "url": "https://imf.org/external/pubs/ft/wp/2004/wp04125.pdf",
+      "caveat": "Secondary descriptions in search excerpts; the search did not tie each figure to a named document. The summary notes that expanding local extra-budgetary funds pushed down the central share of disposable revenue, so the total-revenue share should not be read alone. Exact legal rates should be checked in the original Chinese policy documents.",
+      "relevant_to": ["Chinese market socialism"]
+    }
+  ]
+}
