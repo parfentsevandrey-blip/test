@@ -247,7 +247,9 @@ nonisolated enum SelfTest {
                 ms = await Probe.delay(httpPort: o.checkPort, timeout: 6, url: bed.targetURL)
             }
             let stats = await CoreStats.sample(port: o.metricsPort)
-            ok = check(ms != nil && (stats?.up ?? 0) > 0, "\(title) [\(server.endpoint.summary)]: \(ms.map { "\($0) мс" } ?? "нет связи"), трафик через сервер \(stats?.up ?? 0) Б") && ok
+            // Обе стороны: у классического Shadowsocks ядро не засчитывает первый пакет отдачи.
+            let bytes = (stats?.up ?? 0) + (stats?.down ?? 0)
+            ok = check(ms != nil && bytes > 0, "\(title) [\(server.endpoint.summary)]: \(ms.map { "\($0) мс" } ?? "нет связи"), через сервер ↑\(stats?.up ?? 0) ↓\(stats?.down ?? 0) Б") && ok
             client.stop()
         }
 
