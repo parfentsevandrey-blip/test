@@ -134,7 +134,8 @@ nonisolated final class AsrEngine: @unchecked Sendable {
         }
         let cores = Hardware.performanceCores
         var cparams = llama_context_default_params()
-        cparams.n_ctx = 4096
+        // Потоковая модель ведёт один поток на всю диктовку: 12,5 строк в секунду, 8192 — около 10 минут.
+        cparams.n_ctx = asr.realtime ? 8192 : 4096
         cparams.n_batch = 2048
         cparams.n_ubatch = 512
         cparams.n_threads = Int32(cores)
@@ -305,6 +306,20 @@ nonisolated final class AsrEngine: @unchecked Sendable {
         }
     }
 
+    /// Пауза в речи: поток остаётся открытым, модель дописывает то, что было «в задержке».
+    /// `completion` получает весь текст потока и признак, что поток пора начать заново (память почти занята
+    /// или модель остановилась).
+    func streamPause(completion: @escaping @Sendable (Result<(text: String, restart: Bool), Error>) -> Void) {
+        queue.async {
+            do { completion(.success(try self.streamPauseSync())) } catch { completion(.failure(error)) }
+        }
+    }
+
+    /// Закрыть поток без результата (конец диктовки).
+    func streamClose() {
+        queue.async { self.freeStream() }
+    }
+
     /// Конец фразы: модель дописывает то, что ещё «в задержке». `completion` получает окончательный текст.
     func streamFinish(completion: @escaping @Sendable (Result<String, Error>) -> Void) {
         queue.async {
@@ -364,6 +379,16 @@ nonisolated final class AsrEngine: @unchecked Sendable {
             try drainStream()
         }
         return streamText
+    }
+
+    private func streamPauseSync() throws -> (text: String, restart: Bool) {
+        guard let stream, let ctx else { throw AsrError.notLoaded }
+        if !streamEnded {
+            _ = mtmd_audio_stream_flush(stream, false)
+            try drainStream()
+        }
+        let nearlyFull = Int(streamPos) > Int(llama_n_ctx(ctx)) * 3 / 4
+        return (streamText, nearlyFull || streamEnded)
     }
 
     private func streamFinishSync() throws -> String {

@@ -329,7 +329,9 @@ nonisolated enum SelfTest {
             try? await Task.sleep(for: .milliseconds(100))
         }
         dictation.stop()
-        while !finished.value && Date().timeIntervalSince(streamStart) < seconds + 60 { try? await Task.sleep(for: .milliseconds(50)) }
+        // Потоковой модели на медленном Mac (виртуальная машина CI) нужно больше времени.
+        let limit = model.realtime ? seconds * 15 + 60 : seconds + 60
+        while !finished.value && Date().timeIntervalSince(streamStart) < limit { try? await Task.sleep(for: .milliseconds(50)) }
         let tailWait = finishedAt.value.timeIntervalSince(speechEnd)
         print("  → напечатано: «\(output.value)»")
         let w2 = wer(reference, output.value)
@@ -358,7 +360,7 @@ nonisolated enum SelfTest {
             }
             d2.feed([Float](repeating: 0, count: rate))
             d2.stop()
-            for _ in 0..<600 where !done.value { try? await Task.sleep(for: .milliseconds(50)) }
+            for _ in 0..<(model.realtime ? 6000 : 600) where !done.value { try? await Task.sleep(for: .milliseconds(50)) }
             print("  → «\(out.value.replacingOccurrences(of: "\n", with: "⏎"))»")
             ok = check(out.value.contains("\n") && !out.value.lowercased().contains("новая строка"), "«новая строка» — перенос, а не текст") && ok
         }

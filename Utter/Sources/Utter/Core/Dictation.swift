@@ -80,6 +80,11 @@ nonisolated final class Dictation: @unchecked Sendable {
 
     // Потоковая модель: поток на каждую фразу.
     private var streamID = -1
+    private var streamOpen = false
+    /// Поток пора начать заново со следующей фразы.
+    private var streamRestart = false
+    /// Сколько символов текста потока принадлежит прошлым фразам.
+    private var streamOffset = 0
     /// Сколько отсчётов текущей фразы уже ушло в поток.
     private var streamFed = 0
     /// Фразы, чей поток ещё дописывается после конца речи.
@@ -288,20 +293,39 @@ nonisolated final class Dictation: @unchecked Sendable {
     private func finishIfDone() {
         guard stopping, !finished, !passRunning, finals.isEmpty, apple.isEmpty, streamPending.isEmpty else { return }
         finished = true
+        if streamOpen {
+            streamOpen = false
+            AsrEngine.shared.streamClose()
+        }
         emit(.finished(joiner.typed))
     }
 
     // MARK: - Потоковая модель (Voxtral Realtime)
+    //
+    // Один поток на всю диктовку: модель помнит сказанное раньше и не ошибается в началах фраз.
+    // Фраза — участок текста потока: от конца прошлой фразы до паузы. На паузе поток «досылает»
+    // задержку (flush без закрытия), и текст фразы становится окончательным.
 
-    /// Новая фраза — новый поток. Звук фразы, накопленный детектором до начала речи, уйдёт следующим `pushStream`.
+    /// Начало фразы. Поток открывается с первой фразой и заново — когда память модели почти занята.
     private func startStream(_ id: Int) {
         streamID = id
         streamFed = 0
         committer.reset()
         committerID = id
+        guard !streamOpen || streamRestart else { return }
+        if streamOpen { AsrEngine.shared.streamClose() }
+        streamOpen = true
+        streamRestart = false
+        streamOffset = 0
         AsrEngine.shared.streamStart { error in
             if let error { self.queue.async { self.emit(.error(error.localizedDescription)) } }
         }
+    }
+
+    /// Текст фразы — то, что поток написал после прошлых фраз.
+    private func utteranceText(_ full: String) -> String {
+        let start = full.index(full.startIndex, offsetBy: min(streamOffset, full.count))
+        return String(full[start...]).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Дослать в поток то, что прибавилось к звуку фразы.
@@ -314,11 +338,12 @@ nonisolated final class Dictation: @unchecked Sendable {
         AsrEngine.shared.streamPush(chunk) { result in
             self.queue.async {
                 self.passCount += 1
-                if Self.trace, case .success(let text) = result {
-                    print("[поток \(id), \(String(format: "%.2f", Date().timeIntervalSince(started))) с] «\(text)»")
-                }
+                guard case .success(let full) = result else { return }
+                // Ответы приходят по порядку: смещение прошлой фразы уже учтено.
+                let text = self.utteranceText(full)
+                if Self.trace { print("[поток \(id), \(String(format: "%.2f", Date().timeIntervalSince(started))) с] «\(text)»") }
                 // Текст идёт за звуком без пересмотра — печатаем по мере утверждения слов.
-                if case .success(let text) = result, id == self.committerID { self.partial(id: id, text: text) }
+                if id == self.committerID { self.partial(id: id, text: text) }
             }
         }
     }
@@ -326,23 +351,25 @@ nonisolated final class Dictation: @unchecked Sendable {
     private func finishStream(_ audio: [Float], paused: Bool) {
         guard streamID == utteranceID else { return }
         let id = streamID
-        if audio.count > streamFed {
-            pushStream(audio)
-        }
+        if audio.count > streamFed { pushStream(audio) }
         streamID = -1
         streamPending.insert(id)
         let minimum = (paused ? Double(options.pauseMs) / 1000 : 0) + 0.3 + 0.25
         let tooShort = Double(audio.count) / Double(options.sampleRate) < minimum
-        AsrEngine.shared.streamFinish { result in
+        AsrEngine.shared.streamPause { result in
             self.queue.async {
                 self.streamPending.remove(id)
                 switch result {
-                case .success(let text):
+                case .success(let state):
+                    let text = self.utteranceText(state.text)
+                    self.streamOffset = state.text.count
+                    if state.restart { self.streamRestart = true }
                     if Self.trace { print("[поток \(id), итог] «\(text)»") }
                     if self.committerID != id { self.committer.reset(); self.committerID = id }
                     // Обрывок (щелчок, кашель) — не фраза.
                     self.finalize(id: id, text: tooShort ? "" : text)
                 case .failure(let error):
+                    self.streamRestart = true
                     self.emit(.error(error.localizedDescription))
                 }
                 self.finishIfDone()
