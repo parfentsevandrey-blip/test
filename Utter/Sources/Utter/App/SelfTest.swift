@@ -16,6 +16,7 @@ nonisolated enum SelfTest {
         case "--selftest-logic": ok = logic()
         case "--selftest-asr": ok = blocking { await asr(gpu: false) }
         case "--selftest-asr-gpu": ok = blocking { await asr(gpu: true) }
+        case "--selftest-audio": ok = audio()
         default: print("Неизвестный режим \(mode)")
         }
         print(ok ? "SELFTEST OK" : "SELFTEST FAILED")
@@ -70,6 +71,25 @@ nonisolated enum SelfTest {
             }
         }
         return Double(d[h.count]) / Double(r.count)
+    }
+
+    // MARK: - Микрофон
+
+    /// Захват с микрофона 2 секунды: каким путём пошёл звук или понятная ошибка вместо кода CoreAudio.
+    static func audio() -> Bool {
+        print("Микрофон: \(AudioCapture.deviceName), разрешение: \(AudioCapture.permission.rawValue)")
+        let ok = check(AudioError.fourCC(2003329396) == "«what»", "код CoreAudio 2003329396 читается как «what»")
+        let count = Box(0)
+        let capture = AudioCapture()
+        do {
+            try capture.start { samples in count.value += samples.count }
+            Thread.sleep(forTimeInterval: 2)
+            capture.stop()
+            print("  путь: \(capture.path), получено \(count.value) отсчётов")
+        } catch {
+            print("  не запустился: \(error.localizedDescription)")
+        }
+        return ok
     }
 
     // MARK: - Логика

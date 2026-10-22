@@ -4,24 +4,45 @@ import Foundation
 nonisolated enum AudioError: LocalizedError {
     case noInput
     case denied
+    case busy(device: String, code: Int)
 
     var errorDescription: String? {
         switch self {
         case .noInput: "Не найден микрофон. Подключите микрофон или выберите его в Системных настройках → Звук."
         case .denied: "Нет доступа к микрофону. Разрешите его в Системных настройках → Конфиденциальность → Микрофон."
+        case .busy(let device, let code):
+            "Микрофон «\(device)» сейчас недоступен (\(AudioError.fourCC(code))). Так бывает, когда AirPods переключаются в режим гарнитуры, "
+                + "микрофон занят другой программой или выбран микрофон iPhone. Попробуйте ещё раз или выберите другой вход в Настройках → Звук."
         }
+    }
+
+    /// Коды CoreAudio — четыре буквы: 2003329396 → «what».
+    static func fourCC(_ code: Int) -> String {
+        let v = UInt32(truncatingIfNeeded: code)
+        let bytes = [24, 16, 8, 0].map { UInt8((v >> UInt32($0)) & 0xFF) }
+        guard bytes.allSatisfy({ (32...126).contains($0) }) else { return "код \(code)" }
+        return "«" + String(decoding: bytes, as: UTF8.self) + "»"
     }
 }
 
 /// Микрофон → 16 кГц моно Float32 (формат моделей распознавания). Звук никуда не уходит с Mac.
+///
+/// Основной путь — AVAudioEngine. Он капризен: CoreAudio отвечает «what» (kAudioHardwareUnspecifiedError),
+/// если формат устройства меняется в момент запуска (AirPods переходят в режим гарнитуры, микрофон
+/// переключили, его держит другая программа). Поэтому: несколько попыток со свежим движком, формат берётся
+/// из самих данных, а не заранее, и запасной путь — AVCaptureSession, который такие переключения переносит.
 nonisolated final class AudioCapture: @unchecked Sendable {
     let sampleRate: Double
-    private let engine = AVAudioEngine()
+    private var engine = AVAudioEngine()
     private let lock = NSLock()
     private var converter: AVAudioConverter?
+    private var converterFormat: AVAudioFormat?
     private var running = false
     private var configObserver: NSObjectProtocol?
     private var onSamples: (@Sendable ([Float]) -> Void)?
+    private var fallback: CaptureSessionInput?
+    /// Каким путём идёт звук — для журнала и самопроверки.
+    private(set) var path = ""
 
     init(sampleRate: Double = 16000) {
         self.sampleRate = sampleRate
@@ -40,31 +61,87 @@ nonisolated final class AudioCapture: @unchecked Sendable {
 
     func start(_ onSamples: @escaping @Sendable ([Float]) -> Void) throws {
         guard Self.permission != .denied && Self.permission != .restricted else { throw AudioError.denied }
-        lock.withLock { self.onSamples = onSamples }
-        try startEngine()
-        // Сменили микрофон (подключили AirPods) — переподключаемся на лету.
-        configObserver = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
-            guard let self, self.lock.withLock({ self.running }) else { return }
-            self.engine.inputNode.removeTap(onBus: 0)
-            try? self.startEngine()
+        guard AVCaptureDevice.default(for: .audio) != nil else { throw AudioError.noInput }
+        lock.withLock {
+            self.onSamples = onSamples
+            self.running = true
         }
+        var lastError: Error = AudioError.noInput
+        // Попытки со свежим движком: после переключения AirPods формат устаканивается за доли секунды.
+        for attempt in 0..<3 {
+            if attempt > 0 { usleep(UInt32(150_000 * attempt)) }
+            do {
+                try startEngine()
+                path = "AVAudioEngine"
+                observeChanges()
+                return
+            } catch {
+                lastError = error
+                resetEngine()
+            }
+        }
+        // Запасной путь.
+        do {
+            let capture = CaptureSessionInput(sampleRate: sampleRate) { [weak self] samples in self?.deliver(samples) }
+            try capture.start()
+            fallback = capture
+            path = "AVCaptureSession"
+            return
+        } catch {
+            lock.withLock { running = false; self.onSamples = nil }
+            throw Self.explain(lastError)
+        }
+    }
+
+    static func explain(_ error: Error) -> Error {
+        if let e = error as? AudioError { return e }
+        let ns = error as NSError
+        return AudioError.busy(device: deviceName, code: ns.code)
     }
 
     private func startEngine() throws {
         let input = engine.inputNode
-        let format = input.outputFormat(forBus: 0)
-        guard format.sampleRate > 0, format.channelCount > 0,
-              let target = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false),
-              let converter = AVAudioConverter(from: format, to: target) else { throw AudioError.noInput }
-        lock.withLock {
-            self.converter = converter
-            self.running = true
-        }
-        input.installTap(onBus: 0, bufferSize: 1024, format: format) { [weak self] buffer, _ in
-            self?.process(buffer, target: target)
+        let format = input.inputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else { throw AudioError.noInput }
+        // Формат отвода — nil: движок сам берёт формат шины; преобразователь создаётся по первому буферу.
+        input.installTap(onBus: 0, bufferSize: 1024, format: nil) { [weak self] buffer, _ in
+            self?.process(buffer)
         }
         engine.prepare()
-        try engine.start()
+        do {
+            try engine.start()
+        } catch {
+            input.removeTap(onBus: 0)
+            throw error
+        }
+    }
+
+    private func resetEngine() {
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+        engine.reset()
+        engine = AVAudioEngine()
+        lock.withLock {
+            converter = nil
+            converterFormat = nil
+        }
+    }
+
+    /// Сменили микрофон (подключили AirPods) — переподключаемся на лету, со свежим движком.
+    private func observeChanges() {
+        if let configObserver { NotificationCenter.default.removeObserver(configObserver) }
+        configObserver = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
+            guard let self, self.lock.withLock({ self.running }) else { return }
+            DispatchQueue.global().asyncAfter(deadline: .now() + 0.2) {
+                guard self.lock.withLock({ self.running }) else { return }
+                self.resetEngine()
+                for attempt in 0..<3 {
+                    if attempt > 0 { usleep(200_000) }
+                    if (try? self.startEngine()) != nil { self.observeChanges(); return }
+                    self.resetEngine()
+                }
+            }
+        }
     }
 
     func stop() {
@@ -74,15 +151,29 @@ nonisolated final class AudioCapture: @unchecked Sendable {
         }
         if let configObserver { NotificationCenter.default.removeObserver(configObserver) }
         configObserver = nil
+        fallback?.stop()
+        fallback = nil
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
     }
 
+    private func deliver(_ samples: [Float]) {
+        guard let callback = lock.withLock({ onSamples }), !samples.isEmpty else { return }
+        callback(samples)
+    }
+
     private final class Once: @unchecked Sendable { var done = false }
 
-    private func process(_ buffer: AVAudioPCMBuffer, target: AVAudioFormat) {
-        let (converter, callback) = lock.withLock { (self.converter, self.onSamples) }
-        guard let converter, let callback else { return }
+    private func process(_ buffer: AVAudioPCMBuffer) {
+        guard let target = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false) else { return }
+        let converter: AVAudioConverter? = lock.withLock {
+            if converterFormat != buffer.format {
+                self.converter = AVAudioConverter(from: buffer.format, to: target)
+                converterFormat = buffer.format
+            }
+            return self.converter
+        }
+        guard let converter else { return }
         let ratio = target.sampleRate / buffer.format.sampleRate
         guard let out = AVAudioPCMBuffer(pcmFormat: target, frameCapacity: AVAudioFrameCount(Double(buffer.frameLength) * ratio + 32)) else { return }
         let once = Once()
@@ -98,7 +189,60 @@ nonisolated final class AudioCapture: @unchecked Sendable {
             return input
         }
         guard error == nil, let channel = out.floatChannelData?[0], out.frameLength > 0 else { return }
-        callback(Array(UnsafeBufferPointer(start: channel, count: Int(out.frameLength))))
+        deliver(Array(UnsafeBufferPointer(start: channel, count: Int(out.frameLength))))
+    }
+}
+
+/// Запасной захват через AVCaptureSession: macOS сама отдаёт 16 кГц моно Float32.
+nonisolated final class CaptureSessionInput: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate, @unchecked Sendable {
+    private let session = AVCaptureSession()
+    private let queue = DispatchQueue(label: "app.utter.capture", qos: .userInteractive)
+    private let sampleRate: Double
+    private let onSamples: @Sendable ([Float]) -> Void
+
+    init(sampleRate: Double, onSamples: @escaping @Sendable ([Float]) -> Void) {
+        self.sampleRate = sampleRate
+        self.onSamples = onSamples
+    }
+
+    func start() throws {
+        guard let device = AVCaptureDevice.default(for: .audio) else { throw AudioError.noInput }
+        let input = try AVCaptureDeviceInput(device: device)
+        let output = AVCaptureAudioDataOutput()
+        output.audioSettings = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVSampleRateKey: sampleRate,
+            AVNumberOfChannelsKey: 1,
+            AVLinearPCMBitDepthKey: 32,
+            AVLinearPCMIsFloatKey: true,
+            AVLinearPCMIsNonInterleaved: true,
+            AVLinearPCMIsBigEndianKey: false,
+        ]
+        output.setSampleBufferDelegate(self, queue: queue)
+        session.beginConfiguration()
+        guard session.canAddInput(input), session.canAddOutput(output) else {
+            session.commitConfiguration()
+            throw AudioError.noInput
+        }
+        session.addInput(input)
+        session.addOutput(output)
+        session.commitConfiguration()
+        session.startRunning()
+        guard session.isRunning else { throw AudioError.busy(device: device.localizedName, code: 0) }
+    }
+
+    func stop() {
+        session.stopRunning()
+    }
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        var samples: [Float] = []
+        try? sampleBuffer.withAudioBufferList { list, _ in
+            guard let buffer = list.first, let data = buffer.mData else { return }
+            let count = Int(buffer.mDataByteSize) / MemoryLayout<Float>.size
+            samples = Array(UnsafeBufferPointer(start: data.assumingMemoryBound(to: Float.self), count: count))
+        }
+        if !samples.isEmpty { onSamples(samples) }
     }
 }
 

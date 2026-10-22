@@ -53,6 +53,10 @@ jobs:
         run: dist/Utter.app/Contents/MacOS/Utter --selftest-logic
 
       # Настоящая модель Qwen3-ASR: загрузка с SHA-256, русская речь (синтез macOS), потоковая диктовка, команды.
+      - name: Self-test microphone capture (informational)
+        continue-on-error: true
+        run: dist/Utter.app/Contents/MacOS/Utter --selftest-audio
+
       - name: Self-test speech recognition (CPU)
         run: dist/Utter.app/Contents/MacOS/Utter --selftest-asr
 
