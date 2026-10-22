@@ -1,0 +1,191 @@
+{
+  "database": 225,
+  "type": "practice",
+  "practice": "Local government and decentralisation",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that obligations to give and return build trust among people who know one another, so village and family networks settle local matters close to home, with standing earned through exchange. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that status and alliances are built through exchange, so local standing and favours decide who is heard, and people outside the networks have no route to a say in town affairs. There is no documented case in the pool. Source: Mauss, The Gift"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a family farm balances its own work against household needs, so farming families take decisions close to the land and local choices follow what households actually need. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption rather than profit, so households have little surplus to pay local rates or fund town services, and services beyond family needs go unpaid for. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central authority collects and stores goods and then redistributes them, so towns and provinces receive support for public works and officials from one common store. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that surplus is collected at the centre and handed out to officials and workers, so towns and regions keep little revenue of their own, and local officials answer only upward. There is no documented case in the pool. Source: Polanyi, The Great Transformation"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that trade income pays for roads, ports and courts that serve the trade, so local public works are paid for by the trade and run by the owners who fund them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that labour is extracted through the ownership of people, so enslaved people have no vote, no property and no standing in local bodies, and local courts and police enforce the owners' claims. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that lords give protection and justice in return for land, so disputes are heard close to home and each manor supplies most of its own needs. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that peasants owe labour services and rents to a lord, so local justice and land sit with the lord, and tenants cannot easily leave the manor or appeal far beyond it. There is no documented case in the pool. Source: Bloch, Feudal Society"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that masters set entry, training and prices under statute, so each town trade is run by its own craft body, which keeps standards and settles disputes among members. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that guilds control entry and prices, so a closed body of masters governs local trade and much of town life, and newcomers and outsiders have no route to a say. There is no documented case in the pool. Source: Boileau, Le Livre des métiers"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state aims for a trade surplus, so port and market towns that carry licensed trade can gain privileges and customs income to fund local works. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production and trade are regulated for national gain, so local rules and tolls give way to the centre's aim, and towns have little say over what they make or sell. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that a single tax on land rent should fund the state, so local landowners and officials assess it under simple rules, and free grain trade keeps towns supplied without local controls. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that grain should move freely, so local tolls and town controls on grain block the movement of food and let shortages grow after a poor harvest. There is no documented case in the pool. Source: Quesnay, Tableau économique"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "Inferred from its principle that a small state protects property and contracts and otherwise stays out, so towns compete for trade and residents, and that rivalry keeps local rates low. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state stays out beyond protecting property and contracts, so towns with few trades or residents lack funds for roads, schools and water, and local bodies have little power to close the gap. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, so local decisions guided by prices can fit local needs better than a central plan. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion distorts production, so a town or region that borrows heavily to fund projects can misdirect capital and leave a debt that local taxpayers must carry. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "Inferred from its principle that a smaller state, with fewer controls and more privatisation, makes local bodies answer for their own budgets and lets them compete with private providers on cost. There is no documented case in the pool.",
+      "worst": "Chile's 1981 transfer of public schools to municipalities put schools under municipal control, funded through a per-capita voucher with identical amounts for public and private schools. A World Bank study covering 1981 to 1990 finds mixed results and leaves whether the reform improved cost-effectiveness unresolved. A slight cost-effectiveness edge went to private rather than public schools. Non-teaching posts at the education ministry shrank, and measured learning appears to have slipped. A search summary says the scanned text is garbled in places, and the study gives no clean causal estimate of the transfer on test scores. Source: World Bank study by Donald Winkler and Taryn Rounds (1993)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Inferred from its principle that spending rises in slumps, so central grants that let towns and regions spend more when the economy falls keep local works and jobs going. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that spending should fall in booms, so towns that must balance their own budgets every year cut spending in a downturn and deepen the slump they face. There is no documented case in the pool. Source: Keynes, The General Theory"
+    },
+    {
+      "model": "Social market economy",
+      "best": "Inferred from its principle that competition runs inside a legal order that curbs monopoly, so local utilities and services stay open to rivals under one common set of rules. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a legal order must curb monopoly, so a local council that runs a utility, or writes its own rules for a market, can shut out rivals and split the market into local pieces. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "Inferred from its principle that universal public services are financed by high taxes, so towns and regions deliver schools, care and transport to one national standard, with local offices running active labour-market programmes. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that wages are bargained nationally, so towns and regions cannot set pay for their own public staff or adjust terms to their local labour markets. There is no documented case in the pool. Source: Saltsjöbaden Agreement"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state directs credit and export targets to chosen industries, so regional agencies can link local firms and training to national targets and judge them by results. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state picks sectors and disciplines firms by performance, so towns and regions outside the chosen industries may get little support, and local needs can give way to national targets. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that land rent should fund public services, so towns and regions that tax land values can pay for roads, schools and parks from the value that public works add to land. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that land taxes fund local services, so a town's budget depends on land values, and a sharp fall in those values cuts local revenue just when services are most needed. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities and planned associations are built by example, so local groups can run their own schools, workshops and services without waiting for a wider state. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that such communities run their own affairs, so a small community cut off from wider public services and outside funds may lack the money and staff that large services need. There is no documented case in the pool. Source: Owen, A New View of Society"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that mutual credit lets workers keep the value of their work, so local mutual banks lend at cost, and towns and member societies keep control of their own credit. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that mutual credit is raised and lent among members, so local networks may be too small to fund large public works such as water systems or hospitals, and towns may depend on finance they do not control. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Inferred from its principle that members own and control firms and banks, one member one vote, so towns can run shops, credit societies and services that answer to the people who use them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that members own and control the enterprise, so a local cooperative can serve its members well while residents who are not members have no say, and wider public needs can go unmet. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that federated communes decide local life directly, so each commune sets its own affairs, its members take decisions in person, and goods are shared by need. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no state, so works that span several communes, and disputes between them, depend on voluntary agreement that may fail, with no body above the commune to settle them. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that trade unions run industry through workers' organisations, so local workplaces and services are run by the workers who staff them, through their own union bodies. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that strikes, and eventually a general strike, are the means of change, so local services can be halted by industrial action, and union bodies may restrict who may work in a trade. There is no documented case in the pool. Source: Founding of the French CGT"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that socialism comes by democratic and gradual means, so towns can run municipal enterprises, and a national minimum of welfare is set through elected bodies. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that public enterprise is run by councils and state boards, so residents and workers have little direct say over how a municipal service is run between elections. There is no documented case in the pool. Source: Fabian Essays in Socialism"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control of industry through councils, so local services and works are run by the people who use and staff them, with the town as one partner among several. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state is one partner among several in these councils, so no single elected body holds clear authority over a town's services, and disputes among workers, consumers and the state can stall decisions. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that central plans set output and investment, so a town or region can be given a share of a national programme of building, and labour can be moved quickly to priority projects. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that central plans set output, prices and investment, so local bodies carry out targets set above them, and local needs give way whenever they conflict with the plan. There is no documented case in the pool. Source: Kornai, The Socialist System"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that public firms follow market prices under managers who respond to them, so local public enterprises can be run by local managers and judged by their results. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, so towns and regions have little say over the capital their public firms need, and local enterprises must wait for funds the centre controls. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that once classes and the state have withered away, communities manage their own affairs directly, so decisions a central state once made pass to local bodies. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state must hold power through the transition before it withers away, so during that period local bodies may hold little independent power and depend on the central state for resources. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "Inferred from its principle that special economic zones operate alongside public ownership, so a town or region can try a reform within a bounded area, and the centre can extend what works while price reform proceeds gradually. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that reform proceeds under party direction, so local leaders are steered by central priorities, and local choices may follow those priorities rather than what residents need. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "A dissertation reports real but uneven results from Participatory budgeting in Porto Alegre, where residents take part in city budgeting, and obstacles have held back what those budgets could deliver. No quantitative impact study was found, and the evidence is 22 interviews.",
+      "worst": "Kerala's People's Plan campaign targeted 35 to 40 per cent for local bodies in 1996. A DMEO document reports around 90 per cent of that commitment devolved, but not what that 90 per cent is a share of. A table attributed to Oommen (2014) puts local plan grants at roughly a quarter of state plan outlay on average over 1997-98 to 2011-12, peaking near 33 per cent in 2002-03 and falling to about 23 per cent by 2011-12. The sources conflict, and only search excerpts were read. Source: DMEO document 'Decentralized Planning Experience in Kerala' (year not shown); MPRA working paper 65710, reproducing a table by Oommen (2014)"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, so local employers and workers can settle wage and production disputes within one structure, with the state coordinating local output. There is no documented case in the pool.",
+      "worst": "Fascist replacement of elected mayors by podestà, 1926: an Italian-language anthology dates the end of elected municipal government to 1926, when appointed podestà took over the powers of the mayor, the executive committee and the council. A study of podestà in Bolzano province dates the reform to two stages between February and September 1926, and treats the end of municipal self-rule as a precondition for the totalitarian state. Both sources are in Italian and were read only as search excerpts. Source: Italian-language anthology on the podestà (2023); Andrea Di Michele, study of podestà in Bolzano province (secondary)"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk, and that zakat redistributes wealth, so local funds can serve the families of their own town, with trust among neighbours backing loans. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that trust underpins contracts, so local finance rests on personal ties, and without a formal check, those who hold the ties can decide who receives funds and how zakat is spent. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being, so towns and villages keep production small and local, and decisions stay close to the people they affect. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production is small in scale, so towns and regions may lack the size to fund and run large shared works such as water systems or hospitals alone, and any shortfall falls on local people. There is no documented case in the pool. Source: Schumacher, Buddhist Economics"
+    },
+    {
+      "model": "Distributism",
+      "best": "Women as village-council heads in India's panchayats: a random reservation of one third of village-council headships for women changes which public goods are provided, and female leaders put more into infrastructure tied to women's needs. The claims come from abstracts and summaries, not the full text, and the published study covers 265 councils, where an NBER abstract gives 165.",
+      "worst": "New municipalities in Chile and pupil results: an IDB study of 11 municipalities created in 1994 to 2004 estimates a drop of 0.2 standard deviations in elementary maths in their schools, compared with areas whose secession bids fell short. Staff churn and insecurity rose among teachers and school leaders there, but shrinking the original networks made no difference to pupil results or staff. The figure and comparison design are as a search summary reports them, and the study measures elementary maths only, not the 1981 school transfer. Source: IDB study by Alcaíno and colleagues (2022), 'Government fragmentation and educational outcomes: evidence on the creation of municipalities in Chile'"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that a social floor is guaranteed to everyone within planetary limits, so towns and regions can set local limits on resource use and guarantee local services that meet basic needs. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no imperative to grow, so the tax base of towns and regions may stop growing, and local services may be squeezed unless the centre passes money down to keep the social floor in place. There is no documented case in the pool. Source: Daly, Steady-State Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen receives an unconditional income, so local councils can stop running means-tested payments and put their money and staff into local services instead. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, so the rent that towns and regions might keep for local services is collected centrally and paid out nationally. There is no documented case in the pool. Source: Paine, Agrarian Justice"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government which issues its own currency can fund full employment, so central transfers can pay for local jobs and services without the borrowing limits that towns face. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so when prices rise the centre must cut spending, and towns and regions that rely on central transfers face cuts without a currency of their own. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Residents who share a city budget can help set its priorities: a dissertation reports real but uneven results from Participatory budgeting in Porto Alegre, with obstacles that have held back what the budgets could deliver. No quantitative impact study was found, and the evidence is 22 interviews.",
+      "worst": "Inferred from its principle that local rules need wider institutions to be enforced, so where rule-makers have no backing from larger bodies, insiders can capture the shared resource and outsiders who depend on it have no say. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "Towns and regions run their own budgets within national minimum standards, and elected councils set local priorities. Residents take part in budgeting, and no council may be abolished or replaced by appointees.",
+    "details": "Keeps: resident participation in budgets, from Commons governance and Participatory economics, as in Participatory budgeting in Porto Alegre, where the evidence is 22 interviews with no quantitative impact study. Blocks: abolition of elected councils, from Corporatism and fascist economics, by a legal guarantee that councils stay elected; splitting local government into new small municipalities, from Distributism, by a results test and a staffing floor before any boundary change. Test: each year for five years, measure each council's share of public spending, the share of its budget that residents decide, pupil results and staff turnover, against councils whose boundaries did not change. Source: Terence Wood dissertation on Porto Alegre and Belo Horizonte; Italian-language anthology on the podestà (2023), read only as excerpts; IDB study by Alcaíno and colleagues (2022), read only through a search summary."
+  }
+}
