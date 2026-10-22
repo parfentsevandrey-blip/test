@@ -108,17 +108,22 @@ nonisolated struct TextJoiner {
         return (String(rendered.dropFirst(common)), old.count - common)
     }
 
-    /// Фраза в тексте: пробел перед ней и строчная буква, если пауза пришлась посреди предложения
-    /// (модель начинает каждую фразу с заглавной).
+    /// Фраза в тексте: пробел перед ней; строчная буква, если пауза пришлась посреди предложения
+    /// (модель начинает каждую фразу с заглавной), и заглавная — после точки и с новой строки.
     static func render(_ words: [String], after last: Character?) -> String {
         guard !words.isEmpty else { return "" }
         var words = words
         var text = ""
         if let last {
             if !last.isWhitespace { text = " " }
-            if !".!?…\n".contains(last) { words[0] = decapitalize(words[0]) }
+            words[0] = ".!?…\n".contains(last) ? capitalize(words[0]) : decapitalize(words[0])
         }
         return text + words.joined(separator: " ")
+    }
+
+    static func capitalize(_ word: String) -> String {
+        guard let first = word.first, first.isLowercase else { return word }
+        return first.uppercased() + word.dropFirst()
     }
 
     mutating func closeUtterance() {

@@ -118,6 +118,12 @@ nonisolated enum SelfTest {
         let e = j.append(["Завтра", "начнём."])
         ok = check(a + b + d + e == "Я думаю, что это хорошая идея. Завтра начнём.", "пауза посреди предложения не делает заглавную: «\(a + b + d + e)»") && ok
         ok = check(TextJoiner.decapitalize("МГУ") == "МГУ" && TextJoiner.decapitalize("Это") == "это", "аббревиатуры не трогаем") && ok
+        var nl = TextJoiner()
+        _ = nl.append(["Первая", "строка."])
+        nl.closeUtterance()
+        _ = nl.apply(.newLine)
+        let after = nl.append(["спасибо", "всем!"])
+        ok = check(after == "Спасибо всем!", "с новой строки — с заглавной: «\(after)»") && ok
         let (_, erase) = j.apply(.deleteLast)
         ok = check(erase == " Завтра начнём.".count, "«удали это» стирает последнюю фразу: \(erase) символов") && ok
         var k = TextJoiner()

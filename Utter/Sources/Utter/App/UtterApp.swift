@@ -4,6 +4,7 @@ import SwiftUI
 @main
 enum Entry {
     static func main() {
+        setvbuf(stdout, nil, _IOLBF, 0)
         SelfTest.runIfRequested()
         UtterApp.main()
     }

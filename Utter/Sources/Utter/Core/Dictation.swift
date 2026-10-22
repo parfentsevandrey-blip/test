@@ -235,6 +235,8 @@ nonisolated final class Dictation: @unchecked Sendable {
             previous = Double(audio.count) / Double(options.sampleRate) <= contextLimit ? (audio, clean) : nil
         }
         if options.commands, let command = VoiceCommand.match(clean) {
+            // Команда — не текст: следующей фразе контекстом не служит (с ней модель пишет продолжение «новой строки»).
+            if audio != nil { previous = nil }
             // Если начало команды уже успело напечататься — стираем его.
             let (_, undo) = joiner.settle([])
             let (insert, erase) = joiner.apply(command)
