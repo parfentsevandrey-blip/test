@@ -35,13 +35,22 @@ struct FeedView: View {
                         .disabled(model.feedLoading)
                 }
             }
-            Picker("", selection: $kind) { ForEach(KindFilter.allCases) { Text($0.title).tag($0) } }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(maxWidth: 660)
-                .padding(.horizontal, 28)
-                .padding(.bottom, 12)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Фильтры строками с переносом: в узком окне не обрезаются.
+            FlowLayout(spacing: 8, lineSpacing: 8) {
+                ForEach(KindFilter.allCases) { k in
+                    Button {
+                        withAnimation(.snappy) { kind = k }
+                    } label: {
+                        Text(k.title).font(.system(size: 12, weight: .medium)).padding(.horizontal, 4)
+                    }
+                    .buttonStyle(.glass)
+                    .tint(kind == k ? Section.feed.tint : nil)
+                    .background(Capsule().fill(kind == k ? Section.feed.tint.opacity(0.25) : .clear))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 28)
+            .padding(.bottom, 12)
             if let error = model.feedError {
                 Label(error, systemImage: "wifi.exclamationmark").font(.system(size: 12)).foregroundStyle(.orange)
                     .padding(.horizontal, 28).padding(.bottom, 8).frame(maxWidth: .infinity, alignment: .leading)

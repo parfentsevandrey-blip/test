@@ -102,8 +102,7 @@ struct CatalogView: View {
             .padding(.vertical, 10)
             .glassEffect(.regular, in: .capsule)
 
-            ScrollView(.horizontal) {
-                HStack(spacing: 8) {
+            FlowLayout(spacing: 8, lineSpacing: 8) {
                     ForEach(Filter.allCases) { f in
                         Button {
                             withAnimation(.snappy) { filter = f }
@@ -118,9 +117,8 @@ struct CatalogView: View {
                         .tint(filter == f ? Section.catalog.tint : nil)
                         .background(Capsule().fill(filter == f ? Section.catalog.tint.opacity(0.25) : .clear))
                     }
-                }
             }
-            .scrollIndicators(.never)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, 28)
         .padding(.bottom, 12)
@@ -311,7 +309,7 @@ struct ModelDetailView: View {
                 Spacer()
                 Link(destination: card.hubURL) { Label("Hugging Face", systemImage: "arrow.up.right.square") }.font(.system(size: 11.5))
             }
-            Text("Чем сильнее сжатие, тем меньше файл и быстрее ответы, но немного ниже качество. Synapse отмечает лучший вариант для вашего Mac.")
+            Text("Чем сильнее сжатие, тем меньше файл и быстрее ответы, но ниже качество — под каждым вариантом написано, что именно теряется. Synapse отмечает лучший вариант для вашего Mac.")
                 .font(.system(size: 11.5)).foregroundStyle(.secondary)
             ContentCard {
                 VStack(spacing: 0) {
@@ -319,6 +317,7 @@ struct ModelDetailView: View {
                     ForEach(rows) { v in
                         let fit = Advisor.estimate(v, card: card, mac: model.mac)
                         let isBest = v.quant.name == best?.quant.name
+                        VStack(alignment: .leading, spacing: 5) {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 6) {
@@ -342,6 +341,12 @@ struct ModelDetailView: View {
                             InstallButton(card: card, variant: v.estimated ? nil : v, prominent: isBest)
                                 .frame(width: 122, alignment: .trailing)
                                 .disabled(v.estimated || !fit.runnable && fit.level == .noDisk)
+                        }
+                        // Что теряется на этом сжатии.
+                        Text(v.quant.tradeoff(params: card.params))
+                            .font(.system(size: 11)).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)

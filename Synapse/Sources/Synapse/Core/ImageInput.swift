@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Foundation
 import ImageIO
@@ -79,6 +80,33 @@ nonisolated enum ImageInput {
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.jpeg.identifier as CFString, 1, nil) else { return nil }
         CGImageDestinationAddImage(dest, image, [kCGImageDestinationLossyCompressionQuality: 0.9] as CFDictionary)
         return CGImageDestinationFinalize(dest) ? name : nil
+    }
+
+    // MARK: - Буфер обмена
+
+    private static let imageTypes: [NSPasteboard.PasteboardType] = [.png, .tiff, .init("public.jpeg"), .init("public.heic"), .init("org.webmproject.webp")]
+    private static let fileOptions: [NSPasteboard.ReadingOptionKey: Any] = [
+        .urlReadingFileURLsOnly: true,
+        .urlReadingContentsConformToTypes: [UTType.image.identifier],
+    ]
+
+    /// В буфере картинка, а не текст: скопированный файл-изображение, снимок экрана, «Скопировать изображение»
+    /// в браузере. Если вместе с картинкой есть текст (так копируют, например, из Word), это текст — его
+    /// вставит обычное поле ввода.
+    static func pasteboardHasImage(_ pb: NSPasteboard = .general) -> Bool {
+        if pb.canReadObject(forClasses: [NSURL.self], options: fileOptions) { return true }
+        return pb.availableType(from: imageTypes) != nil && pb.availableType(from: [.string]) == nil
+    }
+
+    /// Сохраняет картинки из буфера как вложения. Возвращает имена файлов.
+    static func storeFromPasteboard(_ pb: NSPasteboard = .general) -> [String] {
+        if let urls = pb.readObjects(forClasses: [NSURL.self], options: fileOptions) as? [URL], !urls.isEmpty {
+            return urls.compactMap { storeAttachment(from: $0) }
+        }
+        for type in imageTypes {
+            if let data = pb.data(forType: type), let name = storeAttachment(data: data) { return [name] }
+        }
+        return []
     }
 
     static func path(_ name: String) -> String { AppPaths.attachments.appendingPathComponent(name).path }

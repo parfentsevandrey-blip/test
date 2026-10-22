@@ -60,12 +60,13 @@ struct SectionHeader<Trailing: View>: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
+            // Текст уступает место кнопкам: кнопки справа всегда видны целиком.
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.system(size: 26, weight: .bold))
-                Text(subtitle).font(.system(size: 12.5)).foregroundStyle(.secondary).lineLimit(2)
+                Text(title).font(.system(size: 26, weight: .bold)).lineLimit(1)
+                Text(subtitle).font(.system(size: 12.5)).foregroundStyle(.secondary).lineLimit(3)
             }
-            Spacer(minLength: 12)
-            trailing
+            .frame(maxWidth: .infinity, alignment: .leading)
+            trailing.fixedSize()
         }
         .padding(.horizontal, 28)
         .padding(.top, 22)
@@ -292,5 +293,54 @@ struct WindowAccessor: NSViewRepresentable {
             super.viewDidMoveToWindow()
             if let window { onWindow?(window) }
         }
+    }
+}
+
+/// Раскладка «строками с переносом»: элементы идут слева направо и переносятся, когда не помещаются.
+/// Так ряд фильтров никогда не обрезается краем окна.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    var lineSpacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = arrange(width: proposal.width ?? .infinity, subviews: subviews)
+        let width = rows.map { $0.width }.max() ?? 0
+        let height = rows.reduce(0) { $0 + $1.height } + lineSpacing * CGFloat(max(0, rows.count - 1))
+        return CGSize(width: proposal.width.map { min($0, width) } ?? width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in arrange(width: bounds.width, subviews: subviews) {
+            var x = bounds.minX
+            for i in row.items {
+                let size = subviews[i].sizeThatFits(.unspecified)
+                subviews[i].place(at: CGPoint(x: x, y: y + (row.height - size.height) / 2), proposal: ProposedViewSize(size))
+                x += size.width + spacing
+            }
+            y += row.height + lineSpacing
+        }
+    }
+
+    private struct Row {
+        var items: [Int] = []
+        var width: CGFloat = 0
+        var height: CGFloat = 0
+    }
+
+    private func arrange(width: CGFloat, subviews: Subviews) -> [Row] {
+        var rows: [Row] = [Row()]
+        for i in subviews.indices {
+            let size = subviews[i].sizeThatFits(.unspecified)
+            let extra = rows[rows.count - 1].items.isEmpty ? size.width : size.width + spacing
+            if !rows[rows.count - 1].items.isEmpty && rows[rows.count - 1].width + extra > width {
+                rows.append(Row())
+            }
+            let gap = rows[rows.count - 1].items.isEmpty ? 0 : spacing
+            rows[rows.count - 1].items.append(i)
+            rows[rows.count - 1].width += size.width + gap
+            rows[rows.count - 1].height = max(rows[rows.count - 1].height, size.height)
+        }
+        return rows.filter { !$0.items.isEmpty }
     }
 }

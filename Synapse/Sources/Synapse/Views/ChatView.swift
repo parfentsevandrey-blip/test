@@ -81,6 +81,8 @@ struct ChatPane: View {
     /// Высота видимой части переписки.
     @State private var viewport: CGFloat = 600
     @FocusState private var focused: Bool
+    /// Перехват ⌘V: картинку из буфера — во вложения.
+    @State private var pasteMonitor: Any?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -94,7 +96,14 @@ struct ChatPane: View {
             }
             composer
         }
-        .onAppear { focused = true }
+        .onAppear {
+            focused = true
+            installPaste()
+        }
+        .onDisappear {
+            if let m = pasteMonitor { NSEvent.removeMonitor(m) }
+            pasteMonitor = nil
+        }
         // Картинку можно просто перетащить в окно чата.
         .onDrop(of: [.fileURL, .image], isTargeted: $dropTargeted) { providers in
             accept(providers)
@@ -136,6 +145,32 @@ struct ChatPane: View {
                     Task { @MainActor in if let name = ImageInput.storeAttachment(data: data) { model.pendingAttachments.append(name) } }
                 }
             }
+        }
+    }
+
+    /// ⌘V с картинкой в буфере (скриншот, скопированное фото или файл) — картинка прикладывается к сообщению.
+    /// Текст вставляется как обычно. Клавиша V определяется по месту на клавиатуре — работает и в русской раскладке.
+    private func installPaste() {
+        guard pasteMonitor == nil else { return }
+        let model = model
+        let hint = visionHint
+        pasteMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard event.keyCode == 9, event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command else { return event }
+            let handled = MainActor.assumeIsolated { () -> Bool in
+                guard model.section == .chat, event.window?.isKeyWindow == true, ImageInput.pasteboardHasImage() else { return false }
+                guard model.visionReady else {
+                    model.showToast(hint)
+                    return true
+                }
+                let names = ImageInput.storeFromPasteboard()
+                if names.isEmpty {
+                    model.showToast("Не получилось прочитать картинку из буфера обмена")
+                } else {
+                    model.pendingAttachments += names
+                }
+                return true
+            }
+            return handled ? nil : event
         }
     }
 
@@ -254,7 +289,7 @@ struct ChatPane: View {
             .buttonStyle(.glass)
             .buttonBorderShape(.circle)
             .disabled(model.installed.isEmpty || !model.visionReady)
-            .help(model.visionReady ? "Приложить изображение (или перетащите его в окно)" : visionHint)
+            .help(model.visionReady ? "Приложить изображение — или перетащите его в окно, или вставьте из буфера ⌘V" : visionHint)
             TextField(placeholder, text: $draft, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
@@ -286,6 +321,7 @@ struct ChatPane: View {
 
     private var placeholder: String {
         if model.installed.isEmpty { return "Сначала установите модель" }
+        if model.visionReady && model.pendingAttachments.isEmpty { return "Спросите что угодно…  ⏎ — отправить, ⌥⏎ — новая строка, ⌘V — вставить картинку" }
         if !model.pendingAttachments.isEmpty { return "Что сделать с изображением? Например: «Что здесь написано?»" }
         return "Спросите что угодно…  ⏎ — отправить, ⌥⏎ — новая строка"
     }
@@ -350,7 +386,7 @@ struct ChatTopBar: View {
             Button { showSettings.toggle() } label: { Image(systemName: "slider.horizontal.3") }
                 .buttonStyle(.glass)
                 .popover(isPresented: $showSettings, arrowEdge: .bottom) {
-                    ScrollView { GenerationSettingsView(compact: true).padding(18) }.frame(width: 380, height: 560)
+                    ScrollView { GenerationSettingsView(compact: true).padding(18).frame(width: 400) }.frame(width: 400, height: 560)
                 }
                 .help("Настройки ответа")
         }

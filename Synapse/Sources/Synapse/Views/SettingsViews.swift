@@ -107,7 +107,8 @@ struct GenerationSettingsView: View {
                     Text("8 000").tag(8192)
                 }
                 .labelsHidden()
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
+                .fixedSize()
             }
 
             Divider()

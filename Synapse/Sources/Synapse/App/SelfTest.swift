@@ -147,6 +147,13 @@ nonisolated enum SelfTest {
             ok = check(old?.temperature == 0.3 && old?.loopGuard == true, "настройки прошлой версии читаются, защита включена") && ok
         }
 
+        print("— Что теряется при сжатии")
+        let q4 = Quant.named("Q4_K_M")!.tradeoff(params: 9), q8 = Quant.named("Q8_0")!.tradeoff(params: 9)
+        let iq2 = Quant.named("IQ2_XXS")!.tradeoff(params: 80), mx = Quant.named("MXFP4_MOE")!.tradeoff(params: 20)
+        let tiny = Quant.named("Q4_K_M")!.tradeoff(params: 0.8)
+        ok = check(q4.contains("Стандарт") && q8.contains("без потерь") && iq2.contains("Экстремальное") && mx.contains("gpt-oss")
+                   && tiny.contains("маленьких"), "у каждого сжатия — своё объяснение: «\(q4.prefix(60))…»") && ok
+
         print("— HTTP-запрос")
         let raw = "POST /v1/chat/completions?x=1 HTTP/1.1\r\nHost: localhost\r\nContent-Length: 13\r\n\r\n{\"model\":\"a\"}"
         let req = HTTPRequest.parse(Data(raw.utf8))
