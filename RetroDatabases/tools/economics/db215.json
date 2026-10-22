@@ -6,117 +6,117 @@
     {
       "model": "Gift economy",
       "best": "Inferred from its principle that new drugs and trial results move through reciprocal exchange among researchers, clinics and patients, so knowledge circulates through trusted networks rather than through price. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that obligations to return favours shape who gets early access, so trials and treatments flow to kin and allies while outsiders wait without a route in. There is no documented case in the pool. Source: Sahlins, Stone Age Economics"
+      "worst": "Inferred from its principle that obligations to return favours shape who gets early access, so trials and treatments flow to kin and allies while outsiders wait without a route in. There is no documented case in the pool. Source: Sahlins, Stone Age Economics (1972)"
     },
     {
       "model": "Household and peasant economy",
       "best": "Inferred from its principle that households produce for their own needs, so small-scale preparation of remedies can meet local needs at low cost. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production serves household consumption rather than profit, so research and supply stop where a household has no surplus to trade, and rare or costly treatments go unmade. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+      "worst": "Inferred from its principle that production serves household consumption rather than profit, so research and supply stop where a household has no surplus to trade, and rare or costly treatments go unmade. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy (1925)"
     },
     {
       "model": "Redistributive economy",
       "best": "Inferred from its principle that a central authority collects resources and redistributes them, so a common store can fund drug research and supply to all who need it. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the centre allocates what it collects by rank, so supplies and research funds reach officials and favoured groups first, while ordinary patients receive what is left after allocation. There is no documented case in the pool. Source: Polanyi, The Great Transformation"
+      "worst": "Inferred from its principle that the centre allocates what it collects by rank, so supplies and research funds reach officials and favoured groups first, while ordinary patients receive what is left after allocation. There is no documented case in the pool. Source: Polanyi, The Great Transformation (1944)"
     },
     {
       "model": "Slave economy",
       "best": "Inferred from its principle that output is sold through trade, so remedies that owners can sell are produced in volume and moved quickly along established trade routes. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that people are owned as labour and denied education and property, so medical care is given only to keep the labour working, and drug research serves the owners' costs rather than the health of the enslaved. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+      "worst": "Inferred from its principle that people are owned as labour and denied education and property, so medical care is given only to keep the labour working, and drug research serves the owners' costs rather than the health of the enslaved. There is no documented case in the pool. Source: Williams, Capitalism and Slavery (1944)"
     },
     {
       "model": "Feudalism",
       "best": "Inferred from its principle that the manor is largely self-supplying, so a lord's estate may keep its own remedies and healers on hand for the people who owe it service. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that services are owed to a lord in return for land and protection, so access to remedies is tied to bonded service and to the manor, and tenants cannot seek treatment or supply elsewhere. There is no documented case in the pool. Source: Bloch, Feudal Society"
+      "worst": "Inferred from its principle that services are owed to a lord in return for land and protection, so access to remedies is tied to bonded service and to the manor, and tenants cannot seek treatment or supply elsewhere. There is no documented case in the pool. Source: Bloch, Feudal Society (1939-1940)"
     },
     {
       "model": "Guild economy",
       "best": "Inferred from its principle that craft statutes fix training and quality, so remedies are made to set standards by trained masters and journeymen. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that masters control entry and set the statutes, so new suppliers and new methods wait for admission, and a closed body decides which remedies may be made and sold. There is no documented case in the pool. Source: Epstein, Freedom and Growth"
+      "worst": "Inferred from its principle that masters control entry and set the statutes, so new suppliers and new methods wait for admission, and a closed body decides which remedies may be made and sold. There is no documented case in the pool. Source: Epstein, Freedom and Growth (2000)"
     },
     {
       "model": "Mercantilism",
       "best": "Inferred from its principle that the state aims for a trade surplus, so it can fund drug research and domestic production that reduce the need to import medicines. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state regulates production and trade for national gain, so research is steered toward goods that earn foreign exchange, and medicines may be held back from export when supply at home is thin. There is no documented case in the pool. Source: Heckscher, Mercantilism"
+      "worst": "Inferred from its principle that the state regulates production and trade for national gain, so research is steered toward goods that earn foreign exchange, and medicines may be held back from export when supply at home is thin. There is no documented case in the pool. Source: Heckscher, Mercantilism (1935)"
     },
     {
       "model": "Physiocracy",
       "best": "Inferred from its principle that only agriculture creates a net product, so farm output, including medicinal plants, is treated as the source of national wealth, and trade in those crops is kept free. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a single tax on land should fund the state, so drug research and supply are paid for only from land rent, leaving other medical work with little public funding. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy"
+      "worst": "Inferred from its principle that a single tax on land should fund the state, so drug research and supply are paid for only from land rent, leaving other medical work with little public funding. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy (1962)"
     },
     {
       "model": "Classical laissez-faire capitalism",
       "best": "Inferred from its principle that competitive markets reward firms that bring useful drugs to market, while the state protects property and contracts and otherwise stays out. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state protects contracts and otherwise stays out, so no public body funds or checks drug research, and prices and supply follow what buyers can pay. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+      "worst": "Inferred from its principle that the state protects contracts and otherwise stays out, so no public body funds or checks drug research, and prices and supply follow what buyers can pay. There is no documented case in the pool. Source: Smith, The Wealth of Nations (1776)"
     },
     {
       "model": "Austrian free-market economics",
       "best": "Inferred from its principle that prices carry knowledge spread across many firms, so drug prices set by many buyers and sellers show which treatments are worth making. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that state planning and credit expansion distort production, so public drug research and supply plans can send money toward projects that are later abandoned, with no price signal to correct them. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society"
+      "worst": "Inferred from its principle that state planning and credit expansion distort production, so public drug research and supply plans can send money toward projects that are later abandoned, with no price signal to correct them. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society (1945)"
     },
     {
       "model": "Monetarist neoliberalism",
       "best": "The Bayh-Dole Act of 1980 replaced a patchwork of agency rules with one framework, and it let universities patent federally funded discoveries and license them to companies on an exclusive basis. None of the sources for this case is a causal evaluation of the Act.",
-      "worst": "Inferred from its principle that deregulation and privatisation shrink the state's role in drug research and supply, so price and access are left to firms and to open trade, with no public check on how supplies are shared. There is no documented case in the pool. Source: Harvey, A Brief History of Neoliberalism"
+      "worst": "Inferred from its principle that deregulation and privatisation shrink the state's role in drug research and supply, so price and access are left to firms and to open trade, with no public check on how supplies are shared. There is no documented case in the pool. Source: Harvey, A Brief History of Neoliberalism (2005)"
     },
     {
       "model": "Keynesian welfare capitalism",
       "best": "Inferred from its principle that public spending rises in slumps, so governments can fund drug research and stockpiles in downturns, keeping research jobs and supply steady. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that spending is cut in booms, so drug research and supply budgets fall when the economy is strong, and the stock of new treatments shrinks in good years. There is no documented case in the pool. Source: Beveridge, Social Insurance and Allied Services"
+      "worst": "Inferred from its principle that spending is cut in booms, so drug research and supply budgets fall when the economy is strong, and the stock of new treatments shrinks in good years. There is no documented case in the pool. Source: Beveridge, Social Insurance and Allied Services (1942)"
     },
     {
       "model": "Social market economy",
       "best": "Germany's early benefit assessment of new drugs (AMNOG), from 2011, gave an added benefit to 7 drugs at the institute IQWiG and to 10 at the Federal Joint Committee in the first 14 assessments finalised by June 2012. Those 2012 figures come from a company-linked abstract covering only those 14 processes.",
-      "worst": "Inferred from its principle that competitive firms operate inside a legal order that curbs monopoly, so a drug with no close rival may still be priced high if the curbs are not applied to it. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft"
+      "worst": "Inferred from its principle that competitive firms operate inside a legal order that curbs monopoly, so a drug with no close rival may still be priced high if the curbs are not applied to it. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft (1947)"
     },
     {
       "model": "Nordic social democracy",
       "best": "Inferred from its principle that universal public services are financed by high taxes and reach everyone, so new treatments can reach patients by need rather than by income. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that universal services are financed by high taxes, so the budget for new drugs is set centrally, and patients may wait for a treatment until the budget allows it. There is no documented case in the pool. Source: Saltsjöbaden Agreement"
+      "worst": "Inferred from its principle that universal services are financed by high taxes, so the budget for new drugs is set centrally, and patients may wait for a treatment until the budget allows it. There is no documented case in the pool. Source: Saltsjöbaden Agreement (1938)"
     },
     {
       "model": "Developmental state",
       "best": "Inferred from its principle that the state directs credit to chosen industries and disciplines firms by performance, so public research money goes to priority medicines, and firms that miss their targets lose support. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state picks the sectors it backs, so drug research may favour chosen firms and medicines, while work outside the targets receives less funding and attention. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle"
+      "worst": "Inferred from its principle that the state picks the sectors it backs, so drug research may favour chosen firms and medicines, while work outside the targets receives less funding and attention. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982)"
     },
     {
       "model": "Georgism",
       "best": "Inferred from its principle that a tax on the value of land funds public services, so public drug research and health facilities can be paid for without taxing the work of researchers. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that drug research and supply are paid for from land rent alone, so the funds for medicines rise and fall with land values rather than with health needs. There is no documented case in the pool. Source: George, Progress and Poverty"
+      "worst": "Inferred from its principle that drug research and supply are paid for from land rent alone, so the funds for medicines rise and fall with land values rather than with health needs. There is no documented case in the pool. Source: George, Progress and Poverty (1879)"
     },
     {
       "model": "Utopian socialism",
       "best": "Inferred from its principle that cooperative communities share knowledge and production by example, so small groups can test and share treatments openly. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that planned associations are built by example, so research and supply depend on a few communities, and the drugs they make may not reach people outside them. There is no documented case in the pool. Source: Fourier, Le Nouveau Monde industriel"
+      "worst": "Inferred from its principle that planned associations are built by example, so research and supply depend on a few communities, and the drugs they make may not reach people outside them. There is no documented case in the pool. Source: Fourier, Le Nouveau Monde industriel (1829)"
     },
     {
       "model": "Mutualism",
       "best": "Inferred from its principle that mutual credit lets researchers and makers keep the full value of their work, and banks lend at cost, so the costs of drug development fall for producers. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that rent on property is abolished, so the reward for holding a patent or a formula falls away, and costly trials may lack the private funding that such rewards would draw. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+      "worst": "Inferred from its principle that rent on property is abolished, so the reward for holding a patent or a formula falls away, and costly trials may lack the private funding that such rewards would draw. There is no documented case in the pool. Source: Proudhon, What Is Property? (1840)"
     },
     {
       "model": "Cooperative economy",
       "best": "Inferred from its principle that members who own and control a firm share its surplus between users and workers, so patients and staff of a drug-making cooperative can both shape pricing and supply. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that members own and control firms and share the surplus, so drug makers organised as cooperatives may favour their members' markets and keep research close to what members can afford. There is no documented case in the pool. Source: Mondragón cooperatives"
+      "worst": "Inferred from its principle that members own and control firms and share the surplus, so drug makers organised as cooperatives may favour their members' markets and keep research close to what members can afford. There is no documented case in the pool. Source: Mondragón cooperatives (from 1956)"
     },
     {
       "model": "Anarcho-communism",
       "best": "Inferred from its principle that goods are shared according to need within federated communes, so drugs are made and given where they are needed, without sale. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that there are no wages and no state, so drug research has no stable funding and no body to set standards, and supply depends on what communes choose to make. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+      "worst": "Inferred from its principle that there are no wages and no state, so drug research has no stable funding and no body to set standards, and supply depends on what communes choose to make. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread (1892)"
     },
     {
       "model": "Syndicalism",
       "best": "Inferred from its principle that workers' organisations run industry directly, so the people who make drugs can set safety and supply rules on the shop floor. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that strikes are the main weapon of trade unions, so supply of medicines can be halted in disputes, and patients bear the cost of stoppages that do not concern them. There is no documented case in the pool. Source: Founding of the French CGT"
+      "worst": "Inferred from its principle that strikes are the main weapon of trade unions, so supply of medicines can be halted in disputes, and patients bear the cost of stoppages that do not concern them. There is no documented case in the pool. Source: Founding of the French CGT (1895)"
     },
     {
       "model": "Fabian socialism",
       "best": "Inferred from its principle that a national minimum of welfare is set by public enterprise, so public bodies can produce essential drugs and guarantee a basic supply to every citizen. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that change comes gradually through public enterprise, so new drugs may reach patients slowly while public capacity is built up. There is no documented case in the pool. Source: Founding of the Fabian Society"
+      "worst": "Inferred from its principle that change comes gradually through public enterprise, so new drugs may reach patients slowly while public capacity is built up. There is no documented case in the pool. Source: Founding of the Fabian Society (1884)"
     },
     {
       "model": "Guild socialism",
       "best": "Inferred from its principle that workers and consumers share control of industry through councils, so drug makers and patients can both have a voice in research priorities and supply. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state is one partner among several, so no single body is clearly accountable for drug research or supply, and decisions may stall between the councils. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+      "worst": "Inferred from its principle that the state is one partner among several, so no single body is clearly accountable for drug research or supply, and decisions may stall between the councils. There is no documented case in the pool. Source: Cole, Self-Government in Industry (1917)"
     },
     {
       "model": "Command socialism",
@@ -126,66 +126,66 @@
     {
       "model": "Market socialism",
       "best": "Inferred from its principle that public ownership with market prices lets managers follow prices, so drug output can respond to demand while a central board sets the rules for research. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a central board sets the rules and the investment, so drug research budgets depend on board decisions, and firms that follow prices may under-fund research for medicines with small markets. There is no documented case in the pool. Source: Yugoslav workers' self-management"
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, so drug research budgets depend on board decisions, and firms that follow prices may under-fund research for medicines with small markets. There is no documented case in the pool. Source: Yugoslav workers' self-management (1950s)"
     },
     {
       "model": "Marxian communism",
       "best": "Inferred from its principle that distribution follows need once classes disappear, so medicines are provided according to what each person requires. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that distribution follows need, with no price signal, so the means to judge how much research and supply are needed are left open, and stocks may run short or pile up. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+      "worst": "Inferred from its principle that distribution follows need, with no price signal, so the means to judge how much research and supply are needed are left open, and stocks may run short or pile up. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme (1875)"
     },
     {
       "model": "Chinese market socialism",
       "best": "Inferred from its principle that public ownership of key sectors sits alongside markets and special zones, so drug makers can test prices and new supply arrangements in limited areas before wider use. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that gradual price reform proceeds under party direction, so prices for drugs may change slowly and unevenly, and firms in special zones may gain access that others lack. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+      "worst": "Inferred from its principle that gradual price reform proceeds under party direction, so prices for drugs may change slowly and unevenly, and firms in special zones may gain access that others lack. There is no documented case in the pool. Source: Naughton, The Chinese Economy (2007)"
     },
     {
       "model": "Participatory economics",
       "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, so research priorities and drug supply can be set by those who make and use medicines. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that neither markets nor central planners allocate, so repeated rounds of proposals may take a long time, and urgent supply of new drugs may wait for the cycle to finish. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+      "worst": "Inferred from its principle that neither markets nor central planners allocate, so repeated rounds of proposals may take a long time, and urgent supply of new drugs may wait for the cycle to finish. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward (1991)"
     },
     {
       "model": "Corporatism and fascist economics",
       "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, so the state can direct drug research and production toward national health and defence aims. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, so drug research and supply may be pulled toward military needs, and civilian patients may wait for medicines. There is no documented case in the pool. Source: Italian corporative law"
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, so drug research and supply may be pulled toward military needs, and civilian patients may wait for medicines. There is no documented case in the pool. Source: Italian corporative law (1934)"
     },
     {
       "model": "Islamic economics",
       "best": "Inferred from its principle that finance shares profit and risk rather than charging interest, so research and production can be funded by partnerships that share the risk of failure. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that trust underpins contracts, so drug research relies on shared trust between parties, and where trust is weak the financing of costly trials and supply may be hard to secure. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System"
+      "worst": "Inferred from its principle that trust underpins contracts, so drug research relies on shared trust between parties, and where trust is weak the financing of costly trials and supply may be hard to secure. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985)"
     },
     {
       "model": "Buddhist economics",
       "best": "Inferred from its principle that production is small-scale, local and non-violent, so drugs are made in small units close to the people who use them, with moderate use of resources. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production is kept small, so the large trials, factories and stockpiles that some treatments need may not be built, and research for rare conditions may go unfunded. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful"
+      "worst": "Inferred from its principle that production is kept small, so the large trials, factories and stockpiles that some treatments need may not be built, and research for rare conditions may go unfunded. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful (1973)"
     },
     {
       "model": "Distributism",
       "best": "Inferred from its principle that widespread small enterprise and subsidiarity keep decisions with the smallest competent body, so local makers and clinics can decide which drugs to stock and supply. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that small enterprise is widely spread, so large and costly research programmes that need a big firm or a central body may be harder to fund and coordinate. There is no documented case in the pool. Source: Belloc, The Servile State"
+      "worst": "Inferred from its principle that small enterprise is widely spread, so large and costly research programmes that need a big firm or a central body may be harder to fund and coordinate. There is no documented case in the pool. Source: Belloc, The Servile State (1912)"
     },
     {
       "model": "Steady-state and degrowth economics",
       "best": "Inferred from its principle that economic activity stays within planetary limits, so drug research and supply are sized to health needs, with a social floor that guarantees basic treatment for everyone. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that there is no growth imperative, so investment in new drugs may be held back even where demand is high, and the stock of treatments may not expand to meet a growing population. There is no documented case in the pool. Source: Raworth, Doughnut Economics"
+      "worst": "Inferred from its principle that there is no growth imperative, so investment in new drugs may be held back even where demand is high, and the stock of treatments may not expand to meet a growing population. There is no documented case in the pool. Source: Raworth, Doughnut Economics (2017)"
     },
     {
       "model": "Universal basic income",
       "best": "Inferred from its principle that every citizen receives an unconditional income, so patients can afford treatment and can decline a drug they do not need, without being forced into work to pay for it. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that income is paid regardless of need, so money for medicines is spread across everyone, and the cost of expensive treatment is not tied to the patients who need it. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All"
+      "worst": "Inferred from its principle that income is paid regardless of need, so money for medicines is spread across everyone, and the cost of expensive treatment is not tied to the patients who need it. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All (1995)"
     },
     {
       "model": "Modern monetary theory",
       "best": "Inferred from its principle that a government which issues its own currency can fund full employment, so drug research and supply can be financed directly, with inflation as the real limit. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so public funding for drugs may be expanded without a clear ceiling, and the price of medicines can rise faster than supply follows. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so public funding for drugs may be expanded without a clear ceiling, and the price of medicines can rise faster than supply follows. There is no documented case in the pool. Source: Kelton, The Deficit Myth (2020)"
     },
     {
       "model": "Commons governance",
-      "best": "The Medicines Patent Pool negotiates voluntary licences for medicines, and roughly 22 million patient-years of treatment have been supplied through licensed generics. The pool's founding date differs between sources.",
-      "worst": "Inferred from its principle that a shared resource needs rules that are monitored and enforced, so pool licences that cover only some drugs or countries can leave gaps that no rule closes. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+      "best": "The Medicines Patent Pool and voluntary licences: the pool negotiates voluntary licences for medicines, and roughly 22 million patient-years of treatment have been supplied through licensed generics. The pool's founding date differs between sources.",
+      "worst": "Inferred from its principle that a shared resource needs rules that are monitored and enforced, so pool licences that cover only some drugs or countries can leave gaps that no rule closes. There is no documented case in the pool. Source: Ostrom, Governing the Commons (1990)"
     }
   ],
   "compromise": {
     "summary": "A public research and licensing framework for new drugs. Public money funds early research, licences to makers are voluntary and shared, and a benefit check comes before wide use and before a price is set. Shortages are reported in public and acted on regionally.",
-    "details": "Keeps: licensing of federally funded discoveries to companies, from The Bayh-Dole Act of 1980 (Monetarist neoliberalism); benefit checks before price is set, from Germany's early benefit assessment of new drugs (AMNOG), from 2011 (Social market economy); voluntary licences that share patents, from The Medicines Patent Pool and voluntary licences (Commons governance). Blocks: exclusive licences that keep a drug from patients, with a safeguard that a licence can be shared when supply is short; shortages that go unseen, with a safeguard of a public monthly stock register; and allocation by rank rather than need, with a safeguard of published criteria for every grant. Test: over ten years, measure licensed drugs, price per treatment year, and stock-outs reported each quarter. Source: ITIF, How the Bayh-Dole Act Supercharged Innovation; ISPOR, AMNOG Benefit Assessment in Germany; PLOS ONE (2017) on the Medicines Patent Pool; Cambridge University Press review of a book on Soviet planning, for the shortage block; models' sources for inferred principles: Harvey, A Brief History of Neoliberalism, and Polanyi, The Great Transformation."
+    "details": "Keeps: licensing of federally funded discoveries to companies, from The Bayh-Dole Act of 1980 (Monetarist neoliberalism); benefit checks of new drugs, from Germany's early benefit assessment of new drugs (AMNOG), from 2011 (Social market economy); voluntary licences for medicines, from The Medicines Patent Pool and voluntary licences (Commons governance). Blocks: price and access left to firms, with a safeguard that a licence can be shared when supply is short; planned production that falls short of ample supply, with a safeguard of a public monthly stock register; and allocation by rank, with a safeguard of published criteria for every grant. Test: over a fixed period, measure licensed drugs, price per treatment year, and stock-outs reported each quarter. Source: ITIF, How the Bayh-Dole Act Supercharged Innovation; ISPOR, AMNOG Benefit Assessment in Germany; PLOS ONE (2017) on the Medicines Patent Pool; Cambridge University Press review of a book on Soviet planning, for the shortage block; models' sources: Harvey, A Brief History of Neoliberalism (2005), and Polanyi, The Great Transformation (1944)."
   }
 }
