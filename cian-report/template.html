@@ -98,6 +98,9 @@ h1, h2, h3 { font-family: var(--display); font-weight: 400; letter-spacing: -.02
   background: var(--ink); color: var(--accent); font-family: var(--display); font-size: 7.5pt; font-weight: 500;
   display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 .8mm #fff, 0 1.5mm 4mm rgba(0,0,0,.35);
 }
+.overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+.overlay .pin rect { fill: var(--ink); stroke: #fff; }
+.overlay .pin text { fill: var(--accent); font-family: var(--display); font-weight: 500; text-anchor: middle; }
 .mk.pill { width: auto; padding: 0 2.4mm; border-radius: 99px; white-space: nowrap; }
 .mk.big { width: 11mm; height: 11mm; font-size: 10pt; }
 .mk.big::after { content: ""; position: absolute; inset: -4.5mm; border-radius: 50%; border: .5mm solid var(--ink); opacity: .35; }
@@ -266,9 +269,7 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 8.4pt; }
     <div class="ov">
       <div class="mapbox">
         <img src="{{ overview_map }}" alt="Карта объектов">
-        {% for c in maps.overview.clusters %}
-        <div class="mk{% if c.orders|length > 1 %} pill{% endif %}" style="left: {{ c.left }}%; top: {{ c.top }}%">{{ c.orders|join(' · ') }}</div>
-        {% endfor %}
+        {{ overview_svg|safe }}
       </div>
       <div class="ov-list">
         <div class="eyebrow">Объекты подборки</div>

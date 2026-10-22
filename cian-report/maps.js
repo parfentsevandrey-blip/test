@@ -57,9 +57,10 @@ function centredClip(view, w, h) {
   await page.close();
 
   // Overview: frame the bounding box of all listings at a fixed zoom.
-  const oview = { width: 1500, height: 1250 };
+  const oview = { width: 1200, height: 1320 };
   const opage = await browser.newPage({ viewport: oview, deviceScaleFactor: 2, locale: 'ru-RU' });
-  const oclip = centredClip(oview, 1300, 1060);
+  // Same aspect as the overview frame in the report (158 × 176 mm).
+  const oclip = centredClip(oview, 1060, 1180);
   const z = 14;
   const pts = listings.map(i => ({ id: i.id, order: i.order, ...project(i.coords.lat, i.coords.lng, z) }));
   const cx = (Math.min(...pts.map(p => p.x)) + Math.max(...pts.map(p => p.x))) / 2;

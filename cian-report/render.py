@@ -87,19 +87,32 @@ def bar_chart(items):
     return "".join(parts)
 
 
-def cluster_markers(markers, radius=3.2):
-    """Merge markers that would overlap (same or neighbouring buildings) into one pill."""
-    out = []
-    for m in sorted(markers, key=lambda m: m["order"]):
-        near = next((c for c in out if abs(c["left"] - m["left"]) < radius and abs(c["top"] - m["top"]) < radius * 1.2), None)
+def overview_svg(ov, r=21):
+    """Numbered markers as an SVG in the screenshot's pixel space.
+    preserveAspectRatio "slice" crops exactly like the <img>'s object-fit:
+    cover, so markers stay on their addresses whatever the frame's shape.
+    Markers that would overlap (same or neighbouring buildings) merge into one pill."""
+    w, h = ov["w"], ov["h"]
+    placed = []
+    for m in sorted(ov["markers"], key=lambda m: m["order"]):
+        x, y = m["left"] / 100 * w, m["top"] / 100 * h
+        near = next((p for p in placed if abs(p["x"] - x) < r * 2.1 and abs(p["y"] - y) < r * 2.1), None)
         if near:
-            near["orders"].append(m["order"])
-            n = len(near["orders"])
-            near["left"] = (near["left"] * (n - 1) + m["left"]) / n
-            near["top"] = (near["top"] * (n - 1) + m["top"]) / n
+            near["labels"].append(str(m["order"]))
+            n = len(near["labels"])
+            near["x"] += (x - near["x"]) / n
+            near["y"] += (y - near["y"]) / n
         else:
-            out.append({"left": m["left"], "top": m["top"], "orders": [m["order"]]})
-    return out
+            placed.append({"x": x, "y": y, "labels": [str(m["order"])]})
+    out = [f'<svg class="overlay" viewBox="0 0 {w} {h}" preserveAspectRatio="xMidYMid slice">']
+    for p in placed:
+        text = " · ".join(p["labels"])
+        half = max(r, r * 0.42 * len(text) + r * 0.55)
+        out.append(f'<g class="pin"><rect x="{p["x"] - half:.1f}" y="{p["y"] - r:.1f}" width="{2 * half:.1f}" '
+                   f'height="{2 * r:.1f}" rx="{r:.1f}" style="stroke-width:{r * 0.22:.1f}px"/>'
+                   f'<text x="{p["x"]:.1f}" y="{p["y"] + r * 0.36:.1f}" style="font-size:{r * 0.95:.1f}px">{text}</text></g>')
+    out.append("</svg>")
+    return "".join(out)
 
 
 def feature(it, label):
@@ -125,7 +138,6 @@ def main():
         year = feature(it, "Год постройки")
         it["year"] = int(year) if year and year.isdigit() else (
             it["building"]["year"] or (it["jk"]["finish"] or {}).get("year") if it["jk"] else it["building"]["year"])
-    maps["overview"]["clusters"] = cluster_markers(maps["overview"]["markers"])
 
     # Group listings by complex, in the order complexes first appear.
     groups = []
@@ -167,7 +179,7 @@ def main():
     env.globals.update(plural=plural)
     html = env.get_template("template.html").render(
         listings=listings, groups=groups, stats=stats, maps=maps,
-        overview_map=map_jpeg("overview"), chart=bar_chart(listings),
+        overview_map=map_jpeg("overview"), overview_svg=overview_svg(maps["overview"]), chart=bar_chart(listings),
         cover=next(g["hero"] for g in groups if g["jk"].get("id") == 3401216) if any(
             g["jk"].get("id") == 3401216 for g in groups) else groups[0]["hero"],
         date="21 октября 2026",
