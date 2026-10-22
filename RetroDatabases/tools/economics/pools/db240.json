@@ -1,0 +1,83 @@
+{
+  "database": 240,
+  "practice": "Sport and professional leagues",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "SP1",
+      "case": "Dynamo, the Soviet state security sports society",
+      "years": "1923 onward (Soviet period)",
+      "claim": "The Dynamo sports society was created in 1923, with the GPU as sponsor, at Dzerzhinsky's push. It was the sports wing of Soviet state security, a lineage that traced back to the Cheka and OGPU. Its athletes were supplied by the NKVD, and after World War II by the MVD and KGB. In the Soviet period, top Dynamo athletes held formal service ranks, so their pay and pensions came with that status.",
+      "source": "online encyclopaedia (secondary)",
+      "url": "https://en.wikipedia.org/wiki/Dynamo_Sports_Club",
+      "caveat": "Known from search excerpts of one encyclopaedia entry, which was not opened. No Soviet budget, ministry or enterprise sports-fund figures were found, so state funding appears here only as sponsorship and service-rank pay. The entry's facility count is flagged as unsourced and is left out. Accounts of other societies, such as Spartak, differ and are not used.",
+      "relevant_to": [
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "SP2",
+      "case": "Green Bay Packers' community ownership",
+      "years": "1923 onward",
+      "claim": "Residents began buying shares in the Green Bay Packers in 1923, when the club was nearly broke. An older Mental Floss article gives 112,150 shareholders and says individual holdings are capped at 200,000 shares, a limit that discourages hostile takeovers.",
+      "source": "Mental Floss, popular magazine article (year not shown in the result)",
+      "url": "https://www.mentalfloss.com/article/27709/how-people-green-bay-came-own-packers",
+      "caveat": "Known from search excerpts; the article was not opened. The numbers conflict across results: a local TV page gives 363,948 holders, a 2025 count gives 538,967 (source not named), and the Mental Floss figure is older. One result gives first share prices of 50 and 100 US dollars, which conflicts with a first share sale of about 5,000 US dollars reported elsewhere. Another dates a local-investor sale to 1929, which conflicts with the 1923 to 1935 corporate timeline. No result is an official team source, so check figures against team materials.",
+      "relevant_to": [
+        "Cooperative economy",
+        "Commons governance"
+      ]
+    },
+    {
+      "id": "SP3",
+      "case": "Nazi appointment of a Reich sports commissioner",
+      "years": "1933",
+      "claim": "In April 1933 Nazi authorities put Hans von Tschammer und Osten in charge of gymnastics and sport as Reich commissioner. His tenure as Reichssportführer began on 19 July 1933.",
+      "source": "online encyclopaedia (secondary)",
+      "url": "https://en.wikipedia.org/wiki/Hans_von_Tschammer_und_Osten",
+      "caveat": "Known from search excerpts of one encyclopaedia entry, which was not opened; no primary source was found. The results also say that left-wing and church-linked sports groups were outlawed in 1933 and that working-class clubs largely dissolved in the first half of that year, but no cited page is shown to say so, so those points are left out. A separate encyclopaedia entry gives 27 July 1934 for the national league, and that date is not used here.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "SP4",
+      "case": "Breakaway that formed the Premier League",
+      "years": "1992 to 1993",
+      "claim": "In 1992 a group of First Division clubs broke away from the Football League to set up a separate top-flight competition. The feature titled 'How the Premier League breakaway happened' covers that competition's first season, 1992/93, through the recollections of people involved.",
+      "source": "FourFourTwo, football magazine feature on the first Premier League season (year not shown in the result)",
+      "url": "https://www.fourfourtwo.com/features/remembered-premier-leagues-first-ever-season-dodgy-blazers-sky-and-shower-scenes",
+      "caveat": "Known from the feature's title and search excerpts; the feature was not opened, and it is a magazine piece built on recollections. Most search excerpts give a Sky deal of about £304 million from May 1992, but no result ties that figure to this page, so it is not used. No result says how broadcast money was shared among clubs, so this case supports no revenue-sharing claim. Search excerpts also link the breakaway to broadcast money, but not to this page.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "SP5",
+      "case": "Bosman ruling on player transfers",
+      "years": "1990 to 1995",
+      "claim": "Jean-Marc Bosman's contract with RFC Liège ran out in 1990, and a planned move to Dunkerque collapsed over the fee Liège demanded. In 1995 the European Court of Justice (case C-415/93) found that the transfer system restricted workers' free movement and breached Article 39(1) of the EC Treaty, and held that EU law reaches sport only as far as it amounts to economic activity. Players whose contracts had expired could then sign for a club in a different EU football association without a fee; nationality limits on EU players in domestic leagues were struck down; and UEFA dropped its three-foreigner squad limit in its competitions. Fees that fell due before the judgment were exempt from its retrospective reach. Most summaries limit the free-transfer right to moves between clubs in different EU football associations, but one outlet applies it to UEFA-registered clubs.",
+      "source": "European Court of Justice, judgment in case C-415/93 (1995), as summarised in a Higher School of Economics legal precedent catalogue; football press features (years not shown)",
+      "url": "https://precedent.hse.ru/en/catalog/134633117",
+      "caveat": "Known from search excerpts; neither the judgment nor the catalogue entry was opened, and the day of the judgment is not in the results. One piece calls the Bosman Rule a 1995 regulation, while most describe a court ruling. Effects and background come from secondary coverage, not the judgment text. One explainer's view that the ruling shifted bargaining power to players is opinion and is not used.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "SP6",
+      "case": "German 50+1 rule on club ownership",
+      "years": "not dated in the results",
+      "claim": "Eligibility to compete in the DFL's leagues depends on members holding a majority of the votes, set at 50 percent plus one, and the requirement sits in the top flight's regulations. Even when outside financiers acquire a large stake, the majority of votes stays with members. The stated aim is to keep fans from being recast as customers. Sources disagree: critics say the rule holds back expansion in a commercial market, while supporters say it shields clubs against outside funding.",
+      "source": "Bundesliga website, explainer (year not shown in the result)",
+      "url": "https://www.bundesliga.com/en/faq/what-are-the-rules-and-regulations-of-soccer/50-1-fifty-plus-one-german-football-soccer-rule-explained-ownership-22832",
+      "caveat": "Known from one search excerpt of an explainer; the page was not opened. No DFL rulebook text was found, and the results give no date for when the rule was adopted and do not cover exceptions to it. The critics' and supporters' views are not attributed to named people.",
+      "relevant_to": [
+        "Social market economy",
+        "Cooperative economy"
+      ]
+    }
+  ]
+}

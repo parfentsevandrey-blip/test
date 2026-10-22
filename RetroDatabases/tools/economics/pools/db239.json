@@ -1,0 +1,83 @@
+{
+  "database": 239,
+  "practice": "Copyright and cultural property",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "CP1",
+      "case": "Statute of Anne (first copyright act)",
+      "years": "1710 (some sources say 1709)",
+      "claim": "The Statute of Anne of 1710 is reported to give a new book a first term of fourteen years, with a second fourteen-year term going to the author if still living when the first ended. Books already printed received a 21-year term. The royal assent is given as 5 April 1710. Sources disagree on the name and year: some call it the Copyright Act 1709, others 1710.",
+      "source": "History of Information online entry on the Statute of Anne, The First Copyright Statute (year not shown)",
+      "url": "https://www.historyofinformation.com/detail.php?id=2955",
+      "caveat": "The terms, the assent date and the naming come from search summaries. The cited entry was not read in full, and the statute's text and the British Library were not reached, so check the terms against the entry before use. A U.S. Intellectual History blog post in the results argues that the act aimed at the manufacturing side of the book trade rather than creative content, which cuts against reading it as a creators' right. Results also give different years (1692 or 1694) for when a London printers' guild lost its legal footing.",
+      "relevant_to": [
+        "Guild economy",
+        "Mercantilism"
+      ]
+    },
+    {
+      "id": "CP2",
+      "case": "US Copyright Term Extension Act of 1998",
+      "years": "1998 (act); 2002 (brief)",
+      "claim": "The Copyright Term Extension Act of 1998 lengthened US copyright by twenty years and reaches both existing and future works, as framed in a Brookings-hosted copy of a 2002 amicus brief. In May 2002 seventeen economists, five of them Nobel laureates, filed that brief in Eldred v. Ashcroft and judged that the economic gains were very unlikely to exceed the added costs. Their central point is that money from the added years is worth almost nothing once discounted, while protecting older works creates monopoly losses and makes new derivative works costlier to make. The signatories' ideological views ranged from Kenneth Arrow to Milton Friedman.",
+      "source": "Brookings-hosted copy of a 2002 amicus brief by seventeen economists (Eldred v. Ashcroft)",
+      "url": "https://www.brookings.edu/research/the-copyright-term-extension-act-of-1998-an-economic-analysis/",
+      "caveat": "This is one side's advocacy brief, not an empirical study of the act, and the results do not give the Act's text, the court's decision or any later data. A law-and-economics article in the Economics Working Paper Archive (EconWPA) pushes back on the brief, saying it skipped some points, misread others and relied on assumptions that other data contradicts, so sources disagree on the economics.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "CP3",
+      "case": "Berne Convention (1886)",
+      "years": "1886",
+      "claim": "A University of Michigan law review abstract lists national treatment, the abolition of formalities, a life-plus-fifty term and a moral-rights requirement among the key provisions of the 1886 Berne Convention.",
+      "source": "University of Michigan law review abstract (year not shown)",
+      "url": "https://repository.law.umich.edu/mttlr/vol23/iss1/5",
+      "caveat": "The treaty text was not reached, and the abstract's year is not shown. Other results place the moral-rights provision in the 1928 Rome revision, so the abstract's grouping of it under 1886 is loose. One encyclopaedia-style entry in the results dates the life-plus-fifty minimum to the 1967 Stockholm revision, which conflicts with the abstract; that entry has dubious claims and citations, so it is not used.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "CP4",
+      "case": "A&M Records v. Napster",
+      "years": "2001",
+      "claim": "A&M Records v. Napster, reported at 239 F.3d 1004 (9th Cir. 2001), concerned a peer-to-peer service that let users find and copy MP3 recordings stored on one another's computers. A Stanford WILMap case entry summarises the preliminary injunction as placing notice duties on the plaintiffs and search duties on Napster, and says courts may require internet service providers to adopt filtering.",
+      "source": "Stanford WILMap case entry on A&M Records v. Napster (case citation 2001)",
+      "url": "https://wilmap.stanford.edu/node/30333",
+      "caveat": "The source is a case-entry summary and a citation, not the opinion, and the results do not give the court's full disposition or any later events. The description of the service is from the search summary and was not checked against the entry. A law-firm analysis in the results reports that the panel was unanimous and rejected Napster's arguments one by one, but it is not the cited source.",
+      "relevant_to": [
+        "Commons governance",
+        "Anarcho-communism"
+      ]
+    },
+    {
+      "id": "CP5",
+      "case": "Stagma, state-approved music-rights society in Germany",
+      "years": "1933",
+      "claim": "An Austrian literary-history web book in German reports that Stagma, a state-approved society presented as the successor to the Musikschutzverband, held an extraordinary general meeting in Berlin in September 1933, following the society's monopolisation in Germany. The passage gives both 20 and 22 September for the meeting.",
+      "source": "Austria Forum web book, an Austrian literary history in German (year not shown)",
+      "url": "https://austria-forum.org/web-books/literaturoesterreich00de2021isds/000232",
+      "caveat": "This is a short passage in a secondary literary-history book, and the meeting date is unclear. The results do not confirm that Stagma later became GEMA: one search summary gives 1947 for the name change, but no result covers it. Most hits for the GEMA name were about an unrelated radar firm. GEMA membership figures in other results also conflict and are not used here.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "CP6",
+      "case": "Denmark's public lending right",
+      "years": "1946",
+      "claim": "Canada's public lending right history timeline credits Denmark with pioneering library compensation in 1946. A 1977 journal abstract on the Erudit platform says the Danish parliament had adopted the 'new right' by 1946.",
+      "source": "Canadian public lending right history timeline (year not shown); 1977 journal abstract on the Erudit platform",
+      "url": "https://publiclendingright.ca/about/history",
+      "caveat": "The 1946 date comes from a Canadian programme timeline and a brief abstract, not from the Danish law itself. The results agree on 1946 but give no amounts for the early payments and do not say how they were set or funded.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    }
+  ]
+}
