@@ -45,7 +45,7 @@
     },
     {
       "model": "Classical laissez-faire capitalism",
-      "best": "John Lewis Partnership: the staff trusts of 1929 and 1950: company history sources date the First Trust Settlement to 18 April 1929, placing the shares of Spedan Lewis in trustees acting for staff. The timeline comes from the company's own pages, and the start date is disputed, with one encyclopaedic summary giving 1920.",
+      "best": "John Lewis Partnership: the staff trusts of 1929 and 1950: company history sources date the First Trust Settlement to 18 April 1929, placing the shares of Spedan Lewis in trustees acting for staff. The timeline comes from the company's own pages, which have a stake in the story and were read only as summaries, and the start date is disputed, with one encyclopaedic summary giving 1920.",
       "worst": "Inferred from its principle that the state protects property and contracts and otherwise stays out, so owners alone decide, and workers have no legal right to a share in the firm or a seat on its board. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
     },
     {
@@ -55,7 +55,7 @@
     },
     {
       "model": "Monetarist neoliberalism",
-      "best": "US employee stock ownership plans and firm survival: firms where employees held at least 5% showed roughly a 24% lower chance of disappearing from 1988 to 2001, and such ownership is one route open under market-led rules. The evidence is observational, the two studies share a co-author so they are not independent checks, one is known only from an excerpt, and the measure also counts profit-sharing and 401(k) stock.",
+      "best": "US employee stock ownership plans and firm survival: firms where employees held at least 5% showed roughly a 24% lower chance of disappearing from 1988 to 2001. The evidence is observational, the two studies share a co-author so they are not independent checks, one is known only from an excerpt, and the measure also counts profit-sharing and 401(k) stock.",
       "worst": "Inferred from its principle that privatisation sells state firms to owners and deregulation removes controls, so workers gain no legal right to ownership or board seats and keep a say only where new owners choose to give one. There is no documented case in the pool. Source: Friedman, Capitalism and Freedom; Harvey, A Brief History of Neoliberalism"
     },
     {
@@ -96,7 +96,7 @@
     {
       "model": "Cooperative economy",
       "best": "Worker-recovered factories in Argentina: a retrospective article citing UBA and INAES registry data reports more than 400 recovered firms still operating. The figure comes from that one article, the excerpt does not show the registry years, and counts vary widely.",
-      "worst": "Worker-recovered factories in Argentina: a Peter Ranis analysis suggests only about 150 were still operating when judged by productivity gains, so not every worker-run firm passes that test. The Ranis figure is a judgement based on productivity, its page is not linked, and no consistent series of counts was found. Source: 'Self-management in Argentina 20 Years After 2001' (publisher and year not shown in the excerpt), citing UBA and INAES registry data; Peter Ranis, analysis of worker-run enterprises in Argentina (year not shown)"
+      "worst": "Worker-recovered factories in Argentina: a Peter Ranis analysis suggests only about 150 were still operating when judged by productivity gains, so not every recovered firm passes that test. The Ranis figure is a judgement based on productivity, its page is not linked, and no consistent series of counts was found. Source: 'Self-management in Argentina 20 Years After 2001' (publisher and year not shown in the excerpt), citing UBA and INAES registry data; Peter Ranis, analysis of worker-run enterprises in Argentina (year not shown)"
     },
     {
       "model": "Anarcho-communism",
@@ -135,7 +135,7 @@
     },
     {
       "model": "Chinese market socialism",
-      "best": "Employee stock ownership plans and productivity in listed Chinese firms: a study in The Economic and Labour Relations Review finds that these plans raised total factor productivity, working through more R&D spending and lower agency costs. The gains were largest at non-state-owned firms, and the study is known only from an excerpt that does not show its sample period, year or authors.",
+      "best": "Employee stock ownership plans and productivity in listed Chinese firms: a study in The Economic and Labour Relations Review finds that these plans raised total factor productivity, working through more R&D spending and lower agency costs. The gains were largest at non-state-owned firms, and the study is observational and known only from an excerpt that does not show its sample period, year or authors.",
       "worst": "Inferred from its principle that key sectors stay in public ownership under party direction, so workers in those firms have no ownership of their enterprises and no board seat, and any share plans sit inside the state's control rather than the workers' own. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
     },
     {
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "Workers in firms above a set size hold employee shares and equal seats on the supervisory board, with a neutral rule for deadlocks, so that neither owners nor workers win ties by default. The share plans reach every employee, not only senior staff.",
-    "details": "Keeps: equal seat counts on the supervisory board (Social market economy, Germany's Co-determination Act of 1976) and survival-linked ownership (Monetarist neoliberalism, US employee stock ownership plans and firm survival). Blocks: a shareholder casting vote on deadlocks, safeguarded by a neutral chair; ownership without a board seat, safeguarded by worker seats. Test: over thirteen years, the span of the 1988 to 2001 US study, survival and deadlock outcomes against matched firms without the plans. Source: Act on the Co-determination of Employees, English translation of the amended Act (publisher and year not shown); Dammann and Eidenmüller, 'Codetermination: A Poor Fit for U.S. Corporations' (working paper; year not shown); Eurofound, '700 companies covered by 1976 Co-determination Act' (year not shown); Federal Agency for Civic Education (bpb), German-language piece marking the 40th anniversary (year not shown); Park, Kruse and Sesil, study on whether employee ownership enhances firm survival (Rutgers University; year not shown); Blasi, Kruse and Weltmann, 'Firm Survival and Performance in Privately Held ESOP Companies' (book chapter, 2013, Emerald)"
+    "details": "Keeps: equal seat counts on the supervisory board (Social market economy, Germany's Co-determination Act of 1976) and survival-linked ownership (Monetarist neoliberalism, US employee stock ownership plans and firm survival). Blocks: a shareholder casting vote on deadlocks, safeguarded by a neutral chair; no legal right to ownership or board seats (Monetarist neoliberalism), safeguarded by law. Test: over the span of the 1988 to 2001 US study, survival and deadlock outcomes against matched firms without the plans. Source: Act on the Co-determination of Employees, English translation of the amended Act (publisher and year not shown); Dammann and Eidenmüller, 'Codetermination: A Poor Fit for U.S. Corporations' (working paper; year not shown); Eurofound, '700 companies covered by 1976 Co-determination Act' (year not shown); Federal Agency for Civic Education (bpb), German-language piece marking the 40th anniversary (year not shown); Park, Kruse and Sesil, study on whether employee ownership enhances firm survival (Rutgers University; year not shown); Blasi, Kruse and Weltmann, 'Firm Survival and Performance in Privately Held ESOP Companies' (book chapter, 2013, Emerald)"
   }
 }
