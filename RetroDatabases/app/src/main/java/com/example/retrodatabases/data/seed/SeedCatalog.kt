@@ -8,7 +8,7 @@ import com.example.retrodatabases.data.RecordEntity
 // (databaseId = the new id, one file per kind) and run python3 tools/build_catalogue.py.
 
 /** Version of the database file: the number of the newest seeded database. */
-const val DATABASE_VERSION = 212
+const val DATABASE_VERSION = 225
 
 /** The catalogue of databases that are created on the first launch, in id order. */
 val seedDatabases: List<DatabaseEntity> = listOf(
@@ -1284,6 +1284,84 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "The economic models applied to the pay, training and status of teachers: the best and worst practice of each model, and one compromise.",
         colorHex = "#67D962",
     ),
+    DatabaseEntity(
+        id = 213,
+        name = "Database 213: economics of health financing",
+        description = "The economic models applied to health financing: how care is paid for, the best and worst practice of each model, and one compromise.",
+        colorHex = "#72D962",
+    ),
+    DatabaseEntity(
+        id = 214,
+        name = "Database 214: economics of hospitals and clinics",
+        description = "The economic models applied to hospitals and clinics: who owns, runs and staffs them, the best and worst practice of each model, and one compromise.",
+        colorHex = "#D96295",
+    ),
+    DatabaseEntity(
+        id = 215,
+        name = "Database 215: economics of medicines and drug research",
+        description = "The economic models applied to medicines and drug research: how drugs are researched, priced and supplied, and one compromise.",
+        colorHex = "#62B8D9",
+    ),
+    DatabaseEntity(
+        id = 216,
+        name = "Database 216: economics of doctors' training and pay",
+        description = "The economic models applied to the training, licensing and pay of doctors and nurses, and one compromise.",
+        colorHex = "#D9D762",
+    ),
+    DatabaseEntity(
+        id = 217,
+        name = "Database 217: economics of mental health care",
+        description = "The economic models applied to mental health care: who provides and pays for it, the best and worst practice of each model, and one compromise.",
+        colorHex = "#B462D9",
+    ),
+    DatabaseEntity(
+        id = 218,
+        name = "Database 218: economics of care for older and dying people",
+        description = "The economic models applied to care for older and dying people, at home and in care homes, and one compromise.",
+        colorHex = "#62D991",
+    ),
+    DatabaseEntity(
+        id = 219,
+        name = "Database 219: economics of public health and vaccination",
+        description = "The economic models applied to public health and vaccination: who organises and pays for it, the best and worst practice of each model, and one compromise.",
+        colorHex = "#D96F62",
+    ),
+    DatabaseEntity(
+        id = 220,
+        name = "Database 220: economics of elections and political money",
+        description = "The economic models applied to elections and political money: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D36969",
+    ),
+    DatabaseEntity(
+        id = 221,
+        name = "Database 221: economics of public administration and bureaucracy",
+        description = "The economic models applied to public administration and bureaucracy: the best and worst practice of each model, and one compromise.",
+        colorHex = "#69D388",
+    ),
+    DatabaseEntity(
+        id = 222,
+        name = "Database 222: economics of ownership of strategic industries",
+        description = "The economic models applied to ownership of strategic industries: the best and worst practice of each model, and one compromise.",
+        colorHex = "#A769D3",
+    ),
+    DatabaseEntity(
+        id = 223,
+        name = "Database 223: economics of taxation",
+        description = "The economic models applied to taxation: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D3C669",
+    ),
+    DatabaseEntity(
+        id = 224,
+        name = "Database 224: economics of regulation and competition",
+        description = "The economic models applied to regulation and competition: the best and worst practice of each model, and one compromise.",
+        colorHex = "#69C2D3",
+    ),
+    DatabaseEntity(
+        id = 225,
+        name = "Database 225: economics of local government and decentralisation",
+        description = "The economic models applied to local government and decentralisation: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D369A2",
+    ),
 )
 
 /** Years each seeded catalogue covers. The tests check the records against them. */
@@ -1500,6 +1578,19 @@ val seedYears: Map<Long, IntRange> = mapOf(
     210L to 800..2026,
     211L to 800..2026,
     212L to 800..2026,
+    213L to 800..2026,
+    214L to 800..2026,
+    215L to 800..2026,
+    216L to 800..2026,
+    217L to 800..2026,
+    218L to 800..2026,
+    219L to 800..2026,
+    220L to 800..2026,
+    221L to 800..2026,
+    222L to 800..2026,
+    223L to 800..2026,
+    224L to 800..2026,
+    225L to 800..2026,
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
@@ -1532,4 +1623,6 @@ val seedRecords: List<RecordEntity> =
         db189Records + db190Records + db191Records + db192Records + db193Records + db194Records + db195Records +
         db196Records + db197Records + db198Records + db199Records + db200Records + db201Records + db202Records +
         db203Records + db204Records + db205Records + db206Records + db207Records + db208Records + db209Records +
-        db210Records + db211Records + db212Records
+        db210Records + db211Records + db212Records + db213Records + db214Records + db215Records + db216Records +
+        db217Records + db218Records + db219Records + db220Records + db221Records + db222Records + db223Records +
+        db224Records + db225Records

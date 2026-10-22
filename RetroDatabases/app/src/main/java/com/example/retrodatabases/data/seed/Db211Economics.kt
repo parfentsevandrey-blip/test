@@ -17,7 +17,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Marcel Mauss",
         year = 1925,
         summary = "Inferred from its principle that goods move as gifts that create obligations, adults could learn skills from relatives and neighbours in return for later help, with no fee and with trust in place of money. There is no documented case in the pool.",
-        details = "Inferred from its principle that status and trust come through exchange, adults with few alliances, or nothing of their own to return, would have little access to retraining, and a course taught as a gift would leave the learner owing a return that could last for years. There is no documented case in the pool. Source: Mauss, The Gift (1925); Sahlins, Stone Age Economics (1972)",
+        details = "Inferred from its principle that status and trust come through exchange, adults with few alliances, or nothing of their own to return, would have little access to retraining, and a course taught as a gift would leave the learner owing a return that could last for years. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics",
     ),
 
     entry(
@@ -29,7 +29,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Alexander Chayanov",
         year = 1925,
         summary = "Inferred from its principle that a family farm fits its work to the needs of its household, adults could take practical courses in slack seasons, timed around household labour rather than bought in a market. There is no documented case in the pool.",
-        details = "Inferred from its principle that a household weighs its labour against its needs, study by young adults, or by anyone who might leave the farm, is given up whenever the household needs their work, and the principle gives no reason for the household to pay for the retraining of those who go. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy (1925)",
+        details = "Inferred from its principle that a household weighs its labour against its needs, study by young adults, or by anyone who might leave the farm, is given up whenever the household needs their work, and the principle gives no reason for the household to pay for the retraining of those who go. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy",
     ),
 
     entry(
@@ -41,7 +41,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Karl Polanyi, Conrad Arensberg, Harry Pearson",
         year = 1957,
         summary = "Inferred from its principle that a central authority gathers goods and redistributes them to workers and officials, the centre could pay for adult training in the skills it needs, drawing on the stores it holds. There is no documented case in the pool.",
-        details = "Inferred from its principle that tribute and taxes flow to the centre and are redistributed to officials and the workers the centre chooses, adult training would go mainly to officials, while the workers who supply the tribute would have no claim to retraining. There is no documented case in the pool. Source: Polanyi, The Great Transformation (1944); Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires (1957)",
+        details = "Inferred from its principle that tribute and taxes flow to the centre and are redistributed to officials and the workers the centre chooses, adult training would go mainly to officials, while the workers who supply the tribute would have no claim to retraining. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires",
     ),
 
     entry(
@@ -53,7 +53,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Plantation owners and colonial legislatures",
         year = 1619,
         summary = "Inferred from its principle that output is sold through trade, owners could pay for training that raises the sale value of their enslaved workers, so that some adults gain trade skills at the owner's expense and for the owner's gain. There is no documented case in the pool.",
-        details = "Inferred from its principle that the enslaved are denied education and property, adults held in slavery would have no route to schooling, retraining or a course of their own choosing, and no means to pay for one. There is no documented case in the pool. Source: Williams, Capitalism and Slavery (1944)",
+        details = "Inferred from its principle that the enslaved are denied education and property, adults held in slavery would have no route to schooling, retraining or a course of their own choosing, and no means to pay for one. There is no documented case in the pool. Source: Williams, Capitalism and Slavery",
     ),
 
     entry(
@@ -65,7 +65,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Carolingian administrators",
         year = 800,
         summary = "Inferred from its principle that a lord owes protection and justice in return for service, the manor could teach adults farming and estate crafts within its own work, so that learning comes with the land and a place in the household. There is no documented case in the pool.",
-        details = "Inferred from its principle that peasants owe labour services and rents to a lord in return for land, a peasant's time for study would belong to the lord's labour services, and leaving the manor to train elsewhere could mean losing the land. There is no documented case in the pool. Source: Bloch, Feudal Society (1939-1940); Capitulare de villis (c. 800)",
+        details = "Inferred from its principle that peasants owe labour services and rents to a lord in return for land, a peasant's time for study would belong to the lord's labour services, and leaving the manor to train elsewhere could mean losing the land. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis (c. 800)",
     ),
 
     entry(
@@ -77,7 +77,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Étienne Boileau (compiler)",
         year = 1268,
         summary = "Inferred from its principle that guilds set training and quality through statutes, adults who start late could enter a trade through a set apprenticeship and journeyman stage, with standards that every master must meet. There is no documented case in the pool.",
-        details = "Inferred from its principle that guilds regulate entry and prices, adults without a master to vouch for them could be shut out of retraining, and statutes could bar a worker from moving into another trade. There is no documented case in the pool. Source: Boileau, Le Livre des métiers (c. 1268); Epstein, Freedom and Growth (2000)",
+        details = "Inferred from its principle that guilds regulate entry and prices, adults without a master to vouch for them could be shut out of retraining, and statutes could bar a worker from moving into another trade. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth",
     ),
 
     entry(
@@ -89,7 +89,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Thomas Mun",
         year = 1664,
         summary = "Inferred from its principle that the state regulates production to win a trade surplus, the state could pay for adults to learn skills in export manufacturing, so that workers move into the trades that bring in gold. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state aims at a trade surplus, gold and colonies, public money for training would go to trades that serve those aims, leaving adults who train for other work without public help, and colonial workers would be set to supply the home trade. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade (1664); Heckscher, Mercantilism (1935)",
+        details = "Inferred from its principle that the state aims at a trade surplus, gold and colonies, public money for training would go to trades that serve those aims, leaving adults who train for other work without public help, and colonial workers would be set to supply the home trade. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism",
     ),
 
     entry(
@@ -101,7 +101,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "François Quesnay",
         year = 1758,
         summary = "Inferred from its principle that a single tax on land rent funds the state, public courses in farming methods could be paid from land rent, with no tax on the wages of adults who study. There is no documented case in the pool.",
-        details = "Inferred from its principle that only agriculture creates a net product, training for manufacture and services would count as unproductive and go without public support, so an adult who leaves the land for other work would have little help to retrain. There is no documented case in the pool. Source: Quesnay, Tableau économique (1758); Meek, The Economics of Physiocracy (1962)",
+        details = "Inferred from its principle that only agriculture creates a net product, training for manufacture and services would count as unproductive and go without public support, so an adult who leaves the land for other work would have little help to retrain. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy",
     ),
 
     entry(
@@ -113,7 +113,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Adam Smith",
         year = 1776,
         summary = "Inferred from its principle that competitive markets reward skill, employers and learners would pay for the retraining that the market values, and courses would compete on price and quality. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state stays out apart from protecting property and contracts, adults who lose work without savings would have no public route to retraining, and training would reach mainly those whom firms or learners can pay for. There is no documented case in the pool. Source: Smith, The Wealth of Nations (1776)",
+        details = "Inferred from its principle that the state stays out apart from protecting property and contracts, adults who lose work without savings would have no public route to retraining, and training would reach mainly those whom firms or learners can pay for. There is no documented case in the pool. Source: Smith, The Wealth of Nations",
     ),
 
     entry(
@@ -125,7 +125,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Carl Menger; Friedrich Hayek",
         year = 1871,
         summary = "Inferred from its principle that prices carry knowledge spread across many people, adults could read wages and job openings as signals and pay, from savings or private loans, for the retraining those signals point to. There is no documented case in the pool.",
-        details = "Inferred from its principle that state planning and credit expansion distort production, cheap state or bank credit for courses could draw adults into training for jobs that may not last, and planned state courses could fail to match what employers want. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre (1871); Hayek, The Use of Knowledge in Society (1945)",
+        details = "Inferred from its principle that state planning and credit expansion distort production, cheap state or bank credit for courses could draw adults into training for jobs that may not last, and planned state courses could fail to match what employers want. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society",
     ),
 
     entry(
@@ -149,7 +149,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "John Maynard Keynes",
         year = 1936,
         summary = "Inferred from its principle that government spending rises in slumps, public money for retraining could rise when jobs are scarce, so that unemployed adults can study while work is short and return to work as demand recovers. There is no documented case in the pool.",
-        details = "Inferred from its principle that spending falls in booms, public money for retraining would be cut when jobs are plentiful, leaving fewer public places in good years, when employed adults may still want to upgrade their skills, and training would be run as a tool of demand management rather than for the learner's own aims. There is no documented case in the pool. Source: Keynes, The General Theory (1936); Beveridge, Social Insurance and Allied Services (1942)",
+        details = "Inferred from its principle that spending falls in booms, public money for retraining would be cut when jobs are plentiful, leaving fewer public places in good years, when employed adults may still want to upgrade their skills, and training would be run as a tool of demand management rather than for the learner's own aims. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services",
     ),
 
     entry(
@@ -161,7 +161,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Alfred Müller-Armack; Ludwig Erhard",
         year = 1947,
         summary = "Germany ratified ILO Convention 140 on paid educational leave in 1976, and it took effect for Germany a year later, so paid study time became a legal commitment there.",
-        details = "Inferred from its principle that social insurance and worker representation are tied to firms, adults between jobs, or in small firms with no worker representative, may have no claim to paid study leave or to retraining support. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft (1947); Erhard, Wohlstand für Alle (1957)",
+        details = "Inferred from its principle that social insurance and worker representation are tied to firms, adults between jobs, or in small firms with no worker representative, may have no claim to paid study leave or to retraining support. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle",
     ),
 
     entry(
@@ -173,7 +173,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Swedish Social Democrats and trade unions",
         year = 1938,
         summary = "Sweden ratified ILO Convention 140 on paid educational leave in June 1975, with effect from September 1976. Sweden's municipal adult education (komvux) began in 1968, with aims to narrow educational gaps and let people top up their schooling; this is a weak case, as its start date and aims come from a source flagged for missing citations.",
-        details = "Inferred from its principle that active labour-market policy steers people into courses, learners could be pushed toward what the state and employers favour, with less say over the subject, and places could be limited by a public budget financed by high taxes. There is no documented case in the pool. Source: Saltsjöbaden Agreement (1938); Esping-Andersen, The Three Worlds of Welfare Capitalism (1990)",
+        details = "Inferred from its principle that active labour-market policy steers people into courses, learners could be pushed toward what the state and employers favour, with less say over the subject, and places could be limited by a public budget financed by high taxes. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism",
     ),
 
     entry(
@@ -185,7 +185,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Japan's Ministry of International Trade and Industry",
         year = 1949,
         summary = "A state-funded credit can reach many adults: Singapore's SkillsFuture Credit, introduced in 2015, had more than 840,000 users by a November 2022 parliamentary reply, about 30 per cent of eligible citizens, though the sources report uptake, not effects.",
-        details = "Inferred from its principle that the state picks the industries that receive credit and export support, adults who want training for sectors outside the chosen list would get little public money, and courses would follow the state's targets more than learners' own choices. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982); Amsden, Asia's Next Giant (1989)",
+        details = "Inferred from its principle that the state picks the industries that receive credit and export support, adults who want training for sectors outside the chosen list would get little public money, and courses would follow the state's targets more than learners' own choices. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant",
     ),
 
     entry(
@@ -197,7 +197,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Henry George",
         year = 1879,
         summary = "Inferred from its principle that the rent of land funds public services, adult courses could be paid for from land rent, so learners pay no fees and no tax falls on the wages of workers who study. There is no documented case in the pool.",
-        details = "Inferred from its principle that public services are funded from the rent of land, adult courses would be fewer in places where land is cheap, so retraining would depend on where a person lives. There is no documented case in the pool. Source: George, Progress and Poverty (1879)",
+        details = "Inferred from its principle that public services are funded from the rent of land, adult courses would be fewer in places where land is cheap, so retraining would depend on where a person lives. There is no documented case in the pool. Source: George, Progress and Poverty",
     ),
 
     entry(
@@ -209,7 +209,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Robert Owen; Charles Fourier",
         year = 1825,
         summary = "Inferred from its principle that cooperative communities built by example replace wage competition, adults could learn trades inside a community that shares its work and its teaching, free of any pressure to train for the highest wage. There is no documented case in the pool.",
-        details = "Inferred from its principle that communities are built by example and planned association, a course would exist only where a community chose to set one up, and an experiment that failed or folded would leave its members without the teaching they relied on. There is no documented case in the pool. Source: Owen, A New View of Society (1813); Fourier, Le Nouveau Monde industriel (1829)",
+        details = "Inferred from its principle that communities are built by example and planned association, a course would exist only where a community chose to set one up, and an experiment that failed or folded would leave its members without the teaching they relied on. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel",
     ),
 
     entry(
@@ -221,7 +221,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Pierre-Joseph Proudhon",
         year = 1840,
         summary = "Inferred from its principle that banks lend at cost and workers keep the full value of their work, adults could borrow mutual credit at cost to pay for retraining, so that no lender's profit is added to the price of a course. There is no documented case in the pool.",
-        details = "Inferred from its principle that mutual credit and free contracts replace profit-based lending, adults without a network of mutual partners could find no credit to pay for retraining, and a learner whose course failed to deliver would have little protection beyond the contract. There is no documented case in the pool. Source: Proudhon, What Is Property? (1840)",
+        details = "Inferred from its principle that mutual credit and free contracts replace profit-based lending, adults without a network of mutual partners could find no credit to pay for retraining, and a learner whose course failed to deliver would have little protection beyond the contract. There is no documented case in the pool. Source: Proudhon, What Is Property?",
     ),
 
     entry(
@@ -233,7 +233,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Rochdale Pioneers",
         year = 1844,
         summary = "Inferred from its principle that members own and control their firm and share the surplus between users and workers, a cooperative could fund training from its surplus and let members decide, one member one vote, what its people need to learn. There is no documented case in the pool.",
-        details = "Inferred from its principle that ownership and the vote belong to members, training could be limited to members, so outside workers and new entrants would have no say in what is taught, and a poor year would cut the surplus that pays for courses. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers (1844); Mondragón cooperatives (from 1956)",
+        details = "Inferred from its principle that ownership and the vote belong to members, training could be limited to members, so outside workers and new entrants would have no say in what is taught, and a poor year would cut the surplus that pays for courses. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives",
     ),
 
     entry(
@@ -245,7 +245,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Peter Kropotkin",
         year = 1892,
         summary = "Inferred from its principle that goods are shared by need and free association replaces contracts, adults could join classes and workshops freely, with no price and no need to earn a wage first. There is no documented case in the pool.",
-        details = "Inferred from its principle that there are no wages and no state, retraining would depend on what communes and free associations choose to offer, so an adult who wants a course that no commune provides would have no claim to it. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread (1892)",
+        details = "Inferred from its principle that there are no wages and no state, retraining would depend on what communes and free associations choose to offer, so an adult who wants a course that no commune provides would have no claim to it. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread",
     ),
 
     entry(
@@ -257,7 +257,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Fernand Pelloutier; the French CGT",
         year = 1895,
         summary = "Inferred from its principle that trade unions run industry through workers' organisations, unions could run training for their own trades and win paid time to learn through bargaining and strikes. There is no documented case in the pool.",
-        details = "Inferred from its principle that unions run industry through strikes and, eventually, a general strike, training would serve the trades those unions organise, workers outside them would have little access, and a strike would halt the courses that unions run. There is no documented case in the pool. Source: Founding of the French CGT (1895); Pelloutier, Histoire des Bourses du travail (1902)",
+        details = "Inferred from its principle that unions run industry through strikes and, eventually, a general strike, training would serve the trades those unions organise, workers outside them would have little access, and a strike would halt the courses that unions run. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail",
     ),
 
     entry(
@@ -269,7 +269,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Sidney and Beatrice Webb",
         year = 1884,
         summary = "Inferred from its principle that democratic and gradual means build municipal and national public enterprise, towns and the state could offer adults low-cost courses as part of a national minimum of welfare. There is no documented case in the pool.",
-        details = "Inferred from its principle that change comes by gradual means, public adult provision would grow slowly, the national minimum could be set low and rarely raised, and adults in areas not yet reached would wait for courses. There is no documented case in the pool. Source: Fabian Essays in Socialism (1889); Founding of the Fabian Society (1884)",
+        details = "Inferred from its principle that change comes by gradual means, public adult provision would grow slowly, the national minimum could be set low and rarely raised, and adults in areas not yet reached would wait for courses. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society",
     ),
 
     entry(
@@ -281,7 +281,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "G. D. H. Cole",
         year = 1917,
         summary = "Inferred from its principle that workers and consumers share control of industry through guild-like councils, a trade's council could decide what its members need to learn and pay for that training from the industry's revenue. There is no documented case in the pool.",
-        details = "Inferred from its principle that control is shared among guild-like councils, a council could limit entry to its established members, so workers and retrainees from other trades would find no route in, and the state, as one partner among several, could be outvoted on what is taught. There is no documented case in the pool. Source: Cole, Self-Government in Industry (1917)",
+        details = "Inferred from its principle that control is shared among guild-like councils, a council could limit entry to its established members, so workers and retrainees from other trades would find no route in, and the state, as one partner among several, could be outvoted on what is taught. There is no documented case in the pool. Source: Cole, Self-Government in Industry",
     ),
 
     entry(
@@ -293,7 +293,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Soviet planners; Joseph Stalin",
         year = 1928,
         summary = "Inferred from its principle that central plans set output and investment and the state mobilises labour, a plan could fund large-scale retraining quickly for the industries it chooses. There is no documented case in the pool.",
-        details = "Inferred from its principle that central plans set output, prices and investment, adults would be assigned to training and work by the plan, with little choice of course, and training would follow the plan's targets rather than the wishes of learners. There is no documented case in the pool. Source: Kornai, The Socialist System (1992); First Five-Year Plan (1928-1932)",
+        details = "Inferred from its principle that central plans set output, prices and investment, adults would be assigned to training and work by the plan, with little choice of course, and training would follow the plan's targets rather than the wishes of learners. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan",
     ),
 
     entry(
@@ -305,7 +305,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Oskar Lange; Fred Taylor",
         year = 1938,
         summary = "Inferred from its principle that public firms work with market prices and their managers follow those prices, a firm could pay for training when prices show that skills earn more, under rules that a central board sets. There is no documented case in the pool.",
-        details = "Inferred from its principle that a central board sets the rules and the investment, training would depend on that board's budget and rules, so adults in enterprises the board does not fund would have little route to retraining. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism (1938; Lange's essays date from 1936-1937); Yugoslav workers' self-management (1950s)",
+        details = "Inferred from its principle that a central board sets the rules and the investment, training would depend on that board's budget and rules, so adults in enterprises the board does not fund would have little route to retraining. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management (1950s)",
     ),
 
     entry(
@@ -317,7 +317,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Karl Marx",
         year = 1875,
         summary = "Inferred from its principle that distribution follows need once classes disappear, learning could be given to each adult according to ability and need, with no fee and no market test of what a person may learn. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state runs affairs until it withers away, training would be decided by the state in the meantime, and the state would judge who is able enough to train, so adults it judged less able could get less. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme (1875)",
+        details = "Inferred from its principle that the state runs affairs until it withers away, training would be decided by the state in the meantime, and the state would judge who is able enough to train, so adults it judged less able could get less. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme",
     ),
 
     entry(
@@ -329,7 +329,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Deng Xiaoping and the Chinese leadership",
         year = 1978,
         summary = "Inferred from its principle that special economic zones run alongside public ownership of key sectors, a zone could set up adult training quickly for the firms it attracts, and the public sector could fund it. There is no documented case in the pool.",
-        details = "Inferred from its principle that reform is gradual and runs under party direction, adults in sectors not yet reformed would have fewer choices of course and provider, and the timing of new training would depend on decisions taken above them. There is no documented case in the pool. Source: Naughton, The Chinese Economy (2007)",
+        details = "Inferred from its principle that reform is gradual and runs under party direction, adults in sectors not yet reformed would have fewer choices of course and provider, and the timing of new training would depend on decisions taken above them. There is no documented case in the pool. Source: Naughton, The Chinese Economy",
     ),
 
     entry(
@@ -341,7 +341,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Michael Albert; Robin Hahnel",
         year = 1991,
         summary = "Inferred from its principle that councils plan through repeated proposals and jobs are balanced in complexity, adults could rotate through jobs of varied complexity and learn on the job, with training planned in the same rounds of proposals. There is no documented case in the pool.",
-        details = "Inferred from its principle that planning runs through repeated rounds of proposals, a learner's request for a course could wait through many rounds before it is agreed, and balancing jobs in complexity could limit how far any one adult can specialise. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward (1991)",
+        details = "Inferred from its principle that planning runs through repeated rounds of proposals, a learner's request for a course could wait through many rounds before it is agreed, and balancing jobs in complexity could limit how far any one adult can specialise. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward",
     ),
 
     entry(
@@ -353,7 +353,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Benito Mussolini; Alfredo Rocco",
         year = 1934,
         summary = "Inferred from its principle that employers and unions are organised into corporations that plan together, apprenticeships and retraining could be planned across each sector so that the skills taught match that sector's stated needs. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state directs industry toward national goals, including war, adult training would be aimed at those goals, unions would have no independent voice over what is taught, and adults could be moved into work the state needs without a say. There is no documented case in the pool. Source: Italian corporative law (1934); Nazi Four-Year Plan (1936)",
+        details = "Inferred from its principle that the state directs industry toward national goals, including war, adult training would be aimed at those goals, unions would have no independent voice over what is taught, and adults could be moved into work the state needs without a say. There is no documented case in the pool. Source: Italian corporative law; Nazi Four-Year Plan",
     ),
 
     entry(
@@ -365,7 +365,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Ahmad El Najjar",
         year = 1963,
         summary = "Inferred from its principle that finance shares profit and risk instead of charging interest, a learner could take a profit-sharing loan for a course, and zakat could fund training for people with little income. There is no documented case in the pool.",
-        details = "Inferred from its principle that interest is prohibited and finance rests on trust, adults without trusted networks might find few lenders for retraining, and a course funded by profit sharing would tie a learner's future earnings to the lender. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985); Founding of the Mit Ghamr savings bank (1963)",
+        details = "Inferred from its principle that interest is prohibited and finance rests on trust, adults without trusted networks might find few lenders for retraining, and a course funded by profit sharing would tie a learner's future earnings to the lender. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank",
     ),
 
     entry(
@@ -377,7 +377,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "E. F. Schumacher",
         year = 1966,
         summary = "Inferred from its principle that economic life serves well-being, adult learning could be small, local and moderate in cost, with courses close to home and no push to consume more. There is no documented case in the pool.",
-        details = "Inferred from its principle that production is small-scale and local, adult courses might be too few and too small to offer the range of skills a retraining adult needs, and a stress on moderate consumption could make learning for better-paid work seem a lesser aim. There is no documented case in the pool. Source: Schumacher, Buddhist Economics (first published 1966); Schumacher, Small Is Beautiful (1973)",
+        details = "Inferred from its principle that production is small-scale and local, adult courses might be too few and too small to offer the range of skills a retraining adult needs, and a stress on moderate consumption could make learning for better-paid work seem a lesser aim. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful",
     ),
 
     entry(
@@ -389,7 +389,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Pope Leo XIII; G. K. Chesterton; Hilaire Belloc",
         year = 1891,
         summary = "Inferred from its principle that widespread small enterprise and subsidiarity keep decisions with the smallest competent body, local trade courses could be set by the small firms and crafts they serve, close to the work they teach. There is no documented case in the pool.",
-        details = "Inferred from its principle that small enterprise is widespread, small firms and crafts may lack the money to pay for retraining, and the smallest competent body may be too small to fund courses across a region, so adults in weak local economies would have fewer routes. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum (1891); Belloc, The Servile State (1912)",
+        details = "Inferred from its principle that small enterprise is widespread, small firms and crafts may lack the money to pay for retraining, and the smallest competent body may be too small to fund courses across a region, so adults in weak local economies would have fewer routes. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State",
     ),
 
     entry(
@@ -401,7 +401,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Herman Daly; Kate Raworth",
         year = 1977,
         summary = "Inferred from its principle that a social floor sits under everyone, adults could retrain for shorter working hours and for care work, with learning valued for the well-being it gives rather than for growth. There is no documented case in the pool.",
-        details = "Inferred from its principle that there is no growth imperative, fewer new jobs might open, so retraining could lead to fewer openings, and a floor that holds regardless of work could offer adults fewer routes to better-paid work. There is no documented case in the pool. Source: Daly, Steady-State Economics (1977); Raworth, Doughnut Economics (2017)",
+        details = "Inferred from its principle that there is no growth imperative, fewer new jobs might open, so retraining could lead to fewer openings, and a floor that holds regardless of work could offer adults fewer routes to better-paid work. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics",
     ),
 
     entry(
@@ -413,7 +413,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Thomas Paine",
         year = 1797,
         summary = "Inferred from its principle that every citizen receives an unconditional income, adults could take evening classes and courses without losing that income, which is paid for by taxes on land and natural resources. There is no documented case in the pool.",
-        details = "Inferred from its principle that the income is unconditional and funded by land and resource taxes, a payment set low would leave study unaffordable for many adults, fees would still fall on those who must work, and the income could go to living costs rather than learning. There is no documented case in the pool. Source: Paine, Agrarian Justice (1797); Van Parijs, Real Freedom for All (1995)",
+        details = "Inferred from its principle that the income is unconditional and funded by land and resource taxes, a payment set low would leave study unaffordable for many adults, fees would still fall on those who must work, and the income could go to living costs rather than learning. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All",
     ),
 
     entry(
@@ -425,7 +425,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Stephanie Kelton; L. Randall Wray",
         year = 2020,
         summary = "Inferred from its principle that a government which issues its own currency can fund full employment, retraining could be paid for at the scale that places need, with inflation as the check on that spending. There is no documented case in the pool.",
-        details = "Inferred from its principle that inflation, not debt, is the real limit, training budgets could be cut whenever prices rise, so adults could lose courses at such times, and what is funded would depend on inflation rather than on learners' needs. There is no documented case in the pool. Source: Kelton, The Deficit Myth (2020)",
+        details = "Inferred from its principle that inflation, not debt, is the real limit, training budgets could be cut whenever prices rise, so adults could lose courses at such times, and what is funded would depend on inflation rather than on learners' needs. There is no documented case in the pool. Source: Kelton, The Deficit Myth",
     ),
 
     entry(
@@ -437,7 +437,7 @@ val db211Records: List<RecordEntity> = listOf(
         author = "Elinor Ostrom",
         year = 1990,
         summary = "Inferred from its principle that users of a shared resource design, monitor and enforce their own rules, a learning centre run by its users could set its own courses and fees, with the people who use it deciding. There is no documented case in the pool.",
-        details = "Inferred from its principle that the users of a shared resource design and enforce its rules, newcomers and outsiders could be kept from courses, and monitoring and enforcement would take the time of the same members who run the centre. There is no documented case in the pool. Source: Ostrom, Governing the Commons (1990)",
+        details = "Inferred from its principle that the users of a shared resource design and enforce its rules, newcomers and outsiders could be kept from courses, and monitoring and enforcement would take the time of the same members who run the centre. There is no documented case in the pool. Source: Ostrom, Governing the Commons",
     ),
 
     entry(

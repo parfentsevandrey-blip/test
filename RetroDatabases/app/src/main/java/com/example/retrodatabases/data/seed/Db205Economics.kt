@@ -17,7 +17,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Marcel Mauss",
         year = 1925,
         summary = "Inferred from its principle that gifts create obligations to give and return, exchange builds trust, alliances and status without relying on price. There is no documented case in the pool.",
-        details = "Inferred from its principle that obligations to return a gift can bind people into lasting dependence on whoever gives first, and status can be won by giving more than others can repay. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics (1972)",
+        details = "Inferred from its principle that obligations to return a gift can bind people into lasting dependence on whoever gives first, and status can be won by giving more than others can repay. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics",
     ),
 
     entry(
@@ -41,7 +41,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Karl Polanyi, Conrad Arensberg, Harry Pearson",
         year = 1957,
         summary = "Inferred from its principle that a central store of goods can feed workers and officials in lean years and fund large public works such as temples and palaces. There is no documented case in the pool.",
-        details = "Inferred from its principle that goods collected as tribute are allocated by officials rather than by need or market prices, so storage and pay depend on the central authority's own accounts and loyalty. There is no documented case in the pool. Source: Polanyi, The Great Transformation (1944)",
+        details = "Inferred from its principle that goods collected as tribute are allocated by officials rather than by need or market prices, so storage and pay depend on the central authority's own accounts and loyalty. There is no documented case in the pool. Source: Polanyi, The Great Transformation",
     ),
 
     entry(
@@ -65,7 +65,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Carolingian administrators",
         year = 800,
         summary = "Inferred from its principle that lords provide land, protection and justice in return for labour, so each manor can supply most of its own food and needs. There is no documented case in the pool.",
-        details = "Inferred from its principle that labour services and rents are owed whatever the harvest, so peasants may keep little surplus in bad years and little reason to improve the land. There is no documented case in the pool. Source: Bloch, Feudal Society (1939-1940)",
+        details = "Inferred from its principle that labour services and rents are owed whatever the harvest, so peasants may keep little surplus in bad years and little reason to improve the land. There is no documented case in the pool. Source: Bloch, Feudal Society",
     ),
 
     entry(
@@ -77,7 +77,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Étienne Boileau (compiler)",
         year = 1268,
         summary = "Inferred from its principle that statutes on entry, training and quality give apprentices a clear path to mastery and protect buyers from poor work. There is no documented case in the pool.",
-        details = "Inferred from its principle that control of entry and prices can keep newcomers out and raise prices, so skilled trades change slowly. There is no documented case in the pool. Source: Epstein, Freedom and Growth (2000)",
+        details = "Inferred from its principle that control of entry and prices can keep newcomers out and raise prices, so skilled trades change slowly. There is no documented case in the pool. Source: Epstein, Freedom and Growth",
     ),
 
     entry(
@@ -89,7 +89,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Thomas Mun",
         year = 1664,
         summary = "Inferred from its principle that a state regulating production and trade toward a surplus can build reserves of bullion and secure markets for domestic producers. There is no documented case in the pool.",
-        details = "Inferred from its principle that controls on trade and production can protect favoured sectors and colonies at the cost of consumers and rival producers. There is no documented case in the pool. Source: Heckscher, Mercantilism (1935)",
+        details = "Inferred from its principle that controls on trade and production can protect favoured sectors and colonies at the cost of consumers and rival producers. There is no documented case in the pool. Source: Heckscher, Mercantilism",
     ),
 
     entry(
@@ -101,7 +101,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "François Quesnay",
         year = 1758,
         summary = "Inferred from its principle that one tax on land rent funds the state without taxing labour or trade, and free grain trade keeps food supplies responsive to prices. There is no documented case in the pool.",
-        details = "Inferred from its principle that a tax on rent alone can leave the state short of revenue when rents are low, and an emphasis on agriculture can neglect manufacturing and services. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy (1962)",
+        details = "Inferred from its principle that a tax on rent alone can leave the state short of revenue when rents are low, and an emphasis on agriculture can neglect manufacturing and services. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy",
     ),
 
     entry(
@@ -125,7 +125,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Carl Menger; Friedrich Hayek",
         year = 1871,
         summary = "Inferred from its principle that prices carry knowledge spread across many people, so decentralised price signals can guide production better than a planner can. There is no documented case in the pool.",
-        details = "Inferred from its principle that credit expansion sends false price signals, so a banking system that lets credit grow without limit can produce booms followed by busts. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society (1945)",
+        details = "Inferred from its principle that credit expansion sends false price signals, so a banking system that lets credit grow without limit can produce booms followed by busts. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society",
     ),
 
     entry(
@@ -149,7 +149,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "John Maynard Keynes",
         year = 1936,
         summary = "Inferred from its principle that government spending and taxes, adjusted against the business cycle, keep demand and employment steady. There is no documented case in the pool.",
-        details = "Inferred from its principle that spending that is not reversed in good times can build up debt and inflation, so employment gains may come with rising prices. There is no documented case in the pool. Source: Beveridge, Social Insurance and Allied Services (1942)",
+        details = "Inferred from its principle that spending that is not reversed in good times can build up debt and inflation, so employment gains may come with rising prices. There is no documented case in the pool. Source: Beveridge, Social Insurance and Allied Services",
     ),
 
     entry(
@@ -161,7 +161,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Alfred Müller-Armack; Ludwig Erhard",
         year = 1947,
         summary = "Inferred from its principle that competition inside a legal order that curbs monopoly, with social insurance and worker representation in firms, can combine growth with protection against market failure. There is no documented case in the pool.",
-        details = "Inferred from its principle that a legal order that curbs monopoly can be captured by large firms, and social insurance can grow without a link to what it costs, so the market is weakened. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle (1957)",
+        details = "Inferred from its principle that a legal order that curbs monopoly can be captured by large firms, and social insurance can grow without a link to what it costs, so the market is weakened. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle",
     ),
 
     entry(
@@ -173,7 +173,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Swedish Social Democrats and trade unions",
         year = 1938,
         summary = "Inferred from its principle that universal public services and active labour-market policy, paid for by high taxes, can help people move between jobs while unions bargain wages nationally. There is no documented case in the pool.",
-        details = "Inferred from its principle that high taxes and national wage bargaining can slow adjustment when an industry declines, and public services can grow faster than the tax base that funds them. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism (1990)",
+        details = "Inferred from its principle that high taxes and national wage bargaining can slow adjustment when an industry declines, and public services can grow faster than the tax base that funds them. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism",
     ),
 
     entry(
@@ -185,7 +185,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Japan's Ministry of International Trade and Industry",
         year = 1949,
         summary = "Inferred from its principle that a state directing credit and export targets to chosen industries, and disciplining firms by their performance, can concentrate resources on those industries. There is no documented case in the pool.",
-        details = "Inferred from its principle that credit for chosen industries must be disciplined by export performance, so favoured firms that fail to export can keep support and draw resources from others. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982); Amsden, Asia's Next Giant (1989)",
+        details = "Inferred from its principle that credit for chosen industries must be disciplined by export performance, so favoured firms that fail to export can keep support and draw resources from others. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant",
     ),
 
     entry(
@@ -209,7 +209,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Robert Owen; Charles Fourier",
         year = 1825,
         summary = "Inferred from its principle that cooperative communities built by example can test new ways of organising work and share gains among members. There is no documented case in the pool.",
-        details = "Inferred from its principle that communities built by example depend on voluntary membership and the commitment of their founders, so they can dissolve when leaders leave or funds run out. There is no documented case in the pool. Source: Owen (1813); Fourier, Le Nouveau Monde industriel (1829)",
+        details = "Inferred from its principle that communities built by example depend on voluntary membership and the commitment of their founders, so they can dissolve when leaders leave or funds run out. There is no documented case in the pool. Source: Owen; Fourier, Le Nouveau Monde industriel",
     ),
 
     entry(
@@ -233,7 +233,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Rochdale Pioneers",
         year = 1844,
         summary = "Yugoslavia's workers' self-management gave workers' councils wide powers over output and finance inside a state plan, a form of shared control of firms; the evidence on productivity and wages is thin.",
-        details = "Inferred from its principle that members who own and control a firm may vote against closures or hard investment, so weak firms can be kept going and losses carried. There is no documented case in the pool. Source: Mondragón cooperatives (from 1956)",
+        details = "Inferred from its principle that members who own and control a firm may vote against closures or hard investment, so weak firms can be kept going and losses carried. There is no documented case in the pool. Source: Mondragón cooperatives",
     ),
 
     entry(
@@ -257,7 +257,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Fernand Pelloutier; the French CGT",
         year = 1895,
         summary = "Inferred from its principle that workers' organisations running industry directly can give workers a voice over work and output. There is no documented case in the pool.",
-        details = "Inferred from its principle that strikes can halt output in disputes, and a general strike could stop the whole economy, so investment may be held back during conflicts. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail (1902)",
+        details = "Inferred from its principle that strikes can halt output in disputes, and a general strike could stop the whole economy, so investment may be held back during conflicts. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail",
     ),
 
     entry(
@@ -365,7 +365,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Ahmad El Najjar",
         year = 1963,
         summary = "Inferred from its principle that profit-and-loss sharing and a ban on interest can tie finance to real output and risk, while zakat redistributes wealth. There is no documented case in the pool.",
-        details = "Inferred from its principle that a ban on interest and reliance on trust can make credit harder to price and enforce, so finance may be scarce or slow for borrowers without collateral. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985)",
+        details = "Inferred from its principle that a ban on interest and reliance on trust can make credit harder to price and enforce, so finance may be scarce or slow for borrowers without collateral. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System",
     ),
 
     entry(
@@ -377,7 +377,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "E. F. Schumacher",
         year = 1966,
         summary = "Inferred from its principle that moderate consumption and small-scale, local production can serve well-being and limit strain on people and resources. There is no documented case in the pool.",
-        details = "Inferred from its principle that small-scale production may give up scale economies and specialisation, so some goods may cost more or be harder to obtain. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful (1973)",
+        details = "Inferred from its principle that small-scale production may give up scale economies and specialisation, so some goods may cost more or be harder to obtain. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful",
     ),
 
     entry(
@@ -389,7 +389,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Pope Leo XIII; G. K. Chesterton; Hilaire Belloc",
         year = 1891,
         summary = "Inferred from its principle that widespread private property, small enterprise and a just wage can spread economic power and keep decisions with the smallest competent body. There is no documented case in the pool.",
-        details = "Inferred from its principle that small enterprises may lack the capital for large investment or export markets, so some goods may cost more and growth may be slower. There is no documented case in the pool. Source: Belloc, The Servile State (1912)",
+        details = "Inferred from its principle that small enterprises may lack the capital for large investment or export markets, so some goods may cost more and growth may be slower. There is no documented case in the pool. Source: Belloc, The Servile State",
     ),
 
     entry(
@@ -401,7 +401,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Herman Daly; Kate Raworth",
         year = 1977,
         summary = "Inferred from its principle that activity within planetary limits and a social floor under everyone can meet basic needs without a growth imperative. There is no documented case in the pool.",
-        details = "Inferred from its principle that a fixed scale of activity can leave some regions and workers with lower incomes and less room for new jobs, and debt may rise if output falls. There is no documented case in the pool. Source: Daly; Raworth, Doughnut Economics (2017)",
+        details = "Inferred from its principle that a fixed scale of activity can leave some regions and workers with lower incomes and less room for new jobs, and debt may rise if output falls. There is no documented case in the pool. Source: Daly; Raworth, Doughnut Economics",
     ),
 
     entry(
@@ -413,7 +413,7 @@ val db205Records: List<RecordEntity> = listOf(
         author = "Thomas Paine",
         year = 1797,
         summary = "Inferred from its principle that an unconditional income paid to every citizen can cushion risk and support work and care, funded by taxes on land and natural resources. There is no documented case in the pool.",
-        details = "Inferred from its principle that an unconditional payment to all can cost a large share of national output, and if it is funded by borrowing it may add to inflation. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All (1995)",
+        details = "Inferred from its principle that an unconditional payment to all can cost a large share of national output, and if it is funded by borrowing it may add to inflation. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All",
     ),
 
     entry(

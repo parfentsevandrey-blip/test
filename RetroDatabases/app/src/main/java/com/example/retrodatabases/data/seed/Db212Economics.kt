@@ -17,7 +17,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Marcel Mauss",
         year = 1925,
         summary = "Inferred from its principle that trust and status are built through reciprocal giving, teachers would be supported by gifts that create lasting obligations, and their standing would grow with the families they serve. There is no documented case in the pool.",
-        details = "Inferred from its principle that gifts create obligations rather than prices, teachers would have no fixed pay to plan against, and training would reach mainly children whose families sit inside the giving network. Teaching would rest on goodwill, so standing would fall for anyone outside those ties, and disputes over what is owed would have no price to settle them. There is no documented case in the pool. Source: Mauss, The Gift (1925); Sahlins, Stone Age Economics (1972)",
+        details = "Inferred from its principle that gifts create obligations rather than prices, teachers would have no fixed pay to plan against, and training would reach mainly children whose families sit inside the giving network. Teaching would rest on goodwill, so standing would fall for anyone outside those ties, and disputes over what is owed would have no price to settle them. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics",
     ),
 
     entry(
@@ -29,7 +29,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Alexander Chayanov",
         year = 1925,
         summary = "Inferred from its principle that a family farm balances its work against household needs, teachers would be fed and housed by the households they serve, in shares sized to what each can spare, so pay would follow need rather than profit. There is no documented case in the pool.",
-        details = "Inferred from its principle that production serves household consumption and not profit, teacher pay could depend on the harvest and on how much labour a household can spare, so schooling could stop in busy seasons and teachers could have no pay beyond what households can give. Standing would stay local, with no route to a higher qualification. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy (1925)",
+        details = "Inferred from its principle that production serves household consumption and not profit, teacher pay could depend on the harvest and on how much labour a household can spare, so schooling could stop in busy seasons and teachers could have no pay beyond what households can give. Standing would stay local, with no route to a higher qualification. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy",
     ),
 
     entry(
@@ -41,7 +41,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Karl Polanyi, Conrad Arensberg, Harry Pearson",
         year = 1957,
         summary = "Inferred from its principle that a central store collects goods and pays workers and officials from them, teachers could receive regular allocations from the store, so their pay would be predictable and their training could be provided in central institutions. There is no documented case in the pool.",
-        details = "Inferred from its principle that a central authority collects goods and decides who receives them, teacher pay would depend on the authority's allocations, which could be cut when tribute or taxes fall short, and teachers' status would attach to the office they hold rather than to their skill. There is no documented case in the pool. Source: Polanyi, The Great Transformation (1944); Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires (1957)",
+        details = "Inferred from its principle that a central authority collects goods and decides who receives them, teacher pay would depend on the authority's allocations, which could be cut when tribute or taxes fall short, and teachers' status would attach to the office they hold rather than to their skill. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires",
     ),
 
     entry(
@@ -53,7 +53,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Plantation owners and colonial legislatures",
         year = 1619,
         summary = "Inferred from its principle that output is sold through trade, teaching would be valued only where it raises output, so trainers would be paid from sales and their skills used where they add to what is traded. There is no documented case in the pool.",
-        details = "Inferred from its principle that the enslaved are denied education and property, teaching would be withheld from the people who do the work, and any teacher's pay would come from the owner rather than from the people taught, who would have no claim on training or standing. There is no documented case in the pool. Source: Williams, Capitalism and Slavery (1944)",
+        details = "Inferred from its principle that the enslaved are denied education and property, teaching would be withheld from the people who do the work, and any teacher's pay would come from the owner rather than from the people taught, who would have no claim on training or standing. There is no documented case in the pool. Source: Williams, Capitalism and Slavery",
     ),
 
     entry(
@@ -65,7 +65,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Carolingian administrators",
         year = 800,
         summary = "Inferred from its principle that land is held in return for service, teachers could be supported from land or dues set aside for the manor, so pay would be fixed in advance and tied to a lasting place in the manor rather than to a market. There is no documented case in the pool.",
-        details = "Inferred from its principle that peasants owe labour and rents to a lord, teachers could be bound to the manor where they serve, paid in dues and land rather than wages, with teaching depending on the lord's will and on the labour the manor can spare. Training would be local and passed on by custom, with no route between manors. There is no documented case in the pool. Source: Bloch, Feudal Society (1939-1940); Capitulare de villis (c. 800)",
+        details = "Inferred from its principle that peasants owe labour and rents to a lord, teachers could be bound to the manor where they serve, paid in dues and land rather than wages, with teaching depending on the lord's will and on the labour the manor can spare. Training would be local and passed on by custom, with no route between manors. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis (c. 800)",
     ),
 
     entry(
@@ -77,7 +77,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Étienne Boileau (compiler)",
         year = 1268,
         summary = "Inferred from its principle that guilds regulate entry, training and quality under statute, teachers would be trained along a set path from apprentice to master, with standards and pay fixed by statute and checked within the guild. There is no documented case in the pool.",
-        details = "Inferred from its principle that guilds regulate entry, a closed entry could keep teaching places scarce and open only to those already inside the trade, so new teachers would wait long for a post, and pay could be kept high by limiting numbers rather than by meeting need. Training would keep the guild's pace rather than pupils' needs. There is no documented case in the pool. Source: Boileau, Le Livre des métiers (c. 1268); Epstein, Freedom and Growth (2000)",
+        details = "Inferred from its principle that guilds regulate entry, a closed entry could keep teaching places scarce and open only to those already inside the trade, so new teachers would wait long for a post, and pay could be kept high by limiting numbers rather than by meeting need. Training would keep the guild's pace rather than pupils' needs. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth",
     ),
 
     entry(
@@ -89,7 +89,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Thomas Mun",
         year = 1664,
         summary = "Inferred from its principle that the state seeks a trade surplus and regulates production to that end, the state could pay for training in trades that raise exports or save imports, so teachers of those skills would be paid from public funds. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state regulates production and trade to win a surplus, training and pay would favour trades that earn foreign income, so teachers of other subjects could receive little pay or standing, and teachers' posts would follow the state's trade targets rather than local need. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade (1664); Heckscher, Mercantilism (1935)",
+        details = "Inferred from its principle that the state regulates production and trade to win a surplus, training and pay would favour trades that earn foreign income, so teachers of other subjects could receive little pay or standing, and teachers' posts would follow the state's trade targets rather than local need. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism",
     ),
 
     entry(
@@ -101,7 +101,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "François Quesnay",
         year = 1758,
         summary = "Inferred from its principle that a single tax on the rent of land should fund the state, rural teachers could be paid from the land-rent tax, giving them a stable pay base that does not depend on trade. There is no documented case in the pool.",
-        details = "Inferred from its principle that only agriculture creates a net product, teaching would count as unproductive labour, so teacher pay could be cut first when the land-rent tax is stretched, and training would receive little public money beyond what farming needs. There is no documented case in the pool. Source: Quesnay, Tableau économique (1758); Meek, The Economics of Physiocracy (1962)",
+        details = "Inferred from its principle that only agriculture creates a net product, teaching would count as unproductive labour, so teacher pay could be cut first when the land-rent tax is stretched, and training would receive little public money beyond what farming needs. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy",
     ),
 
     entry(
@@ -113,7 +113,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Adam Smith",
         year = 1776,
         summary = "Inferred from its principle that competitive markets reward skill, teacher pay would follow what parents and employers will pay for teaching, so scarce skills would earn more and training would respond to what the labour market wants. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state protects contracts and otherwise stays out, teacher pay and training would depend on what local parents and employers can pay, so schools in poor areas could have low pay and weak training, and teachers would have no public floor or standing beyond what the market gives. There is no documented case in the pool. Source: Smith, The Wealth of Nations (1776)",
+        details = "Inferred from its principle that the state protects contracts and otherwise stays out, teacher pay and training would depend on what local parents and employers can pay, so schools in poor areas could have low pay and weak training, and teachers would have no public floor or standing beyond what the market gives. There is no documented case in the pool. Source: Smith, The Wealth of Nations",
     ),
 
     entry(
@@ -125,7 +125,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Carl Menger; Friedrich Hayek",
         year = 1871,
         summary = "Inferred from its principle that prices carry knowledge that no planner can gather, teacher pay and training places would follow price signals, rising where skills are short and easing where they are in surplus, without a fixed national quota. There is no documented case in the pool.",
-        details = "Inferred from its principle that state planning distorts production, a fixed national pay scale and training quota would hide the knowledge carried by prices, so places and pay would drift away from local need, and training could be expanded on credit beyond what schools and pupils can use. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre (1871); Hayek, The Use of Knowledge in Society (1945)",
+        details = "Inferred from its principle that state planning distorts production, a fixed national pay scale and training quota would hide the knowledge carried by prices, so places and pay would drift away from local need, and training could be expanded on credit beyond what schools and pupils can use. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society",
     ),
 
     entry(
@@ -137,7 +137,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Milton Friedman",
         year = 1962,
         summary = "Inferred from its principle that steady money growth keeps prices predictable and that competition opens schooling to choice, teachers' pay could hold its value, and schools would compete to attract teachers on the terms they offer. There is no documented case in the pool.",
-        details = "Inferred from its principle that deregulation and a smaller state reduce public controls, teacher pay and training could be left to private employers and school budgets with no public floor, so pay could fall behind that of graduates in other work, and training would depend on what each school can afford. There is no documented case in the pool. Source: Friedman, Capitalism and Freedom (1962); Harvey, A Brief History of Neoliberalism (2005)",
+        details = "Inferred from its principle that deregulation and a smaller state reduce public controls, teacher pay and training could be left to private employers and school budgets with no public floor, so pay could fall behind that of graduates in other work, and training would depend on what each school can afford. There is no documented case in the pool. Source: Friedman, Capitalism and Freedom; Harvey, A Brief History of Neoliberalism",
     ),
 
     entry(
@@ -149,7 +149,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "John Maynard Keynes",
         year = 1936,
         summary = "Inferred from its principle that public spending rises in slumps, teacher hiring and training could be stepped up in downturns, when posts and pay are most exposed to cuts, so that schools stay staffed and pay holds through a recession. There is no documented case in the pool.",
-        details = "Inferred from its principle that public spending falls in booms, teacher pay and training budgets could be cut when the economy is strong, so shortages would build up and need costly catch-up in the next slump, and teachers' standing would depend on the timing of public budgets rather than on steady need. There is no documented case in the pool. Source: Keynes, The General Theory (1936); Beveridge, Social Insurance and Allied Services (1942)",
+        details = "Inferred from its principle that public spending falls in booms, teacher pay and training budgets could be cut when the economy is strong, so shortages would build up and need costly catch-up in the next slump, and teachers' standing would depend on the timing of public budgets rather than on steady need. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services",
     ),
 
     entry(
@@ -173,7 +173,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Swedish Social Democrats and trade unions",
         year = 1938,
         summary = "Finland's master's requirement for teachers sets one master's-level bar for elementary and secondary teachers, with equal academic rank. The case covers training and academic rank, not pay or legal status, and accounts differ on dates and programme lengths.",
-        details = "Inferred from its principle that national wage bargaining sets one pay scale, teacher pay could stay the same across regions even where teachers are scarce, so shortages in remote or hard-to-staff schools could persist, and pay would not rise to attract teachers there. There is no documented case in the pool. Source: Saltsjöbaden Agreement (1938); Esping-Andersen, The Three Worlds of Welfare Capitalism (1990)",
+        details = "Inferred from its principle that national wage bargaining sets one pay scale, teacher pay could stay the same across regions even where teachers are scarce, so shortages in remote or hard-to-staff schools could persist, and pay would not rise to attract teachers there. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism",
     ),
 
     entry(
@@ -185,7 +185,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Japan's Ministry of International Trade and Industry",
         year = 1949,
         summary = "Inferred from its principle that the state directs credit to chosen industries and disciplines firms by performance, teacher training could be aimed at the trades those industries need, with vocational teachers paid partly on measured results. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state directs resources to chosen sectors, teacher pay and training could follow those sectors, leaving teachers of other subjects with little funding and status, and performance targets could push teachers to teach to measures rather than to the whole pupil. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982); Amsden, Asia's Next Giant (1989)",
+        details = "Inferred from its principle that the state directs resources to chosen sectors, teacher pay and training could follow those sectors, leaving teachers of other subjects with little funding and status, and performance targets could push teachers to teach to measures rather than to the whole pupil. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant",
     ),
 
     entry(
@@ -197,7 +197,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Henry George",
         year = 1879,
         summary = "Inferred from its principle that the rent of land should fund public services, teacher pay could come from land values, so schools in areas where land is valuable would have a steady base for teachers' salaries. There is no documented case in the pool.",
-        details = "Inferred from its principle that land values fund public services, teacher pay would follow the value of land, so schools in areas where land is cheap would have less money for pay, training and standing, and the funding base could fall sharply in a property downturn. There is no documented case in the pool. Source: George, Progress and Poverty (1879)",
+        details = "Inferred from its principle that land values fund public services, teacher pay would follow the value of land, so schools in areas where land is cheap would have less money for pay, training and standing, and the funding base could fall sharply in a property downturn. There is no documented case in the pool. Source: George, Progress and Poverty",
     ),
 
     entry(
@@ -209,7 +209,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Robert Owen; Charles Fourier",
         year = 1825,
         summary = "Inferred from its principle that cooperative communities replace wage competition, teachers would be full members of their community, paid from shared resources, with training open to all members as a common good. There is no documented case in the pool.",
-        details = "Inferred from its principle that communities are built by example rather than by law, teacher pay, training and standing would depend on each community's goodwill and success, with no legal floor, so teachers in a community that did not hold together would lose both pay and post. There is no documented case in the pool. Source: Owen, A New View of Society (1813); Fourier, Le Nouveau Monde industriel (1829)",
+        details = "Inferred from its principle that communities are built by example rather than by law, teacher pay, training and standing would depend on each community's goodwill and success, with no legal floor, so teachers in a community that did not hold together would lose both pay and post. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel",
     ),
 
     entry(
@@ -221,7 +221,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Pierre-Joseph Proudhon",
         year = 1840,
         summary = "Inferred from its principle that mutual credit and free contracts let workers keep the full value of their work, teachers would keep the full return on their teaching, with pay agreed freely between teachers and the families and associations they serve. There is no documented case in the pool.",
-        details = "Inferred from its principle that free contracts replace state rules, teachers would have no legal pay floor and no state duty to train them, so pay would depend on bargaining strength, and teachers in poor districts, with little credit or bargaining power, could face low pay and few routes into training. There is no documented case in the pool. Source: Proudhon, What Is Property? (1840)",
+        details = "Inferred from its principle that free contracts replace state rules, teachers would have no legal pay floor and no state duty to train them, so pay would depend on bargaining strength, and teachers in poor districts, with little credit or bargaining power, could face low pay and few routes into training. There is no documented case in the pool. Source: Proudhon, What Is Property?",
     ),
 
     entry(
@@ -233,7 +233,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Rochdale Pioneers",
         year = 1844,
         summary = "Inferred from its principle that members own and control schools and training bodies, one member one vote, teachers would be members with a vote on pay, training and posts, and the surplus would be shared between users and workers. There is no documented case in the pool.",
-        details = "Inferred from its principle that the surplus is shared between users and workers, teacher pay would rise and fall with the cooperative's income, so pay could fall in a weak year, and members might vote to spend less on training than pupils need. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers (1844); Mondragón cooperatives (from 1956)",
+        details = "Inferred from its principle that the surplus is shared between users and workers, teacher pay would rise and fall with the cooperative's income, so pay could fall in a weak year, and members might vote to spend less on training than pupils need. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives",
     ),
 
     entry(
@@ -245,7 +245,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Peter Kropotkin",
         year = 1892,
         summary = "Inferred from its principle that goods are shared by need and there are no wages, teachers would receive what they need from the commune, with training open to all and no pay gap between teachers and other members. There is no documented case in the pool.",
-        details = "Inferred from its principle that there are no wages and no state, teaching would depend on free association and the commune's agreement, so hard or unpopular posts could go unfilled, and a teacher's standing would rest on the community's view of their work rather than on any rule. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread (1892)",
+        details = "Inferred from its principle that there are no wages and no state, teaching would depend on free association and the commune's agreement, so hard or unpopular posts could go unfilled, and a teacher's standing would rest on the community's view of their work rather than on any rule. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread",
     ),
 
     entry(
@@ -257,7 +257,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Fernand Pelloutier; the French CGT",
         year = 1895,
         summary = "Inferred from its principle that workers' organisations run industry directly, teachers' unions would set pay, training and entry standards through collective bargaining, giving teachers a direct voice in the decisions that affect them. There is no documented case in the pool.",
-        details = "Inferred from its principle that unions use strikes and, in the end, a general strike, pupils' schooling could be interrupted by industrial action, and pay would depend on the strength of each union, so teachers outside a strong union could have lower pay and less standing. There is no documented case in the pool. Source: Founding of the French CGT (1895); Pelloutier, Histoire des Bourses du travail (1902)",
+        details = "Inferred from its principle that unions use strikes and, in the end, a general strike, pupils' schooling could be interrupted by industrial action, and pay would depend on the strength of each union, so teachers outside a strong union could have lower pay and less standing. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail",
     ),
 
     entry(
@@ -269,7 +269,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Sidney and Beatrice Webb",
         year = 1884,
         summary = "Inferred from its principle that democratic, gradual reform builds public enterprise and a national minimum of welfare, teacher pay and training would be set by public bodies, with a national floor for pay and one common standard for training. There is no documented case in the pool.",
-        details = "Inferred from its principle that change comes gradually through municipal and national enterprise, teacher pay could vary from council to council and reform could be slow, so teachers in councils with small budgets would wait longer for better pay and training. There is no documented case in the pool. Source: Fabian Essays in Socialism (1889); Founding of the Fabian Society (1884)",
+        details = "Inferred from its principle that change comes gradually through municipal and national enterprise, teacher pay could vary from council to council and reform could be slow, so teachers in councils with small budgets would wait longer for better pay and training. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society",
     ),
 
     entry(
@@ -281,7 +281,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "G. D. H. Cole",
         year = 1917,
         summary = "Inferred from its principle that workers and consumers share control of industry through guild-like councils, teachers' councils would set entry standards and pay with parents and pupils represented, and the state would be one partner among several. There is no documented case in the pool.",
-        details = "Inferred from its principle that several partners share control, decisions on pay and training could be slow or deadlocked, and a teachers' council could restrict entry as a craft guild does, so new teachers would find it hard to enter and pay would reflect bargaining rather than pupil need. There is no documented case in the pool. Source: Cole, Self-Government in Industry (1917)",
+        details = "Inferred from its principle that several partners share control, decisions on pay and training could be slow or deadlocked, and a teachers' council could restrict entry as a craft guild does, so new teachers would find it hard to enter and pay would reflect bargaining rather than pupil need. There is no documented case in the pool. Source: Cole, Self-Government in Industry",
     ),
 
     entry(
@@ -305,7 +305,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Oskar Lange; Fred Taylor",
         year = 1938,
         summary = "Inferred from its principle that managers follow market prices inside public ownership, teacher pay and training budgets could follow measured demand, with schools that need teachers able to bid for them under rules set by a central board. There is no documented case in the pool.",
-        details = "Inferred from its principle that a central board sets the rules and the investment while schools follow market prices, poorer districts could have less to bid with, so teacher pay and training would vary with local budgets, and the board might not fund schools where prices are low. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism (1938; Lange's essays date from 1936-1937); Yugoslav workers' self-management (1950s)",
+        details = "Inferred from its principle that a central board sets the rules and the investment while schools follow market prices, poorer districts could have less to bid with, so teacher pay and training would vary with local budgets, and the board might not fund schools where prices are low. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management (1950s)",
     ),
 
     entry(
@@ -317,7 +317,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Karl Marx",
         year = 1875,
         summary = "Inferred from its principle that distribution follows ability and need once classes disappear, teachers would be paid by need and would contribute by ability, with training open to all and no class gap between teachers and the people they teach. There is no documented case in the pool.",
-        details = "Inferred from its principle that distribution by need applies only after the state withers away and classes disappear, the principle gives no pay or training rule for the interval before then, so teacher pay and status in that interval would be set by whatever transitional authority holds power, with no fixed standard. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme (1875)",
+        details = "Inferred from its principle that distribution by need applies only after the state withers away and classes disappear, the principle gives no pay or training rule for the interval before then, so teacher pay and status in that interval would be set by whatever transitional authority holds power, with no fixed standard. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme",
     ),
 
     entry(
@@ -341,7 +341,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Michael Albert; Robin Hahnel",
         year = 1991,
         summary = "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, teachers and parents would propose pay, training and posts in councils, with the complexity of teaching and other jobs balanced so that no post is treated as lesser. There is no documented case in the pool.",
-        details = "Inferred from its principle that councils plan through repeated proposals and that neither markets nor central planners allocate, pay and training decisions could be slow to settle, and a shortage in one subject could persist until enough proposals converge, with no price signal to bring teachers in. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward (1991)",
+        details = "Inferred from its principle that councils plan through repeated proposals and that neither markets nor central planners allocate, pay and training decisions could be slow to settle, and a shortage in one subject could persist until enough proposals converge, with no price signal to bring teachers in. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward",
     ),
 
     entry(
@@ -353,7 +353,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Benito Mussolini; Alfredo Rocco",
         year = 1934,
         summary = "Inferred from its principle that employers and unions are organised into state-controlled corporations, teachers' pay and training could be set in one corporate framework with other trades, so that one standard covers each profession and its entry. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state directs industry toward national goals, including war, teacher training and posts could be aimed at those goals, pay could be set by the corporation rather than by bargaining, and teachers whose work did not fit those aims could lose posts and standing. There is no documented case in the pool. Source: Italian corporative law (1934); Nazi Four-Year Plan (1936)",
+        details = "Inferred from its principle that the state directs industry toward national goals, including war, teacher training and posts could be aimed at those goals, pay could be set by the corporation rather than by bargaining, and teachers whose work did not fit those aims could lose posts and standing. There is no documented case in the pool. Source: Italian corporative law; Nazi Four-Year Plan",
     ),
 
     entry(
@@ -365,7 +365,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Ahmad El Najjar",
         year = 1963,
         summary = "Inferred from its principle that finance shares profit and risk and that zakat redistributes wealth, teachers could be paid partly from the shared profits of schools and from zakat, with teaching contracts resting on trust and written terms for shared risk. There is no documented case in the pool.",
-        details = "Inferred from its principle that interest is prohibited and finance shares profit and risk, school buildings and teacher pay could be hard to finance when shared profits fall, and teachers could have no fixed claim on pay; zakat flows could also vary from year to year. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985); Founding of the Mit Ghamr savings bank (1963)",
+        details = "Inferred from its principle that interest is prohibited and finance shares profit and risk, school buildings and teacher pay could be hard to finance when shared profits fall, and teachers could have no fixed claim on pay; zakat flows could also vary from year to year. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank",
     ),
 
     entry(
@@ -377,7 +377,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "E. F. Schumacher",
         year = 1966,
         summary = "Inferred from its principle that economic life serves well-being and that consumption is moderate, teachers would be paid modest, stable salaries suited to a small community, and teaching would be valued as a service to the community's well-being. There is no documented case in the pool.",
-        details = "Inferred from its principle that production is small-scale and local, teacher pay and training could be limited to what the local community can fund, so specialist and advanced training would be scarce, and teachers would have few means to move to larger schools or gain further qualifications. There is no documented case in the pool. Source: Schumacher, Buddhist Economics (first published 1966); Schumacher, Small Is Beautiful (1973)",
+        details = "Inferred from its principle that production is small-scale and local, teacher pay and training could be limited to what the local community can fund, so specialist and advanced training would be scarce, and teachers would have few means to move to larger schools or gain further qualifications. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful",
     ),
 
     entry(
@@ -389,7 +389,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Pope Leo XIII; G. K. Chesterton; Hilaire Belloc",
         year = 1891,
         summary = "Inferred from its principle that a just wage and widespread small enterprise spread work and property, teachers would be paid a just wage, small local bodies would run schools close to parents, and subsidiarity would keep decisions on training and posts local. There is no documented case in the pool.",
-        details = "Inferred from its principle that subsidiarity leaves decisions with the smallest competent body, teacher pay and training could depend on small local bodies with little money, so poorer localities could have lower pay, weaker training and less standing for teachers, with no wider body obliged to step in. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum (1891); Belloc, The Servile State (1912)",
+        details = "Inferred from its principle that subsidiarity leaves decisions with the smallest competent body, teacher pay and training could depend on small local bodies with little money, so poorer localities could have lower pay, weaker training and less standing for teachers, with no wider body obliged to step in. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State",
     ),
 
     entry(
@@ -401,7 +401,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Herman Daly; Kate Raworth",
         year = 1977,
         summary = "Inferred from its principle that every person has a social floor within planetary limits, teachers would have a secure pay floor, and training would be sized to real need rather than to growth targets. There is no documented case in the pool.",
-        details = "Inferred from its principle that there is no growth imperative, teacher pay could stagnate in real terms if budgets are held flat, and any rise in pay or training would need to be paid for by cutting other spending, so shortages could persist in fast-growing areas. There is no documented case in the pool. Source: Daly, Steady-State Economics (1977); Raworth, Doughnut Economics (2017)",
+        details = "Inferred from its principle that there is no growth imperative, teacher pay could stagnate in real terms if budgets are held flat, and any rise in pay or training would need to be paid for by cutting other spending, so shortages could persist in fast-growing areas. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics",
     ),
 
     entry(
@@ -413,7 +413,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Thomas Paine",
         year = 1797,
         summary = "Inferred from its principle that every citizen receives an unconditional income, teachers could choose teaching for vocation as well as pay, so schools could draw people who would not otherwise take the work, and training would be open to all without a means test. There is no documented case in the pool.",
-        details = "Inferred from its principle that the unconditional income is paid for by taxes on land and resources, teacher pay could be set below what schools would otherwise need to offer, since people with a basic income may accept lower wages, and posts in hard or unpopular schools could go unfilled unless pay rose. There is no documented case in the pool. Source: Paine, Agrarian Justice (1797); Van Parijs, Real Freedom for All (1995)",
+        details = "Inferred from its principle that the unconditional income is paid for by taxes on land and resources, teacher pay could be set below what schools would otherwise need to offer, since people with a basic income may accept lower wages, and posts in hard or unpopular schools could go unfilled unless pay rose. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All",
     ),
 
     entry(
@@ -425,7 +425,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Stephanie Kelton; L. Randall Wray",
         year = 2020,
         summary = "Inferred from its principle that a government which issues its own currency can fund full employment, teacher posts and training could be funded without a debt limit, so schools could be staffed to need and pay could keep up with demand. There is no documented case in the pool.",
-        details = "Inferred from its principle that inflation, not debt, is the real limit, teacher pay could be eroded by rising prices, so real pay rises would depend on keeping inflation in check, and sustained inflation could cut teachers' real pay even while their posts stay funded. There is no documented case in the pool. Source: Kelton, The Deficit Myth (2020)",
+        details = "Inferred from its principle that inflation, not debt, is the real limit, teacher pay could be eroded by rising prices, so real pay rises would depend on keeping inflation in check, and sustained inflation could cut teachers' real pay even while their posts stay funded. There is no documented case in the pool. Source: Kelton, The Deficit Myth",
     ),
 
     entry(
@@ -437,7 +437,7 @@ val db212Records: List<RecordEntity> = listOf(
         author = "Elinor Ostrom",
         year = 1990,
         summary = "Inferred from its principle that communities govern a shared resource with rules they design, monitor and enforce, a school community could set teacher pay, training and posts by its own rules, monitored by the people it serves and nested within wider rules. There is no documented case in the pool.",
-        details = "Inferred from its principle that communities design, monitor and enforce their own rules, teacher pay and training could differ widely between communities that lack the means or the will to monitor, and rules could favour those who already run the school, leaving teachers outside the governing group with little say. There is no documented case in the pool. Source: Ostrom, Governing the Commons (1990)",
+        details = "Inferred from its principle that communities design, monitor and enforce their own rules, teacher pay and training could differ widely between communities that lack the means or the will to monitor, and rules could favour those who already run the school, leaving teachers outside the governing group with little say. There is no documented case in the pool. Source: Ostrom, Governing the Commons",
     ),
 
     entry(

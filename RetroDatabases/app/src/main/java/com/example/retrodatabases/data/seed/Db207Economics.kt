@@ -17,7 +17,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Marcel Mauss",
         year = 1925,
         summary = "Inferred from its principle that gifts create obligations to give and to return, the best schooling would rest on reciprocal duties, with families giving time and help to the school and the school repaying them with teaching that builds trust and standing in the community. There is no documented case in the pool.",
-        details = "Inferred from its principle that status and alliances are built through exchange, schools would give places and the best teachers to families with the most to offer and the strongest ties, so pupils without those ties would be left out; no documented case in the pool. There is no documented case in the pool. Source: Mauss, The Gift (1925); Sahlins, Stone Age Economics (1972)",
+        details = "Inferred from its principle that status and alliances are built through exchange, schools would give places and the best teachers to families with the most to offer and the strongest ties, so pupils without those ties would be left out. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics",
     ),
 
     entry(
@@ -29,7 +29,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Alexander Chayanov",
         year = 1925,
         summary = "Inferred from its principle that a household balances its work against its needs, schooling would fit around the farm year, with lessons in slack seasons and pupils free to leave for the harvest without losing their place. There is no documented case in the pool.",
-        details = "Inferred from its principle that production serves household consumption, children would be kept at work on the farm whenever the household needs labour, so schooling would stop early and come second to the harvest; no documented case in the pool. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy (1925)",
+        details = "Inferred from its principle that production serves household consumption, children would be kept at work on the farm whenever the household needs labour, so schooling would stop early and come second to the harvest. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy",
     ),
 
     entry(
@@ -41,7 +41,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Karl Polanyi, Conrad Arensberg, Harry Pearson",
         year = 1957,
         summary = "Inferred from its principle that a central authority collects goods and redistributes them, the best schooling would be paid for from central revenue, with trained teachers and the same funding reaching every district rather than only the centre. There is no documented case in the pool.",
-        details = "Inferred from its principle that the centre decides who receives what, schooling would train the scribes and officials the centre needs, with schools for its own staff and little for the wider population; no documented case in the pool. There is no documented case in the pool. Source: Polanyi, The Great Transformation (1944); Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires (1957)",
+        details = "Inferred from its principle that the centre decides who receives what, schooling would train the scribes and officials the centre needs, with schools for its own staff and little for the wider population. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires",
     ),
 
     entry(
@@ -53,7 +53,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Plantation owners and colonial legislatures",
         year = 1619,
         summary = "Inferred from its principle that labour is extracted through ownership, the best a slave economy could offer is training in the few skills its enterprises need, given to a small group who keep records or run trades, with no general schooling. There is no documented case in the pool.",
-        details = "Inferred from its principle that the enslaved are denied education and property, schooling would be withheld from them altogether, with no public school, no protected place and no route to reading, which keeps labour under the owner's control; no documented case in the pool. There is no documented case in the pool. Source: Williams, Capitalism and Slavery (1944)",
+        details = "Inferred from its principle that the enslaved are denied education and property, schooling would be withheld from them altogether, with no public school, no protected place and no route to reading, which keeps labour under the owner's control. There is no documented case in the pool. Source: Williams, Capitalism and Slavery",
     ),
 
     entry(
@@ -65,7 +65,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Carolingian administrators",
         year = 800,
         summary = "Inferred from its principle that the manor is largely self-supplying, the best schooling would be parish-based, taught near home by the local church with the lord paying the costs, so that children gain basic letters and reckoning close to their families. There is no documented case in the pool.",
-        details = "Inferred from its principle that peasants owe labour services to a lord, schooling would be kept for the lord's clerks and the church, while peasant children start work on the manor young and seldom attend; no documented case in the pool. There is no documented case in the pool. Source: Bloch, Feudal Society (1939-1940); Capitulare de villis (c. 800)",
+        details = "Inferred from its principle that peasants owe labour services to a lord, schooling would be kept for the lord's clerks and the church, while peasant children start work on the manor young and seldom attend. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis (c. 800)",
     ),
 
     entry(
@@ -101,7 +101,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "François Quesnay",
         year = 1758,
         summary = "Inferred from its principle that only agriculture makes a net product, the best schooling would be funded from a single tax on land rent, and rural schools would serve the farming families whose work makes that net product. There is no documented case in the pool.",
-        details = "Inferred from its principle that only agriculture creates a net product, schooling for towns and crafts would be left thin, with teachers and funds concentrated on farm children and few places for pupils who will work outside farming; no documented case in the pool. There is no documented case in the pool. Source: Quesnay, Tableau économique (1758); Meek, The Economics of Physiocracy (1962)",
+        details = "Inferred from its principle that only agriculture creates a net product, schooling for towns and crafts would be left thin, with teachers and funds concentrated on farm children and few places for pupils who will work outside farming. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy",
     ),
 
     entry(
@@ -125,7 +125,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Carl Menger; Friedrich Hayek",
         year = 1871,
         summary = "Sweden's free-school reform gave families the right to choose schools, and research finds rising average results in municipalities with more free schools; a 2010 Bristol study found small gains and tentatively linked the reforms to greater segregation and inequality.",
-        details = "Inferred from its principle that no planner can gather the knowledge spread across many people, schools set by a central plan would place pupils where planners expect demand rather than where families need places, and credit expansion would fund buildings beyond what families choose to pay for; no documented case in the pool. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre (1871); Hayek, The Use of Knowledge in Society (1945)",
+        details = "Inferred from its principle that no planner can gather the knowledge spread across many people, schools set by a central plan would place pupils where planners expect demand rather than where families need places, and credit expansion would fund buildings beyond what families choose to pay for. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society",
     ),
 
     entry(
@@ -149,7 +149,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "John Maynard Keynes",
         year = 1936,
         summary = "Inferred from its principle that public spending should rise in slumps, the best schooling would expand school buildings, teacher hiring and pay in downturns, so that teachers and builders keep their work through the slump. There is no documented case in the pool.",
-        details = "Inferred from its principle that spending is set to manage demand, school building and hiring would start and stop with the economic cycle rather than with pupil numbers, so classes would be crowded when the economy is strong and new places would wait for a downturn; no documented case in the pool. There is no documented case in the pool. Source: Keynes, The General Theory (1936); Beveridge, Social Insurance and Allied Services (1942)",
+        details = "Inferred from its principle that spending is set to manage demand, school building and hiring would start and stop with the economic cycle rather than with pupil numbers, so classes would be crowded when the economy is strong and new places would wait for a downturn. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services",
     ),
 
     entry(
@@ -173,7 +173,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Swedish Social Democrats and trade unions",
         year = 1938,
         summary = "Finland's comprehensive school reform (peruskoulu) replaced the two-track system after primary school with a nine-year comprehensive school; a working paper finds it reduced the link between fathers' and sons' incomes by about seven percentage points, with a small gain in verbal test scores and no average change in arithmetic or logical reasoning. A newer study on another measure gives a different figure; the two are not comparable.",
-        details = "Inferred from its principle that universal public services are financed by high taxes, a single state-run school system would leave parents no choice of school and no rival schools to compare against, so weak schools could persist without pressure to improve; no documented case in the pool. There is no documented case in the pool. Source: Saltsjöbaden Agreement (1938); Esping-Andersen, The Three Worlds of Welfare Capitalism (1990)",
+        details = "Inferred from its principle that universal public services are financed by high taxes, a single state-run school system would leave parents no choice of school and no rival schools to compare against, so weak schools could persist without pressure to improve. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism",
     ),
 
     entry(
@@ -197,7 +197,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Henry George",
         year = 1879,
         summary = "Inferred from its principle that the rent of land should fund public services, the best schooling would be paid for from a tax on land values, so that rising land values in a district fund the schools serving it and families are not taxed on their labour for schooling. There is no documented case in the pool.",
-        details = "Inferred from its principle that land values should fund public services, school budgets tied to land values would rise and fall with property booms and slumps, leaving schools in poorer districts with less money when land values there are low; no documented case in the pool. There is no documented case in the pool. Source: George, Progress and Poverty (1879)",
+        details = "Inferred from its principle that land values should fund public services, school budgets tied to land values would rise and fall with property booms and slumps, leaving schools in poorer districts with less money when land values there are low. There is no documented case in the pool. Source: George, Progress and Poverty",
     ),
 
     entry(
@@ -209,7 +209,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Robert Owen; Charles Fourier",
         year = 1825,
         summary = "Robert Owen's infant school at New Lanark opened on 1 January 1816 for very young children, dropped rewards and punishments, held many lessons outdoors and included music and dance; infant schools spread across Britain in the 1820s and 1830s, though sources disagree on the age range and the daily detail is thin.",
-        details = "Inferred from its principle that cooperative communities are built by example, schools would depend on the energy and goodwill of their founders rather than on public funding, and could close when a founder leaves; no documented case in the pool. There is no documented case in the pool. Source: Owen, A New View of Society (1813); Fourier, Le Nouveau Monde industriel (1829)",
+        details = "Inferred from its principle that cooperative communities are built by example, schools would depend on the energy and goodwill of their founders rather than on public funding, and could close when a founder leaves. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel",
     ),
 
     entry(
@@ -221,7 +221,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Pierre-Joseph Proudhon",
         year = 1840,
         summary = "Inferred from its principle that mutual credit and free contracts let workers keep the value of their work, the best schooling would be run by parents and teachers under free contracts, with teachers paid at cost and no rent charged on the premises used for teaching. There is no documented case in the pool.",
-        details = "Inferred from its principle that free contracts govern all dealings, schooling would depend on what each family can bargain for, so families with less bargaining power would get fewer and poorer places, with no public duty to guarantee a place for every child; no documented case in the pool. There is no documented case in the pool. Source: Proudhon, What Is Property? (1840)",
+        details = "Inferred from its principle that free contracts govern all dealings, schooling would depend on what each family can bargain for, so families with less bargaining power would get fewer and poorer places, with no public duty to guarantee a place for every child. There is no documented case in the pool. Source: Proudhon, What Is Property?",
     ),
 
     entry(
@@ -233,7 +233,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Rochdale Pioneers",
         year = 1844,
         summary = "Inferred from its principle that members own and control their institutions, one member one vote, the best schooling would be run by a cooperative of parents, teachers and pupils' representatives, with the gains shared between the families served and the staff who teach. There is no documented case in the pool.",
-        details = "Inferred from its principle that members decide by one member one vote, school decisions would fall to the most active members, so parents with time for meetings would shape the school while others had less say; no documented case in the pool. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers (1844); Mondragón cooperatives (from 1956)",
+        details = "Inferred from its principle that members decide by one member one vote, school decisions would fall to the most active members, so parents with time for meetings would shape the school while others had less say. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives",
     ),
 
     entry(
@@ -245,7 +245,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Peter Kropotkin",
         year = 1892,
         summary = "Francisco Ferrer's Modern School in Barcelona was an anti-authoritarian school, opened in 1901 to oppose Church control of schooling; the authorities closed it in 1906 after a crackdown, and a Modern School movement followed, including a school in New York in January 1911.",
-        details = "Inferred from its principle that there is no state and that free association replaces contracts, schooling would depend on voluntary communes, with no duty to attend and no guarantee that every child has a school within reach; no documented case in the pool. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread (1892)",
+        details = "Inferred from its principle that there is no state and that free association replaces contracts, schooling would depend on voluntary communes, with no duty to attend and no guarantee that every child has a school within reach. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread",
     ),
 
     entry(
@@ -257,7 +257,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Fernand Pelloutier; the French CGT",
         year = 1895,
         summary = "Inferred from its principle that trade unions run industry through workers' own organisations, the best schooling would be run directly by teachers' and workers' unions, with classes set to the trades pupils are likely to join and study and work linked inside one organisation. There is no documented case in the pool.",
-        details = "Inferred from its principle that strikes, and eventually a general strike, are the main tools, schooling would be exposed to stoppages, so pupils would lose teaching days whenever the unions called action, with no rule to protect a child's place; no documented case in the pool. There is no documented case in the pool. Source: Founding of the French CGT (1895); Pelloutier, Histoire des Bourses du travail (1902)",
+        details = "Inferred from its principle that strikes, and eventually a general strike, are the main tools, schooling would be exposed to stoppages, so pupils would lose teaching days whenever the unions called action, with no rule to protect a child's place. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail",
     ),
 
     entry(
@@ -269,7 +269,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Sidney and Beatrice Webb",
         year = 1884,
         summary = "Finland's comprehensive school reform (peruskoulu) replaced a two-track system with a nine-year common school for all; a working paper finds it reduced the link between fathers' and sons' incomes by about seven percentage points. A newer study on another measure gives a different figure; the two are not comparable.",
-        details = "Inferred from its principle that schools are run as municipal and national public enterprises, a central system could set one curriculum and one route for all, with little local choice and little room for schools to differ; no documented case in the pool. There is no documented case in the pool. Source: Fabian Essays in Socialism (1889); Founding of the Fabian Society (1884)",
+        details = "Inferred from its principle that schools are run as municipal and national public enterprises, a central system could set one curriculum and one route for all, with little local choice and little room for schools to differ. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society",
     ),
 
     entry(
@@ -281,7 +281,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "G. D. H. Cole",
         year = 1917,
         summary = "Inferred from its principle that workers and consumers share control of industry through guild-like councils, the best schooling would be run by councils of teachers, parents and pupils' representatives, with the state as one partner among several and no single body in charge. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state is only one partner among several, schooling could be split among councils with different rules in each district, so pupils who move between districts would meet different standards and gaps in provision; no documented case in the pool. There is no documented case in the pool. Source: Cole, Self-Government in Industry (1917)",
+        details = "Inferred from its principle that the state is only one partner among several, schooling could be split among councils with different rules in each district, so pupils who move between districts would meet different standards and gaps in provision. There is no documented case in the pool. Source: Cole, Self-Government in Industry",
     ),
 
     entry(
@@ -292,8 +292,8 @@ val db207Records: List<RecordEntity> = listOf(
         originalTitle = "Pyatiletka (the first Five-Year Plan)",
         author = "Soviet planners; Joseph Stalin",
         year = 1928,
-        summary = "Soviet compulsory schooling and the 1939 census record a 1930 measure that made four years of schooling compulsory from age eight, and seven years in industrial cities and workers' settlements; the census literacy figures are treated as unreliable, and the sources are secondary or Soviet-era, so those figures are unconfirmed.",
-        details = "Inferred from its principle that the state mobilises labour for rapid industrialisation, schooling could be cut short or set to the plan's needs, with pupils moved early into work and training placed where output is short; no documented case in the pool. There is no documented case in the pool. Source: Kornai, The Socialist System (1992); First Five-Year Plan (1928-1932)",
+        summary = "China's exemption from charges for rural compulsory education waived tuition and miscellaneous charges for rural pupils in the western provinces from spring 2006 and in all rural areas from spring 2007, and a June 2006 amendment to the Compulsory Education Law banned tuition and arbitrary fees. Sources differ on the number of pupils affected, and they do not cover outcomes after the 2007 roll-out.",
+        details = "Inferred from its principle that the state mobilises labour for rapid industrialisation, schooling could be cut short or set to the plan's needs, with pupils moved early into work and training placed where output is short. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan",
     ),
 
     entry(
@@ -305,7 +305,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Oskar Lange; Fred Taylor",
         year = 1938,
         summary = "Inferred from its principle that managers follow market prices under public ownership, the best schooling would give schools budgets from public funds that respond to pupil numbers and parents' choices, with a central board setting the rules and the investment. There is no documented case in the pool.",
-        details = "Inferred from its principle that a central board sets the rules and the investment, schools would wait on the centre for capital and rule changes, so local needs and parents' views would reach investment decisions slowly; no documented case in the pool. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism (1938; Lange's essays date from 1936-1937); Yugoslav workers' self-management (1950s)",
+        details = "Inferred from its principle that a central board sets the rules and the investment, schools would wait on the centre for capital and rule changes, so local needs and parents' views would reach investment decisions slowly. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management (1950s)",
     ),
 
     entry(
@@ -317,7 +317,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Karl Marx",
         year = 1875,
         summary = "Inferred from its principle that distribution follows need and ability once classes disappear, the best schooling would be free and open to all, with each pupil given the teaching that his or her ability and needs call for, paid from common funds. There is no documented case in the pool.",
-        details = "Inferred from its principle that the state withers away only after classes disappear, a state still in place could sort pupils early by a fixed rule of ability into streams, fixing their routes before they have a say; no documented case in the pool. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme (1875)",
+        details = "Inferred from its principle that the state withers away only after classes disappear, a state still in place could sort pupils early by a fixed rule of ability into streams, fixing their routes before they have a say. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme",
     ),
 
     entry(
@@ -341,7 +341,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Michael Albert; Robin Hahnel",
         year = 1991,
         summary = "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, the best schooling would be planned by councils of teachers, parents and pupils, revising proposals until each school's plan is accepted, with teaching jobs balanced in complexity. There is no documented case in the pool.",
-        details = "Inferred from its principle that neither markets nor central planners allocate, schools could respond slowly to demand, because repeated rounds of council proposals can delay places and staff changes, and families outside the councils would have less say; no documented case in the pool. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward (1991)",
+        details = "Inferred from its principle that neither markets nor central planners allocate, schools could respond slowly to demand, because repeated rounds of council proposals can delay places and staff changes, and families outside the councils would have less say. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward",
     ),
 
     entry(
@@ -365,7 +365,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Ahmad El Najjar",
         year = 1963,
         summary = "Inferred from its principle that zakat redistributes wealth, the best schooling would be partly funded by zakat for poor families' children, with schools financed on shared profit and risk rather than on interest-bearing loans. There is no documented case in the pool.",
-        details = "Inferred from its principle that trust underpins contracts, schools could rely on personal trust and family ties rather than written rules, so families without ties to the foundations running schools would get fewer places and less recourse when a school fails; no documented case in the pool. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985); Founding of the Mit Ghamr savings bank (1963)",
+        details = "Inferred from its principle that trust underpins contracts, schools could rely on personal trust and family ties rather than written rules, so families without ties to the foundations running schools would get fewer places and less recourse when a school fails. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank",
     ),
 
     entry(
@@ -377,7 +377,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "E. F. Schumacher",
         year = 1966,
         summary = "Inferred from its principle that economic life serves well-being, the best schooling would be small-scale and local, with moderate class sizes and budgets sized to the community, so that schools stay close to the families they serve and avoid waste. There is no documented case in the pool.",
-        details = "Inferred from its principle that production is small-scale and local, schools in remote or poor areas could be too small to offer a full range of subjects, leaving pupils fewer options than in larger schools, with no means of sharing specialist teachers across districts; no documented case in the pool. There is no documented case in the pool. Source: Schumacher, Buddhist Economics (first published 1966); Schumacher, Small Is Beautiful (1973)",
+        details = "Inferred from its principle that production is small-scale and local, schools in remote or poor areas could be too small to offer a full range of subjects, leaving pupils fewer options than in larger schools, with no means of sharing specialist teachers across districts. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful",
     ),
 
     entry(
@@ -389,7 +389,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Pope Leo XIII; G. K. Chesterton; Hilaire Belloc",
         year = 1891,
         summary = "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, the best schooling would be run by local parish or village schools, with parents and local craftsmen helping to teach and teachers paid a just wage. There is no documented case in the pool.",
-        details = "Inferred from its principle that widespread property and small enterprise form the base, schooling could follow the local economy, with less funding where small enterprise is weak and pupils' options limited to local trades; no documented case in the pool. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum (1891); Belloc, The Servile State (1912)",
+        details = "Inferred from its principle that widespread property and small enterprise form the base, schooling could follow the local economy, with less funding where small enterprise is weak and pupils' options limited to local trades. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State",
     ),
 
     entry(
@@ -401,7 +401,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Herman Daly; Kate Raworth",
         year = 1977,
         summary = "Inferred from its principle that economic activity stays within planetary limits with a social floor under everyone, the best schooling would guarantee a free place and a basic education for every child, with schools sized to need rather than to growth targets. There is no documented case in the pool.",
-        details = "Inferred from its principle that there is no growth imperative, schooling could be kept too thin for the skills a changing economy needs, with little investment in new courses or teacher training, so pupils would lose out on those skills; no documented case in the pool. There is no documented case in the pool. Source: Daly, Steady-State Economics (1977); Raworth, Doughnut Economics (2017)",
+        details = "Inferred from its principle that there is no growth imperative, schooling could be kept too thin for the skills a changing economy needs, with little investment in new courses or teacher training, so pupils would lose out on those skills. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics",
     ),
 
     entry(
@@ -413,7 +413,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Thomas Paine",
         year = 1797,
         summary = "Inferred from its principle that every citizen receives an unconditional income, the best schooling would be free and open to all, and families would not need children's wages to keep them out of school, so pupils could stay for the full compulsory years. There is no documented case in the pool.",
-        details = "Inferred from its principle that income is unconditional, families could spend it on private tuition and extra lessons, which would widen the gap between children whose families can pay for extra help and those whose families cannot; no documented case in the pool. There is no documented case in the pool. Source: Paine, Agrarian Justice (1797); Van Parijs, Real Freedom for All (1995)",
+        details = "Inferred from its principle that income is unconditional, families could spend it on private tuition and extra lessons, which would widen the gap between children whose families can pay for extra help and those whose families cannot. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All",
     ),
 
     entry(
@@ -425,7 +425,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Stephanie Kelton; L. Randall Wray",
         year = 2020,
         summary = "Inferred from its principle that a government which issues its own currency can fund full employment, the best schooling would be fully funded from the public budget, with teachers, buildings and places paid for without waiting for tax receipts, and inflation, not debt, as the limit. There is no documented case in the pool.",
-        details = "Inferred from its principle that inflation is the real limit, school budgets could be cut whenever prices rise, even as pupil numbers grow, so classes could become larger and maintenance could lapse; no documented case in the pool. There is no documented case in the pool. Source: Kelton, The Deficit Myth (2020)",
+        details = "Inferred from its principle that inflation is the real limit, school budgets could be cut whenever prices rise, even as pupil numbers grow, so classes could become larger and maintenance could lapse. There is no documented case in the pool. Source: Kelton, The Deficit Myth",
     ),
 
     entry(
@@ -437,7 +437,7 @@ val db207Records: List<RecordEntity> = listOf(
         author = "Elinor Ostrom",
         year = 1990,
         summary = "Inferred from its principle that communities who share a resource govern it with rules they design, monitor and enforce, the best schooling would be run by a local community of parents and teachers that sets and enforces its own school rules within wider institutions. There is no documented case in the pool.",
-        details = "Inferred from its principle that users govern a shared resource, a school run by a local community could set rules that exclude newcomers or families unable to take part in its meetings, so pupils from outside the community would have less access to the school; no documented case in the pool. There is no documented case in the pool. Source: Ostrom, Governing the Commons (1990)",
+        details = "Inferred from its principle that users govern a shared resource, a school run by a local community could set rules that exclude newcomers or families unable to take part in its meetings, so pupils from outside the community would have less access to the school. There is no documented case in the pool. Source: Ostrom, Governing the Commons",
     ),
 
     entry(
