@@ -1,0 +1,60 @@
+{
+  "database": 215,
+  "practice": "Medicines and drug research",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "MD1",
+      "case": "The Bayh-Dole Act of 1980",
+      "years": "1980 onward",
+      "claim": "The Bayh-Dole Act of 1980 replaced a patchwork of agency rules, which one account counts as roughly twenty sets, with one framework. It let universities patent federally funded discoveries and license them to companies on an exclusive basis. A study in the New England Journal of Medicine, relayed secondhand, counts 153 FDA-approved drugs, vaccines or new indications traced to public-sector research over three decades. Company-formation tallies differ: over 7,000 in an AUTM-credited summary and over 6,500 in a congressional finding. An ITIF report counts 2,061 invention disclosures and 1,087 patents from research universities for 2017 to 2021.",
+      "source": "NEJM study on public-sector drug research, as relayed by Respiratory Therapy (secondary); ITIF, How the Bayh-Dole Act Supercharged Innovation; Issues.org, Is the Bayh-Dole Act Stifling Biomedical Innovation?",
+      "url": "https://respiratory-therapy.com/public-health/public-sector-research-responsible-for-many-new-drug-discoveries/",
+      "caveat": "None of these sources is a causal evaluation of the Act. The 153-drug figure is relayed secondhand, and the full NEJM paper was not read. The same relay says federally owned patents produced no drugs before 1980, which the search did not confirm.",
+      "relevant_to": [
+        "Developmental state",
+        "Monetarist neoliberalism",
+        "Commons governance"
+      ]
+    },
+    {
+      "id": "MD2",
+      "case": "Germany's early benefit assessment of new drugs (AMNOG), from 2011",
+      "years": "2011 to November 2023",
+      "claim": "In the first 14 assessments finalised by June 2012, the institute IQWiG gave an added benefit to 7 drugs and the Federal Joint Committee (G-BA) gave one to 10. Across 944 assessments up to November 2023, 42 per cent ended with no added benefit. Average launch-price rebates were 24 per cent where an added benefit was granted and 33 per cent where none was.",
+      "source": "ISPOR presentation, AMNOG Benefit Assessment in Germany: Outcomes from 2011 to November 2023; ISPOR abstract of 2012 by Novartis and IGES authors (secondary)",
+      "url": "https://www.ispor.org/heor-resources/presentations-database/presentation/intl2024-3898/137636",
+      "caveat": "The 2012 figures come from a company-linked abstract covering only the 14 processes. The 2022 update and the 2023 analysis share authors, so they are not independent checks. The price figures are averages, and the search did not give how each sample was drawn.",
+      "relevant_to": [
+        "Social market economy",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "MD3",
+      "case": "The Medicines Patent Pool and voluntary licences",
+      "years": "2008 to 2028 (projection)",
+      "claim": "The Medicines Patent Pool negotiates voluntary licences for medicines. Its first antiretroviral licence came on 30 September 2010, when the US National Institutes of Health agreed to share its patents with the pool. Roughly 22 million patient-years of treatment have been supplied through licensed generics, and a periodic audit by a major firm puts the savings at about 1.06 billion US dollars, without a stated period. A 2017 study models savings from pool licences over 2010 to 2028, and its affiliations include the pool. It argues that competition between generic makers lowers prices more reliably than voluntary discounts.",
+      "source": "Projected savings through voluntary licences of HIV drugs negotiated by the Medicines Patent Pool, PLOS ONE (2017); Patent pooling to increase access to essential medicines, PubMed Central (PMC6653814); UNAIDS press statement (30 September 2010)",
+      "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5444652/",
+      "caveat": "The search does not date the 1.06 billion US dollar total or name the drug covered by the 2010 patents. The 2017 study's savings are projections, not measured outcomes. Sources differ on the pool's founding: 2010 in the 2017 study, and under UNITAID in July 2008 in the UNAIDS statement.",
+      "relevant_to": [
+        "Commons governance",
+        "Cooperative economy"
+      ]
+    },
+    {
+      "id": "MD4",
+      "case": "Soviet planning of drug supply",
+      "years": "1947 to the 1970s",
+      "claim": "A study of penicillin supply in the late 1940s describes a centralised distribution system in which a coefficient set by the Ministry fixed each republic's share of total drug supplies. In 1974 a letter to the newspaper Trud asked whether planners had miscalculated output or purchasing, while essential drugs had gone missing from pharmacies in Arkhangelsk and Leningrad, according to a 2025 report. A Cambridge University Press review of a book on Soviet planning concludes that the drive for social justice and planned production fell short of ample supply, reliable distribution and quality. A University of Pittsburgh lecture page reports that the health ministry did not treat drug shortages as a driver of falling population health.",
+      "source": "Novaya Gazeta Europe, Vitrina bez lekarstv, 2025 (in Russian, secondary); a study of penicillin supply in the USSR, Vestnik of the Samara State Technical University; Cambridge University Press review of a book by Olga Zvonareva; University of Pittsburgh lecture page",
+      "url": "https://novayagazeta.eu/articles/2025/08/24/vitrina-bez-lekarstv",
+      "caveat": "The 1974 letter is recounted in a 2025 report and was not checked against Trud. The review is of a book, not of primary data. Coverage of 1970s and 1980s planning mechanics is thin, and the search found no national shortage figures.",
+      "relevant_to": [
+        "Command socialism",
+        "Marxian communism"
+      ]
+    }
+  ]
+}

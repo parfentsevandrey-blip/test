@@ -1,111 +1,534 @@
 {
   "spheres": [
-    {"name": "Education", "practices": [
-      {"name": "Primary and secondary schooling", "short": "schooling", "database": 207, "scope": "Who pays for and runs compulsory schooling, and how pupils, classes and schools are organised."},
-      {"name": "Higher education", "short": "higher education", "database": 208, "scope": "Who pays for, provides and admits students to universities and colleges, and how tuition and student support work."},
-      {"name": "Vocational training and apprenticeship", "short": "vocational training", "database": 209, "scope": "How people learn a trade, in schools or in workplaces through apprenticeships, and who pays for it."},
-      {"name": "Early childhood care and education", "short": "early childhood care", "database": 210, "scope": "Care and learning for children before compulsory school, who provides it and who pays for it."},
-      {"name": "Adult and lifelong learning", "short": "adult learning", "database": 211, "scope": "Learning after the main education: retraining, second-chance courses and evening classes, and who pays for them."},
-      {"name": "Teacher pay, training and status", "short": "teacher pay", "database": 212, "scope": "How teachers are paid, trained, selected, promoted and respected, and who sets those rules."}
-    ]},
-    {"name": "Medicine and health", "practices": [
-      {"name": "Health financing", "short": "health financing", "database": null, "scope": "How care is paid for: taxes, insurance contributions, out-of-pocket payment or a mix of these."},
-      {"name": "Hospitals and clinics", "short": "hospitals", "database": null, "scope": "Who owns, runs and staffs hospitals and clinics, and how they are paid."},
-      {"name": "Medicines and drug research", "short": "medicines", "database": null, "scope": "How new drugs are researched, priced, patented and supplied."},
-      {"name": "Doctors' training and pay", "short": "doctors", "database": null, "scope": "How doctors and nurses are trained, licensed, paid and spread across regions."},
-      {"name": "Mental health care", "short": "mental health", "database": null, "scope": "Who provides and pays for psychological and psychiatric care, and how waiting times and stigma are handled."},
-      {"name": "Care for older and dying people", "short": "elder care", "database": null, "scope": "Who provides and pays for care at home and in homes for older and dying people."},
-      {"name": "Public health and vaccination", "short": "public health", "database": null, "scope": "Who organises vaccination, screening, sanitation and health campaigns, and who pays for them."}
-    ]},
-    {"name": "Politics and governance", "practices": [
-      {"name": "Elections and political money", "short": "elections", "database": null, "scope": "How candidates are chosen and funded, and how votes are counted and contested."},
-      {"name": "Public administration and bureaucracy", "short": "bureaucracy", "database": null, "scope": "How the civil service is recruited, paid, supervised and held to account."},
-      {"name": "Ownership of strategic industries", "short": "state ownership", "database": null, "scope": "Which firms and sectors the state owns or controls, such as energy, rail and banks."},
-      {"name": "Taxation", "short": "taxation", "database": null, "scope": "Which taxes fund the state, how progressive they are, and who pays them."},
-      {"name": "Regulation and competition", "short": "regulation", "database": null, "scope": "How markets are regulated, monopolies are controlled and consumers are protected."},
-      {"name": "Local government and decentralisation", "short": "local government", "database": null, "scope": "How much power, money and decision-making sits in towns and regions rather than at the centre."}
-    ]},
-    {"name": "Work and employment", "practices": [
-      {"name": "Wages and minimum wages", "short": "wages", "database": null, "scope": "How pay is set, whether a legal minimum exists, and who sets it."},
-      {"name": "Trade unions and worker voice", "short": "unions", "database": null, "scope": "How workers organise, bargain and have a say in decisions at work."},
-      {"name": "Working time and paid leave", "short": "working time", "database": null, "scope": "Hours of work, holidays, parental and sick leave, and who sets them."},
-      {"name": "Unemployment and job security", "short": "unemployment", "database": null, "scope": "How people who lose work are protected, retrained and supported."},
-      {"name": "Worker ownership and co-determination", "short": "worker ownership", "database": null, "scope": "Whether workers own the firms they work in, or sit on their boards."},
-      {"name": "Automation and technological change", "short": "automation", "database": null, "scope": "Who gains and who loses when machines replace work, and who decides how fast this happens."}
-    ]},
-    {"name": "Money and finance", "practices": [
-      {"name": "Money creation and central banking", "short": "central banking", "database": null, "scope": "Who creates money, sets interest rates and controls the currency."},
-      {"name": "Banking and credit", "short": "credit", "database": null, "scope": "Who lends, who owns the banks, and who gets credit on what terms."},
-      {"name": "Pensions and retirement", "short": "pensions", "database": null, "scope": "How income in old age is funded: pay-as-you-go schemes, savings funds or the state."},
-      {"name": "Social and private insurance", "short": "insurance", "database": null, "scope": "How risks such as illness, accident, unemployment and disaster are shared."},
-      {"name": "Public debt", "short": "public debt", "database": null, "scope": "How governments borrow, how debt is repaid, and who holds it."}
-    ]},
-    {"name": "Entertainment and culture", "practices": [
-      {"name": "Media ownership and public broadcasting", "short": "media", "database": null, "scope": "Who owns newspapers, broadcasters and platforms, and how public broadcasting is funded."},
-      {"name": "Film, music and the arts", "short": "the arts", "database": null, "scope": "How films, music, theatre and visual arts are funded, distributed and judged."},
-      {"name": "Copyright and cultural property", "short": "copyright", "database": null, "scope": "How creators are rewarded, how long rights last, and who may copy and share."},
-      {"name": "Sport and professional leagues", "short": "sport", "database": null, "scope": "Who runs and funds sport, professional leagues, clubs and mass participation."},
-      {"name": "Games, gambling and lotteries", "short": "gambling", "database": null, "scope": "How games of chance are run, taxed and restricted."}
-    ]},
-    {"name": "Leisure and free time", "practices": [
-      {"name": "Holidays and free time", "short": "free time", "database": null, "scope": "How much free time people have and who provides holidays and leisure."},
-      {"name": "Parks, libraries and public spaces", "short": "public spaces", "database": null, "scope": "Who provides and maintains parks, libraries and other free public facilities."},
-      {"name": "Tourism", "short": "tourism", "database": null, "scope": "Who profits from visitors, and who bears the costs of tourism."},
-      {"name": "Hobbies, clubs and makerspaces", "short": "hobbies", "database": null, "scope": "How hobby groups, clubs and workshops are organised and funded."}
-    ]},
-    {"name": "Social life and community", "practices": [
-      {"name": "Housing and rent", "short": "housing", "database": null, "scope": "Who owns, builds and rents homes, and how rents are set."},
-      {"name": "Urban planning and public space", "short": "urban planning", "database": null, "scope": "Who decides how towns grow, what is built, and where people can meet."},
-      {"name": "Charity, mutual aid and philanthropy", "short": "charity", "database": null, "scope": "How people help each other outside the state: charities, mutual aid and donors."},
-      {"name": "Volunteering and civic associations", "short": "volunteering", "database": null, "scope": "How volunteers and civic groups are organised, recognised and funded."},
-      {"name": "Religious life and its institutions", "short": "religious life", "database": null, "scope": "How religious communities are funded, governed and regulated."},
-      {"name": "Food sharing and communal kitchens", "short": "food sharing", "database": null, "scope": "How food is shared outside the market: communal meals, food banks and gleaning."}
-    ]},
-    {"name": "Family and intimate life", "practices": [
-      {"name": "Marriage and partnership law", "short": "marriage", "database": null, "scope": "How partnerships are recognised, and what they entitle the partners to."},
-      {"name": "Childcare and parental leave", "short": "childcare", "database": null, "scope": "Who cares for children while parents work, and who pays for leave and care."},
-      {"name": "Unpaid domestic and care work", "short": "domestic work", "database": null, "scope": "Who does unpaid housework and care, and whether that work is counted or paid."},
-      {"name": "Family planning and contraception", "short": "family planning", "database": null, "scope": "Who provides contraception and abortion services, and who pays for them."},
-      {"name": "Sex education and sexual health services", "short": "sexual health", "database": null, "scope": "What young people are taught about sex, and who provides testing, treatment and advice."},
-      {"name": "Sex work and its legal status", "short": "sex work", "database": null, "scope": "How paid sex is treated in law, and what that means for workers' safety and income."},
-      {"name": "Divorce and property after a partnership ends", "short": "divorce", "database": null, "scope": "How property, debts and children are divided when partnerships end."}
-    ]},
-    {"name": "Environment and resources", "practices": [
-      {"name": "Carbon pricing and climate policy", "short": "carbon pricing", "database": null, "scope": "How emissions are priced or limited, and who pays the costs."},
-      {"name": "Energy supply", "short": "energy", "database": null, "scope": "Who produces, owns and sells energy, and how supply is kept reliable and affordable."},
-      {"name": "Land and natural resources", "short": "land", "database": null, "scope": "Who owns land, forests and minerals, and who receives their rent."},
-      {"name": "Waste and circular economy", "short": "waste", "database": null, "scope": "How waste is collected, reused, recycled or landfilled, and who pays."},
-      {"name": "Shared resources such as fisheries and water", "short": "shared resources", "database": null, "scope": "How shared resources such as fisheries, water and grazing land are managed."}
-    ]},
-    {"name": "Transport and mobility", "practices": [
-      {"name": "Public transport and fares", "short": "public transport", "database": null, "scope": "Who runs buses and trains, and how fares are set."},
-      {"name": "Car ownership and road pricing", "short": "road pricing", "database": null, "scope": "How roads are paid for, and whether drivers pay for congestion and for the space they use."}
-    ]},
-    {"name": "Science and knowledge", "practices": [
-      {"name": "Public research funding", "short": "research funding", "database": null, "scope": "How science is funded: project grants, institutes and block funding for universities."},
-      {"name": "Patents and open knowledge", "short": "patents", "database": null, "scope": "Who may own inventions and data, and how long monopolies last."},
-      {"name": "Access to information and archives", "short": "archives", "database": null, "scope": "Who may read public records, data and archives, and at what cost."}
-    ]},
-    {"name": "Justice, security and defence", "practices": [
-      {"name": "Courts and access to justice", "short": "courts", "database": null, "scope": "Who runs the courts, who pays for lawyers, and how quickly disputes are settled."},
-      {"name": "Prisons", "short": "prisons", "database": null, "scope": "Who runs prisons, how they are paid for, and whether they may be run for profit."},
-      {"name": "Policing", "short": "policing", "database": null, "scope": "Who pays for and controls the police, and how they are held to account."},
-      {"name": "Military service", "short": "military service", "database": null, "scope": "Whether defence relies on conscription or volunteers, and how soldiers are paid."},
-      {"name": "Migration and citizenship", "short": "migration", "database": null, "scope": "Who may move, work and become citizens, and who pays for newcomers."}
-    ]},
-    {"name": "Communication and information", "practices": [
-      {"name": "Postal service and broadband access", "short": "connectivity", "database": null, "scope": "Who provides post and internet access, and whether everyone is guaranteed it."},
-      {"name": "Online platforms and personal data", "short": "platforms", "database": null, "scope": "Who owns online platforms and personal data, and how users are protected."}
-    ]},
-    {"name": "Trade and international relations", "practices": [
-      {"name": "Tariffs and free trade", "short": "trade", "database": null, "scope": "Whether goods cross borders freely, and who gains or loses from tariffs."},
-      {"name": "Foreign aid and development finance", "short": "aid", "database": null, "scope": "Who gives aid and loans to poorer countries, and on what conditions."},
-      {"name": "Sanctions and economic statecraft", "short": "sanctions", "database": null, "scope": "When and why states use trade, money or investment as instruments of policy, and who pays the costs."}
-    ]},
-    {"name": "Food and agriculture", "practices": [
-      {"name": "Land tenure for farmers", "short": "farm land", "database": null, "scope": "Who owns or rents farmland, and what security farmers have."},
-      {"name": "Food safety and subsidies", "short": "food subsidies", "database": null, "scope": "Who sets food rules and pays farm subsidies, and who benefits from them."},
-      {"name": "Food distribution and waste", "short": "food distribution", "database": null, "scope": "How food moves from farm to table, and how much of it is wasted."}
-    ]}
+    {
+      "name": "Education",
+      "practices": [
+        {
+          "name": "Primary and secondary schooling",
+          "short": "schooling",
+          "database": 207,
+          "scope": "Who pays for and runs compulsory schooling, and how pupils, classes and schools are organised."
+        },
+        {
+          "name": "Higher education",
+          "short": "higher education",
+          "database": 208,
+          "scope": "Who pays for, provides and admits students to universities and colleges, and how tuition and student support work."
+        },
+        {
+          "name": "Vocational training and apprenticeship",
+          "short": "vocational training",
+          "database": 209,
+          "scope": "How people learn a trade, in schools or in workplaces through apprenticeships, and who pays for it."
+        },
+        {
+          "name": "Early childhood care and education",
+          "short": "early childhood care",
+          "database": 210,
+          "scope": "Care and learning for children before compulsory school, who provides it and who pays for it."
+        },
+        {
+          "name": "Adult and lifelong learning",
+          "short": "adult learning",
+          "database": 211,
+          "scope": "Learning after the main education: retraining, second-chance courses and evening classes, and who pays for them."
+        },
+        {
+          "name": "Teacher pay, training and status",
+          "short": "teacher pay",
+          "database": 212,
+          "scope": "How teachers are paid, trained, selected, promoted and respected, and who sets those rules."
+        }
+      ]
+    },
+    {
+      "name": "Medicine and health",
+      "practices": [
+        {
+          "name": "Health financing",
+          "short": "health financing",
+          "database": 213,
+          "scope": "How care is paid for: taxes, insurance contributions, out-of-pocket payment or a mix of these."
+        },
+        {
+          "name": "Hospitals and clinics",
+          "short": "hospitals",
+          "database": 214,
+          "scope": "Who owns, runs and staffs hospitals and clinics, and how they are paid."
+        },
+        {
+          "name": "Medicines and drug research",
+          "short": "medicines",
+          "database": 215,
+          "scope": "How new drugs are researched, priced, patented and supplied."
+        },
+        {
+          "name": "Doctors' training and pay",
+          "short": "doctors",
+          "database": 216,
+          "scope": "How doctors and nurses are trained, licensed, paid and spread across regions."
+        },
+        {
+          "name": "Mental health care",
+          "short": "mental health",
+          "database": 217,
+          "scope": "Who provides and pays for psychological and psychiatric care, and how waiting times and stigma are handled."
+        },
+        {
+          "name": "Care for older and dying people",
+          "short": "elder care",
+          "database": 218,
+          "scope": "Who provides and pays for care at home and in homes for older and dying people."
+        },
+        {
+          "name": "Public health and vaccination",
+          "short": "public health",
+          "database": 219,
+          "scope": "Who organises vaccination, screening, sanitation and health campaigns, and who pays for them."
+        }
+      ]
+    },
+    {
+      "name": "Politics and governance",
+      "practices": [
+        {
+          "name": "Elections and political money",
+          "short": "elections",
+          "database": 220,
+          "scope": "How candidates are chosen and funded, and how votes are counted and contested."
+        },
+        {
+          "name": "Public administration and bureaucracy",
+          "short": "bureaucracy",
+          "database": 221,
+          "scope": "How the civil service is recruited, paid, supervised and held to account."
+        },
+        {
+          "name": "Ownership of strategic industries",
+          "short": "state ownership",
+          "database": 222,
+          "scope": "Which firms and sectors the state owns or controls, such as energy, rail and banks."
+        },
+        {
+          "name": "Taxation",
+          "short": "taxation",
+          "database": 223,
+          "scope": "Which taxes fund the state, how progressive they are, and who pays them."
+        },
+        {
+          "name": "Regulation and competition",
+          "short": "regulation",
+          "database": 224,
+          "scope": "How markets are regulated, monopolies are controlled and consumers are protected."
+        },
+        {
+          "name": "Local government and decentralisation",
+          "short": "local government",
+          "database": 225,
+          "scope": "How much power, money and decision-making sits in towns and regions rather than at the centre."
+        }
+      ]
+    },
+    {
+      "name": "Work and employment",
+      "practices": [
+        {
+          "name": "Wages and minimum wages",
+          "short": "wages",
+          "database": 226,
+          "scope": "How pay is set, whether a legal minimum exists, and who sets it."
+        },
+        {
+          "name": "Trade unions and worker voice",
+          "short": "unions",
+          "database": 227,
+          "scope": "How workers organise, bargain and have a say in decisions at work."
+        },
+        {
+          "name": "Working time and paid leave",
+          "short": "working time",
+          "database": 228,
+          "scope": "Hours of work, holidays, parental and sick leave, and who sets them."
+        },
+        {
+          "name": "Unemployment and job security",
+          "short": "unemployment",
+          "database": 229,
+          "scope": "How people who lose work are protected, retrained and supported."
+        },
+        {
+          "name": "Worker ownership and co-determination",
+          "short": "worker ownership",
+          "database": 230,
+          "scope": "Whether workers own the firms they work in, or sit on their boards."
+        },
+        {
+          "name": "Automation and technological change",
+          "short": "automation",
+          "database": 231,
+          "scope": "Who gains and who loses when machines replace work, and who decides how fast this happens."
+        }
+      ]
+    },
+    {
+      "name": "Money and finance",
+      "practices": [
+        {
+          "name": "Money creation and central banking",
+          "short": "central banking",
+          "database": 232,
+          "scope": "Who creates money, sets interest rates and controls the currency."
+        },
+        {
+          "name": "Banking and credit",
+          "short": "credit",
+          "database": 233,
+          "scope": "Who lends, who owns the banks, and who gets credit on what terms."
+        },
+        {
+          "name": "Pensions and retirement",
+          "short": "pensions",
+          "database": 234,
+          "scope": "How income in old age is funded: pay-as-you-go schemes, savings funds or the state."
+        },
+        {
+          "name": "Social and private insurance",
+          "short": "insurance",
+          "database": 235,
+          "scope": "How risks such as illness, accident, unemployment and disaster are shared."
+        },
+        {
+          "name": "Public debt",
+          "short": "public debt",
+          "database": 236,
+          "scope": "How governments borrow, how debt is repaid, and who holds it."
+        }
+      ]
+    },
+    {
+      "name": "Entertainment and culture",
+      "practices": [
+        {
+          "name": "Media ownership and public broadcasting",
+          "short": "media",
+          "database": 237,
+          "scope": "Who owns newspapers, broadcasters and platforms, and how public broadcasting is funded."
+        },
+        {
+          "name": "Film, music and the arts",
+          "short": "the arts",
+          "database": 238,
+          "scope": "How films, music, theatre and visual arts are funded, distributed and judged."
+        },
+        {
+          "name": "Copyright and cultural property",
+          "short": "copyright",
+          "database": 239,
+          "scope": "How creators are rewarded, how long rights last, and who may copy and share."
+        },
+        {
+          "name": "Sport and professional leagues",
+          "short": "sport",
+          "database": 240,
+          "scope": "Who runs and funds sport, professional leagues, clubs and mass participation."
+        },
+        {
+          "name": "Games, gambling and lotteries",
+          "short": "gambling",
+          "database": 241,
+          "scope": "How games of chance are run, taxed and restricted."
+        }
+      ]
+    },
+    {
+      "name": "Leisure and free time",
+      "practices": [
+        {
+          "name": "Holidays and free time",
+          "short": "free time",
+          "database": 242,
+          "scope": "How much free time people have and who provides holidays and leisure."
+        },
+        {
+          "name": "Parks, libraries and public spaces",
+          "short": "public spaces",
+          "database": 243,
+          "scope": "Who provides and maintains parks, libraries and other free public facilities."
+        },
+        {
+          "name": "Tourism",
+          "short": "tourism",
+          "database": 244,
+          "scope": "Who profits from visitors, and who bears the costs of tourism."
+        },
+        {
+          "name": "Hobbies, clubs and makerspaces",
+          "short": "hobbies",
+          "database": 245,
+          "scope": "How hobby groups, clubs and workshops are organised and funded."
+        }
+      ]
+    },
+    {
+      "name": "Social life and community",
+      "practices": [
+        {
+          "name": "Housing and rent",
+          "short": "housing",
+          "database": 246,
+          "scope": "Who owns, builds and rents homes, and how rents are set."
+        },
+        {
+          "name": "Urban planning and public space",
+          "short": "urban planning",
+          "database": 247,
+          "scope": "Who decides how towns grow, what is built, and where people can meet."
+        },
+        {
+          "name": "Charity, mutual aid and philanthropy",
+          "short": "charity",
+          "database": 248,
+          "scope": "How people help each other outside the state: charities, mutual aid and donors."
+        },
+        {
+          "name": "Volunteering and civic associations",
+          "short": "volunteering",
+          "database": 249,
+          "scope": "How volunteers and civic groups are organised, recognised and funded."
+        },
+        {
+          "name": "Religious life and its institutions",
+          "short": "religious life",
+          "database": 250,
+          "scope": "How religious communities are funded, governed and regulated."
+        },
+        {
+          "name": "Food sharing and communal kitchens",
+          "short": "food sharing",
+          "database": 251,
+          "scope": "How food is shared outside the market: communal meals, food banks and gleaning."
+        }
+      ]
+    },
+    {
+      "name": "Family and intimate life",
+      "practices": [
+        {
+          "name": "Marriage and partnership law",
+          "short": "marriage",
+          "database": 252,
+          "scope": "How partnerships are recognised, and what they entitle the partners to."
+        },
+        {
+          "name": "Childcare and parental leave",
+          "short": "childcare",
+          "database": 253,
+          "scope": "Who cares for children while parents work, and who pays for leave and care."
+        },
+        {
+          "name": "Unpaid domestic and care work",
+          "short": "domestic work",
+          "database": 254,
+          "scope": "Who does unpaid housework and care, and whether that work is counted or paid."
+        },
+        {
+          "name": "Family planning and contraception",
+          "short": "family planning",
+          "database": 255,
+          "scope": "Who provides contraception and abortion services, and who pays for them."
+        },
+        {
+          "name": "Sex education and sexual health services",
+          "short": "sexual health",
+          "database": 256,
+          "scope": "What young people are taught about sex, and who provides testing, treatment and advice."
+        },
+        {
+          "name": "Sex work and its legal status",
+          "short": "sex work",
+          "database": 257,
+          "scope": "How paid sex is treated in law, and what that means for workers' safety and income."
+        },
+        {
+          "name": "Divorce and property after a partnership ends",
+          "short": "divorce",
+          "database": 258,
+          "scope": "How property, debts and children are divided when partnerships end."
+        }
+      ]
+    },
+    {
+      "name": "Environment and resources",
+      "practices": [
+        {
+          "name": "Carbon pricing and climate policy",
+          "short": "carbon pricing",
+          "database": 259,
+          "scope": "How emissions are priced or limited, and who pays the costs."
+        },
+        {
+          "name": "Energy supply",
+          "short": "energy",
+          "database": 260,
+          "scope": "Who produces, owns and sells energy, and how supply is kept reliable and affordable."
+        },
+        {
+          "name": "Land and natural resources",
+          "short": "land",
+          "database": 261,
+          "scope": "Who owns land, forests and minerals, and who receives their rent."
+        },
+        {
+          "name": "Waste and circular economy",
+          "short": "waste",
+          "database": 262,
+          "scope": "How waste is collected, reused, recycled or landfilled, and who pays."
+        },
+        {
+          "name": "Shared resources such as fisheries and water",
+          "short": "shared resources",
+          "database": 263,
+          "scope": "How shared resources such as fisheries, water and grazing land are managed."
+        }
+      ]
+    },
+    {
+      "name": "Transport and mobility",
+      "practices": [
+        {
+          "name": "Public transport and fares",
+          "short": "public transport",
+          "database": 264,
+          "scope": "Who runs buses and trains, and how fares are set."
+        },
+        {
+          "name": "Car ownership and road pricing",
+          "short": "road pricing",
+          "database": 265,
+          "scope": "How roads are paid for, and whether drivers pay for congestion and for the space they use."
+        }
+      ]
+    },
+    {
+      "name": "Science and knowledge",
+      "practices": [
+        {
+          "name": "Public research funding",
+          "short": "research funding",
+          "database": 266,
+          "scope": "How science is funded: project grants, institutes and block funding for universities."
+        },
+        {
+          "name": "Patents and open knowledge",
+          "short": "patents",
+          "database": 267,
+          "scope": "Who may own inventions and data, and how long monopolies last."
+        },
+        {
+          "name": "Access to information and archives",
+          "short": "archives",
+          "database": 268,
+          "scope": "Who may read public records, data and archives, and at what cost."
+        }
+      ]
+    },
+    {
+      "name": "Justice, security and defence",
+      "practices": [
+        {
+          "name": "Courts and access to justice",
+          "short": "courts",
+          "database": 269,
+          "scope": "Who runs the courts, who pays for lawyers, and how quickly disputes are settled."
+        },
+        {
+          "name": "Prisons",
+          "short": "prisons",
+          "database": 270,
+          "scope": "Who runs prisons, how they are paid for, and whether they may be run for profit."
+        },
+        {
+          "name": "Policing",
+          "short": "policing",
+          "database": 271,
+          "scope": "Who pays for and controls the police, and how they are held to account."
+        },
+        {
+          "name": "Military service",
+          "short": "military service",
+          "database": 272,
+          "scope": "Whether defence relies on conscription or volunteers, and how soldiers are paid."
+        },
+        {
+          "name": "Migration and citizenship",
+          "short": "migration",
+          "database": 273,
+          "scope": "Who may move, work and become citizens, and who pays for newcomers."
+        }
+      ]
+    },
+    {
+      "name": "Communication and information",
+      "practices": [
+        {
+          "name": "Postal service and broadband access",
+          "short": "connectivity",
+          "database": 274,
+          "scope": "Who provides post and internet access, and whether everyone is guaranteed it."
+        },
+        {
+          "name": "Online platforms and personal data",
+          "short": "platforms",
+          "database": 275,
+          "scope": "Who owns online platforms and personal data, and how users are protected."
+        }
+      ]
+    },
+    {
+      "name": "Trade and international relations",
+      "practices": [
+        {
+          "name": "Tariffs and free trade",
+          "short": "trade",
+          "database": 276,
+          "scope": "Whether goods cross borders freely, and who gains or loses from tariffs."
+        },
+        {
+          "name": "Foreign aid and development finance",
+          "short": "aid",
+          "database": 277,
+          "scope": "Who gives aid and loans to poorer countries, and on what conditions."
+        },
+        {
+          "name": "Sanctions and economic statecraft",
+          "short": "sanctions",
+          "database": 278,
+          "scope": "When and why states use trade, money or investment as instruments of policy, and who pays the costs."
+        }
+      ]
+    },
+    {
+      "name": "Food and agriculture",
+      "practices": [
+        {
+          "name": "Land tenure for farmers",
+          "short": "farm land",
+          "database": 279,
+          "scope": "Who owns or rents farmland, and what security farmers have."
+        },
+        {
+          "name": "Food safety and subsidies",
+          "short": "food subsidies",
+          "database": 280,
+          "scope": "Who sets food rules and pays farm subsidies, and who benefits from them."
+        },
+        {
+          "name": "Food distribution and waste",
+          "short": "food distribution",
+          "database": 281,
+          "scope": "How food moves from farm to table, and how much of it is wasted."
+        }
+      ]
+    }
   ]
 }

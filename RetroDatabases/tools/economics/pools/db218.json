@@ -1,0 +1,59 @@
+{
+  "database": 218,
+  "practice": "Care for older and dying people",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "EL1",
+      "case": "St Christopher's Hospice, opened 1967",
+      "years": "1957 to 1967",
+      "claim": "Cicely Saunders' earliest paper on terminal care dates to 1957, and her hospice plans had taken detailed form by 1959, according to a 1998 article in Mortality by D. Clark. Construction began in 1965, and admissions began in summer 1967. The Royal College of Physicians describes the hospice as the first to pair patient care with research and teaching.",
+      "source": "D. Clark, Mortality (1998), as cited in the search; Royal College of Physicians, Dame Cicely Mary Strode Saunders (history page)",
+      "url": "https://history.rcplondon.ac.uk/inspiring-physicians/dame-cicely-mary-strode-saunders",
+      "caveat": "Sources disagree on the hospice's location: south-west, south-east or north London. A King's College London archive entry places it in Sydenham, in south-east London. The Clark article's own link was not captured.",
+      "relevant_to": [
+        "Mutualism",
+        "Gift economy"
+      ]
+    },
+    {
+      "id": "EL2",
+      "case": "Japan's long-term care insurance, from 2000",
+      "years": "1997 to 2020",
+      "claim": "Legislation of 1997 set up Japan's compulsory long-term care insurance, which took effect in April 2000. A 2017 Japanese-language article credits the scheme with expanding service supply, widening user choice and raising quality through competition, and with easing the strain on families who care for relatives. The same article flags rising public costs and a shortage of care workers. A 2001 to 2002 grant evaluation found users positive about care managers but critical of fees, service volume and transport. A 2020 ERIA report uses national claims data to study changes in care need among users.",
+      "source": "Makiko Takao, 2017 Japanese-language article on the long-term care insurance scheme (secondary); 2001 to 2002 grant evaluation of service providers; ERIA, Outcomes of Long-term Care Insurance Service in Japan (2020)",
+      "url": "https://www.eria.org/uploads/Outcome-of-Long-term-Care-Insurance-Service-in-Japan-new.pdf",
+      "caveat": "Earlier Japanese evaluations emphasised equipment and staffing, leaving outcomes less studied. The 2017 article and the 2001 to 2002 study report views and judgments, not measured outcomes. The search gave no figures on nursing home beds.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "EL3",
+      "case": "Germany's long-term care insurance, from 1995",
+      "years": "1994 to 2008",
+      "claim": "Germany's long-term care insurance, the fifth pillar of social insurance, was finalised in April 1994 and began on 1 January 1995, with employers and workers sharing its cost equally. Home care was paid from April 1995 and residential care from July 1996. Reforms in 2008 and in 2015 to 2017 expanded benefits and redefined care need. The contribution rate was 1.0 per cent at the start, 1.7 per cent at the second stage and 1.95 per cent from July 2008.",
+      "source": "vdek, history of long-term care insurance; Sozialversicherung-kompetent, timeline of long-term care insurance; Duncker and Humblot sample (Rothgang evaluation essay); BDA employers' statement (2024)",
+      "url": "https://www.vdek.com/LVen/HES/fokus/30JahrePflegeversicherung/Geschichte.html",
+      "caveat": "Later contribution changes and the 2023 finance law are not verified by these sources. An employers' statement of 2024 argues that a draft reform omits financial measures and warns of further rises. Evaluation sources are thin: one essay and one 2003 catalogue record.",
+      "relevant_to": [
+        "Social market economy",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "EL4",
+      "case": "Private equity ownership of nursing homes",
+      "years": "2000 to 2017 (sources differ on the start)",
+      "claim": "An NBER working paper (No. 28474) by Atul Gupta and colleagues studied Medicare data on more than 12,400 for-profit skilled nursing facilities, of which 1,674 were bought by private equity firms. Mortality during a stay and in the 90 days after it was about 10 per cent higher at private equity-owned facilities. Preventable emergency visits and hospitalisations were 11.1 and 8.7 per cent higher at acquired homes. A separate study found infection and death rates about 30 and 40 per cent above statewide averages at private equity-backed homes during the COVID-19 pandemic.",
+      "source": "Gupta and colleagues, NBER Working Paper 28474, summarised in an NBER digest (2021); study of private equity-backed nursing homes in COVID-19, as cited in secondary write-ups",
+      "url": "https://www.nber.org/digest/202104/how-patients-fare-when-private-equity-funds-acquire-nursing-homes",
+      "caveat": "The NBER digest describes an association, while Wharton's coverage describes causal effects and gives 11 per cent for mortality. The COVID-19 and hospitalisation figures come from secondary write-ups. The search gave no null or positive result for the other side of the question.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Classical laissez-faire capitalism"
+      ]
+    }
+  ]
+}

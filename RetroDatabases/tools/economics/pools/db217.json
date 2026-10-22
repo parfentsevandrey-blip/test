@@ -1,0 +1,46 @@
+{
+  "database": 217,
+  "practice": "Mental health care",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "MH1",
+      "case": "Trieste and the closure of Italy's asylums",
+      "years": "1977 to the late 1990s",
+      "claim": "Trieste announced in January 1977 that it would close its asylum, and full closure came in 1980. Round-the-clock community services, supervised housing and worker cooperatives took its place. Italy's statute of May 1978, often called Basaglia's Law, began the phase-out of asylums, and by the late 1990s every asylum in the country had closed. The historian John Foot calls the overall outcome 'a partial one', and implementation varied so widely that in some places institutions were only renamed.",
+      "source": "Centre for Medical Humanities, review of The Man Who Closed the Asylums (secondary); American Journal of Psychiatry, obituary of Franco Basaglia, 1924 to 1980",
+      "url": "https://centreformedicalhumanities.org/the-man-who-closed-the-asylums-franco-basaglia-and-the-revolution-in-mental-health-care-reviewed-by-dr-lisa-dikomitis/",
+      "caveat": "The sources give no hard outcome measures, such as readmission rates. Some are commemorative or essayistic. The Foot quotation comes from secondary sources and was not checked against his writing.",
+      "relevant_to": [
+        "Cooperative economy",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "MH2",
+      "case": "Soviet psychiatry and the diagnosis of sluggish schizophrenia",
+      "years": "1970s to 1989",
+      "claim": "In the Soviet Union the diagnosis of sluggish schizophrenia was applied to political dissenters. Leonid Plyushch was detained in 1972 over his rights-group work. After a year behind bars he was given the diagnosis, placed in a special hospital, and freed in 1976 to settle in Paris. Clinicians kept using the diagnosis until 1989. The international classification ICD-10 left it out, while the Russian edition grouped it with schizotypal personality disorder. A 2019 Stanford paper analyses the diagnosis as a device aimed at dissenters, using the cases of Vladimir Bukovsky and Natalya Gorbanevskaya.",
+      "source": "Stanford, 2019 paper on sluggish schizophrenia as a diagnosis for political dissenters; geohistory.today essay on Snezhnevsky and Soviet political abuse of psychiatry (secondary)",
+      "url": "https://purl.stanford.edu/cj200yf2075",
+      "caveat": "Most of the material is secondary: essays, a translation site and a 1989 first-hand account. The results give no case-level detail on Bukovsky or Gorbanevskaya, and the search found no Serbsky records. A claim in one excerpt that the Party requested the diagnosis is not supported by the excerpt, so it is not used.",
+      "relevant_to": [
+        "Command socialism",
+        "Marxian communism"
+      ]
+    },
+    {
+      "id": "MH3",
+      "case": "The federal mental health parity law of 2008 and its evaluations",
+      "years": "2005 to 2019",
+      "claim": "The Mental Health Parity and Addiction Equity Act of 2008 is the federal parity law for mental health and substance use care. An analysis of Medical Expenditure Panel Survey data for 2005 to 2013, published in Psychiatric Services in 2019, found no statistically significant change in whether people used mental health care, how much they used, or their total and out-of-pocket spending. A 2019 TruvenHealth analysis for the Assistant Secretary for Planning and Evaluation found significant rises in substance use disorder service use, but it had no control group and benchmarked against non-behavioral services.",
+      "source": "Psychiatric Services (2019), Medical Expenditure Panel Survey analysis; ASPE, TruvenHealth report on the impact of parity (February 2019)",
+      "url": "https://psychiatryonline.org/doi/10.1176/appi.ps.201800313",
+      "caveat": "The authors judged the effects slight through 2013 and left open whether plans were already compliant with the law. The excerpts did not include results of two 2017 evaluation papers (Harwood and colleagues; Friedman and colleagues), so more recent evaluations may exist.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Monetarist neoliberalism"
+      ]
+    }
+  ]
+}

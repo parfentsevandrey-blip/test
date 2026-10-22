@@ -1,0 +1,100 @@
+{
+  "database": 213,
+  "practice": "Health financing",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "F1",
+      "case": "Germany's sickness insurance law of 1883",
+      "years": "1883 onward",
+      "claim": "The sickness insurance law was passed on 15 June 1883 and took effect on 1 December 1883. A federal ministry page gives the passage date, and a Deutschlandmuseum calendar entry gives the effective date.",
+      "source": "Deutschlandmuseum, calendar entry for 1 December 1883 (passage date from a federal ministry page)",
+      "url": "https://www.deutschlandmuseum.de/en/history/calendar/1883-12-01-health-insurance/",
+      "caveat": "Estimates of early coverage differ between sources, so this case gives no coverage figure. The federal ministry page was seen only in search excerpts.",
+      "relevant_to": [
+        "Social market economy",
+        "Corporatism and fascist economics",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "F2",
+      "case": "Taiwan's national health insurance from 1995",
+      "years": "1995 to 2010",
+      "claim": "Taiwan's single-payer national health insurance launched in March 1995. A 2010 study in BMC Health Services Research reports that the insured share of the population rose from about 57 per cent to between 98 and 99 per cent. The same sources report that amenable-cause mortality fell by about 5.8 per cent a year over 1996 to 1999, and they present this as associated with the scheme.",
+      "source": "BMC Health Services Research (2010), study of Taiwan's national health insurance; Health Affairs Forefront, Taiwan's single-payer national health insurance: 30 years, part 1",
+      "url": "https://bmchealthservres.biomedcentral.com/articles/10.1186/1472-6963-10-225",
+      "caveat": "The sources give different baselines for the coverage rise, so the 57 per cent figure is approximate. The mortality decline is an association, not a controlled evaluation.",
+      "relevant_to": [
+        "Developmental state",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "F3",
+      "case": "Oregon's Medicaid lottery, 2008",
+      "years": "2008 to 2014",
+      "claim": "In 2008 Oregon drew names by lottery for a limited number of places to apply for Medicaid, which created a natural experiment. The 2013 NEJM study by Baicker and colleagues found no significant change in blood pressure, cholesterol or HbA1c. Diagnoses of diabetes rose, and the share of people screening positive for depression fell by about nine percentage points. A 2014 Science paper (Taubman and colleagues) reports emergency visits about 40 per cent above the control group's level. Employment and earnings did not change significantly.",
+      "source": "Baicker and colleagues, New England Journal of Medicine (2013), summary by the National Bureau of Economic Research; Taubman and colleagues, Science (2014); NBER Oregon Health Insurance Experiment background",
+      "url": "https://img.nber.org/sites/default/files/2020-02/summary-nejm-2013-05-02.pdf",
+      "caveat": "The results come from secondary summaries of the lottery study. The 2014 emergency-use figure was not checked against the paper itself.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "F4",
+      "case": "Singapore's MediSave account from 1984",
+      "years": "1984 onward",
+      "claim": "MediSave, a compulsory savings account for health care, began on 1 April 1984 under the Ministry of Health and the Central Provident Fund. At the outset, employers and employees each paid 3 per cent of wages into it.",
+      "source": "Dollars and Sense, What is MediSave and why it is important in Singapore (secondary)",
+      "url": "https://dollarsandsense.sg/what-is-medisave-why-it-is-important-in-singapore/",
+      "caveat": "The launch date and the 3 per cent rates come from one secondary web page and were not checked against Central Provident Fund or ministry records. The sources disagree on current contribution rates, and the caps on withdrawals were not verified.",
+      "relevant_to": [
+        "Developmental state",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "F5",
+      "case": "The National Health Service, 1948",
+      "years": "1948 to 1951",
+      "claim": "The National Health Service began on 5 July 1948 under the National Health Service Act of 1946. It was funded from general taxation and was free at the point of use. In 1951, charges for some dental and optical items were introduced in Hugh Gaitskell's budget, and Aneurin Bevan resigned from the government in protest.",
+      "source": "Warwick University Library, welfare state documents on the NHS (secondary)",
+      "url": "https://warwick.ac.uk/services/library/mrc/studying/docs/welfare/nhs/",
+      "caveat": "The sources do not cover the health services of the devolved nations, which now run separately from the NHS in England.",
+      "relevant_to": [
+        "Fabian socialism",
+        "Nordic social democracy",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "F6",
+      "case": "Cuba's family doctor programme and infant mortality",
+      "years": "1972 to 2013",
+      "claim": "Cuba launched its family doctor programme in 1984. Infant mortality figures from the Cuban health ministry, summarised in MEDICC Review, fell from 28.7 per 1,000 live births in 1972 to 17.3 in 1982, 10.2 in 1992, 6.3 in 2003 and 4.2 in 2013.",
+      "source": "MEDICC Review (2015), infant mortality series from the Cuban health ministry (secondary)",
+      "url": "https://scielosp.org/article/medicc/2015.v17n1/11-13",
+      "caveat": "Much of the decline came before 1984, so these figures alone do not show the programme's effect. The sources disagree about how much of the decline to attribute to it. A 2020 study of two provinces is the only attribution study the search found.",
+      "relevant_to": [
+        "Command socialism",
+        "Redistributive economy"
+      ]
+    },
+    {
+      "id": "F7",
+      "case": "The Soviet health system under Semashko, from 1918",
+      "years": "1918 to 1930",
+      "claim": "A July 1918 decree put health facilities under state ownership and declared care free to everyone. A PubMed Central review describes the system as underfunded and heavily reliant on inpatient care.",
+      "source": "PubMed Central article PMC6220729 on the Soviet health system (secondary)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6220729",
+      "caveat": "Another paper dates the start of implementation to the late 1920s. Sources disagree on the scope of Semashko's post and on his role.",
+      "relevant_to": [
+        "Command socialism",
+        "Marxian communism"
+      ]
+    }
+  ]
+}

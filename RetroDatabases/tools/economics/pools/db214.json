@@ -1,0 +1,86 @@
+{
+  "database": 214,
+  "practice": "Hospitals and clinics",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "HO1",
+      "case": "Private equity acquisition of US hospitals, JAMA study",
+      "years": "2009 to 2019",
+      "claim": "A JAMA study by Kannan, Bruch and Song (2023) compared 51 US hospitals acquired by private equity with 259 matched control hospitals, using Medicare claims for 2009 to 2019. Hospital-acquired conditions rose by about 25 per cent relative to the controls, most of the rise coming from falls and central-line bloodstream infections. Surgical-site infection rates reached about twice their earlier level, while surgical volume fell by about 8 per cent. Thirty-day mortality after discharge did not change, and in-hospital deaths edged down slightly.",
+      "source": "Kannan, Bruch and Song, JAMA (2023), DOI 10.1001/jama.2023.23147, as summarised by AHRQ PSNet",
+      "url": "https://psnet.ahrq.gov/issue/changes-hospital-adverse-events-and-patient-outcomes-associated-private-equity-acquisition",
+      "caveat": "These comparisons are observational. The acquired hospitals' patients were younger, included fewer dual-eligible patients and were more often transferred out, so the patient mix changed as well. The paper itself was not read; these figures come from summaries.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "HO2",
+      "case": "Emergency department deaths at private equity hospitals, Annals study",
+      "years": "Study year not stated in the search results",
+      "claim": "A study in the Annals of Internal Medicine reported that emergency department death rates at private equity-acquired hospitals were about 13 per cent higher than at comparable hospitals. A researcher quoted in the coverage named reduced staffing as the most likely cause.",
+      "source": "Annals of Internal Medicine study on private equity and emergency departments, as reported by NBC Boston (secondary)",
+      "url": "https://www.nbcboston.com/news/national-international/death-rates-rose-er-private-equity-firms-study/3814620/",
+      "caveat": "Known only from news coverage. The study design and its comparison group were not checked. The staffing cause is the view of a researcher quoted in the coverage, not a finding reported by the study.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "HO3",
+      "case": "For-profit and non-profit hospital mortality, a 2002 meta-analysis",
+      "years": "Data from 1982 to 1995; published 2002",
+      "claim": "A 2002 systematic review and meta-analysis in CMAJ compared mortality at private for-profit and private non-profit hospitals. After adjustment for confounders, the adult estimate was a relative risk of death of about 1.02 for for-profit hospitals (95 per cent confidence interval roughly 1.003 to 1.038). The perinatal estimate, drawn from one study, was about 1.095.",
+      "source": "CMAJ systematic review and meta-analysis of for-profit and non-profit hospital mortality (2002, 166(11): 1399 to 1406)",
+      "url": "https://www.cmaj.ca/content/166/11/1399",
+      "caveat": "The studies are observational and highly variable, and the underlying US data cover 1982 to 1995. The review measures mortality only. The search found no newer or contrary meta-analysis.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Mutualism",
+        "Cooperative economy"
+      ]
+    },
+    {
+      "id": "HO4",
+      "case": "The Hospices de Beaune, founded 1443",
+      "years": "1443 onward",
+      "claim": "Chancellor Nicolas Rolin and his wife Guigone de Salins founded the Hospices de Beaune in 1443 as a poor-relief hospital, at a time when raiders, famine and plague had impoverished the town. Its income came from salt works and wine sales. Sources date the formal founding to 4 August 1443 and admissions to 1 January 1452.",
+      "source": "France Today, Hospices de Beaune: The Remarkable Story of Burgundy's Palace of the Poor (secondary)",
+      "url": "https://francetoday.com/learn/history/hospices-de-beaune-the-remarkable-story-of-burgundys-palace-of-the-poor/",
+      "caveat": "The dates come from secondary sources. The search did not give the date when the hospital's own care ended, and one source gives two different dates for it.",
+      "relevant_to": [
+        "Feudalism",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "HO5",
+      "case": "Kaiser Permanente's prepaid group practice, from 1933",
+      "years": "1933 onward",
+      "claim": "Sidney Garfield began a prepaid group practice in 1933 at a Mojave Desert hospital that served workers on the Colorado River Aqueduct. Workers paid about five cents a day through a prepayment arrangement. Garfield and Henry J. Kaiser co-founded Kaiser Permanente, which the company's own history dates to 1945.",
+      "source": "Kaiser Permanente, Sidney Garfield, pioneer of modern health care (company history)",
+      "url": "https://about.kaiserpermanente.org/who-we-are/our-history/sidney-garfield-pioneer-of-modern-health-care",
+      "caveat": "Sources differ on the bed count of the first hospital. The search gave no membership figure for 1945.",
+      "relevant_to": [
+        "Cooperative economy",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "HO6",
+      "case": "State ownership of health facilities in the Soviet Union, from 1918",
+      "years": "1918 onward",
+      "claim": "A July 1918 decree put health facilities under state ownership and declared care free to everyone. A PubMed Central review describes underfunding and a heavy reliance on inpatient care in the system that followed.",
+      "source": "PubMed Central article PMC6220729 on the Soviet health system (secondary)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6220729",
+      "caveat": "Another paper dates the start of implementation to the late 1920s. The review's description of the system is a summary, not a measured outcome.",
+      "relevant_to": [
+        "Command socialism",
+        "Marxian communism"
+      ]
+    }
+  ]
+}

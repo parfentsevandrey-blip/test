@@ -1,0 +1,59 @@
+{
+  "database": 219,
+  "practice": "Public health and vaccination",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "PH1",
+      "case": "Worldwide eradication of smallpox",
+      "years": "1953 to 1980",
+      "claim": "The idea of worldwide smallpox eradication was raised in 1953 by WHO's Canadian chief, Brock Chisholm, and set aside in 1955 so that attention could move to malaria. The World Health Assembly gave the Director-General a mandate in 1966. The intensified campaign began in 1967 and cleared Latin America in about four years. The last natural infection was recorded in Somalia in October 1977. A body of experts from 19 countries validated the outcome in Geneva in December 1979. On 8 May 1980 the World Health Assembly, in resolution WHA 33.3, accepted that the virus had been eradicated. American money covered much of the cost, and most vaccine stock came from the Soviet Union.",
+      "source": "Ohio State University, The WHO and the eradication of smallpox (origins.osu.edu, secondary); WHO records as summarised in the search",
+      "url": "https://origins.osu.edu/read/who-and-eradication-smallpox",
+      "caveat": "The dates differ by milestone: the last case, the expert validation and the Assembly's declaration fall in different years. The program's architect is identified as Donald Henderson. Vaccines alone did not produce the outcome, which relied on decades of work, diplomacy and technical innovation.",
+      "relevant_to": [
+        "Commons governance",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "PH2",
+      "case": "Chadwick's sanitary inquiry and the Public Health Act of 1848",
+      "years": "1842 to 1854",
+      "claim": "Edwin Chadwick effectively ran the 1842 inquiry into the sanitary condition of the labouring population. Its report argued that drainage, housing and water supply were economically vital because they reduced premature deaths among workers. After a fresh cholera outbreak in 1848, his sustained advocacy drove the Public Health Act to passage. The Act created a central Board of Health and urged localities to appoint their own boards and medical officers and to link homes to clean water supplies and sewerage.",
+      "source": "Victorian Web, Edwin Chadwick and the sanitary report (secondary); Encyclopaedia Britannica, Edwin Chadwick (print article, secondary)",
+      "url": "https://victorianweb.org/history/chad1.html",
+      "caveat": "Sources differ on when Chadwick's Board of Health role ended: 1852 in one encyclopaedia entry and 1854 in Britannica. The search gives no measured outcome for the Act.",
+      "relevant_to": [
+        "Fabian socialism",
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "PH3",
+      "case": "The Salk polio vaccine trial and its announcement, 1954 to 1955",
+      "years": "1954 to 1962",
+      "claim": "The Salk polio vaccine trial began inoculations in late April 1954 in Virginia and ended in early July, reaching children in 44 states. Most accounts give about 1.8 million first- to third-grade children enrolled, though one account gives 1.3 million for the blinded trial. The trial was double-blind and placebo-controlled, with observation-only controls making up roughly a third of the group. The results were announced on 12 April 1955 at the University of Michigan, where the vaccine was labelled 'safe, effective, and potent'. Reported effectiveness against paralytic polio was about 80 to 90 per cent. Five firms were cleared to make the vaccine the same day.",
+      "source": "University of Michigan School of Public Health, 1955 polio vaccine trial announcement; Vaxopedia, The Polio Pioneers (2016); Pharmalive, anniversary article on the polio vaccine (secondary)",
+      "url": "https://sph.umich.edu/polio",
+      "caveat": "One article places the trial after the April 1955 announcement, which conflicts with the 1954 start dates in other sources. Most sources are anniversary pieces and blogs. A 113-page evaluation report exists and was not read, so the figures should be checked against it.",
+      "relevant_to": [
+        "Commons governance",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "PH4",
+      "case": "The Soviet sanitary-epidemiological service",
+      "years": "1922 to 1991",
+      "claim": "Sources date the start of state sanitary-epidemiological supervision in the Soviet Union to a September 1922 decree of the Russian republic on sanitary bodies. Before the Second World War, authorities built a centralised network of such services. A 2020 paper in Gigiena i Sanitariya analyses the service's activity during the war, using a 1944 report from a Moscow district. A 1991 Russian republic law on sanitary-epidemiological welfare began a period of change. A paper by Roger Glass, hosted by the US Centers for Disease Control and Prevention, describes the service as a network for surveillance and control of preventable disease, with a central planning role from the revolutionary era onward.",
+      "source": "Gigiena i Sanitariya (2020), Moscow district sanitary and epidemiological service in the Second World War (Russian-language, secondary); Roger Glass, overview of the sanitary-epidemiological service (US Centers for Disease Control and Prevention)",
+      "url": "https://stacks.cdc.gov/view/cdc/65194/cdc_65194_DS1.pdf",
+      "caveat": "The search found no station-level detail for the 1980s, and the Glass paper carries no date in the excerpt. One source gives 1992 for the 1922 decree, which looks like a typo.",
+      "relevant_to": [
+        "Command socialism",
+        "Marxian communism"
+      ]
+    }
+  ]
+}

@@ -2126,5 +2126,82 @@
     "colorHex": "#67D962",
     "curated": false,
     "group": "economics"
+  },
+  {
+    "id": 213,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 213: economics of health financing",
+    "description": "The economic models applied to health financing: how care is paid for, the best and worst practice of each model, and one compromise.",
+    "colorHex": "#72D962",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 214,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 214: economics of hospitals and clinics",
+    "description": "The economic models applied to hospitals and clinics: who owns, runs and staffs them, the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D96295",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 215,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 215: economics of medicines and drug research",
+    "description": "The economic models applied to medicines and drug research: how drugs are researched, priced and supplied, and one compromise.",
+    "colorHex": "#62B8D9",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 216,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 216: economics of doctors' training and pay",
+    "description": "The economic models applied to the training, licensing and pay of doctors and nurses, and one compromise.",
+    "colorHex": "#D9D762",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 217,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 217: economics of mental health care",
+    "description": "The economic models applied to mental health care: who provides and pays for it, the best and worst practice of each model, and one compromise.",
+    "colorHex": "#B462D9",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 218,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 218: economics of care for older and dying people",
+    "description": "The economic models applied to care for older and dying people, at home and in care homes, and one compromise.",
+    "colorHex": "#62D991",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 219,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 219: economics of public health and vaccination",
+    "description": "The economic models applied to public health and vaccination: who organises and pays for it, the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D96F62",
+    "curated": false,
+    "group": "economics"
   }
 ]
