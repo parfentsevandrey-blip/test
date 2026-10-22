@@ -39,10 +39,9 @@ struct BrowserWindow: View {
         }
         .toolbar { toolbar }
         .navigationTitle(browser.selected?.displayTitle ?? "Ward")
-        .background(WindowAccessor { window in
-            browser.window = window
-            if browser.isPrivate { window.appearance = NSAppearance(named: .darkAqua) }
-        })
+        .background(WindowAccessor { window in browser.window = window })
+        // Частное окно — тёмное целиком, чтобы его нельзя было спутать с обычным.
+        .preferredColorScheme(browser.isPrivate ? .dark : nil)
         .focusedSceneValue(\.browser, browser)
         .onAppear {
             model.register(browser)
