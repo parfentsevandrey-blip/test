@@ -52,6 +52,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-36 | 2026-10-20 | 147,853 | 408 | 88 | 118 | 148,467 | +974 (the on-device assistant: index, classifier, answers, screen and 20 new tests, 37 in all; no record files; DATABASE_VERSION unchanged at 204) |
 | CP-37 | 2026-10-21 | 147,861 | 454 | 88 | 118 | 148,521 | +54 (economics paused at the web-search budget: model and sphere lists, generator support, two record kinds, tests; no economics records yet) |
 | CP-38 | 2026-10-21 | 151,310 | 457 | 88 | 118 | 151,973 | +3,452 (economics batch 1: databases 205 to 212, 276 records, each file reviewed against its case pool; 49 records name a documented case; generator and tests extended) |
+| CP-39 | 2026-10-22 | 157,305 | 461 | 88 | 118 | 157,972 | +5,999 (economics batches 2 and 3: databases 213 to 225, 481 records, each file reviewed against its case pool; generator and 40 unit tests pass; DATABASE_VERSION 225) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2640,3 +2641,36 @@ Totals: Kotlin main 151,310 (CP-37: 147,861), Kotlin test 457 (454), XML 88 (88)
 ### Next
 
 `ECONOMICS.md` sets out the two directions: deepen the pools of batch 1, or continue with databases 213 to 281. Both need web searches, and neither is started.
+
+## CP-39: economics batches 2 and 3 (databases 213 to 225)
+
+Mood: steadier than batch 1. The pipeline now runs in one pass per database: pool, record file, review. The reviews changed more than the writers did, and most of the changes are about how sources and closing sentences are written, not about the facts.
+
+Totals: Kotlin main 157,305 (CP-38: 151,310), Kotlin test 461 (457), XML 88 (88), Gradle and project files 118 (118), total 157,972 (151,973).
+
+### What changed
+
+- Thirteen economics databases are in the app: 213 to 219 (medicine and health) and 220 to 225 (politics and governance). That is 481 records, in generated files `Db213Economics.kt` to `Db225Economics.kt`. `SeedCatalog.kt` now has version 225, with 7,013 records in all.
+- Case pools for 213 to 225 under `tools/economics/pools/`: 31 cases for batch 2 and 45 for batch 3.
+- Record files `tools/economics/db213.json` to `db225.json`, each reviewed against its pool by a second agent that did not write it.
+- Catalogue rows 220 to 225 added to `tools/databases.json`. `spheres.json` numbers the practices 207 to 281.
+- `EconomicsSeedTest` covers databases 205 to 225 through one constant, `LAST_ECONOMICS_DATABASE`, which is raised as each batch is generated.
+- Batch 1 cleanup: 93 repeated closing sentences in databases 207, 208 and 209 were removed; years were removed from the inferred Source lines in 205 and 207 to 212; three cases whose links pointed to Wikipedia pages were dropped from 207, 209 and 210, and the records that cited them were patched.
+
+### Problems found and fixed
+
+- Pool source fields carried domain names, such as a site name followed by its domain. Each now names the publisher in plain words. The pool brief forbids domains in source fields.
+- Writers and reviewers copied model sources with their years, against the convention. Each reviewed file was corrected after its review. The later reviewer prompts state the convention.
+- Some inferred fields lacked the opening "Inferred from its principle that". They were marked.
+- Rows 220 to 225 were not in `databases.json` when batch 3 was first checked, so the generator did not see them until they were added.
+
+### Limits, stated plainly
+
+- The pools were built from search results. The pool agents did not open the pages in most cases, and the caveats say so where it matters.
+- Most inferred fields have no pool case. Documented cases cluster on the socialist, anarchist and mixed-economy families; the market and religious families have almost none.
+- Some compromise Source lines name the pool sources in short form, to keep the details within 170 words.
+- The batch 1 pools are not yet deepened. That work is open.
+
+### Next
+
+Batches 4 to 7 (databases 226 to 281). Database 206 to refer to the practice compromises for medicine and politics. Deepening the batch 1 pools.

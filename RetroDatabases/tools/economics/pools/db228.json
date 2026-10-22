@@ -1,0 +1,96 @@
+{
+  "database": 228,
+  "practice": "Working time and paid leave",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "WT1",
+      "case": "Britain's Ten Hours Act for textile mills",
+      "years": "1831 to 1850",
+      "claim": "Parliament's 1847 measure, usually called the Ten Hours Act, capped the working day at ten hours for women and young people aged 13 to 18 in textile mills. Royal assent came in June and the Act took effect in July. Richard Oastler, who took up the cause in 1831, Lord Ashley and John Fielden pressed for it over many years. Manufacturers and free-trade Liberals such as John Bright pushed back against state limits on hours, drawing on laissez-faire arguments. Parliament returned in 1850 to close loopholes created by defective drafting.",
+      "source": "Online encyclopaedia (secondary), entries on the Factories Act 1847 and on the Ten Hours Act; Mount Royal Undergraduate Humanities Review (student journal, year not shown in the results)",
+      "url": "https://mrujs.mtroyal.ca/index.php/mruhr/article/download/543/408/1896",
+      "caveat": "The Act's terms and the June and July dates come from encyclopaedia summaries in the search excerpts, not from the Act's text. The student journal is linked for the campaigners and the 1850 amendment. Sources disagree on who was covered: the encyclopaedia says women and young people aged 13 to 18, while some study-help sites say 'women and children'. The case covers textile mills only and does not cover the earlier 1833 Factory Act.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Fabian socialism"
+      ]
+    },
+    {
+      "id": "WT2",
+      "case": "Soviet continuous production week",
+      "years": "1929 to 1940",
+      "claim": "The Soviet continuous production week, known as nepreryvka, introduced a five-day cycle from 1929. Its origin is traced to the economist Yuri Larin. Sources give different start dates: formal five-day rules on 24 September 1929, while other accounts point to August or to 1 October. By 1931 the cycle had shifted to six days. Output rose in 1929 and 1930, but officials ended up conceding more idle equipment. The scheme was dropped in June 1940, after roughly eleven years.",
+      "source": "HISTORY (online article, year not shown in the results); Mises Wire (commentary, year not shown in the results); Amusing Planet (online history blog, 2022)",
+      "url": "https://www.history.com/articles/soviet-union-stalin-weekend-labor-policy",
+      "caveat": "The search excerpts do not say which of the named pages gives each date, so the sources are attributed as a group, and the figures should be checked against the pages before writing records. The start date is disputed. The pages are popular history, commentary and a blog, and no archival source is named in the results. One online encyclopaedia (secondary) in the results flags some early-1929 claims as lacking citations.",
+      "relevant_to": [
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "WT3",
+      "case": "Kellogg's six-hour day at Battle Creek",
+      "years": "1930 to 1985",
+      "claim": "From 1 December 1930 the Battle Creek plant split its workday into four six-hour shifts instead of three eight-hour ones, a work-sharing response to the Depression. Accounts tie the change to higher productivity, lower overhead and labour costs, and fewer accidents. They disagree on jobs: one says 300 previously jobless workers were hired, another puts the new positions at 400. A 1932 Labor Department payroll review concluded that 77 percent of workers earned less each week, while a later survey indicated that nearly half of workers remembered pay cuts. Wartime demands brought back eight-hour shifts in the 1940s, and the six-hour schedule ended in 1985, when workers faced longer days or the company left Battle Creek.",
+      "source": "InformationWeek (technology trade publication, article; year not shown in the results); other accounts in the results are blogs and podcast pages",
+      "url": "https://www.informationweek.com/six-hour-shifts-satisfied-kelloggs-appetite-for-productivity/d/d-id/1014546",
+      "caveat": "The figures come from a search summary, not from the article text, and the summary does not say which page gives each figure. Most other hits are blogs and podcast pages. The job counts and pay figures conflict between accounts, and the 1932 payroll review is known only through those accounts. Check the figures against the originals before writing records.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "WT4",
+      "case": "EU Working Time Directive and the UK opt-out",
+      "years": "1993 to 2008",
+      "claim": "The EU Working Time Directive of 1993 sets a 48-hour average weekly ceiling, averaged over reference periods of up to four months that collective agreement can extend. In the UK, the Working Time Regulations 1998 let a worker's written consent displace the cap. Employers must keep hour records for opted-out staff, and refusing to opt out cannot be penalised. A worker can withdraw consent on seven days' notice, though written terms may substitute a period of up to three months. A Cambridge academic research project, drawing on about 40 interviews under a European Commission brief, fed heavily into the Commission's formal review of the opt-out. Sources give dates around the turn of 2003 and 2004 for that work and review, and differ on the exact days. The Commission leaned toward scrapping the opt-out. Estimates of the share of UK workers above 48 hours differ: the Commission cites about 16%, and a TUC report 25%. Unions called for abolition, saying about a third of signatories had no genuine option. In a 2004 consultation, ministers defended the opt-out as protecting choice and flexibility while promising stricter application. A late-2008 TUC document says lawmakers were set to vote on the review's second reading on 17 December, after ministers had backed keeping the opt-out.",
+      "source": "Trades Union Congress (TUC), report and a late-2008 document; Cambridge academic research project; Pinsent Masons (law-firm news on the 2004 consultation); a company blog on the Commission's review (year not shown in the results)",
+      "url": "https://www.tuc.org.uk/research-analysis/reports/its-about-time-end-long-hours-opt-out",
+      "caveat": "Most sources are union, law-firm or company pages from 2002 to 2008, and the linked TUC report is advocacy, so its figures are one side's estimates. The results do not show the outcome of the December 2008 vote or the opt-out's status after it. The 13-employer figure comes from an EU report that was unpublished when the TUC publicised it. The 16% and 25% estimates are not reconciled, and the UK rules come from search summaries rather than the regulations' text.",
+      "relevant_to": [
+        "Social market economy",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "WT5",
+      "case": "Sweden's parental insurance and fathers' take-up",
+      "years": "1995 to 2018 (figures for 2005 and from 2018)",
+      "claim": "A Population Europe digest dates the first reserved-month quota in Swedish parental leave to 1995. A 2005 working paper from the Max Planck Institute for Demographic Research reports that around 85% of fathers used some leave, though most spells were short. A policy brief drawing on Statistics Sweden data says men's share of claimed parental days has levelled off at about 31% since 2018, and other sources put it at roughly a third.",
+      "source": "Population Europe (digest, year not shown in the results); Max Planck Institute for Demographic Research (working paper, 2005); Free Policy Briefs (policy brief, 2024, citing Statistics Sweden data)",
+      "url": "https://www.demogr.mpg.de/papers/working/wp-2005-013.pdf",
+      "caveat": "Only the 2005 working paper is linked; the 1995 quota and the 2018 share rest on the other two named sources. The results describe the 30 reserved days as forfeited if unused, but do not tie that rule to the 1995 quota. Official Swedish Social Insurance Agency statistics were not in the results. The early figures for 1974 to 1978 are left out because their sources are not named in the results, and the 1978 figure rests only on an informal note. Causation is speculative.",
+      "relevant_to": [
+        "Nordic social democracy",
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "WT6",
+      "case": "France's 35-hour week and the 2002 assessment",
+      "years": "2002 (government assessment); 2014 (later critique)",
+      "claim": "The French government's September 2002 assessment of the 35-hour laws put their job effect at roughly 300,000 positions, as Eurofound reported it. Eurofound also says company and sector bargaining expanded considerably as schedules became more flexible. A 2014 IRES presentation argues that earlier assessments have aged, because successive legal changes make the law's longer-run effects impossible to pin down. A Reporterre article quoting Martine Aubry says growth helped but cannot alone explain the job gains.",
+      "source": "Eurofound (EU agency), coverage of the French government's September 2002 assessment; IRES, 2014 presentation; Reporterre (French news site), quoting Martine Aubry (year not shown in the results)",
+      "url": "https://www.eurofound.europa.eu/en/publications/all/government-issues-assessment-35-hour-week-legislation",
+      "caveat": "The 300,000 figure is the government's own estimate as Eurofound relays it, and the results contain no independent estimate of it. The results do not give the law's start date, so the 2000 start is not established here. Only the Eurofound page is linked; the IRES presentation and the Reporterre article are named from the results, and the Reporterre piece quotes a minister, so it is an interested source.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "WT7",
+      "case": "South Korea's 52-hour weekly ceiling",
+      "years": "2018 onward; hours data 2011 to 2021",
+      "claim": "A news article from Asia News Network reports that the weekly working-time ceiling fell from 68 to 52 hours when the rule took hold in July 2018, and that the allowance for extra hours beyond the 40-hour base fell from 28 to 12. Annual hours fell by about 10% over a decade from a 2011 peak of 2,136 hours, but remained high: Korea ranked fifth of 38 OECD members in 2021, at 1,915 hours against an OECD average of 1,716. A journal abstract using 2006 to 2020 survey data puts the share of wage earners working over 52 hours a week in 2020 at about 6%. One online encyclopaedia (secondary) dates the start to 2020, against July 2018 in the news article.",
+      "source": "Asia News Network (news article, year not shown in the results); journal abstract (journal name and year not shown in the results); online encyclopaedia (secondary), for the disputed start date",
+      "url": "https://asianews.network/south-koreas-working-hours-decrease-10-over-decade-but-still-remains-high/",
+      "caveat": "Most figures are news coverage of OECD data, not the OECD database itself, and the OECD and ministry series count hours differently. The start date is disputed. Pandemic-era disruption also trimmed hours, so the rule's effect cannot be isolated, and the entry of Colombia and Costa Rica into the OECD accounts for much of Korea's lower ranking. The 6% figure covers wage earners only, and very small employers face effectively no statutory ceiling. Figures attributed to the news article were matched through the search summary, so check them against the page before writing records.",
+      "relevant_to": [
+        "Developmental state"
+      ]
+    }
+  ]
+}
