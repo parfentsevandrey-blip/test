@@ -1,0 +1,80 @@
+{
+  "database": 250,
+  "practice": "Religious life and its institutions",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "RL1",
+      "case": "Church tax collected by the state in Germany",
+      "years": "Roots in the 1800s; state collection given legal footing by 1919 legislation (one account)",
+      "claim": "Accounts in the results say that members of recognised churches owe a church tax (Kirchensteuer) and that the state collects it from members; the Federal Agency for Civic Education lexicon describes the state as the collecting body. The tax is calculated from the assessed wage or income tax rather than from income, after allowances and tax breaks are subtracted. The rate is 8 percent of that tax in Bavaria and Baden-Württemberg and 9 percent in the other states, and the sources agree on this split. Non-members, including people who have formally left, owe no church tax; leaving means a formal withdrawal called Kirchenaustritt. Church tax paid may be claimed as a special expense (Sonderausgabe) against income tax under section 10(1) no. 4 EStG, which lowers the income tax due.",
+      "source": "Federal Agency for Civic Education (Bundeszentrale für politische Bildung), legal lexicon entry on Kirchensteuer (year not stated); commercial tax guides and a blog from the same search (years not stated)",
+      "url": "https://www.bpb.de/kurz-knapp/lexika/recht-a-z/323629/kirchensteuer/",
+      "caveat": "Most of the detail comes from commercial tax guides and blogs in the results. The Federal Agency lexicon is the most authoritative text reported there, and the results show only its collection role. The 1919 date rests on one blog. Rates and the deduction were not checked against the tax laws, and the high-income caps are left out because they come from a commercial calculator that was cut off.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "RL2",
+      "case": "Tithes converted into rent-charges in England and Wales",
+      "years": "1836; later Acts in 1891, 1918 and 1925",
+      "claim": "The Tithe Act 1836, often called the Tithe Commutation Act, replaced payments of tithes in kind with money rent-charges that tracked national corn prices rather than local conditions. Three commissioners based in London oversaw the change. Accounts differ on the averaging: one gives a seven-year average of wheat, barley and oat prices, while another says the figure was revised each year from grain-price averages published in the London Gazette. Owners carried the duty to pay until the Tithe Act 1891. The Tithe Act 1918 froze the sum until 1 January 1926, and a 1925 Act aimed to fix it in place and ultimately end it. The results do not show how the 1925 aims played out.",
+      "source": "Surrey History Centre (Surrey County Council), guide on tithe maps and apportionments (year not stated); online encyclopaedia (secondary) entry on the Tithe Act 1836 (year not stated)",
+      "url": "https://surreycc.gov.uk/culture-and-leisure/history-centre/researchers/guides/tithe-maps",
+      "caveat": "The statute text was not in the results, so the details rest on a county guide and an encyclopaedia entry, and the 1918 and 1925 Acts were not checked against their text. The averaging method is reported in two ways and is not settled here.",
+      "relevant_to": [
+        "Physiocracy",
+        "Georgism"
+      ]
+    },
+    {
+      "id": "RL3",
+      "case": "Church tax and state grant funding the Church of Denmark",
+      "years": "2005 figures, given in a 2006 ministry reply",
+      "claim": "A 2006 ministry reply, published by the Danish Parliament, gives the 2005 income of Folkekirken (the Church of Denmark) as about 6,236 million kroner. About 3,954 million of that came from local church tax (lokal kirkeskat) and about 690 million from the state grant. Legislation governing that grant at the time is given as section 20 of the Folk Church Economy Act (lov om folkekirkens økonomi), together with the annual finance acts.",
+      "source": "Danish Parliament (Folketing), ministry reply on Folkekirken finances (2006)",
+      "url": "https://ft.dk/samling/20061/almdel/kiu/spm/11/svar/291364/324745.pdf",
+      "caveat": "This gives one year's figures from a parliamentary reply, not from full accounts. A 2009 proposal to replace state support with a block grant (bloktilskud) appeared in the same search, but the excerpts do not show whether it was adopted, so it is not described here. A Copenhagen University PhD thesis in another result, with no year given, puts church tax at roughly 80 percent of church income; the figures may use different years or bases.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    },
+    {
+      "id": "RL4",
+      "case": "US Supreme Court upholds church property-tax exemptions (Walz)",
+      "years": "1970 (decided 4 May 1970)",
+      "claim": "On 4 May 1970 the US Supreme Court rejected a challenge by a Richmond County property owner to New York City's property-tax exemptions for churches, by seven votes to one, with Justice Douglas the only dissenter. The majority said the exemptions were religiously neutral in purpose, favoured no particular faith and fitted a long American tradition. It also warned that assessing and collecting taxes from congregations would itself draw the state into church affairs. Secondary accounts in the results credit the case with introducing the idea of 'excessive entanglement', which Lemon v. Kurtzman later made the third prong of the Lemon test.",
+      "source": "US Supreme Court opinion in Walz v. Tax Commission of the City of New York (1970), as published by Cornell Law School's Legal Information Institute; secondary accounts: an online encyclopaedia (secondary) and case summary pages (years not stated)",
+      "url": "https://www.law.cornell.edu/supremecourt/text/397/664",
+      "caveat": "The facts come from a search summary, and the opinion text itself was not read. The vote, the entanglement point and the link to the Lemon test come from secondary accounts. The results do not say whether this reasoning is still applied, so no current status is given.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "RL5",
+      "case": "Soviet registration of religious communities (1929)",
+      "years": "April 1929 law; changes reported for 1932 and 1975",
+      "claim": "Under the April 1929 RSFSR statute on religious organisations, a congregation could not operate until a local executive committee or municipal soviet had registered it, and a group seeking registration needed at least twenty initiators to petition those bodies. A group refused registration could not meet legally, lease state property or build a prayer house, and church buildings passed into state ownership. Secondary articles in the results say the law was revised slightly in 1932, that a round of changes in 1975 touched nearly half of its 68 articles, and that each of the fifteen republics ran a slightly different version.",
+      "source": "Michigan State University, Soviet history site, text of the 1929 Law on Religious Organizations (1929); secondary articles on Soviet religious policy (names and years not given in the results)",
+      "url": "https://soviethistory.msu.edu/1929/churches-closed/churches-closed-texts/law-on-religious-organizations/",
+      "caveat": "Only excerpts and secondary articles were read, and the full law was not checked. The 1932 and 1975 changes and the fifteen-republic variation come from secondary articles and are not confirmed against the text.",
+      "relevant_to": [
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "RL6",
+      "case": "Pakistan's state collection of zakat and ushr",
+      "years": "Zakat from June 1980; ushr enforceable from March 1983; provincial change April 2010",
+      "claim": "Since June 1980, eleven classes of assets have faced a compulsory 2.5 percent zakat deduction, valued as of the first day of Ramadan, and the sums withheld go to a Central Zakat Fund at the State Bank of Pakistan. The farm-produce levy (ushr) became enforceable only in March 1983. A constitutional change in April 2010 moved legislative authority over zakat and ushr to the provinces, and separate provincial statutes followed. Sources disagree on the administrative home: two accounts place zakat oversight with the Ministry of Religious Affairs, and another places the 1980 ordinance under a Zakat and Ushr Division in the Ministry of Finance. One journal article calls the 1980 ordinance Pakistan's first zakat law, while others cite an earlier 1979 ordinance.",
+      "source": "Khalid Zafar and Associates (Pakistani law firm), summary page on the Zakat and Ushr Ordinance, 1980 (undated); a journal article and other accounts from the same search (names and years not given)",
+      "url": "https://khalidzafar.com/?p=362",
+      "caveat": "The claims come from search summaries and a law-firm page. The 1983 and 2010 dates come from other results, not from the linked page. The case fits this sphere only loosely: it concerns state collection of a religious levy rather than funding of congregations. The ministry and the 1979 or 1980 start date are disputed and not resolved.",
+      "relevant_to": [
+        "Islamic economics"
+      ]
+    }
+  ]
+}

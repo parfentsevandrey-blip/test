@@ -1,0 +1,81 @@
+{
+  "database": 248,
+  "practice": "Charity, mutual aid and philanthropy",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "CH1",
+      "case": "English friendly societies in the 19th century",
+      "years": "mid to late 19th century",
+      "claim": "A local-history document on the Sawbridgeworth friendly society says that Britain's count of friendly societies peaked at over 27,000 in the mid-to-late nineteenth century. By that document's account, about 200 have survived, and many of the others were absorbed into building societies, banks or insurers.",
+      "source": "Local-history document on the Sawbridgeworth friendly society (year not shown in the search result)",
+      "url": "https://sbwhistory.com/wp-content/uploads/2017/11/friendly-society.pdf",
+      "caveat": "A local-history document, not a statistical series. It gives no source for the count, and the peak is a period rather than a year. Another search result gives a different figure: women's enrolment exceeded 27,000 by 1874. That measures something else and must not be merged with this count.",
+      "relevant_to": [
+        "Cooperative economy",
+        "Mutualism"
+      ]
+    },
+    {
+      "id": "CH2",
+      "case": "Charitable Trusts Act 1853 and the Charity Commission",
+      "years": "1853",
+      "claim": "The Charitable Trusts Act 1853, dated 20 August 1853, set up a standing Board of Charity Commissioners for England and Wales. The Crown could appoint four commissioners, a secretary and two inspectors. The Board could examine how charities were managed, could designate staff as official trustees (subject to Treasury approval), and could refer cases it judged worth pursuing to the Attorney General. Some charities were exempt, among them university, church and friendly-society charities.",
+      "source": "Charitable Trusts Act 1853, legal database copy (year 1853)",
+      "url": "https://vlex.co.uk/vid/charitable-trusts-act-1853-808047769",
+      "caveat": "Based on a search-result description of the Act, which was not read in full. The background (an 1851 proposal and the 1852 change of government) and the later changes (1855, 1860, 1899 and 1944) are left out because this case cites only the Act. The reason for the exemptions is not given.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "CH3",
+      "case": "Carnegie's wealth-giving and the Carnegie Corporation of New York",
+      "years": "1889 to 1912 (the foundation was set up in 1911)",
+      "claim": "Andrew Carnegie set up the Carnegie Corporation of New York in 1911 under a New York State charter, so that he could hand out most of his remaining wealth while alive, with the body continuing to give after his death. His gifts totalled 125 million US dollars in 1911 to 1912, and a further 10 million US dollars reached the Corporation once his estate was wound up. His two 1889 essays, together called The Gospel of Wealth, ran in the North American Review and treat the wealthy as stewards who should live modestly and direct surplus to public purposes; their line 'The man who dies thus rich dies disgraced' drew controversy on both sides of the Atlantic. Sources disagree on motive: a web page from NCFP stresses his Presbyterian upbringing and push for faith-based giving, while a Philanthropy Roundtable piece argues that Carnegie personally was not driven by religious impulses, unlike Rockefeller.",
+      "source": "Carnegie Corporation of New York, history page on its website (year not shown); NCFP web page on The Gospel of Wealth (year not shown); Philanthropy Roundtable article 'The Carnegie Corporation Turns 100' (year not shown)",
+      "url": "https://carnegie.org/about/our-history",
+      "caveat": "The foundation's own history page is an interested source. The gift totals and the 1889 publication details come from search-result summaries, not the full texts, and the cited page is not confirmed as the source of each figure. The sources give no years, and they disagree on Carnegie's motives. The foundation's site says it took the name Andrew Carnegie Foundation in 2026, so check the name used in a record.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "CH4",
+      "case": "Waqf endowments in Ottoman and other Muslim lands",
+      "years": "from the 9th century; estimates for the late 18th and early 19th centuries",
+      "claim": "Waqf (Islamic endowments) took root around the ninth century and spread through Muslim lands, reaching city planning, social welfare and market stability. A cautious early-1800s calculation counts over half of Ottoman property as endowed. Late-18th-century estimates put the yearly income of roughly 20,000 Ottoman endowments at about a third of state revenue, and suggest that endowments may have held between half and two-thirds of farmland. Regional estimates drawn from Amy Singer's book put endowed land at 75 percent of arable land in present-day Turkey, about a fifth in Egypt and half in Algeria.",
+      "source": "Yaqeen Institute essay by Khalil Abdurrashid (year not shown); Amy Singer's book, as cited in the search results (year not shown)",
+      "url": "https://yaqeeninstitute.org/khalil-abdurrashid/financing-kindness-as-a-society-the-rise-fall-of-islamic-philanthropic-institutions-waqfs/",
+      "caveat": "All the shares are rough, secondhand estimates. A critical blog review says the Singer book lacks primary data behind its figures. Adam Mestyan's 2020 essay says research on modern Egyptian land administration is thin and that 19th-century court and survey records are restricted, so the Egyptian figure cannot be checked here. The Yaqeen essay's date is not shown.",
+      "relevant_to": [
+        "Islamic economics"
+      ]
+    },
+    {
+      "id": "CH5",
+      "case": "A Haarlem burial fund that became a life insurer",
+      "years": "1719 (in the insurer's name); no other date given",
+      "claim": "A Radboud University archive description of a Haarlem life insurer says that 'De Onderlinge van 1719' was formerly a burial fund in Haarlem called 'De vrijwillige liefdebeurs' (a voluntary charity fund).",
+      "source": "Radboud University archive description of a Haarlem life insurer (undated)",
+      "url": "https://www.ru.nl/kdc/bladeren/archieven-thema/subpagina-archieven-thema/stands-vakorganisaties/archieven_van/archieven_i/onderlinge",
+      "caveat": "A short archive description with no founding or conversion date for the burial fund and no membership figures; 1719 appears only in the insurer's name. Other Dutch results were only snippets (a 2020 blog post on mutual insurance and a note on burial funds from 1800 to 1850), so they are not used.",
+      "relevant_to": [
+        "Mutualism",
+        "Cooperative economy"
+      ]
+    },
+    {
+      "id": "CH6",
+      "case": "Winterhilfswerk (Winter Relief), a state-party charity in Germany",
+      "years": "1933 to 1945; start date disputed (September 1933 or 1931)",
+      "claim": "The Winterhilfswerk (Winter Relief), organised by the NSV welfare organisation, was an autumn-to-spring collection campaign that ran from 1933 to 1945. The German Historical Museum dates its founding to September 1933, but a museum database entry says the drive began under Brüning in 1931, so sources disagree on the start.",
+      "source": "German Historical Museum, online exhibition text on the Winterhilfswerk (year not shown); a museum database entry on the drive (undated)",
+      "url": "https://www.dhm.de/lemo/kapitel/ns-regime/ns-organisationen/winterhilfswerk.html",
+      "caveat": "The museum page is cited for the founding date; it was not read in full, and the NSV role is taken from search summaries. Search summaries also describe enforced giving, door-to-door collections by Party members and Hitler Youth, and aid limited to people judged racially acceptable, along with a Martin Bormann response that partly corroborated armaments rumours. Those statements are not claimed here because the cited page is not confirmed to say them. No totals of money raised appear in the results.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    }
+  ]
+}
