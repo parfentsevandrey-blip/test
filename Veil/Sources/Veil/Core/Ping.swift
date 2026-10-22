@@ -66,7 +66,11 @@ nonisolated enum Ping {
                     group.addTask {
                         // Первый запрос — с подключением; если не прошёл, вторая попытка.
                         var ms = await Probe.delay(httpPort: port, timeout: timeout)
-                        if ms == nil { ms = await Probe.delay(httpPort: port, timeout: timeout) }
+                        if ms == nil {
+                            // Мгновенный отказ бывает, пока тестер поднимает соединения, — короткая пауза.
+                            try? await Task.sleep(for: .milliseconds(400))
+                            ms = await Probe.delay(httpPort: port, timeout: timeout)
+                        }
                         onResult(server.id, ms.map { .ms($0) } ?? .timeout)
                     }
                 }

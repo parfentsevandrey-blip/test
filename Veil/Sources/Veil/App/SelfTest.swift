@@ -381,7 +381,13 @@ nonisolated extension Ping {
             for (server, port) in zip(servers, ports) {
                 group.addTask {
                     var ms = await Probe.delay(httpPort: port, timeout: 6, url: url)
-                    if ms == nil { ms = await Probe.delay(httpPort: port, timeout: 6, url: url) }
+                    if ms == nil {
+                        try? await Task.sleep(for: .milliseconds(400))
+                        switch await Probe.measure(httpPort: port, timeout: 6, url: url) {
+                        case .success(let v): ms = v
+                        case .failure(let e): print("    \(server.name): \(e.localizedDescription)")
+                        }
+                    }
                     onResult(server.id, ms.map { .ms($0) } ?? .timeout)
                 }
             }
