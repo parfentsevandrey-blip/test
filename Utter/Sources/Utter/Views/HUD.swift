@@ -109,7 +109,8 @@ struct HUDView: View {
                 .lineLimit(1)
         } else {
             // Напечатанное — ярко, неустоявшийся хвост — приглушённо; длинный текст обрезается слева.
-            (Text(model.liveTyped).foregroundStyle(.primary) + Text(model.liveTail.isEmpty ? "" : " " + model.liveTail).foregroundStyle(.secondary))
+            let tail = model.liveTail.isEmpty ? "" : " " + model.liveTail
+            Text("\(Text(model.liveTyped).foregroundStyle(.primary))\(Text(tail).foregroundStyle(.secondary))")
                 .font(.system(size: 15, weight: .medium))
                 .lineLimit(1)
                 .truncationMode(.head)

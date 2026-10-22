@@ -29,8 +29,8 @@ nonisolated final class Typer: @unchecked Sendable {
     static var trusted: Bool { AXIsProcessTrusted() }
 
     static func requestTrust() {
-        let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
-        _ = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
+        // Значение kAXTrustedCheckOptionPrompt (глобальная переменная C недоступна в строгой конкурентности).
+        _ = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
     }
 
     /// Поле пароля: macOS включает защищённый ввод, и печатать туда нельзя (и не нужно).
@@ -65,7 +65,7 @@ nonisolated final class Typer: @unchecked Sendable {
 
     // MARK: - События клавиатуры
 
-    private static let source = CGEventSource(stateID: .hidSystemState)
+    nonisolated(unsafe) private static let source = CGEventSource(stateID: .hidSystemState)
 
     private static func typeNow(_ text: String) {
         // Перевод строки — Shift+Return: в мессенджерах обычный Return отправил бы сообщение.
