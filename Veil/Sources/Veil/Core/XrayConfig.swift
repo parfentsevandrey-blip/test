@@ -306,7 +306,8 @@ nonisolated enum XrayConfig {
         }
         outbounds.append(["tag": "block", "protocol": "blackhole"])
         return [
-            "log": ["loglevel": "none"],
+            // «warning» — чтобы появилась строка «started» (её ждёт запуск).
+            "log": ["loglevel": "warning"],
             "inbounds": inbounds,
             "outbounds": outbounds,
             "routing": ["rules": rules],

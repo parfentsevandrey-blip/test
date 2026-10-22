@@ -239,7 +239,13 @@ nonisolated enum SelfTest {
                 continue
             }
             var ms = await Probe.delay(httpPort: o.checkPort, timeout: 6, url: bed.targetURL)
-            if ms == nil { ms = await Probe.delay(httpPort: o.checkPort, timeout: 6, url: bed.targetURL) }
+            if ms == nil {
+                if case .failure(let error) = await Probe.measure(httpPort: o.checkPort, timeout: 6, url: bed.targetURL) {
+                    print("    \(error.localizedDescription)")
+                    print("    журнал: " + LogBook.shared.all.suffix(3).map(\.text).joined(separator: " | "))
+                }
+                ms = await Probe.delay(httpPort: o.checkPort, timeout: 6, url: bed.targetURL)
+            }
             let stats = await CoreStats.sample(port: o.metricsPort)
             ok = check(ms != nil && (stats?.up ?? 0) > 0, "\(title) [\(server.endpoint.summary)]: \(ms.map { "\($0) мс" } ?? "нет связи"), трафик через сервер \(stats?.up ?? 0) Б") && ok
             client.stop()

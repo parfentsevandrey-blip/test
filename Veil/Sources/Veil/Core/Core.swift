@@ -257,14 +257,24 @@ nonisolated enum Probe {
 
     /// Время полного запроса через прокси (с рукопожатием), мс; nil — не прошёл.
     static func delay(httpPort: Int, timeout: TimeInterval = 7, url: URL = checkURL) async -> Int? {
+        if case .success(let ms) = await measure(httpPort: httpPort, timeout: timeout, url: url) { return ms }
+        return nil
+    }
+
+    static func measure(httpPort: Int, timeout: TimeInterval = 7, url: URL = checkURL) async -> Result<Int, Error> {
         let s = session(httpPort: httpPort, timeout: timeout)
         defer { s.invalidateAndCancel() }
         var request = URLRequest(url: url)
         request.httpMethod = "HEAD"
         let start = Date()
-        guard let (_, response) = try? await s.data(for: request),
-              let code = (response as? HTTPURLResponse)?.statusCode, (200..<400).contains(code) else { return nil }
-        return Int(Date().timeIntervalSince(start) * 1000)
+        do {
+            let (_, response) = try await s.data(for: request)
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            guard (200..<400).contains(code) else { return .failure(URLError(.badServerResponse, userInfo: [NSLocalizedDescriptionKey: "HTTP \(code)"])) }
+            return .success(Int(Date().timeIntervalSince(start) * 1000))
+        } catch {
+            return .failure(error)
+        }
     }
 
     struct Exit: Sendable, Equatable {

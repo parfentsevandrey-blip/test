@@ -86,6 +86,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
       </array>
     </dict>
   </array>
+  <key>NSAppTransportSecurity</key><dict><key>NSAllowsArbitraryLoads</key><true/></dict>
   <key>NSHumanReadableCopyright</key><string>Veil — VPN-клиент для Mac. Ядро Xray-core (MPL-2.0), базы сайтов runetfreedom.</string>
 </dict>
 </plist>
