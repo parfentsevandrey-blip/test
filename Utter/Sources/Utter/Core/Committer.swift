@@ -59,9 +59,9 @@ nonisolated enum VoiceCommand: Equatable {
             .map(String.init).joined()
             .split(separator: " ").joined(separator: " ")
         switch normalized {
-        case "новая строка", "с новой строки", "перенос строки": return .newLine
-        case "новый абзац", "абзац", "с нового абзаца": return .newParagraph
-        case "удали это", "удали последнее", "стереть это", "сотри это", "отмена": return .deleteLast
+        case "новая строка", "с новой строки", "перенос строки", "new line", "newline": return .newLine
+        case "новый абзац", "абзац", "с нового абзаца", "new paragraph": return .newParagraph
+        case "удали это", "удали последнее", "стереть это", "сотри это", "отмена", "delete that", "scratch that", "undo that": return .deleteLast
         default: return nil
         }
     }

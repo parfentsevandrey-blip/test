@@ -76,6 +76,16 @@ struct SettingsView: View {
     private var recognition: some View {
         @Bindable var model = model
         return Form {
+            Section("Язык речи") {
+                Picker("Я говорю", selection: $model.speechLanguage) {
+                    ForEach(SpeechLanguage.allCases) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
+                Text(model.asrModel.realtime
+                     ? "Voxtral Realtime определяет язык сам — выбор действует на Qwen3-ASR и распознавание macOS. Если важно не путать языки, возьмите Qwen3-ASR."
+                     : "Модель распознаёт только выбранный язык: не путает русский с украинским и не переводит английские фразы. Голосовые команды работают на обоих языках: «новая строка» / «new line».")
+                    .font(.system(size: 11)).foregroundStyle(.secondary)
+            }
             Section("Модель") {
                 ForEach(AsrModel.all) { m in
                     HStack(spacing: 10) {

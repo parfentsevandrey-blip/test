@@ -169,6 +169,9 @@ nonisolated enum SelfTest {
         print("— Голосовые команды")
         ok = check(VoiceCommand.match("Новая строка.") == .newLine && VoiceCommand.match("новый абзац") == .newParagraph
                    && VoiceCommand.match("Удали это!") == .deleteLast && VoiceCommand.match("Новая строка кода") == nil, "команды распознаются только целой фразой") && ok
+        ok = check(VoiceCommand.match("New line.") == .newLine && VoiceCommand.match("Scratch that") == .deleteLast
+                   && SpeechLanguage.english.asrName == "English" && SpeechLanguage.russian.locale.identifier == "ru-RU",
+                   "английские команды и выбор языка речи") && ok
 
         print("— Сочетания клавиш")
         ok = check(Shortcut.default.display == "⌥ Пробел", "по умолчанию: \(Shortcut.default.display)") && ok

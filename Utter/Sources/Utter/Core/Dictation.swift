@@ -2,6 +2,19 @@
 import Foundation
 @preconcurrency import Speech
 
+/// Язык речи, который выбирают вручную: модель не тратит время на определение и не путает языки
+/// (русский с украинским, английские слова в русской речи и наоборот).
+nonisolated enum SpeechLanguage: String, Sendable, Codable, CaseIterable, Identifiable {
+    case russian, english
+
+    var id: String { rawValue }
+    var title: String { self == .russian ? "Русский" : "English" }
+    /// Как язык называется в запросе к Qwen3-ASR.
+    var asrName: String { self == .russian ? "Russian" : "English" }
+    /// Для встроенного распознавания macOS.
+    var locale: Locale { Locale(identifier: self == .russian ? "ru-RU" : "en-US") }
+}
+
 /// Конвейер диктовки: микрофон → детектор речи → распознавание фразы каждые полсекунды →
 /// утверждение слов (LocalAgreement) → печать. Всё состояние — на одной последовательной очереди.
 nonisolated final class Dictation: @unchecked Sendable {
@@ -32,6 +45,7 @@ nonisolated final class Dictation: @unchecked Sendable {
 
     struct Options: Sendable {
         var engine: Engine = .qwen
+        var language: SpeechLanguage = .russian
         var pauseMs = 700
         /// Подсказки модели: имена, термины.
         var context = ""
@@ -190,9 +204,10 @@ nonisolated final class Dictation: @unchecked Sendable {
         let started = Date()
         lastPassStart = started
         let context = options.context
+        let language = options.language.asrName
         Task.detached(priority: .userInitiated) {
             let result: Result<String, Error>
-            do { result = .success(try await AsrEngine.shared.transcribe(audio, prefix: prefix, context: context)) }
+            do { result = .success(try await AsrEngine.shared.transcribe(audio, prefix: prefix, context: context, language: language)) }
             catch { result = .failure(error) }
             self.queue.async {
                 self.passRunning = false
@@ -338,7 +353,7 @@ nonisolated final class Dictation: @unchecked Sendable {
     // MARK: - Встроенное распознавание macOS
 
     private func startApple(_ id: Int, preroll: [Float]) {
-        guard let session = AppleSession(sampleRate: Double(options.sampleRate), context: options.context, onResult: { [weak self] text, isFinal in
+        guard let session = AppleSession(sampleRate: Double(options.sampleRate), context: options.context, language: options.language, onResult: { [weak self] text, isFinal in
             guard let self else { return }
             self.queue.async {
                 // Ошибка распознавания приходит пустым финалом — оставляем последнюю гипотезу.
@@ -350,7 +365,7 @@ nonisolated final class Dictation: @unchecked Sendable {
                 }
             }
         }) else {
-            emit(.error("Распознавание macOS недоступно для русского языка на этом Mac."))
+            emit(.error("Распознавание macOS недоступно для языка «\(options.language.title)» на этом Mac."))
             return
         }
         apple[id] = session
@@ -372,10 +387,10 @@ nonisolated final class AppleSession: @unchecked Sendable {
     private var task: SFSpeechRecognitionTask?
     private let format: AVAudioFormat
 
-    static var recognizer: SFSpeechRecognizer? { SFSpeechRecognizer(locale: Locale(identifier: "ru-RU")) }
+    static func recognizer(_ language: SpeechLanguage) -> SFSpeechRecognizer? { SFSpeechRecognizer(locale: language.locale) }
 
     static var available: Bool {
-        SFSpeechRecognizer.authorizationStatus() == .authorized && recognizer?.isAvailable == true
+        SFSpeechRecognizer.authorizationStatus() == .authorized && recognizer(.russian)?.isAvailable == true
     }
 
     static func requestPermission() async -> Bool {
@@ -384,8 +399,8 @@ nonisolated final class AppleSession: @unchecked Sendable {
         }
     }
 
-    init?(sampleRate: Double, context: String, onResult: @escaping @Sendable (String, Bool) -> Void) {
-        guard let recognizer = Self.recognizer, recognizer.isAvailable,
+    init?(sampleRate: Double, context: String, language: SpeechLanguage, onResult: @escaping @Sendable (String, Bool) -> Void) {
+        guard let recognizer = Self.recognizer(language), recognizer.isAvailable,
               let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: sampleRate, channels: 1, interleaved: false) else { return nil }
         self.format = format
         request.shouldReportPartialResults = true

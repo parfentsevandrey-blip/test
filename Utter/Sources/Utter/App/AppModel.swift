@@ -130,6 +130,10 @@ final class AppModel {
     var dictionary = UserDefaults.standard.string(forKey: "dictionary") ?? "" {
         didSet { UserDefaults.standard.set(dictionary, forKey: "dictionary") }
     }
+    /// Язык речи — выбирается вручную, чтобы модель не путала языки.
+    var speechLanguage = SpeechLanguage(rawValue: UserDefaults.standard.string(forKey: "speechLanguage") ?? "") ?? .russian {
+        didSet { UserDefaults.standard.set(speechLanguage.rawValue, forKey: "speechLanguage") }
+    }
     var commands = UserDefaults.standard.object(forKey: "commands") as? Bool ?? true {
         didSet { UserDefaults.standard.set(commands, forKey: "commands") }
     }
@@ -390,6 +394,7 @@ final class AppModel {
         self.sink = sink
         var options = Dictation.Options()
         options.engine = engine
+        options.language = speechLanguage
         options.pauseMs = pauseMs
         options.commands = commands
         options.sampleRate = engine == .apple ? 16000 : AsrEngine.shared.sampleRate

@@ -9,6 +9,7 @@ struct MenuView: View {
         VStack(alignment: .leading, spacing: 14) {
             header
             recordButton
+            languagePicker
             ModelStatusCard()
             if !model.micGranted || !model.accessibilityGranted { permissions }
             if !model.history.isEmpty { historyList }
@@ -38,6 +39,18 @@ struct MenuView: View {
             if model.hotkeyConflict { return "Сочетание \(model.shortcut.display) занято другой программой — выберите другое" }
             return "Диктовка по \(model.shortcut.display)" + (model.rightOption ? " или удержанию правого ⌥" : "")
         }
+    }
+
+    /// Язык речи — под рукой: переключается и посреди работы (действует со следующей диктовки).
+    private var languagePicker: some View {
+        @Bindable var model = model
+        return Picker("Язык", selection: $model.speechLanguage) {
+            ForEach(SpeechLanguage.allCases) { Text($0.title).tag($0) }
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .disabled(model.phase != .idle)
+        .help("Язык, на котором вы говорите")
     }
 
     private var recordButton: some View {
