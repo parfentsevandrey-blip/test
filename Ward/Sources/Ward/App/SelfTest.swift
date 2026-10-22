@@ -302,10 +302,11 @@ enum SelfTest {
         model.setProtection(true, site: "localhost")
 
         // 5. Отпечаток холста.
-        func fingerprint(_ url: String) async -> [String: Any] {
-            _ = await open(tab, url)
-            return await evaluate(tab, MiniHTTP.canvasProbe) as? [String: Any] ?? [:]
+        func fingerprintIn(_ t: Tab, _ url: String) async -> [String: Any] {
+            _ = await open(t, url)
+            return await evaluate(t, MiniHTTP.canvasProbe) as? [String: Any] ?? [:]
         }
+        func fingerprint(_ url: String) async -> [String: Any] { await fingerprintIn(tab, url) }
         let a1 = await fingerprint("http://localhost:\(p)/fp.html")
         let a2 = await fingerprint("http://localhost:\(p)/fp.html?again")
         let b1 = await fingerprint("http://127.0.0.1:\(p)/fp.html")
@@ -349,7 +350,26 @@ enum SelfTest {
         if case .blocked = tab.interstitial { check(true, "адрес трекера целиком — экран «Ward остановил эту страницу»") }
         else { info("страница трекера: \(tab.interstitial.map { "\($0)" } ?? "открылась") \(tab.url?.absoluteString ?? "")") }
 
-        // 10. Внешний тест блокировщика (справочно).
+        // 10. Частное окно: cookie только в памяти окна, отпечаток со своим секретом.
+        server.set("/cookie.html", html: "<!doctype html><title>cookie</title><script>document.cookie = 'ward_private=1; max-age=3600; path=/';</script>")
+        let priv = BrowserState(isPrivate: true)
+        model.register(priv)
+        if let ptab = priv.selected {
+            let pweb = ptab.webView
+            pweb.frame = host.bounds
+            host.addSubview(pweb)
+            _ = await open(ptab, "http://localhost:\(p)/cookie.html")
+            let pa = await fingerprintIn(ptab, "http://localhost:\(p)/fp.html?private")
+            let normal = await fingerprintIn(tab, "http://localhost:\(p)/fp.html?normal")
+            ok = check(pa["hash"] != nil && (pa["hash"] as? String) != (normal["hash"] as? String), "у частного окна свой отпечаток на том же сайте") && ok
+            let privateCookies = await cookies(priv.dataStore)
+            let normalCookies = await cookies(WKWebsiteDataStore.default())
+            ok = check(privateCookies.contains("ward_private") && !normalCookies.contains("ward_private"), "cookie частного окна не попали в общее хранилище") && ok
+            ok = check(!priv.dataStore.isPersistent, "хранилище частного окна — только в памяти") && ok
+            priv.closedWindow()
+        }
+
+        // 11. Внешний тест блокировщика (справочно).
         if CommandLine.arguments.contains("--live") {
             _ = await open(tab, "https://d3ward.github.io/toolz/adblock.html", timeout: 30)
             try? await Task.sleep(for: .seconds(20))
@@ -374,6 +394,13 @@ enum SelfTest {
             if tab.loadsFinished > before, let view = tab.webViewIfLoaded, !view.isLoading { return true }
         }
         return false
+    }
+
+    /// Имена cookie в хранилище.
+    static func cookies(_ store: WKWebsiteDataStore) async -> Set<String> {
+        await withCheckedContinuation { (c: CheckedContinuation<Set<String>, Never>) in
+            store.httpCookieStore.getAllCookies { list in c.resume(returning: Set(list.map(\.name))) }
+        }
     }
 
     static func evaluate(_ tab: Tab, _ js: String) async -> Any? {

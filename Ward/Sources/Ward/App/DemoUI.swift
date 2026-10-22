@@ -60,17 +60,8 @@ enum DemoUI {
         case "insecure":
             browser.selected?.load(URL(string: "http://neverssl.com/")!)
         case "private":
-            model.openWindow?("private")
-            for _ in 0..<40 where !model.browsers.contains(where: \.isPrivate) { try? await Task.sleep(for: .milliseconds(250)) }
-            print("Ward demo: окон \(model.browsers.count), частных \(model.browsers.filter(\.isPrivate).count)")
-            for _ in 0..<40 where model.browsers.first(where: \.isPrivate)?.window == nil { try? await Task.sleep(for: .milliseconds(250)) }
-            for w in NSApp.windows { print("  окно: \(w.title) \(w.frame) видимо=\(w.isVisible)") }
-            if let priv = model.browsers.first(where: \.isPrivate) {
-                print("Ward demo: окно частного режима \(priv.window.map { "\($0.frame)" } ?? "не найдено")")
-                priv.newTab(url: URL(string: "https://duckduckgo.com")!, select: false)
-                priv.window?.makeKeyAndOrderFront(nil)
-                browser.window?.orderOut(nil)
-            }
+            // В этом демо первое окно само частное (см. WardApp).
+            browser.newTab(url: URL(string: "https://duckduckgo.com")!, select: false)
         case "settings", "settings-lists", "settings-data", "settings-search":
             model.settingsRequest += 1
         default:
