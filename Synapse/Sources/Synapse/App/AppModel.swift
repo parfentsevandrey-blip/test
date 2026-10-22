@@ -313,6 +313,22 @@ final class AppModel {
         Array(Advisor.quiet(cards: trustedPool, variants: variants, mac: mac).prefix(18))
     }
 
+    /// Модели со зрением: сначала те, что удобно работают на этом Mac, среди них — самые умные.
+    var visionModels: [(ModelCard, FitReport?)] {
+        cards.filter { canSee($0) && EngineCatalog.supports($0.architecture) }
+            .map { ($0, fit($0)) }
+            .sorted { a, b in
+                let fa = a.1?.comfortable == true, fb = b.1?.comfortable == true
+                if fa != fb { return fa }
+                return a.0.quality != b.0.quality ? a.0.quality > b.0.quality : a.0.downloads > b.0.downloads
+            }
+    }
+
+    /// Точные списки файлов у первых моделей со зрением: есть ли у сборки проектор и сколько он весит.
+    func resolveVisionVariants() async {
+        for (card, _) in visionModels.prefix(8) where variants[card.id] == nil { await loadVariants(card) }
+    }
+
     /// Рекомендованная на каждый день — для сравнения «во сколько раз крупнее».
     var everydayCard: ModelCard? { recommendations.first { $0.role == .balanced }?.card }
 

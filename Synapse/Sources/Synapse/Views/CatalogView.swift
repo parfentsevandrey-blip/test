@@ -4,11 +4,12 @@ import SwiftUI
 struct CatalogView: View {
     @Environment(AppModel.self) private var model
     @State private var query = ""
-    @State private var filter: Filter = !DemoUI.isOn ? .all : DemoUI.screen == "stretch" ? .stretch : DemoUI.screen == "quiet" ? .quiet : .all
+    @State private var filter: Filter = !DemoUI.isOn ? .all
+        : DemoUI.screen == "stretch" ? .stretch : DemoUI.screen == "quiet" ? .quiet : DemoUI.screen == "images" ? .vision : .all
     @State private var sort: Sort = .popular
 
     enum Filter: String, CaseIterable, Identifiable {
-        case all, fits, quiet, stretch, small, vision, code, reasoning, installed
+        case all, fits, vision, quiet, stretch, small, code, reasoning, installed
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -17,7 +18,7 @@ struct CatalogView: View {
             case .quiet: "Тихие и лёгкие"
             case .stretch: "Выжать максимум"
             case .small: "Лёгкие"
-            case .vision: "Видят картинки"
+            case .vision: "Для картинок"
             case .code: "Для кода"
             case .reasoning: "Рассуждения"
             case .installed: "Установленные"
@@ -65,6 +66,8 @@ struct CatalogView: View {
             }
             if filter == .stretch && query.isEmpty {
                 StretchList()
+            } else if filter == .vision && query.isEmpty {
+                VisionList()
             } else if filter == .quiet && query.isEmpty {
                 QuietList()
             } else {
@@ -105,8 +108,8 @@ struct CatalogView: View {
                         Button {
                             withAnimation(.snappy) { filter = f }
                         } label: {
-                            if f == .stretch || f == .quiet {
-                                Label(f.title, systemImage: f == .stretch ? "flame.fill" : "leaf.fill").font(.system(size: 12, weight: .medium)).padding(.horizontal, 4)
+                            if let symbol = f.symbol {
+                                Label(f.title, systemImage: symbol).font(.system(size: 12, weight: .medium)).padding(.horizontal, 4)
                             } else {
                                 Text(f.title).font(.system(size: 12, weight: .medium)).padding(.horizontal, 4)
                             }
@@ -619,4 +622,62 @@ struct QuietRow: View {
 
     private func seconds(_ s: Double) -> String { s < 60 ? "\(max(1, Int(s.rounded()))) с" : "\(Int((s / 60).rounded())) мин" }
     private func percent(_ x: Double) -> String { x < 0.01 ? "меньше 1%" : "\(Int((x * 100).rounded()))%" }
+}
+
+extension CatalogView.Filter {
+    /// Особые подборки — со значком.
+    var symbol: String? {
+        switch self {
+        case .vision: "photo.on.rectangle.angled"
+        case .quiet: "leaf.fill"
+        case .stretch: "flame.fill"
+        default: nil
+        }
+    }
+}
+
+/// «Для картинок»: модели, которым можно показать изображение, — лучшие для этого Mac сверху.
+struct VisionList: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let rows = model.visionModels
+        ScrollView {
+            LazyVStack(spacing: 8) {
+                intro
+                if rows.isEmpty {
+                    ContentUnavailableView("Моделей со зрением не нашлось", systemImage: "eye.slash",
+                                           description: Text("Обновите каталог — модели со зрением приходят с Hugging Face."))
+                        .padding(.top, 30)
+                }
+                ForEach(rows, id: \.0.id) { card, fit in
+                    CatalogRow(card: card, fit: fit)
+                        .onTapGesture { model.detailCard = card }
+                }
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 24)
+        }
+        .scrollIndicators(.automatic)
+        .task(id: model.cards.count) { await model.resolveVisionVariants() }
+    }
+
+    private var intro: some View {
+        let tint = Section.chat.palette[1]
+        return ContentCard(padding: 18) {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Работа с картинками", systemImage: "photo.on.rectangle.angled")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(tint)
+                Text("Этим моделям можно показать изображение: фото, скриншот, схему, график, отсканированный документ или рукописную заметку. Приложите картинку скрепкой в чате или просто перетащите её в окно.")
+                Text("Что можно спросить: «что на фото?», «перепиши текст со скриншота», «что не так в этой ошибке?», «переведи меню», «объясни график», «сравни две картинки», «составь описание товара по фото».")
+                    .foregroundStyle(.secondary)
+                Text("Вместе с моделью скачивается проектор зрения — небольшой модуль, который переводит картинку на язык модели. Всё работает прямо на Mac: изображения никуда не отправляются.")
+                    .foregroundStyle(.secondary)
+            }
+            .font(.system(size: 12))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.bottom, 4)
+    }
 }
