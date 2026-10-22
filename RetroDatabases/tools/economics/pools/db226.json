@@ -1,0 +1,87 @@
+{
+  "database": 226,
+  "practice": "Wages and minimum wages",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "WG1",
+      "case": "England's Statute of Artificers: wages fixed by local justices",
+      "years": "1563 to 1813",
+      "claim": "The Statute of Artificers, an English act of 1563, left wage-setting to local justices of the peace, subject to central approval. Each year the justices met to fix rates for craftsmen, farm workers and other labourers. Farm wages fell to the justices, while urban trade pay came under guild authority. A 1969 article in The Local Historian by D. M. Woodward covers wage assessment by justices from 1563 to 1813. Kelsall's 1938 book on wage regulation under the statute examines enforcement, especially wage assessment. Footnotes on a University of Exeter labour-history page group the research on enforcement into works that suggest weak enforcement and works that suggest more effective enforcement.",
+      "source": "University of Exeter labour-history web page (year not given); D. M. Woodward, The Local Historian (1969); R. Keith Kelsall, Wage Regulation under the Statute of Artificers (1938)",
+      "url": "https://formsoflabour.exeter.ac.uk/?p=392",
+      "caveat": "The statute's text was not read. The annual assessment and the central-approval step come from summaries of the statute in the results, not from a cited page, and the penalties are left out. The results describe the act's aims as including the capping of wages, which would make it a ceiling rather than a legal minimum; that point is also from a summary and was not checked. Some sources date the act 1562 and others 1563. The Woodward and Kelsall items are known only from listings, and the Exeter page was read only as a summary.",
+      "relevant_to": ["Guild economy", "Mercantilism"]
+    },
+    {
+      "id": "WG2",
+      "case": "Trade Boards Act: binding minimum pay in sweated trades",
+      "years": "1909 to 1910",
+      "claim": "The Trade Boards Act 1909 let trade boards set minimum pay rates that became binding in low-paid 'sweated' trades, where long hours and low pay were common and many workers were women. The Act applied to men and women alike, and to home workers as well as factory workers. It reached fewer than 250,000 workers, mostly in the worst-paid sectors. In 1910 a minimum of two and a half pence an hour for hand-hammered chain work came close to doubling what many women earned. When employers resisted the new rate, the National Federation of Women Workers held a ten-week strike that drew nearly 4,000 pounds in donations. Sheila Blackburn's book argues that the low-pay problem spanned the whole country rather than London or women alone, that the resulting pressure produced the 1909 Act, and calls that Act the cornerstone of low-pay policy and a barrier to a statutory minimum wage for about nine decades.",
+      "source": "University of Warwick digitised collection on the Trade Boards (year not given); Sheila Blackburn, Fair Day's Wage for a Fair Day's Work? (book listing; year not given)",
+      "url": "https://warwick.ac.uk/services/library/mrc/collections/digital/tradeboard/",
+      "caveat": "Both sources are undated. The Warwick page is an archive description, and the Blackburn item is a book listing, so the book's text was not read. The 1910 rate, the strike and the donation figures come from search summaries and were not checked against the pages. The results give the Act's first trades inconsistently, so none are named here. The case covers the 1909 Act only, not the later wages councils.",
+      "relevant_to": ["Fabian socialism"]
+    },
+    {
+      "id": "WG3",
+      "case": "Trustees of Labour in Nazi Germany set pay scales",
+      "years": "1933",
+      "claim": "A 1933 US diplomatic dispatch, passing on the Labour Minister's view, reported that until a corporatist reorganisation was complete, state-appointed Trustees of Labour would set pay scales. Cambridge University Press material describes the trustees as state functionaries with authority over pay and job terms.",
+      "source": "Foreign Relations of the United States, 1933, volume II, document 188 (US government document series); Cambridge University Press book page on the Nazi economy (year not given)",
+      "url": "https://history.state.gov/historicaldocuments/frus1933v02/d188",
+      "caveat": "A diplomatic dispatch reports a minister's stated plan, not the trustees' actual pay decisions, and the Cambridge item is a book page with no wage rules. The results give no text of the 1934 law. A 1934 wage freeze appears only in a user-posted note and a partisan 1934 article, so it is not claimed here.",
+      "relevant_to": ["Corporatism and fascist economics"]
+    },
+    {
+      "id": "WG4",
+      "case": "Saltsjöbaden Agreement: pay bargained by unions and employers",
+      "years": "1938; reported in 2008",
+      "claim": "The Saltsjöbaden Agreement of 1938, between LO and SAF, the union and employer sides, set up a system in which unions and employers bargained over pay and conditions with each other, with the government largely on the sidelines. It created a joint council and grievance procedures, and strikes were generally ruled out while a contract was running. The Local, a news outlet, reported in 2008 that the agreement had been the principal pay-bargaining pact between employers and employees since 1938, and that a formal renegotiation had been cleared. A report by the Japan Institute for Labour Policy and Training (JILPT) describes it as a master agreement that anchored Sweden's centralised model.",
+      "source": "University of Alberta business school page on the 1938 basic agreement (year not given); The Local, news report (2008); Japan Institute for Labour Policy and Training (JILPT) report on Sweden (year not given)",
+      "url": "https://sites.ualberta.ca/~yreshef/orga417/countries/basic.html",
+      "caveat": "None of the results is the agreement's text. The Alberta page and the JILPT report are secondary descriptions, and the sources differ on the agreement's scope: The Local calls it the main pact for pay, while the JILPT report calls it a master agreement behind the centralised model. The 2008 news item is dated, and the results do not confirm the agreement's current status or any later revision, so none is claimed. The case covers bargaining, not a legal minimum; the results do not describe a statutory minimum wage.",
+      "relevant_to": ["Nordic social democracy"]
+    },
+    {
+      "id": "WG5",
+      "case": "Soviet industrial wage structure: stated reform goals",
+      "years": "1977 (paper on the Soviet wage structure)",
+      "claim": "A 1977 Wilson Center paper on the Soviet industrial wage structure describes the goals as a more consistent basic wage structure and equal pay for equal work, with consolidated scales and base rates pulled closer together.",
+      "source": "Wilson Center, Soviet Industrial Wage Structure (1977)",
+      "url": "https://www.wilsoncenter.org/sites/default/files/media/documents/publication/op1_soviet_industrial_wage_structure_chapman_1977.pdf",
+      "caveat": "The results report only the paper's stated goals, not its findings on outcomes, and the paper dates from 1977, so it says nothing about later decades. The results do not name the central body that set the all-union grid. Other reform rounds appear in the results, but their sources are not cited here, so they are left out.",
+      "relevant_to": ["Command socialism"]
+    },
+    {
+      "id": "WG6",
+      "case": "New Jersey's 1992 minimum wage rise and fast-food jobs",
+      "years": "1992 to 2000",
+      "claim": "A 1994 study by Card and Krueger compared fast-food outlets in New Jersey with outlets in eastern Pennsylvania around New Jersey's April 1992 minimum wage increase, which was roughly 19 percent. The study surveyed 410 outlets and used eastern Pennsylvania as the comparison. The authors reported no sign that the increase cut jobs. New Jersey's employment growth outpaced Pennsylvania's, a difference the results describe as not statistically significant on the authors' preferred measure. A 2000 critique by Neumark and Wascher argued that different data show job losses, and a 2000 reply by Card and Krueger used payroll tax records covering New Jersey and selected Pennsylvania counties.",
+      "source": "Card and Krueger, study of fast-food employment in New Jersey and eastern Pennsylvania (1994); Neumark and Wascher, critique (2000); Card and Krueger, reply (2000); the critique and reply as summarised in commentary",
+      "url": "https://www.eco.uc3m.es/docencia/EconomiaAplicada/materiales/CardKrueger94_en.pdf",
+      "caveat": "The results summarise the study and later commentary; the paper's tables were not read, so the exact estimates are not given. Only one comparison region is used. The 2000 dispute over the data is reported without a verdict, and the reply's payroll data are named in one line and not checked.",
+      "relevant_to": ["Monetarist neoliberalism", "Classical laissez-faire capitalism"]
+    },
+    {
+      "id": "WG7",
+      "case": "China's provincial minimum wage rules from 2004",
+      "years": "2004 to 2012",
+      "claim": "China's labour ministry issued revised minimum wage rules in January 2004, in force from 1 March 2004, superseding a 1993 version aimed at enterprises. Each of the 31 provincial-level jurisdictions writes its own rules, and its labour agency prepares the rate plans after consulting unions and employer groups. Officials are expected to weigh living costs, typical pay, productivity, job conditions and regional development gaps. Local authorities must reassess rates at least every two years, whereas the 1993 rules allowed at most one change a year. A 2006 labour ministry progress report found hourly standards in all areas but Guangdong and Tibet, up from 23 areas at the end of 2005, and monthly standards in all 31. Nominal pay floors rose by more than 200 percent after 2004, reaching 944 RMB a month on average in 2012. A paper by Fang and Lin links minimum wage increases to job losses in eastern and central China, with women, young adults and low-skilled workers bearing the losses.",
+      "source": "Commission analysis, 'Most Provincial-Level Governments Issue Hourly Minimum Wage Standards' (year not given); Fang and Lin, IZA conference paper (2014)",
+      "url": "https://www.cecc.gov/publications/commission-analysis/most-provincial-level-governments-issue-hourly-minimum-wage",
+      "caveat": "The sources are secondary commentary, not the 2004 text, and they name the instrument differently (as regulations or as provisions). The results do not confirm that the 2004 rules still apply. The job-loss finding comes from one conference paper, and the pay-floor growth and the 2006 counts come from summaries that were not checked against the originals.",
+      "relevant_to": ["Chinese market socialism"]
+    },
+    {
+      "id": "WG8",
+      "case": "Germany's 2015 minimum wage and employment",
+      "years": "2015 to 2019",
+      "claim": "Germany set a minimum wage of 8.50 euros an hour from 1 January 2015. Several studies of its effects, using different data and methods, find mostly small to moderate effects. An IAB (Institute for Employment Research) study by Bossler and Gerner (2016) reports that affected firms' average pay rose about 4.8 percent while their employment fell about 1.9 percent. A study by Holtemöller and Pohle (2017) finds that marginal jobs appear to have shrunk while socially insured employment grew. An IAB project entry (2019) reports that about 18,000 marginal jobs disappeared in East Germany in the short run and about 52,000 in the medium run, and that West Germany shows no detectable negative employment effect. A University of Potsdam study reports that pay at the bottom of the hourly distribution rose about 9 percent in the short term and 21 percent in the medium term, and that working hours fell, so monthly pay lagged the hourly gains.",
+      "source": "IAB, Bossler and Gerner (2016); IAB project entry (2019); Holtemöller and Pohle (2017), university library record; Caliendo and colleagues, IZA (Institute of Labor Economics) (2017; snippet only); University of Potsdam, publication abstract (year not given)",
+      "url": "https://iab.de/publication/?id=6107358",
+      "caveat": "The results are abstracts and snippets, not the full studies, and the studies use different data and identification strategies, so their figures are not directly comparable. The Caliendo and colleagues study is left out because its snippet cuts off the figure. The url is an IAB publication page, and the other studies are not all at that address. The pay-distribution figures come from a publication abstract.",
+      "relevant_to": ["Social market economy", "Monetarist neoliberalism"]
+    }
+  ]
+}

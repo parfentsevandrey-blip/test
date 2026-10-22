@@ -1,0 +1,94 @@
+{
+  "database": 231,
+  "practice": "Automation and technological change",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "AU1",
+      "case": "Frame-breaking and the Frame Breaking Act of 1812",
+      "years": "1811 to 1812",
+      "claim": "Framework knitters who had left Nottingham wrecked frames at Arnold on 11 March 1811, and a Gedling page treats that episode as the start of the movement. The Frame Breaking Act of 1812 (52 Geo. 3 c. 16) followed. Its text carries the date 20 March 1812, and it covers stocking and lace frames. Sources disagree on the penalty. One history piece says earlier statutes already treated some Luddite activity as capital, and that the 1812 measure made death the explicit penalty for frame-breaking. A Danish-hosted bibliography entry says machine-breaking had carried transportation since 1721, and that death became an available sentence in 1812.",
+      "source": "Statute of 1812 (52 Geo. 3 c. 16), text on a statutes website; Gedling page on the Luddites (undated in the results); a history piece and a Danish-hosted bibliography entry on the 1812 frame-breaking (both undated in the results)",
+      "url": "https://statutes.org.uk/site/the-statutes/nineteenth-century/1812-52-geo-3-c-16-the-frame-breaking-act/",
+      "caveat": "Passage and penalty are disputed in the search excerpts. Several sites give February 1812 for passage, while the statute text carries 20 March 1812. A 2011 legal blog says a citation of 28 Geo. 3 c. 55 is wrong, that the Act is 52 Geo. 3 c. 16, and that it never produced a conviction and was due to lapse on 1 March 1814; the blog speaks from secondhand understanding, so those points are unverified. The statute text was read only as a search excerpt. The results cover 1811 and early 1812 only, so nothing here supports 1813 to 1816.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Guild economy"
+      ]
+    },
+    {
+      "id": "AU2",
+      "case": "Bank tellers and ATMs in the United States",
+      "years": "1970 to the mid-2010s",
+      "claim": "Bessen's analysis of ATMs and tellers reports that staffing per branch fell by roughly a third, and that a typical city branch's teller count fell from about twenty to about thirteen. Cheaper branches made more branches worth opening, so branch networks reportedly grew about 40 per cent over the same window. The US teller workforce rose from about 250,000 in 1970 to around 500,000 by the mid-2010s, with roughly 100,000 of that gain after 2000. Teller work moved from cash handling towards selling loans, credit cards and investments, and pay reportedly rose as tellers became harder to replace.",
+      "source": "James Bessen, 'Toil and Technology', Finance & Development (March 2015), and his book Learning by Doing; figures read through an economics blog post (2015)",
+      "url": "https://conversableeconomist.com/2015/03/03/atms-and-a-rising-number-of-bank-tellers/",
+      "caveat": "The figures come from search excerpts that summarise Bessen's work, not from the article itself. The excerpts say his ATM and teller data come from scattered sources, so the precise numbers need care. The blog adds that looser state branching rules in the 1980s and 1990s also fed branch growth; that is the blogger's point, not Bessen's. A recent commentary in the results says teller employment has started to fall, but gives no current official figures, so the trend after the mid-2010s is not documented here. The 40 per cent branch figure is reported, not checked.",
+      "relevant_to": [
+        "Classical laissez-faire capitalism",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "AU3",
+      "case": "Robots and employment in Japan, 1978 to 2017",
+      "years": "1978 to 2017 (study published 2020)",
+      "claim": "A 2020 RIETI discussion paper by Adachi, Kawaguchi and Saito covers robots and employment in Japan from 1978 to 2017, using robot deliveries by receiving industry and task. Because demand booms can lift adoption and hiring together, the authors use how robot prices fell differently across applications. They report that falling robot prices raised robot installations and jobs across industries and commuting zones, which they read as machines and workers complementing each other.",
+      "source": "Adachi, Kawaguchi and Saito, 'Robots and Employment: Evidence from Japan, 1978-2017', RIETI discussion paper (2020)",
+      "url": "https://www.rieti.go.jp/en/publications/summary/20050012.html",
+      "caveat": "Taken from the RIETI summary; the full paper was not read. A July 2019 paper by the same team, described in another result, uses German robot penetration as its instrument and reports that the employment-to-population ratio fell where robot exposure was highest. The sign of the effect is therefore not settled even within this team's work, and the difference may reflect method. The results cover no firm-level adoption decisions and no worker outcomes such as job switching or retraining. A column in the results notes that Japan's early adoption and largely domestic robot supply may limit how far the findings travel. Earlier US research by Acemoglu and Restrepo, named in the results, linked robot penetration to weaker jobs and pay across education groups.",
+      "relevant_to": [
+        "Keynesian welfare capitalism",
+        "Classical laissez-faire capitalism"
+      ]
+    },
+    {
+      "id": "AU4",
+      "case": "Congressional hearings on automation, 1955",
+      "years": "1955",
+      "claim": "In 1955 a joint House and Senate economic committee put automation on its study list. Its economic stabilization subcommittee, chaired by Wright Patman, held nine days of hearings that October on how automation might shape long-run jobs and investment.",
+      "source": "Joint House-Senate economic committee, hearing record 'Automation and Technological Change' (84th Congress, 1955)",
+      "url": "https://www.jec.senate.gov/reports/84th Congress/Automation and Technological Change - Hearings (75).pdf",
+      "caveat": "The dates, chair and scope come from search excerpts; the hearing record itself was not read. The results do not say what the hearings concluded or whether any law followed. A House subcommittee's automation and unemployment hearings in March and April 1961 fall outside the 1950s.",
+      "relevant_to": [
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "AU5",
+      "case": "Sweden's solidarity wage policy and job moves",
+      "years": "from 1951 (design); period assessed not stated",
+      "claim": "A Spanish-language academic article on the Swedish model argues that the combined strategy kept solidarity pay from triggering mass layoffs in certain areas, though it asks whether the policy could have worked without large public-sector job creation. It says some workers were uprooted geographically or made to switch trades, and that Swedish capital reaped the most benefit.",
+      "source": "Academic article in Spanish, 'Social democracy and capitalism: the neoclassical roots of the Swedish model' (English gloss of the title; year not shown in the results)",
+      "url": "https://revistas.ucm.es/index.php/CRLA/article/download/75765/4564456564129/4564456671974",
+      "caveat": "One article, seen through a search excerpt, with no year shown; its verdict is one author's view. The origin (two LO economists and a 1951 report to LO) and the design of the pay and labour-market policy come from other results that are not tied to this link. A 2016 Stockholm University working paper by Lennart Erixon, also in the results, argues the model remains important but needs rethinking in parts. The LO publication in the results is a party source. The case is about structural change and job moves, not machines, so any link to automation must be written as an inference from the model's principle. None of the results directly addresses technological change.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    },
+    {
+      "id": "AU6",
+      "case": "West Coast longshore deal trading automation for benefits, 1960",
+      "years": "1960",
+      "claim": "In its 1960 coastwide deal with the Pacific Maritime Association, the West Coast longshore union (ILWU) accepted automation alongside a benefit package. A Canadian lumber workers' paper relayed the union's own division of the money: 3 million a year as the members' 'share of the machine' for retirement, vesting and death benefits, and 2 million a year as payment for giving up some work rules.",
+      "source": "Canadian lumber workers' paper, text in a digital archive (date not shown); deal terms also described in other search results that are not tied to this link",
+      "url": "https://bchdp.arcabc.ca/_flysystem/repo-service/2025-06/69198-Extracted%20Text.txt",
+      "caveat": "This is one paper's account of the union's split, read as a search excerpt. The agreement text was not read, the paper's date is not shown, and the currency is not named in the excerpt. The results contain no employer-side sums that can be tied to this link, so none are used. The results are about the West Coast; nothing on the New York docks was found, so this case does not cover the Atlantic ports.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "AU7",
+      "case": "Robots and jobs in China, as reported by a news site",
+      "years": "2010 to 2016 (study data, per the news report)",
+      "claim": "A news report by The Register, reposted on a university website, covers a study of Chinese robot use that links robots to job losses and lower pay. The write-up describes a China Family Panel Studies analysis for 2010 to 2016 and says robot exposure significantly harms both employment and wages.",
+      "source": "The Register, a technology news outlet, reporting an academic study; reposted on a university website (year not shown)",
+      "url": "https://chibe.upenn.edu/news/the-register-industrial-robots-in-china-push-people-out-of-jobs-slash-wages",
+      "caveat": "Only a headline and a short excerpt were read. Methods, sample and effect sizes are not in the results, so the study cannot be checked. Another result describes a 2006 to 2017 Chinese manufacturing panel that finds falling jobs but no clear wage effect, so the wage finding is contested. The results give no evaluation of state policy's effect on workers, so this case does not show who decides the pace of adoption.",
+      "relevant_to": [
+        "Chinese market socialism"
+      ]
+    }
+  ]
+}
