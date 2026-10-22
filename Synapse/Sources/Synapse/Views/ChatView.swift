@@ -323,11 +323,15 @@ struct ChatTopBar: View {
         case .ready:
             if let info = model.modelInfo {
                 HStack(spacing: 6) {
-                    Text("\(info.gpu ? "Metal" : "CPU") · контекст \(info.context / 1024)K").font(.system(size: 11)).foregroundStyle(.tertiary)
+                    Text("\(info.gpu ? "Metal" : "CPU") · \(info.context / 1024)K").font(.system(size: 11)).foregroundStyle(.tertiary)
+                        .help("Считает \(info.gpu ? "видеоядро (Metal)" : "процессор"), помнит до \(info.context) токенов")
                     if info.vision {
-                        Label("видит картинки", systemImage: "eye.fill").font(.system(size: 10.5, weight: .medium)).foregroundStyle(Section.chat.palette[1])
+                        Image(systemName: "eye.fill").font(.system(size: 11)).foregroundStyle(Section.chat.palette[1])
+                            .help("Модель видит изображения — приложите картинку скрепкой или перетащите в окно")
                     }
                 }
+                .lineLimit(1)
+                .fixedSize()
             }
         case .failed(let why):
             Label(why, systemImage: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(.red).lineLimit(1)
@@ -396,7 +400,9 @@ struct MessageView: View {
                 VStack(alignment: .trailing, spacing: 6) {
                     if let images = message.images, !images.isEmpty {
                         HStack(spacing: 6) {
-                            ForEach(images, id: \.self) { AttachmentThumb(name: $0, size: images.count == 1 ? 220 : 120) }
+                            ForEach(images, id: \.self) { name in
+                                if images.count == 1 { AttachmentThumb(name: name, size: 260, fit: true) } else { AttachmentThumb(name: name, size: 120) }
+                            }
                         }
                     }
                     Text(message.text)
@@ -602,22 +608,35 @@ struct NoModelState: View {
 struct AttachmentThumb: View {
     let name: String
     var size: CGFloat = 64
+    /// Показать картинку целиком (в сообщении), а не обрезанным квадратом (в превью).
+    var fit = false
 
     var body: some View {
         let path = ImageInput.path(name)
+        let image = NSImage(contentsOfFile: path)
         Group {
-            if let image = NSImage(contentsOfFile: path) {
-                Image(nsImage: image).resizable().scaledToFill()
+            if let image {
+                if fit {
+                    Image(nsImage: image).resizable().scaledToFit()
+                } else {
+                    Image(nsImage: image).resizable().scaledToFill()
+                }
             } else {
                 Image(systemName: "photo").font(.system(size: size * 0.3)).foregroundStyle(.secondary)
             }
         }
-        .frame(width: size, height: size)
+        .frame(width: fit ? fittedSize(image).width : size, height: fit ? fittedSize(image).height : size)
         .background(Color.primary.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: min(16, size * 0.18), style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: min(16, size * 0.18), style: .continuous).strokeBorder(.primary.opacity(0.1)))
         .contentShape(Rectangle())
         .onTapGesture { NSWorkspace.shared.open(URL(fileURLWithPath: path)) }
         .help("Открыть изображение")
+    }
+
+    private func fittedSize(_ image: NSImage?) -> CGSize {
+        guard let image, image.size.width > 0, image.size.height > 0 else { return CGSize(width: size, height: size) }
+        let scale = min(size / image.size.width, size / image.size.height)
+        return CGSize(width: image.size.width * scale, height: image.size.height * scale)
     }
 }
