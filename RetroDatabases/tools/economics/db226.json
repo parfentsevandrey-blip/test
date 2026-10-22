@@ -93,4 +93,100 @@
       "best": "Inferred from its principle that mutual credit lent at cost and free contracts let workers keep the full value of their work, so pay is the whole product of labour rather than a share taken by rent. There is no documented case in the pool.",
       "worst": "Inferred from its principle that free contracts set terms, so a worker without a mutual to join may accept whatever pay is offered, with no floor to stop it. There is no documented case in the pool. Source: Proudhon, What Is Property?"
     },
-    <<NEXT>>
+    {
+      "model": "Cooperative economy",
+      "best": "Inferred from its principle that members own the firm and share the surplus between users and workers, so pay rises with results and workers have a voice in how the surplus is divided. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that members own and share the surplus, so a small or closed membership may run the firm for insiders and leave newcomers out, paid less or not at all. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that there are no wages and goods are shared according to need within federated communes, so pay is replaced by common provision, and no worker's share depends on a contract. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no state and no contract, so no body can set or enforce a floor, and any fair share of work depends on the goodwill of the commune. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that trade unions run industry through workers' organisations, so pay and conditions in each trade are set by the workers who do the work, not by a state. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that strikes are the main weapon, so long stoppages cost workers their pay for the duration, and a general strike can halt pay for everyone. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "The case Trade Boards Act: binding minimum pay in sweated trades reports that trade boards set minimum pay rates that became binding in low-paid sweated trades, for men and women alike and for home workers as well as factory workers. It covers the 1909 Act only, and both sources are undated; the book's text was not read.",
+      "worst": "Inferred from its principle that reform is gradual and public enterprise is run by officials, so pay floors reach trades one stage at a time, and low-paid workers wait for each stage. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control through guild-like councils, so pay is settled in councils where workers have a voice, alongside the state as one partner. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that several councils share control, so no single body sets pay, and disputes among staff, councils and the state can stall pay settlements for long periods. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "The case Soviet industrial wage structure: stated reform goals reports that a 1977 paper described the goals as a more consistent basic wage structure and equal pay for equal work, with consolidated scales and base rates pulled closer together. The sources give stated goals, not outcomes, and say nothing about later decades.",
+      "worst": "Inferred from its principle that central plans set output, prices and investment, so pay scales are fixed from above and cannot easily track local shortages, skills or workers' own choices. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that managers follow market prices, so an enterprise's pay bill can respond to what it sells, within rules that a central board sets. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, so the rules for pay are decided above the enterprise, and workers have little say over terms the board fixes. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that, once classes disappear, distribution follows need, so the wage bargain gives way to common provision according to what each person needs. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state comes first and withers away later, so during the transition the state sets pay, and the timing of the change is left open. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "Inferred from its principle that public ownership of key sectors sits alongside markets under party direction, so pay floors can be set to suit local conditions and reform can be phased in step by step. There is no documented case in the pool.",
+      "worst": "The case China's provincial minimum wage rules from 2004 reports that a paper by Fang and Lin links minimum wage increases to job losses in eastern and central China, falling on women, young adults and low-skilled workers. That finding comes from one conference paper, and the sources are secondary commentary that does not confirm the rules still apply. Source: Commission analysis, 'Most Provincial-Level Governments Issue Hourly Minimum Wage Standards' (year not given); Fang and Lin, IZA conference paper (2014)"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, so pay is set by councils, with jobs balanced in complexity, and neither markets nor central planners set it. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils reach decisions through repeated proposals, so pay settlements can be slow, and workers who lack time for repeated rounds of meetings may have less say over their own pay. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into corporations, so pay and job terms are settled within one framework for each trade, rather than through rival bargains. There is no documented case in the pool.",
+      "worst": "The case Trustees of Labour in Nazi Germany set pay scales reports that a 1933 US dispatch, passing on the Labour Minister's view, said state-appointed trustees would set pay scales until a corporatist reorganisation was complete. Cambridge University Press material calls them state functionaries with authority over pay and job terms, but the dispatch gives a stated plan, not the trustees' decisions, and the Cambridge item gives no wage rules. Source: Foreign Relations of the United States, 1933, volume II, document 188 (US government document series); Cambridge University Press book page on the Nazi economy (year not given)"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk, so pay can be linked to the results of a shared venture, and zakat redistributes wealth to those in need. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that interest is prohibited and trust underpins contracts, so workers rely on the good faith of employers rather than enforceable minimum terms, and pay disputes can rest on trust alone. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being, so pay is judged by whether it supports a modest but sufficient life, and small local firms keep workers close to the people who employ them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that consumption is moderate and production small-scale, so pay may be set for modest needs alone, with no formal standard for workers in larger or distant enterprises to appeal to. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that a just wage lets a worker build property and support a family, so pay is set to meet that aim, and subsidiarity keeps pay decisions with the smallest competent body. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that small enterprise is widespread, so a small employer with few alternatives may pay what the local trade allows, and no national floor is set to protect workers. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that a social floor lies under everyone within planetary limits, so a legal floor on pay protects low earners without relying on growth to lift them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no growth imperative, so real pay gains that depend on rising output may be limited, and workers in shrinking sectors could face pay cuts. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen receives an unconditional income, so a worker can refuse poor terms and keep a secure income, and pay need not carry the whole cost of subsistence. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the income is paid regardless of earnings, so employers may hold pay down knowing the state covers basic needs, and the cost of low pay shifts onto taxpayers. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government issuing its own currency can fund full employment, so a shortage of finance need not keep willing workers out of paid work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so pay floors set above what output can support could push prices up and erode the real value of wages. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that communities design, monitor and enforce their own rules for a shared resource, so the people who share a resource set and check its shares of work and income themselves. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that rules must be monitored and enforced by the community itself, so a small or divided group may fail to enforce its share rules, leaving some members underpaid. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "A legal minimum wage in low-paid trades, set by a public council of unions, employers and independent members, with pay bargained above it by sector. The floor is a minimum, never a cap, and each rise is tested for its effect on jobs before it is made permanent.",
+    "details": "Keeps: a legal floor set by trade boards in low-paid trades, from Fabian socialism and the Trade Boards Act case; pay bargained between unions and employers through a joint council, from Nordic social democracy and the Saltsjöbaden Agreement case; small to moderate effects in most studies, from Social market economy and the Germany case. Blocks: a cap disguised as a floor, from Mercantilism, with a legal rule that a floor is never a cap; job losses among the least skilled, from the China case, with a jobs test before each rise. Test: hourly pay at the bottom, and jobs in affected trades, against similar areas, for two years after each change and again at five. Source: University of Warwick digitised collection on the Trade Boards (year not given); University of Alberta business school page on the 1938 basic agreement (year not given); University of Exeter labour-history web page (year not given); IAB, Bossler and Gerner (2016); Fang and Lin, IZA conference paper (2014)"
+  }
+}
+
