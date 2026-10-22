@@ -299,7 +299,7 @@ struct ChatPane: View {
                     .help("Остановить (⌘.)")
             } else {
                 let empty = (draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && model.pendingAttachments.isEmpty) || model.installed.isEmpty
-                ComposerButton(symbol: "arrow.up", fill: empty ? .primary.opacity(0.12) : Section.chat.tint, foreground: .white, action: send)
+                ComposerButton(symbol: "arrow.up", fill: Section.chat.tint, foreground: .white, action: send)
                     .disabled(empty)
             }
         }
@@ -307,7 +307,7 @@ struct ChatPane: View {
 
     private var placeholder: String {
         if model.installed.isEmpty { return "Сначала установите модель" }
-        if model.visionReady && model.pendingAttachments.isEmpty { return "Спросите что угодно…  ⏎ — отправить, ⌥⏎ — новая строка, ⌘V — вставить картинку" }
+        if model.visionReady && model.pendingAttachments.isEmpty { return "Спросите что угодно…  ⏎ отправить · ⌥⏎ новая строка · ⌘V картинка" }
         if !model.pendingAttachments.isEmpty { return "Что сделать с изображением? Например: «Что здесь написано?»" }
         return "Спросите что угодно…  ⏎ — отправить, ⌥⏎ — новая строка"
     }
@@ -697,7 +697,7 @@ struct ComposerButton: View {
                 .frame(width: Self.size, height: Self.size)
                 .background(Circle().fill(fill))
                 .contentShape(Circle())
-                .opacity(enabled ? 1 : 0.45)
+                .opacity(enabled ? 1 : 0.4)
         }
         .buttonStyle(.plain)
     }
