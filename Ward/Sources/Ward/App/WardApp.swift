@@ -20,9 +20,6 @@ struct WardApp: App {
         .defaultSize(width: 1280, height: 820)
         .windowToolbarStyle(.unified(showsTitle: false))
         .handlesExternalEvents(matching: [])
-        // Окна не восстанавливает система: вкладки прошлого сеанса Ward возвращает сам, а частные окна
-        // после перезапуска не должны появляться никогда.
-        .restorationBehavior(.disabled)
         .commands { BrowserCommands() }
 
         WindowGroup("Частное окно", id: "private") {
@@ -31,8 +28,7 @@ struct WardApp: App {
         .defaultSize(width: 1280, height: 820)
         .windowToolbarStyle(.unified(showsTitle: false))
         .handlesExternalEvents(matching: [])
-        // Окна не восстанавливает система: вкладки прошлого сеанса Ward возвращает сам, а частные окна
-        // после перезапуска не должны появляться никогда.
+        // Частное окно после перезапуска не должно появляться никогда.
         .restorationBehavior(.disabled)
 
         Settings {
