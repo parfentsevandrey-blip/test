@@ -1,0 +1,191 @@
+{
+  "database": 216,
+  "type": "practice",
+  "practice": "Doctors' training and pay",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that goods move as gifts that create obligations to return, healers earn standing and trust by giving care that is returned, so training and care rest on known ties rather than fees or pay. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that favours are returned, so training places, posts and the most attentive care go to people with ties to the healers who give them, while patients and regions without those ties wait longer for care. There is no documented case in the pool. Source: Mauss, The Gift"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a household balances the work it can give against its needs, so local care is shared among families and healing serves household needs rather than profit. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption, so a household with no spare labour cannot release a young person for years of medical training, and skilled care goes mainly to families that can spare workers. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central store collects revenue and pays workers and officials from it, so trainers, physicians and clerks can be paid and posted from one fund and sent where the centre needs them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that allocation follows rank at the centre, so training places and posts go first to officials and to the palace's own needs, and provincial areas are left with few trained healers. There is no documented case in the pool. Source: Polanyi, The Great Transformation"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that owners can direct a trained healer to wherever labour is short without paying wages, so care can be placed where an owner's estate needs it. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that labour is extracted through ownership, so enslaved people are denied schooling and training, healers among them, and care is allocated to serve owners rather than need. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that peasants owe labour to a lord who gives land, protection and justice, so a manor can keep a local healer supported through its dues and the lord's protection. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that services are owed to a lord, so a healer's training and posting are tied to one manor, and a practitioner cannot move to a place where care is short without the lord's leave. There is no documented case in the pool. Source: Bloch, Feudal Society"
+    },
+    {
+      "model": "Guild economy",
+      "best": "The Royal College of Physicians, from Henry VIII's charter of 1518, let six founders license qualified practitioners and bring prosecutions against malpractice, a body of practitioners that controls entry and polices quality. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523.",
+      "worst": "The Royal College of Physicians, from Henry VIII's charter of 1518, had an initial remit of the City of London and a seven-mile radius for licensing and prosecution, so control over who may practise stopped at that boundary until an Act of Parliament in 1523 widened its reach across England. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523. Source: Royal College of Physicians, history of the college; The History Press, 500 years of the Royal College of Physicians (secondary)"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state aims for a surplus of trained skills and supports the trades that serve national trade goals, so training is funded where it adds to the state's wealth and power. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state regulates production and trade toward national gain, so training and posts are steered to trades that serve the state's goals, and care that serves ordinary people is funded less. There is no documented case in the pool. Source: Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that a single tax on the rent of land funds the state, so training and pay for doctors can be met from land rent without taxing labour or trade. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only agriculture creates a net product, so healers and their training count as a cost met from land rent alone, and when rents are low, doctors' pay and training are the first to be squeezed. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "Inferred from its principle that competition and the division of labour create wealth, so open competition among schools and practitioners should widen who trains as a doctor and keep the cost of training in check. There is no documented case in the pool.",
+      "worst": "The case Cuba's free medical training and doctors per head reports 23 Americans who came for its free tuition and were avoiding debt of 150,000 to 200,000 US dollars from a US medical degree, a debt that a market for training, paid by fees, would pass to the student. Sources disagree on Cuba's per-head doctor figures, which this record does not use. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care (secondary); Vassar College blog on Cuba's commitment to international healthcare (2012); Kaieteur News (2013)"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, so pay and fees show where doctors are most needed, and training places can follow those signals. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that state planning and credit expansion distort production, so places funded by planners or cheap credit can yield doctors in the wrong places, with shortages left where demand is high. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "Inferred from its principle that deregulation and fewer controls on markets let more trained practitioners enter and compete, which can widen access to care. There is no documented case in the pool.",
+      "worst": "The case Cuba's free medical training and doctors per head reports 23 Americans who came for its free tuition and were avoiding debt of 150,000 to 200,000 US dollars from a US medical degree, the kind of fee-paid cost that privatised training would pass to students. Sources disagree on Cuba's per-head doctor figures, which this record does not use. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care (secondary); Vassar College blog on Cuba's commitment to international healthcare (2012); Kaieteur News (2013)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Inferred from its principle that government spending rises in slumps, so public money for training places and posts keeps doctors employed when private demand falls, and taxes that rise in booms help pay for it. There is no documented case in the pool.",
+      "worst": "Under budgets that set how many specialty training places are funded, the case Specialty training places in the NHS, 2024 to 2026 reports about 4.7 applicants per post against 1.9 in 2019, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the BMA's warning that up to 20,000 doctors could be shut out is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze (2025); BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen (July 2025)"
+    },
+    {
+      "model": "Social market economy",
+      "best": "Inferred from its principle that competitive markets work inside a legal order with social insurance, so doctors compete for patients while insurance pays for care, and the law stops any group of clinics from dominating a region. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that social insurance and worker representation are set by law, so training and pay rules agreed among established bodies can lock out newcomers, and rural regions may wait longest for places. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013, the kind of universal service that Nordic social democracy funds through taxes. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
+      "worst": "Universal services paid for from taxes can ration places through fixed budgets. The case Specialty training places in the NHS, 2024 to 2026 reports about 4.7 applicants per post against 1.9 in 2019, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the BMA's warning that up to 20,000 doctors could be shut out is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze (2025); BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen (July 2025)"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state directs credit and targets to chosen sectors and disciplines providers by performance, so it can set training capacity for priority specialties and reward the schools that meet their targets. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state picks sectors and sets targets, so training for unchosen specialties and regions can fall short, and targets may not track local need. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that a tax on land value funds public services, so training and clinics can be paid from land rent, and lower land speculation cuts the cost of premises for clinics. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that land value alone is taxed to fund public services, so rural and poor areas with low land values may raise too little to train and keep doctors there. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities built by example replace wage competition, so a community can train and keep its own healers and share their work among its members. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities are built by example and depend on founders' goodwill, so a small community can train and keep its own healers but may not sustain training or pay across a region, and its care can end when members leave. There is no documented case in the pool. Source: Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that mutual credit at cost lets workers keep the full value of their work, so training loans can be made at cost and healers keep the fruit of their labour. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that mutual credit and free contracts rely on trust and small associations, so training finance and pay may be too small for long courses or whole regions, and healers outside a mutual may lack credit. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Inferred from its principle that members own and control their firms and share the surplus between users and workers, so a doctors' cooperative can set its own training, hiring and pay, with a voice for patients and staff. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that members control the firm, so a cooperative of doctors may restrict new members and keep training and posts within the group, leaving patients and newcomers outside it to wait. There is no documented case in the pool. Source: Mondragón cooperatives"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that there are no wages and goods are shared according to need, so healers are supported by their communes and training and care go where need is greatest. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free association replaces contracts, so training and care depend on local communes that vary in size and resources, and a commune with few healers may have no formal route to train or certify new ones. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that trade unions run industry directly, so the workers who train and care for patients set entry, hours and pay through their own organisations. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that unions use strikes and, eventually, a general strike, so care can be halted by industrial action, and organised workers may restrict entry to protect their own pay. There is no documented case in the pool. Source: Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013, the kind of national provision that a national minimum of welfare calls for. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
+      "worst": "Public enterprise funded from budgets can cap training places below the number of applicants. The case Specialty training places in the NHS, 2024 to 2026 reports about 59,700 applications for 12,743 posts in 2024, and a mid-2025 BMA survey found 52 per cent of second-year foundation respondents had no confirmed August post. That 52 per cent is a survey share, and the 20,000 is a projection, not an official count. Source: The Doctor (BMA), Specialty training squeeze (2025); BMA, Urgent call to expand training places; Workplace Journal, Half of resident doctors face joblessness as training bottlenecks deepen (July 2025)"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "The Royal College of Physicians, from Henry VIII's charter of 1518, shows a body of practitioners that can set entry and police quality: its six founders could license qualified practitioners and bring prosecutions against malpractice. Sources disagree on whether Parliament passed the charter in 1518 or only confirmed it in 1523.",
+      "worst": "Inferred from its principle that workers and consumers share control through guild-like councils, so councils of insiders may protect their own members and slow new entrants, while patients and the state may have less say. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Cuba's free medical training and doctors per head shows tuition-free training expanded at scale, from one medical school in 1959 to 24 by 2012 to 2013, with doctors trained without tuition fees, the kind of capacity a central plan can set. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
+      "worst": "Inferred from its principle that central plans set output and investment, so training numbers, posts and pay are fixed in advance and do not follow applicants or need, and shortages can persist until the next plan. There is no documented case in the pool. Source: Kornai, The Socialist System"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that managers follow market prices within public ownership, so pay and training places can respond to prices, while a central board sets the rules and the investment. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, so training capacity may be slow to follow demand, and managers' price signals may not show where doctors are short. There is no documented case in the pool. Source: Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Cuba's free medical training and doctors per head shows training without tuition fees, from one medical school in 1959 to 24 by 2012 to 2013, which is the kind of provision by need that this model asks for. Sources disagree on Cuba's per-head doctor figures, which this record does not use.",
+      "worst": "Inferred from its principle that distribution follows ability and need only after the state withers away, so during the transition the state must plan training and pay, and places may be set before need is measured. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "Inferred from its principle that public ownership of key sectors works alongside markets and special zones, so public hospitals can pay for performance while zones draw skilled staff with higher pay. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that markets and zones are opened gradually under party direction, so skilled doctors may move to richer coastal zones and cities, leaving inland and poorer regions short of trained staff. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals and balance job complexity, so training and routine tasks are shared out across staff, and no narrow group keeps the skilled work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils plan through repeated rounds of proposals, so changes to training places and pay may take several rounds, and a region whose need is rising may wait a long time for new places to be agreed. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into corporations, so training and pay are agreed within each trade and its standards are set by the trade's own bodies under state direction. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, so doctors and nurses are steered to priority needs, training is shaped by state and military aims, and workers' pay and movement are constrained. There is no documented case in the pool. Source: Italian corporative law"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk and that zakat redistributes wealth, so training and clinics can be funded by shared-risk finance and zakat, with trust underpinning the contracts that pay for care. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that zakat and trust underpin care funding, so provision depends on the reach of zakat and on local trust, and a region with few donors or weak trust may lack trained doctors and clinics. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being, so doctors are trained at a modest scale close to the communities they serve, and paid for care rather than for volume of work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production is small-scale and local, so training and specialist care may be too thin to cover every specialty and region, and a small district may lack a specialist for years. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, so local practices and groups of doctors decide training and pay close to the people they serve, and a just wage keeps care workers fairly paid. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that small enterprise and widespread property are the aim, so doctors may run small local practices with thin cover, and specialist training may be too small to reach across a wide area. There is no documented case in the pool. Source: Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that activity stays within planetary limits with a social floor under everyone, so training and care are sized to guarantee a floor of care for all, not to growth in demand for procedures. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no growth imperative, so training capacity may be held level even when demand for care rises, and specialist places may fall short of need in fast-growing regions. There is no documented case in the pool. Source: Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen receives an unconditional income, so doctors and nurses can train without debt and take posts in less popular regions without losing their income. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that an unconditional income is paid whatever people do, so it does not by itself pay for training places or post doctors where they are short, and specialist training still needs separate funding. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government which issues its own currency can fund full employment, so it can fund training places for all qualified applicants and pay doctors and nurses without a fixed budget limit. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so spending on training and pay may outrun the real supply of doctors and nurses, and bottlenecks in training posts may go unnoticed until prices rise. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that communities who share a resource govern it with rules they design, monitor and enforce, so a local area can plan its own doctors and nurses and keep them answerable to the people they serve. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that rules are designed and enforced locally, so a small community may lack the training and pay to attract doctors, and a governing group may keep care from outsiders. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "One national design for doctors and nurses: tuition-free training with places set each year from applications and posts, licensing by a practitioners' body with national reach, pay set within a public framework, and a regional allowance so that trained staff reach every region.",
+    "details": "Keeps: tuition-free training, from Cuba's free medical training and doctors per head, kept by Command socialism, Marxian communism, Nordic social democracy and Fabian socialism; licensing that sets entry and polices malpractice, from the Royal College of Physicians, kept by Guild economy and Guild socialism. Blocks: capped places, shown by Specialty training places in the NHS, 2024 to 2026, blocked by yearly places set from applications; fee-paid debt, shown by Cuba's case, blocked by tuition-free places; a licence limited to one region, blocked by national licensing; central plans fixing numbers, blocked by regional demand counts. Cuba's per-head figures and Parliament's role in the 1518 charter are disputed and unused; the NHS 52 per cent is a survey share. Test: over five years, measure applicants per funded place, graduates with a confirmed August post, and staff per region against population. Source: Canadian Centre for Policy Alternatives, Fast facts on revolutionary health care; Royal College of Physicians, history of the college; The Doctor (BMA), Specialty training squeeze (2025); Kornai, The Socialist System."
+  }
+}
