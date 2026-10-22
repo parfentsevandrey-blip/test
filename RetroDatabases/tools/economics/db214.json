@@ -6,117 +6,117 @@
     {
       "model": "Gift economy",
       "best": "Inferred from its principle that gifts create obligations to give and return, hospitals and clinics could rest on reciprocal help, with healers and patients repaying each other in service and trust rather than through fees. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that status and alliances are built through exchange rather than price, access to a hospital or clinic could depend on personal ties, so patients without standing or links to the givers may be turned away or made to wait. There is no documented case in the pool. Source: Mauss, The Gift"
+      "worst": "Inferred from its principle that status and alliances are built through exchange rather than price, access to a hospital or clinic could depend on personal ties, so patients without standing or links to the givers may be turned away or made to wait. There is no documented case in the pool. Source: Mauss, The Gift (1925)"
     },
     {
       "model": "Household and peasant economy",
       "best": "Inferred from its principle that a family farm balances its work against household needs, care could be arranged within the family and village, close to home and matched to what the household can spare. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production serves household consumption rather than profit, a household with little spare labour or money has few means to pay for hospital or clinic care, so families without a surplus may go without specialist treatment. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+      "worst": "Inferred from its principle that production serves household consumption rather than profit, a household with little spare labour or money has few means to pay for hospital or clinic care, so families without a surplus may go without specialist treatment. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy (1925)"
     },
     {
       "model": "Redistributive economy",
       "best": "Inferred from its principle that a central authority collects goods and redistributes them, a common store could fund hospitals and clinics for workers, so that care does not depend on each patient's own means. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that goods are redistributed by allocation to workers and officials, care could be steered first to officials and favoured households, while ordinary workers wait for places set by rank. There is no documented case in the pool. Source: Polanyi, The Great Transformation"
+      "worst": "Inferred from its principle that goods are redistributed by allocation to workers and officials, care could be steered first to officials and favoured households, while ordinary workers wait for places set by rank. There is no documented case in the pool. Source: Polanyi, The Great Transformation (1944)"
     },
     {
       "model": "Slave economy",
       "best": "Inferred from its principle that labour is extracted through the ownership of people, owners had a financial reason to pay for medical attention for ill workers, because a sick worker produced less. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the enslaved are denied education and property, care would depend on the owner's interest rather than the patient's need, and the enslaved would have no say in whether they were treated. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+      "worst": "Inferred from its principle that the enslaved are denied education and property, care would depend on the owner's interest rather than the patient's need, and the enslaved would have no say in whether they were treated. There is no documented case in the pool. Source: Williams, Capitalism and Slavery (1944)"
     },
     {
       "model": "Feudalism",
       "best": "The Hospices de Beaune, founded 1443, was a poor-relief hospital begun by Chancellor Nicolas Rolin and his wife Guigone de Salins, with its income from salt works and wine sales, so care for the poor was paid from income-producing holdings. Its dates come from secondary sources, and the date its own care ended was not found, with one source giving two different dates for it.",
-      "worst": "Inferred from its principle that peasants owe labour and rent to a lord in return for protection, a sick peasant's care would depend on the lord's goodwill and the manor's own resources rather than on any right to treatment. There is no documented case in the pool. Source: Bloch, Feudal Society"
+      "worst": "Inferred from its principle that peasants owe labour and rent to a lord in return for protection, a sick peasant's care would depend on the lord's goodwill and the manor's own resources rather than on any right to treatment. There is no documented case in the pool. Source: Bloch, Feudal Society (1939-1940)"
     },
     {
       "model": "Guild economy",
       "best": "Inferred from its principle that guilds set training and quality by statute, healers and practitioners could be trained and tested to a known standard before they treat patients. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that guilds control entry and prices, limits on who may practise and on what they may charge could keep the number of clinics and healers low, so patients may have fewer choices and pay more. There is no documented case in the pool. Source: Epstein, Freedom and Growth"
+      "worst": "Inferred from its principle that guilds control entry and prices, limits on who may practise and on what they may charge could keep the number of clinics and healers low, so patients may have fewer choices and pay more. There is no documented case in the pool. Source: Epstein, Freedom and Growth (2000)"
     },
     {
       "model": "Mercantilism",
       "best": "Inferred from its principle that the state aims for a trade surplus and national strength, hospitals and clinics could be funded and placed where the state judges a healthy workforce matters most to national goals. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state regulates production and trade for national gain, public money for care could be steered toward the state's chosen goals, and care for ordinary people may come second when funds are short. There is no documented case in the pool. Source: Heckscher, Mercantilism"
+      "worst": "Inferred from its principle that the state regulates production and trade for national gain, public money for care could be steered toward the state's chosen goals, and care for ordinary people may come second when funds are short. There is no documented case in the pool. Source: Heckscher, Mercantilism (1935)"
     },
     {
       "model": "Physiocracy",
       "best": "Inferred from its principle that a single tax on the rent of land should fund the state, hospitals and clinics could be paid for from land rent without taxing wages or the grain trade. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that only agriculture creates a net product, hospitals and clinics could be treated as unproductive and funded last, and a single land tax may not raise enough to pay for them. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy"
+      "worst": "Inferred from its principle that only agriculture creates a net product, hospitals and clinics could be treated as unproductive and funded last, and a single land tax may not raise enough to pay for them. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy (1962)"
     },
     {
       "model": "Classical laissez-faire capitalism",
       "best": "Inferred from its principle that competition and the division of labour raise output, hospitals and clinics could specialise and compete for patients on price and quality, so that patients can choose between providers. There is no documented case in the pool.",
-      "worst": "The worst practice is private owners running hospitals with the state staying out. Private equity acquisition of US hospitals, JAMA study, reports hospital-acquired conditions rose by about 25 per cent relative to matched control hospitals, though its figures come from summaries and its patient mix also changed. For-profit and non-profit hospital mortality, a 2002 meta-analysis of observational and highly variable studies, gives an adjusted relative risk of death of about 1.02 for for-profit hospitals. Source: Kannan, Bruch and Song, JAMA (2023), DOI 10.1001/jama.2023.23147, as summarised by AHRQ PSNet; CMAJ systematic review and meta-analysis of for-profit and non-profit hospital mortality (2002, 166(11): 1399 to 1406)"
+      "worst": "The worst practice is private owners running hospitals with the state staying out. Private equity acquisition of US hospitals, JAMA study, reports hospital-acquired conditions rose by about 25 per cent against matched controls, though the comparison is observational, its figures come from summaries and its patient mix changed. For-profit and non-profit hospital mortality, a 2002 meta-analysis of highly variable observational studies of 1982 to 1995 data, gives an adjusted relative risk of death of about 1.02 for for-profit hospitals. Source: Kannan, Bruch and Song, JAMA (2023), DOI 10.1001/jama.2023.23147, as summarised by AHRQ PSNet; CMAJ systematic review and meta-analysis of for-profit and non-profit hospital mortality (2002, 166(11): 1399 to 1406)"
     },
     {
       "model": "Austrian free-market economics",
       "best": "Inferred from its principle that prices carry knowledge spread across many people, hospitals and clinics could learn from prices what services patients want and what they cost, without a planner setting the mix of wards and beds. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that credit expansion distorts production, hospitals built during cheap-credit booms could be left idle when credit tightens, and the cost of that reversal could fall on patients and staff. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society"
+      "worst": "Inferred from its principle that credit expansion distorts production, hospitals built during cheap-credit booms could be left idle when credit tightens, and the cost of that reversal could fall on patients and staff. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society (1945)"
     },
     {
       "model": "Monetarist neoliberalism",
       "best": "Inferred from its principle that steady money and open competition let private providers plan ahead, hospitals and clinics could invest and expand on predictable budgets, with fewer rules on how they are run. There is no documented case in the pool.",
-      "worst": "The worst practice is deregulated private ownership of hospitals. Private equity acquisition of US hospitals, JAMA study, reports hospital-acquired conditions rose by about 25 per cent relative to matched control hospitals, with figures from summaries. Emergency department deaths at private equity hospitals, Annals study, reports death rates about 13 per cent higher than at comparable hospitals, a finding known only from news coverage, whose design was not examined and whose staffing cause is a quoted researcher's view. Source: Kannan, Bruch and Song, JAMA (2023), DOI 10.1001/jama.2023.23147, as summarised by AHRQ PSNet; Annals of Internal Medicine study on private equity and emergency departments, as reported by NBC Boston (secondary)"
+      "worst": "The worst practice is deregulated private ownership of hospitals. Private equity acquisition of US hospitals, JAMA study, reports hospital-acquired conditions rose by about 25 per cent in an observational comparison against matched controls, with figures from summaries and a changed patient mix. Emergency department deaths at private equity hospitals, Annals study, reports death rates about 13 per cent higher than comparable hospitals, known only from news coverage, its design unexamined and the staffing cause a quoted researcher's view. Source: Kannan, Bruch and Song, JAMA (2023), DOI 10.1001/jama.2023.23147, as summarised by AHRQ PSNet; Annals of Internal Medicine study on private equity and emergency departments, as reported by NBC Boston (secondary)"
     },
     {
       "model": "Keynesian welfare capitalism",
       "best": "Inferred from its principle that public spending rises in slumps, hospitals and clinics could expand and keep clinical staff in work when private demand falls, so that care continues through a downturn. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that public spending falls in booms, hospital budgets could be tightened in good years, leaving beds and staff short when demand rises again. There is no documented case in the pool. Source: Keynes, The General Theory"
+      "worst": "Inferred from its principle that public spending falls in booms, hospital budgets could be tightened in good years, leaving beds and staff short when demand rises again. There is no documented case in the pool. Source: Keynes, The General Theory (1936)"
     },
     {
       "model": "Social market economy",
       "best": "Inferred from its principle that competitive markets operate inside a legal order, hospitals and clinics could compete for patients while social insurance pays for care and worker representatives sit on hospital boards. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a legal order curbs monopoly, a regulator could fail to stop a few large groups from dominating a region's hospitals, so that prices and waiting times are set by the group rather than by competition. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft"
+      "worst": "Inferred from its principle that a legal order curbs monopoly, a regulator could fail to stop a few large groups from dominating a region's hospitals, so that prices and waiting times are set by the group rather than by competition. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft (1947)"
     },
     {
       "model": "Nordic social democracy",
       "best": "Inferred from its principle that universal public services are paid for by high taxes, hospitals and clinics could be open to everyone on the same terms, with care paid from the public budget rather than by each patient. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that national wage bargaining sets pay across the whole country, hospitals in remote or hard-to-staff areas may be unable to pay enough to attract doctors and nurses, leaving services short where they are most needed. There is no documented case in the pool. Source: Esping-Andersen, The Three Worlds of Welfare Capitalism"
+      "worst": "Inferred from its principle that national wage bargaining sets pay across the whole country, hospitals in remote or hard-to-staff areas may be unable to pay enough to attract doctors and nurses, leaving services short where they are most needed. There is no documented case in the pool. Source: Esping-Andersen, The Three Worlds of Welfare Capitalism (1990)"
     },
     {
       "model": "Developmental state",
       "best": "Inferred from its principle that the state directs credit to chosen industries and disciplines firms by performance, the state could build up hospital and medical capacity on purpose and hold providers to measured results. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state picks which industries to favour, hospitals and clinics not on the list could lose credit and staff, and performance targets set on output such as procedures could reward volume over patient outcomes. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle"
+      "worst": "Inferred from its principle that the state picks which industries to favour, hospitals and clinics not on the list could lose credit and staff, and performance targets set on output such as procedures could reward volume over patient outcomes. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982)"
     },
     {
       "model": "Georgism",
       "best": "Inferred from its principle that the rent of land should fund public services, a levy on land values could pay for hospitals and clinics while wages and the capital of care providers go untaxed. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that land values fund public services, hospital budgets would rise and fall with land prices, so a fall in land values could cut the money for care just when a downturn raises demand. There is no documented case in the pool. Source: George, Progress and Poverty"
+      "worst": "Inferred from its principle that land values fund public services, hospital budgets would rise and fall with land prices, so a fall in land values could cut the money for care just when a downturn raises demand. There is no documented case in the pool. Source: George, Progress and Poverty (1879)"
     },
     {
       "model": "Utopian socialism",
       "best": "Inferred from its principle that cooperative communities built by example can replace private profit, a hospital founded as a model association could show that care can be organised without profit, and other communities could copy it. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that communities are built by example and association, a hospital set up this way might depend on a few founders' energy and funds, and it could close when they leave, leaving patients without a fallback. There is no documented case in the pool. Source: Fourier, Le Nouveau Monde industriel"
+      "worst": "Inferred from its principle that communities are built by example and association, a hospital set up this way might depend on a few founders' energy and funds, and it could close when they leave, leaving patients without a fallback. There is no documented case in the pool. Source: Fourier, Le Nouveau Monde industriel (1829)"
     },
     {
       "model": "Mutualism",
-      "best": "Paying in advance and non-profit ownership are the best practices here: Kaiser Permanente's prepaid group practice, from 1933, had workers paying about five cents a day, though sources differ on its first hospital's bed count. For-profit and non-profit hospital mortality, a 2002 meta-analysis of observational, highly variable studies, gives an adjusted relative risk of death of about 1.02 for for-profit hospitals against non-profit ones.",
-      "worst": "Inferred from its principle that banks lend at cost and rent on property is abolished, a mutual scheme for hospitals may be too small to share large or rare costs, so one costly surgery or outbreak could force a mutual hospital to cut services. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+      "best": "Paying in advance and non-profit ownership are the best practices here: Kaiser Permanente's prepaid group practice, from 1933, had workers paying about five cents a day, though sources differ on its first hospital's bed count. For-profit and non-profit hospital mortality, a 2002 meta-analysis of observational, highly variable studies of 1982 to 1995 data, gives an adjusted relative risk of death of about 1.02 for for-profit hospitals against non-profit ones.",
+      "worst": "Inferred from its principle that banks lend at cost and rent on property is abolished, a mutual scheme for hospitals may be too small to share large or rare costs, so one costly surgery or outbreak could force a mutual hospital to cut services. There is no documented case in the pool. Source: Proudhon, What Is Property? (1840)"
     },
     {
       "model": "Cooperative economy",
       "best": "Users paying for their care in advance is the best practice here: Kaiser Permanente's prepaid group practice, from 1933, had workers paying about five cents a day, though sources differ on its first hospital's bed count.",
-      "worst": "Inferred from its principle that members own and control the firm, with one member one vote and the surplus shared between users and workers, a hospital run this way could put staff pay or the views of active members ahead of patients who are not members. There is no documented case in the pool. Source: Mondragón cooperatives"
+      "worst": "Inferred from its principle that members own and control the firm, with one member one vote and the surplus shared between users and workers, a hospital run this way could put staff pay or the views of active members ahead of patients who are not members. There is no documented case in the pool. Source: Mondragón cooperatives (from 1956)"
     },
     {
       "model": "Anarcho-communism",
       "best": "Inferred from its principle that goods are shared according to need within communes, hospitals and clinics could be run by local communes, with care given according to need and without a fee at the point of care. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that there is no wage and no state, hospitals could depend on volunteer labour and the agreement of local communes, so staffing could fall short in emergencies and remote areas, and no body could require a commune to provide care. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+      "worst": "Inferred from its principle that there is no wage and no state, hospitals could depend on volunteer labour and the agreement of local communes, so staffing could fall short in emergencies and remote areas, and no body could require a commune to provide care. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread (1892)"
     },
     {
       "model": "Syndicalism",
       "best": "Inferred from its principle that workers' organisations run industry directly, hospital staff could set rotas, training and working conditions through their own unions, giving those who deliver care a direct say in how it is provided. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that strikes, and eventually a general strike, are the main levers, industrial action could halt hospital and clinic work for long periods, leaving patients without routine or emergency care while disputes run. There is no documented case in the pool. Source: Pelloutier, Histoire des Bourses du travail"
+      "worst": "Inferred from its principle that strikes, and eventually a general strike, are the main levers, industrial action could halt hospital and clinic work for long periods, leaving patients without routine or emergency care while disputes run. There is no documented case in the pool. Source: Pelloutier, Histoire des Bourses du travail (1902)"
     },
     {
       "model": "Fabian socialism",
       "best": "Inferred from its principle that public enterprise and a national minimum of welfare can be built gradually by democratic means, municipal and national hospitals could be set up step by step, with a guaranteed minimum of care for every citizen. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that change comes gradually through public enterprise, the national minimum may be set low and municipal hospitals may be funded unevenly from one town to the next, so the care a patient receives could depend on where they live. There is no documented case in the pool. Source: Founding of the Fabian Society"
+      "worst": "Inferred from its principle that change comes gradually through public enterprise, the national minimum may be set low and municipal hospitals may be funded unevenly from one town to the next, so the care a patient receives could depend on where they live. There is no documented case in the pool. Source: Founding of the Fabian Society (1884)"
     },
     {
       "model": "Guild socialism",
       "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, hospital staff and patient representatives could sit on councils that set budgets, staffing and standards together. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state is one partner among several, decisions on hospital capacity could be divided between councils, the state and professional bodies, so no one is clearly answerable for shortages or for closing a ward. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+      "worst": "Inferred from its principle that the state is one partner among several, decisions on hospital capacity could be divided between councils, the state and professional bodies, so no one is clearly answerable for shortages or for closing a ward. There is no documented case in the pool. Source: Cole, Self-Government in Industry (1917)"
     },
     {
       "model": "Command socialism",
@@ -126,66 +126,66 @@
     {
       "model": "Market socialism",
       "best": "Inferred from its principle that managers follow market prices under public ownership, hospitals could be run as public bodies that balance their budgets against prices for services, while a central board sets the rules and the investment. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a central board sets the rules and the investment, decisions on hospital capacity could be slow or mistaken, and managers who follow prices may drop services that patients need but that do not pay. There is no documented case in the pool. Source: Yugoslav workers' self-management"
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, decisions on hospital capacity could be slow or mistaken, and managers who follow prices may drop services that patients need but that do not pay. There is no documented case in the pool. Source: Yugoslav workers' self-management (1950s)"
     },
     {
       "model": "Marxian communism",
       "best": "Care free to everyone, which matches distribution by need, is the best practice here, as the July 1918 decree in State ownership of health facilities in the Soviet Union, from 1918, declared. A PubMed Central review's account of the system is a summary, not a measured outcome, and another paper dates the start of implementation to the late 1920s.",
-      "worst": "Inferred from its principle that distribution follows need rather than price, care that costs the patient nothing could be queued for or overused, since no price limits demand, and the state might not wither away as the model expects. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+      "worst": "Inferred from its principle that distribution follows need rather than price, care that costs the patient nothing could be queued for or overused, since no price limits demand, and the state might not wither away as the model expects. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme (1875)"
     },
     {
       "model": "Chinese market socialism",
       "best": "Inferred from its principle that public ownership of key sectors sits alongside markets, hospitals could stay publicly owned while private clinics compete beside them, with prices reformed gradually so that payment comes closer to cost. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that price reform proceeds gradually under state direction, prices for hospital care may lag behind costs in some regions, leaving public hospitals short of funds and patients paying more out of pocket where reform is slowest. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+      "worst": "Inferred from its principle that price reform proceeds gradually under state direction, prices for hospital care may lag behind costs in some regions, leaving public hospitals short of funds and patients paying more out of pocket where reform is slowest. There is no documented case in the pool. Source: Naughton, The Chinese Economy (2007)"
     },
     {
       "model": "Participatory economics",
       "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, the staff and patients of each hospital could propose and revise budgets, staffing and services until they agree, with jobs balanced in complexity across the team. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that councils plan through repeated rounds of proposals, decisions on hospital services could take a long time, so a clinic that needs a quick change to its budget or staffing may wait through several rounds before it can act. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+      "worst": "Inferred from its principle that councils plan through repeated rounds of proposals, decisions on hospital services could take a long time, so a clinic that needs a quick change to its budget or staffing may wait through several rounds before it can act. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward (1991)"
     },
     {
       "model": "Corporatism and fascist economics",
       "best": "Inferred from its principle that employers and unions are organised into corporations under state direction, hospital staffing, training and beds could be planned jointly by employers, unions and the state under one national plan. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, hospital capacity and medical staff could be directed to military needs, and civilian care may be cut or moved aside to serve those goals. There is no documented case in the pool. Source: Italian corporative law"
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, hospital capacity and medical staff could be directed to military needs, and civilian care may be cut or moved aside to serve those goals. There is no documented case in the pool. Source: Italian corporative law (1934)"
     },
     {
       "model": "Islamic economics",
       "best": "Inferred from its principle that finance shares profit and risk rather than charging interest, and zakat redistributes wealth, hospitals and clinics could be funded through profit-sharing partnerships and charitable giving rather than interest-bearing loans. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that finance shares profit and risk, a hospital or clinic financed this way depends on expected earnings, so a provider serving poor areas with little income may struggle to find partners willing to fund it. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System"
+      "worst": "Inferred from its principle that finance shares profit and risk, a hospital or clinic financed this way depends on expected earnings, so a provider serving poor areas with little income may struggle to find partners willing to fund it. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985)"
     },
     {
       "model": "Buddhist economics",
       "best": "Inferred from its principle that production is small-scale and local, hospitals and clinics could be small and close to the patients they serve, keeping travel short and care matched to local need. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production is small in scale, small hospitals and clinics may lack the equipment, specialist staff and patient numbers for complex cases, so people with serious conditions may have to travel far or go without treatment. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful"
+      "worst": "Inferred from its principle that production is small in scale, small hospitals and clinics may lack the equipment, specialist staff and patient numbers for complex cases, so people with serious conditions may have to travel far or go without treatment. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful (1973)"
     },
     {
       "model": "Distributism",
       "best": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, local clinics and small hospitals could set their own budgets and staffing, with patients and families close to decisions about their care. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that small enterprise is widespread, small hospitals and clinics may be too small to pool risk or buy costly equipment, so the smallest bodies may lack the scale to provide complex or emergency care. There is no documented case in the pool. Source: Belloc, The Servile State"
+      "worst": "Inferred from its principle that small enterprise is widespread, small hospitals and clinics may be too small to pool risk or buy costly equipment, so the smallest bodies may lack the scale to provide complex or emergency care. There is no documented case in the pool. Source: Belloc, The Servile State (1912)"
     },
     {
       "model": "Steady-state and degrowth economics",
       "best": "Inferred from its principle that everyone has a social floor, hospitals and clinics could guarantee a basic level of care to all, with spending set by ecological limits rather than by the pursuit of growth. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that there is no growth imperative, investment in new hospital buildings, equipment and staff could be held back to stay within limits, so waiting times for new treatments and capacity may lengthen. There is no documented case in the pool. Source: Raworth, Doughnut Economics"
+      "worst": "Inferred from its principle that there is no growth imperative, investment in new hospital buildings, equipment and staff could be held back to stay within limits, so waiting times for new treatments and capacity may lengthen. There is no documented case in the pool. Source: Raworth, Doughnut Economics (2017)"
     },
     {
       "model": "Universal basic income",
       "best": "Inferred from its principle that every citizen receives an unconditional income, patients could pay for care from a secure income of their own, which may reduce the pressure to put off treatment for cost reasons. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, a basic income set too low could leave many patients still needing insurance or savings to pay for care, and public money for hospitals could be squeezed if those taxes fall short. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All"
+      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, a basic income set too low could leave many patients still needing insurance or savings to pay for care, and public money for hospitals could be squeezed if those taxes fall short. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All (1995)"
     },
     {
       "model": "Modern monetary theory",
       "best": "Inferred from its principle that a government issuing its own currency can fund full employment, hospitals and clinics could be staffed and expanded to meet need without raising patient charges, with inflation as the check on spending. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that inflation, not debt, is the real limit, a government could overspend on hospital staff and buildings if it misjudges inflation, and the price rises that follow would fall on clinics and patients who rely on fixed budgets. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, a government could overspend on hospital staff and buildings if it misjudges inflation, and the price rises that follow would fall on clinics and patients who rely on fixed budgets. There is no documented case in the pool. Source: Kelton, The Deficit Myth (2020)"
     },
     {
       "model": "Commons governance",
       "best": "Inferred from its principle that communities sharing a resource design, monitor and enforce their own rules, a local hospital could be governed by the patients and staff who use it, with rules that fit local needs and are watched by the people affected. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the community designs and enforces its own rules, a local hospital could be captured by a small group of insiders who set rules to suit themselves, and outside bodies may then have to step in to protect patients. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+      "worst": "Inferred from its principle that the community designs and enforces its own rules, a local hospital could be captured by a small group of insiders who set rules to suit themselves, and outside bodies may then have to step in to protect patients. There is no documented case in the pool. Source: Ostrom, Governing the Commons (1990)"
     }
   ],
   "compromise": {
     "summary": "Hospitals and clinics mostly non-profit, paid from prepaid funds for care rather than for admissions alone. A sale to investors needs public approval after a staffing and safety review, and safety figures are published every year.",
-    "details": "Keeps: prepaid payment by users, from Kaiser Permanente's prepaid group practice, from 1933, bed counts disputed (Mutualism, Cooperative economy), and non-profit ownership, from For-profit and non-profit hospital mortality, a 2002 meta-analysis of observational, highly variable studies (Mutualism). Blocks: investor buyouts, from Private equity acquisition of US hospitals, JAMA study, figures from summaries (Classical laissez-faire capitalism, Monetarist neoliberalism), blocked by public approval after a staffing review; underfunded state ownership, from State ownership of health facilities in the Soviet Union, from 1918, a summary not a measured outcome, dates disputed (Command socialism), blocked by budgets paid from the prepaid pool. Test: for ten years after each ownership change, compare hospital-acquired conditions and 30-day deaths with matched control hospitals each year. Source: Kaiser Permanente, Sidney Garfield, pioneer of modern health care (company history); CMAJ systematic review and meta-analysis of for-profit and non-profit hospital mortality (2002, 166(11): 1399 to 1406); Kannan, Bruch and Song, JAMA (2023), DOI 10.1001/jama.2023.23147, as summarised by AHRQ PSNet; PubMed Central article PMC6220729 on the Soviet health system (secondary)."
+    "details": "Keeps: paying in advance, from Kaiser Permanente's prepaid group practice, from 1933, bed counts disputed (Mutualism, Cooperative economy), and non-profit ownership, from For-profit and non-profit hospital mortality, a 2002 meta-analysis of observational, highly variable studies (Mutualism). Blocks: private ownership of hospitals, from Private equity acquisition of US hospitals, JAMA study, figures from summaries (Classical laissez-faire capitalism, Monetarist neoliberalism), blocked by public approval after a staffing review; state ownership with too little funding, from State ownership of health facilities in the Soviet Union, from 1918, a summary not a measured outcome, dates disputed (Command socialism), blocked by budgets paid from the prepaid pool. Test: over the years after each ownership change, compare hospital-acquired conditions and 30-day deaths with matched controls. Source: Kaiser Permanente, Sidney Garfield, pioneer of modern health care (company history); CMAJ systematic review and meta-analysis of for-profit and non-profit hospital mortality (2002, 166(11): 1399 to 1406); Kannan, Bruch and Song, JAMA (2023), DOI 10.1001/jama.2023.23147, as summarised by AHRQ PSNet; PubMed Central article PMC6220729 on the Soviet health system (secondary)."
   }
 }
