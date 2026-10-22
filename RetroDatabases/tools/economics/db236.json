@@ -1,0 +1,191 @@
+{
+  "database": 236,
+  "type": "practice",
+  "practice": "Public debt",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that obligations to give and return bind lenders and borrowers together, public debt is kept among known partners who expect repayment in kind, so terms rest on trust rather than on price. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a debt creates a lasting obligation to return, a state that borrows from favoured creditors gives them standing over its policy, and repayment depends on alliances rather than fixed terms. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a household borrows only against what its own labour can repay, public debt stays small and is serviced from output the economy can actually produce. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption, a state that services debt by squeezing farm households forces them to work longer and sell land to creditors, so family needs go unmet. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that the centre holds a store of collected goods, it can meet short-term obligations from reserves rather than borrowing from outside, so debt stays within the state. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre collects tribute and allocates it by rank, debts owed to officials and temples are paid from the common store before ordinary households, so repayment favours those close to the centre. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that output sold through trade gives a visible revenue base, so the stream that repays creditors can be seen and scheduled in advance. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that labour is extracted through the ownership of people, public debt is carried by people who have no education, property or voice in borrowing, so they bear its cost without any say over it. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that rents and services are owed for land and protection, debts can be secured on land and fixed services that local lords and courts can enforce. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that tenants owe labour services to a lord, a debt secured on those services can bind families to the manor, so they cannot leave to escape what has been borrowed against them. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that statutes fix terms of entry and quality, a town's borrowing can be made under published rules that its trades police, so lenders know the terms before they lend. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that masters close entry and set prices, the holders of town debt may form a closed group, and new firms that could repay from growth are kept out of lending. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Federal assumption of state war debts (United States, 1790) moved debts that individual states had not yet cleared onto the central government, and its revenue plan relied on a tariff, which put trade duties at the heart of how the debt was to be funded. The claims come from merged search summaries, and the linked blog post was not opened.",
+      "worst": "Inferred from its principle that the state regulates trade for national gain, debts repaid from protective duties fall on buyers of imported goods, who pay higher prices so the treasury can pay its creditors. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that a single tax on the rent of land should fund the state, public debt needs little borrowing, since the state's income rests on a levy that cannot be moved abroad. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only agriculture creates a net product, debt serviced by taxes on trade in grain or on other goods burdens the class that produces the surplus, so the cost of borrowing falls on farms. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "Pitt's sinking fund for the British consols (1786) used tax income to buy back debt in the market rather than redeem it at par, because redeeming at par would have enriched holders. The claims rest on search excerpts of an old encyclopaedia and a general history website, and the sources disagree on the 1786 debt total.",
+      "worst": "Pitt's sinking fund for the British consols (1786) allowed its returns, once the fund reached 4 million pounds, to be diverted to tax relief or other purposes, and by the end of the Napoleonic wars it was financed by borrowing from the same markets. The claims rest on search excerpts, and the results say little about the years after the Napoleonic wars. Source: Encyclopaedia Britannica, 1823 article (reproduced online); history website on Pitt's sinking fund (undated)"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many lenders, a government that borrows at market rates receives a check that no planner can supply, so its spending and debt are priced against real savings. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion distorts production, debt raised through credit that the state channels into chosen projects misdirects capital and leaves obligations that are hard to service when the boom ends. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "In Greece's March 2012 exchange of privately held bonds, private creditors, mostly banks, took write-downs through a voluntary exchange backed by collective action clauses, and the European Stability Mechanism puts take-up at about 97% of privately held bonds. The sources disagree on the measures and on who bore the losses.",
+      "worst": "Argentina's currency peg, 2001 default and later restructurings fixed the peso at parity with the US dollar in 1991, which reined in hyperinflation but removed the option of devaluing when outside shocks hit. The arrangement gave way only after the money supply shrank sharply and foreign debt went unpaid, with the default in late December 2001. Only the linked chronology is relied on here. Source: Congressional Research Service, 'The Argentine Financial Crisis: A Chronology of Events' (2002); other search results on the restructurings and the 2016 settlement, namely academic papers and blog or glossary pages (undated)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Sweden's fiscal consolidation and surplus target (1990s) set a medium-term surplus goal of 2% of GDP over the cycle, with interim goals, as an International Monetary Fund notice of 1997 records. The 1997 and 1998 figures there are forecasts, and later figures come from a commentary column and a working paper, not official accounts.",
+      "worst": "Sweden's fiscal consolidation and surplus target (1990s) set a consolidation path that the sources describe as fixed whatever the economy did, with a multi-year spending cap. That runs against the principle that spending rises in slumps, and the sources disagree on the 1993 deficit peak. Source: International Monetary Fund public information notice (1997); Centre for Economic Policy Research (CEPR) column on lessons from Sweden on fiscal discipline (undated); CEPR discussion paper on Swedish debt (undated)"
+    },
+    {
+      "model": "Social market economy",
+      "best": "Inferred from its principle that competitive markets operate inside a legal order that curbs monopoly, public debt is raised and repaid under rules that keep lenders in open competition, and the social floor is funded from revenue rather than from borrowing. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that social insurance is paid from firms and workers, a debt financed by cutting those contributions weakens the insurance that many households depend on, and a few large banks holding most public bonds could set borrowing terms. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "After Sweden's fiscal consolidation and surplus target (1990s), a commentary column reports a surplus of 3.6% of GDP in 2000 and government debt at 37% of GDP by 2011. Those later figures come from that column and a working paper, not official accounts.",
+      "worst": "Inferred from its principle that universal services and high taxes need a steady tax base, a slump that cuts revenue can push public debt up before taxes or spending adjust, so the cost falls on the taxpayers who fund the services. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state directs credit to chosen industries and expects export results, borrowing for those industries can be repaid from export earnings, so debt is tied to firms that must perform. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs credit to chosen firms, borrowing that backs them can pile up in firms that fail to perform, so the public debt carries the losses while the firms that did well keep their gains. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that the rent of land funds public services, a state that taxes land values can borrow less, and debt service is paid from a base that does not shrink when labour and capital move. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that land values rise with public spending, debt secured on land can feed speculation, so a state that borrows against land value raises the price of land and then faces creditors with claims on the same rent. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities are built by example and fund themselves through shared capital, public debt is avoided because members subscribe their own resources and lend to one another. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that planned associations are built by subscription and loans among members, the debts of a community that dissolves fall on its members, who have no public guarantee to fall back on. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that mutual credit is lent at cost and rent on property is abolished, public borrowing carries only the cost of the loan, so debt holders earn no rent and the state pays no premium above cost. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that interest and rent on property are a claim on the work of others, public debt paid at interest to bondholders keeps that claim in place, and the taxes that repay holders are paid by workers. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Inferred from its principle that members own and control their banks and share the surplus between users and workers, public borrowing from member-owned banks is repaid to the same people who use and fund the services, so creditors are also users. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that members control their banks, lending can favour the members who borrow most or who sit on the board, so a state that borrows from member banks may find its debt held by a narrow group of insiders. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that there are no wages and no state, communes share goods by need and make free agreements, so there is no public debt to service, and any credit between communes rests on free association. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free association replaces contracts, a commune that borrows for common needs has no enforceable promise to repay, so creditors bear the risk and a loan can end in default with no remedy. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that workers' organisations run industry directly, public borrowing for an industry is decided by the unions that run its firms, which ties each loan to the workers who must repay it. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that unions run industry through strikes, a debt that a union-run firm cannot repay could be pushed onto the public purse or onto other workers, and creditors would face a dispute rather than a settlement. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that public enterprise is built gradually by democratic means, borrowing for municipal and national enterprise can be voted on in open councils, and public debt is kept to projects that voters can see. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that public enterprise is financed gradually, municipal borrowing can grow beyond the revenue of the enterprises it funds, so ratepayers carry debt that no vote directly approved. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, borrowing for an industry is approved by the councils that will repay it, so debt is tied to the users who gain from it. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that guild councils bargain for their own industry, each council may borrow for its own members while the state is left holding the costs of failed firms, so public debt is spread unevenly among sectors. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that central plans set output and investment, borrowing for chosen investment can be scheduled against plan targets, so repayment and output are planned together. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state mobilises labour for rapid industrialisation, debts for plan targets may be rolled over and hidden inside the plan, so the public cannot see what has been borrowed or who must repay it. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that public ownership works with market prices, a central board that sets the rules can let managers borrow at prices they must follow, so debt is priced and repaid as a market would require. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a central board sets the investment, the board may keep lending to loss-making public firms, so public debt grows as firms are kept running instead of being closed or sold. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that once classes disappear distribution follows need, a society with no creditor class has little reason to borrow against its members, so public debt loses its role as a claim on workers. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that debts give creditors a claim on the work of others, a state that borrows from a propertied class keeps that class in power until the state withers, and workers repay the debt through taxes they did not agree to. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "China's 2015 swap of local government financing vehicle loans into municipal bonds was authorised with a quota of 1 trillion yuan to refinance loans into cheaper municipal notes, and Fitch noted the swapped bonds could run no more than 30% above comparable central government bonds. The Fitch statement is not tied to a named page, and the sources are news and commentary from about 2015.",
+      "worst": "China's 2015 swap of local government financing vehicle loans into municipal bonds followed heavy reliance on bank-funded local government financing vehicles after the 2009 stimulus. Reported conversions reached about 3.2 trillion yuan that year, well above the initial quota, and one analysis noted the central government still acted as lender of last resort in some cases. The sources are news or commentary from about 2015, and the excerpts do not explain the overshoot. Source: Asia Times article on the local government debt swap plan (March 2015); other news and commentary pages in the same search, including Fitch commentary and a Standard Chartered analysis as they are reported there"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that councils propose and revise plans in repeated rounds, public borrowing is approved only after the councils that bear its cost have proposed it, so debt follows the consent of those who repay. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that repeated proposals take time, borrowing decisions may be slow to settle, and councils that do not coordinate their plans could each borrow more than the whole economy can repay. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, public borrowing for strategic industry can be arranged through those bodies on agreed terms, so lenders and firms bargain at one table. There is no documented case in the pool.",
+      "worst": "Mefo bills financing German rearmament off the budget used bills that a dummy company accepted and lenders could cash at the central bank, reaching about 12 billion Reichsmarks by April 1938, while the official 1938 total of 19 billion Reichsmarks excluded them. The record is patchy, the sources disagree on the start date, and the 12 and 19 billion figures are not reconciled. Source: Harvard Law School Nuremberg Trials Project, deposition on Schacht's funding and International Military Tribunal transcript (November 1945); Naked Capitalism blog post by Philip Pilkington (2013); online article 'The Economics of War: MEFO Bills' (undated)"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk rather than charging interest, public borrowing can be structured so that lenders share the outcome of the projects it funds, and zakat spreads wealth without new debt. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that trust underpins contracts, public borrowing that rests on trust rather than enforceable terms may be hard to enforce when partners lose confidence, so lenders carry more of the risk of default. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that moderate consumption and small-scale production serve well-being, the state keeps spending and borrowing modest, so public debt stays small and is repaid from local production. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that consumption should be moderate, a state that borrows for large-scale projects while consumption outruns local production passes the debt to the communities those projects were meant to serve. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that widespread private property and small enterprise spread ownership, public debt held by many small owners and local savers keeps the state's creditors close to the community. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a just wage and subsidiarity keep decisions with the smallest competent body, a public debt held by a few large banks would move decisions about the community's money away from the people who bear its cost. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that economic activity stays within planetary limits with no growth imperative, public debt is kept to a level that a stable economy can carry, and a social floor is funded without growth-based borrowing. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no growth imperative, public debt that assumes growth to be repaid becomes a burden when growth stops, and the social floor may then be cut to meet creditors. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that taxes on land and natural resources pay for an unconditional income, public debt stays low because the income is paid from a base that does not depend on borrowing. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that every citizen receives the income, a state that funds it by borrowing against future tax would pay interest on the income itself, so lenders would take a share of what each citizen receives. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government that issues its own currency can fund full employment, public debt is not the binding limit, and borrowing can be used for full employment while inflation is watched as the real constraint. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation is the real limit, spending beyond what the economy can supply pushes prices up, and that erodes both the value of the debt and the incomes of people on fixed payments. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that a community that shares a resource designs, monitors and enforces its own rules, a shared public debt raised for a common resource can be governed by the users who must repay it. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that rules are nested in wider institutions, a shared debt that depends on a community with no wider authority to enforce its rules can be left unpaid when members leave or disagree. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "Keep public debt in one published account, borrow in a currency and exchange regime the state can adjust, retire debt by market buybacks rather than at par, and judge borrowing targets over a full economic cycle rather than year by year.",
+    "details": "Keeps: market buybacks, not redemption at par, from Classical laissez-faire capitalism, as in Pitt's sinking fund for the British consols (1786); a surplus goal set over the cycle, from Keynesian welfare capitalism, as in Sweden's fiscal consolidation and surplus target (1990s). Blocks: off-budget borrowing, as in Mefo bills financing German rearmament off the budget, safeguarded by publishing every obligation; state backstops for bank-funded vehicles, as in China's 2015 swap of local government financing vehicle loans into municipal bonds, safeguarded by counting them as state debt; a currency peg with no way to adjust, as in Argentina's currency peg, 2001 default and later restructurings, safeguarded by an exchange rule that can change. Test: debt service as a share of revenue, and total debt including off-budget liabilities, measured each year over a full economic cycle of at least ten years. Source: Encyclopaedia Britannica, 1823 article; International Monetary Fund public information notice (1997); Harvard Law School Nuremberg Trials Project deposition (November 1945); Asia Times article (March 2015); Congressional Research Service chronology (2002)"
+  }
+}
