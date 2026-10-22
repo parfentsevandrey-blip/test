@@ -1,0 +1,388 @@
+import AppKit
+import JavaScriptCore
+import WebKit
+
+/// Самопроверки для CI: `Ward.app/Contents/MacOS/Ward --selftest-<режим>`.
+///
+/// - `logic`  — без сети и WebKit: разбор фильтров, регулярные выражения, очистка ссылок, адресная строка,
+///              синтаксис скриптов защиты, разбор всех встроенных списков;
+/// - `webkit` — настоящий WebKit: сборка всех правил, стенд на этом Mac (реклама, трекеры, косметика),
+///              отпечаток браузера, очистка ссылок, опасные адреса, HTTPS, защита выключена на сайте.
+enum SelfTest {
+    static func runIfRequested() {
+        guard let mode = CommandLine.arguments.first(where: { $0.hasPrefix("--selftest-") }) else { return }
+        switch mode {
+        case "--selftest-logic":
+            let ok = logic()
+            print(ok ? "SELFTEST OK" : "SELFTEST FAILED")
+            Foundation.exit(ok ? 0 : 1)
+        case "--selftest-webkit":
+            runInApp { await webkit() }
+        default:
+            print("Неизвестный режим \(mode)")
+            Foundation.exit(2)
+        }
+    }
+
+    @discardableResult
+    static func check(_ condition: Bool, _ message: String) -> Bool {
+        print("\(condition ? "✓" : "✗") \(message)")
+        return condition
+    }
+
+    static func info(_ message: String) { print("· \(message)") }
+
+    // MARK: - Логика
+
+    static let sample = """
+    [Adblock Plus 2.0]
+    ! Title: проверка
+    ||ads.example.com^
+    ||tracker.example.net^$third-party
+    ||cdn.example.org/ads/*$script,image
+    /banner/*/img^
+    @@||ads.example.com/allowed^
+    @@||goodsite.com^$document
+    @@||nocosmetic.org^$generichide
+    ##.ad-box
+    ###ad_banner
+    example.com,shop.example.com##.promo
+    ~safe.org##.sticky-ad
+    example.com#@#.ad-box
+    example.com##+js(set-constant, x, 1)
+    example.com#?#div:has-text(Реклама)
+    ||bad.example^$removeparam=utm_source
+    $removeparam=gclid
+    ||news.site^$removeparam=ref
+    ||out.example.com/go$urlskip=?to
+    ||scam.example^$all
+    ||popup.example^$popup
+    /regex[0-9]+/
+    ||unicode.пример^
+    ||lazy.example^$csp=script-src 'none'
+    ||remove.me^
+    ||remove.me^$badfilter
+    """
+
+    static func logic() -> Bool {
+        var ok = true
+
+        // Регулярные выражения
+        let r1 = FilterParser.regex("||example.com^") ?? ""
+        ok = check(matches(r1, "https://example.com/x") && matches(r1, "http://sub.example.com") && matches(r1, "https://example.com:8080/")
+                   && !matches(r1, "https://notexample.com/") && !matches(r1, "https://example.com.evil.org/"), "||домен^ → \(r1)") && ok
+        let r2 = FilterParser.regex("/banner/*/img^") ?? ""
+        ok = check(matches(r2, "https://x.org/banner/12/img?x") && matches(r2, "https://x.org/banner/a/img") && !matches(r2, "https://x.org/banner/a/imgs"), "путь с * и ^ → \(r2)") && ok
+        let r3 = FilterParser.regex("|https://x.com/a|") ?? ""
+        ok = check(matches(r3, "https://x.com/a") && !matches(r3, "https://x.com/ab"), "якоря | → \(r3)") && ok
+        ok = check(FilterParser.regex("||unicode.пример^") == nil, "не-ASCII не переводится") && ok
+
+        // Разбор
+        var set = FilterSet()
+        FilterParser.parse(sample, kind: .ads, into: &set, badfilters: FilterParser.badfilters([sample]))
+        ok = check(set.genericSelectors.contains(".ad-box") && set.genericSelectors.contains("#ad_banner"), "общая косметика") && ok
+        ok = check(set.specificSelectors["example.com|shop.example.com"] == [".promo"], "косметика для сайтов") && ok
+        ok = check(set.specificSelectors["!safe.org"] == [".sticky-ad"], "косметика «везде, кроме»") && ok
+        ok = check(set.genericExceptions[".ad-box"] == ["example.com"], "исключение косметики") && ok
+        ok = check(set.pageExceptions.contains("goodsite.com"), "исключение страницы $document") && ok
+        ok = check(set.noGenericCosmetics.contains("nocosmetic.org"), "$generichide") && ok
+        ok = check(set.removeParams.contains("gclid") && set.siteRemoveParams["news.site"] == ["ref"], "метки в ссылках: $removeparam") && ok
+        ok = check(set.redirectors["out.example.com"]?.first == RedirectRule(pathPrefix: "/go", parameter: "to"), "переходники: $urlskip") && ok
+        ok = check(set.danger.isEmpty, "опасные адреса только из списков вредоносного") && ok
+        ok = check(set.trackers["ads.example.com"] == .ads && set.trackers["tracker.example.net"] == .ads, "домены трекеров") && ok
+        ok = check(set.allowedHosts.isEmpty, "частичное исключение не разрешает домен целиком") && ok
+        ok = check(!set.blocks.contains { $0.urlFilter.contains("remove") }, "$badfilter отменяет правило") && ok
+        ok = check(!set.blocks.contains { $0.urlFilter.contains("lazy") }, "$csp пропускается") && ok
+        ok = check(set.blocks.contains { $0.resourceTypes == ["popup"] }, "$popup") && ok
+        ok = check(set.blocks.contains { $0.loadType == "third-party" }, "$third-party") && ok
+        ok = check(set.blocks.contains { $0.resourceTypes == ["image", "script"] }, "$script,image") && ok
+
+        var malware = FilterSet()
+        FilterParser.parse("||scam.example^$all\n||phish.example/login^\n", kind: .malware, into: &malware, badfilters: [])
+        ok = check(malware.danger["scam.example"] == [""] && malware.danger["phish.example"] == ["/login"], "опасные адреса") && ok
+        let index = ProtectionIndex(malware)
+        ok = check(index.isDangerous(URL(string: "http://www.scam.example/x")!) && index.isDangerous(URL(string: "https://phish.example/login/a")!)
+                   && !index.isDangerous(URL(string: "https://phish.example/home")!), "проверка опасного адреса") && ok
+
+        // Правила WebKit
+        let chunks = RuleCompiler.chunks(set)
+        let parsed = chunks.compactMap { try? JSONSerialization.jsonObject(with: Data($0.json.utf8)) as? [[String: Any]] }
+        ok = check(parsed.count == chunks.count && chunks.contains { $0.name == "network-0" } && chunks.contains { $0.name == "cosmetic-generic" },
+                   "части правил: \(chunks.map { "\($0.name)=\($0.count)" }.joined(separator: ", "))") && ok
+        let net = parsed.first ?? []
+        let lastIsException = (net.last?["action"] as? [String: Any])?["type"] as? String == "ignore-previous-rules"
+        ok = check(lastIsException, "исключения — в конце части") && ok
+        let generic = parsed[safe: chunks.firstIndex { $0.name == "cosmetic-generic" } ?? -1] ?? []
+        let unless = generic.contains { (($0["trigger"] as? [String: Any])?["unless-domain"] as? [String]) == ["*example.com"] }
+        ok = check(unless, "общий селектор с исключением — unless-domain") && ok
+
+        // Ссылки
+        let cleaner = LinkCleaner(set)
+        let c1 = cleaner.clean(URL(string: "https://site.com/p?utm_source=x&id=5&fbclid=y&UTM_Medium=z")!)
+        ok = check(c1?.url.absoluteString == "https://site.com/p?id=5" && c1?.removed.count == 3, "метки убраны: \(c1?.url.absoluteString ?? "-")") && ok
+        let c2 = cleaner.clean(URL(string: "https://www.google.com/url?q=https://example.org/page?utm_campaign=a%26b%3D1&sa=D")!)
+        ok = check(c2?.url.host == "example.org" && c2?.unwrapped == true && !(c2?.url.absoluteString.contains("utm") ?? true), "переходник Google: \(c2?.url.absoluteString ?? "-")") && ok
+        let c3 = cleaner.clean(URL(string: "https://vk.com/away.php?to=https%3A%2F%2Fhabr.com%2Fru%2F&cc_key=")!)
+        ok = check(c3?.url.absoluteString == "https://habr.com/ru/", "переходник ВКонтакте: \(c3?.url.absoluteString ?? "-")") && ok
+        let c4 = cleaner.clean(URL(string: "https://out.example.com/go?to=https://dest.org/")!)
+        ok = check(c4?.url.absoluteString == "https://dest.org/", "переходник из списка") && ok
+        let c5 = cleaner.clean(URL(string: "https://www.youtube.com/watch?v=abc&si=XYZ")!)
+        ok = check(c5?.url.absoluteString == "https://www.youtube.com/watch?v=abc", "метка YouTube si") && ok
+        ok = check(cleaner.clean(URL(string: "https://example.org/search?q=si&page=2")!) == nil, "чистая ссылка не меняется") && ok
+        ok = check(cleaner.clean(URL(string: "https://news.site/a?ref=1&b=2")!)?.url.query == "b=2", "метка одного сайта") && ok
+
+        // Адресная строка
+        ok = check(Omnibox.url(from: "example.com", search: .duckduckgo)?.absoluteString == "https://example.com", "адрес без схемы → https") && ok
+        ok = check(Omnibox.url(from: "localhost:8080/x", search: .duckduckgo)?.absoluteString == "http://localhost:8080/x", "localhost → http") && ok
+        ok = check(Omnibox.url(from: "192.168.1.1", search: .duckduckgo)?.absoluteString == "http://192.168.1.1", "локальный IP → http") && ok
+        let q = Omnibox.url(from: "как защититься от слежки", search: .duckduckgo)
+        ok = check(q?.host == "duckduckgo.com" && SearchEngine.duckduckgo.query(in: q!) == "как защититься от слежки", "запрос → DuckDuckGo") && ok
+        ok = check(Omnibox.url(from: "swift", search: .yandex)?.host == "yandex.ru", "одно слово → поиск") && ok
+
+        // Домены
+        ok = check(Hosts.site("a.b.example.co.uk") == "example.co.uk" && Hosts.site("news.mail.ru") == "mail.ru" && Hosts.site("127.0.0.1") == "127.0.0.1", "регистрируемый домен") && ok
+        ok = check(Hosts.isLocal("localhost") && Hosts.isLocal("192.168.0.5") && Hosts.isLocal("printer.local") && !Hosts.isLocal("8.8.8.8") && !Hosts.isLocal("example.com"), "локальные адреса") && ok
+        var trackerIndex = ProtectionIndex()
+        trackerIndex.trackers = ["google-analytics.com": .tracking]
+        ok = check(trackerIndex.classify("www.google-analytics.com", page: "news.ru") == .tracking
+                   && trackerIndex.classify("www.google-analytics.com", page: "google-analytics.com") == nil, "трекер — только сторонний") && ok
+        ok = check(Companies.owner(of: "mc.yandex.ru") == "Яндекс" && Companies.owner(of: "stats.unknown.io") == "unknown.io", "владельцы доменов") && ok
+
+        // Настройки старой версии читаются
+        let old = try? JSONDecoder().decode(Prefs.self, from: Data(#"{"search":"google","fingerprint":false}"#.utf8))
+        ok = check(old?.search == .google && old?.fingerprint == false && old?.cleanLinks == true && old?.enabledLists.contains("easylist") == true, "настройки прошлой версии") && ok
+
+        var history = History()
+        history.visit(URL(string: "https://github.com/apple/swift")!, title: "Swift")
+        history.visit(URL(string: "https://news.ycombinator.com")!, title: "Hacker News")
+        ok = check(history.suggestions("git").first?.url.host == "github.com" && history.suggestions("hacker").count == 1, "подсказки из истории") && ok
+
+        // Скрипты: синтаксис в JavaScriptCore
+        let js = JSContext()!
+        for (name, source) in [("отпечаток", Scripts.fingerprint(secret: "test", blockWebRTC: true)), ("наблюдатель", Scripts.observer),
+                               ("проверка селекторов", Scripts.validateSelectors), ("отпечаток холста", MiniHTTP.canvasProbe)] {
+            js.exception = nil
+            js.setObject(source, forKeyedSubscript: "src" as NSString)
+            js.evaluateScript("new Function('list', src)")
+            ok = check(js.exception == nil, "скрипт «\(name)» без ошибок синтаксиса\(js.exception.map { ": \($0)" } ?? "")") && ok
+        }
+
+        // Встроенные списки
+        let lists = FilterList.all.filter(\.enabledByDefault)
+        let available = lists.filter { FilterStorage.text($0) != nil }
+        if available.isEmpty {
+            info("встроенных списков нет (сборка без сети?) — пропускаю")
+        } else {
+            let start = Date()
+            let full = FilterEngine.parse(lists: available)
+            let parseTime = Date().timeIntervalSince(start)
+            let build = FilterEngine.build(lists: available, parsed: full)
+            let rules = build.chunks.reduce(0) { $0 + $1.count }
+            info("списков: \(available.count), строк: \(full.stats.lines), сеть: \(full.stats.network), косметика: \(full.stats.cosmetic), пропущено: \(full.stats.skipped)")
+            info("правил WebKit: \(rules) в \(build.chunks.count) частях (\(build.chunks.map { "\($0.name)=\($0.count)" }.joined(separator: ", "))), разбор \(String(format: "%.1f", parseTime)) с")
+            info("доменов трекеров: \(full.trackers.count), опасных адресов: \(full.danger.count), меток в ссылках: \(full.removeParams.count) + \(full.siteRemoveParams.count) сайтов, переходников: \(full.redirectors.count)")
+            ok = check(available.count == lists.count, "все \(lists.count) списков в бандле") && ok
+            ok = check(rules > 100_000, "больше 100 тысяч правил") && ok
+            ok = check(build.chunks.allSatisfy { $0.count < 150_000 }, "каждая часть меньше предела WebKit") && ok
+            ok = check(full.trackers["google-analytics.com"] != nil || full.trackers["googletagmanager.com"] != nil, "Google Analytics в трекерах") && ok
+            ok = check(full.trackers["mc.yandex.ru"] != nil || full.trackers["yandex.ru"] != nil, "Яндекс Метрика в трекерах") && ok
+            ok = check(full.genericSelectors.contains("#ad_banner"), "EasyList: ###ad_banner") && ok
+            ok = check(full.danger.count > 1000, "опасные адреса из URLhaus") && ok
+        }
+        return ok
+    }
+
+    static func matches(_ pattern: String, _ text: String) -> Bool {
+        guard let re = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return false }
+        return re.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil
+    }
+
+    // MARK: - WebKit
+
+    nonisolated(unsafe) private static var appDelegate: TestAppDelegate?
+
+    /// WebKit работает только в живом приложении: запускаем его без окон и выполняем проверку.
+    static func runInApp(_ work: @escaping () async -> Bool) -> Never {
+        let app = NSApplication.shared
+        app.setActivationPolicy(.accessory)
+        let delegate = TestAppDelegate(work: work)
+        appDelegate = delegate
+        app.delegate = delegate
+        app.run()
+        Foundation.exit(1)
+    }
+
+    final class TestAppDelegate: NSObject, NSApplicationDelegate {
+        let work: () async -> Bool
+        init(work: @escaping () async -> Bool) { self.work = work }
+
+        func applicationDidFinishLaunching(_ notification: Notification) {
+            Task {
+                let ok = await work()
+                print(ok ? "SELFTEST OK" : "SELFTEST FAILED")
+                Foundation.exit(ok ? 0 : 1)
+            }
+        }
+    }
+
+    static func webkit() async -> Bool {
+        var ok = true
+        let model = AppModel.shared
+        let lists = model.prefs.enabledFilterLists
+
+        // 1. Сборка всех правил.
+        var start = Date()
+        await model.blocker.build(lists: lists, force: true)
+        let firstBuild = Date().timeIntervalSince(start)
+        guard check(model.blocker.isReady, "правила собраны за \(String(format: "%.1f", firstBuild)) с"), let report = model.blocker.report else {
+            print("  состояние: \(model.blocker.phase)")
+            return false
+        }
+        info("правил: \(report.rules), частей: \(model.blocker.ruleLists.count), пропущено при разборе: \(report.skipped), неверных селекторов: \(report.invalidSelectors), отброшено WebKit: \(report.dropped)")
+        ok = check(report.rules > 100_000, "работает больше 100 тысяч правил") && ok
+        ok = check(report.dropped < 500, "WebKit отверг меньше 500 правил (\(report.dropped))") && ok
+
+        start = Date()
+        await model.blocker.build(lists: lists, force: false)
+        let cached = Date().timeIntervalSince(start)
+        ok = check(model.blocker.isReady && cached < 5, "повторный запуск берёт готовые правила за \(String(format: "%.2f", cached)) с") && ok
+
+        // 2. Стенд.
+        let server = MiniHTTP()
+        do { try server.start() } catch { return check(false, "стенд не запустился: \(error)") }
+        server.installTestSite()
+        let p = server.port
+        info("стенд: http://localhost:\(p)")
+
+        let window = NSWindow(contentRect: NSRect(x: -4000, y: -4000, width: 1200, height: 800), styleMask: [.borderless], backing: .buffered, defer: false)
+        window.orderFrontRegardless()
+        let browser = BrowserState(isPrivate: false)
+        model.register(browser)
+        guard let tab = browser.selected else { return false }
+        let host = NSView(frame: window.contentLayoutRect)
+        window.contentView = host
+        let web = tab.webView
+        web.frame = host.bounds
+        host.addSubview(web)
+
+        // 3. Реклама, трекеры, косметика.
+        guard await open(tab, "http://localhost:\(p)/page.html") else { return check(false, "стенд не открылся: \(tab.interstitial.map { "\($0)" } ?? "")") }
+        try? await Task.sleep(for: .seconds(5))
+        let page = await evaluate(tab, """
+        return { banner: getComputedStyle(document.getElementById('ad_banner')).display,
+                 content: getComputedStyle(document.getElementById('content')).display,
+                 results: window.results };
+        """) as? [String: Any] ?? [:]
+        let results = page["results"] as? [String: String] ?? [:]
+        info("результаты стенда: \(results.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: " "))")
+        ok = check(page["banner"] as? String == "none", "###ad_banner скрыт (display: \(page["banner"] ?? "?"))") && ok
+        ok = check(page["content"] as? String != "none", "нужный текст на месте") && ok
+        ok = check(results["adimg"] == "error" || results["adimg2"] == "error", "рекламная картинка не загрузилась") && ok
+        ok = check(results["okimg"] == "load" && results["okjs"] == "load", "обычные картинка и скрипт загрузились") && ok
+        ok = check(!server.requested.contains { $0.contains("/adbanners/") || $0.contains("/ads/banners/") }, "до сервера рекламные запросы не дошли") && ok
+        ok = check(results["gtag"] == "error", "Google Tag Manager заблокирован") && ok
+        ok = check(results["metrika"] == "error", "Яндекс Метрика заблокирована") && ok
+        ok = check(results["fb"] == "error", "пиксель Facebook заблокирован") && ok
+        if results["cdn"] == "load" { check(true, "обычный CDN загрузился — сеть есть, блокируется только лишнее") }
+        else { info("CDN не загрузился (\(results["cdn"] ?? "нет ответа")) — возможно, на раннере нет сети") }
+        try? await Task.sleep(for: .seconds(1))
+        let seen = tab.trackers.keys.sorted()
+        info("щит: \(seen.joined(separator: ", "))")
+        ok = check(seen.contains { $0.contains("googletagmanager") } && seen.contains { $0.contains("yandex") }, "щит показывает остановленные трекеры (\(seen.count))") && ok
+
+        // 4. Защита выключена на сайте — всё грузится.
+        model.setProtection(false, site: "localhost")
+        _ = await open(tab, "http://localhost:\(p)/page.html?off")
+        try? await Task.sleep(for: .seconds(3))
+        let off = await evaluate(tab, "return { banner: getComputedStyle(document.getElementById('ad_banner')).display, results: window.results };") as? [String: Any] ?? [:]
+        let offResults = off["results"] as? [String: String] ?? [:]
+        ok = check(off["banner"] as? String == "block" && offResults["adimg"] == "load", "защита выключена на сайте — реклама видна") && ok
+        model.setProtection(true, site: "localhost")
+
+        // 5. Отпечаток холста.
+        func fingerprint(_ url: String) async -> [String: Any] {
+            _ = await open(tab, url)
+            return await evaluate(tab, MiniHTTP.canvasProbe) as? [String: Any] ?? [:]
+        }
+        let a1 = await fingerprint("http://localhost:\(p)/fp.html")
+        let a2 = await fingerprint("http://localhost:\(p)/fp.html?again")
+        let b1 = await fingerprint("http://127.0.0.1:\(p)/fp.html")
+        info("отпечатки: localhost \(a1["hash"] ?? "-") / \(a2["hash"] ?? "-"), 127.0.0.1 \(b1["hash"] ?? "-")")
+        info("строка браузера: \(a1["ua"] ?? "-")")
+        ok = check(a1["hash"] != nil && (a1["hash"] as? String) == (a2["hash"] as? String), "отпечаток стабилен внутри сайта") && ok
+        ok = check((a1["hash"] as? String) != (b1["hash"] as? String), "у разных сайтов отпечатки разные") && ok
+        ok = check(a1["gpc"] as? Bool == true, "navigator.globalPrivacyControl = true") && ok
+        ok = check(a1["native"] as? Bool == true, "подмена выглядит как встроенная функция") && ok
+        ok = check((a1["cores"] as? Int) == 8, "число ядер — как у большинства Mac") && ok
+        ok = check((a1["ua"] as? String)?.contains("Safari/605.1.15") == true, "строка браузера как у Safari") && ok
+        model.prefs.fingerprint = false
+        let n1 = await fingerprint("http://localhost:\(p)/fp.html?plain")
+        let n2 = await fingerprint("http://127.0.0.1:\(p)/fp.html?plain")
+        ok = check(n1["hash"] != nil && (n1["hash"] as? String) == (n2["hash"] as? String), "без защиты отпечаток одинаков на всех сайтах (значит, разницу даёт защита)") && ok
+        model.prefs.fingerprint = true
+
+        // 6. Очистка ссылок.
+        _ = await open(tab, "http://localhost:\(p)/clean.html?utm_source=newsletter&id=5&fbclid=IwAR0abc")
+        ok = check(tab.url?.query == "id=5" && tab.cleanedParams.contains("fbclid"), "метки убраны до загрузки: \(tab.url?.absoluteString ?? "-")") && ok
+        ok = check(!server.requested.contains { $0.contains("fbclid") }, "сайт не получил fbclid") && ok
+        _ = await open(tab, "https://www.google.com/url?q=http://localhost:\(p)/target.html&sa=D&ust=1")
+        ok = check(tab.url?.path == "/target.html" && tab.unwrappedRedirect, "переходник Google пропущен: \(tab.url?.absoluteString ?? "-")") && ok
+
+        // 7. Опасный адрес — предупреждение без единого запроса.
+        if let bad = model.blocker.index.danger.first(where: { $0.value.contains("") && !Hosts.isLocal($0.key) })?.key {
+            tab.load(URL(string: "http://\(bad)/")!)
+            try? await Task.sleep(for: .seconds(2))
+            var isDanger = false
+            if case .danger = tab.interstitial { isDanger = true }
+            ok = check(isDanger, "опасный адрес \(bad) — предупреждение") && ok
+        }
+
+        // 8. HTTPS (нужна сеть).
+        _ = await open(tab, "http://example.com/", timeout: 25)
+        if tab.url?.scheme == "https" { check(true, "http://example.com открыт по HTTPS") }
+        else { info("HTTPS-проверка: \(tab.url?.absoluteString ?? "-") \(tab.interstitial.map { "\($0)" } ?? "")") }
+
+        // 9. Страница рекламного сервера целиком.
+        _ = await open(tab, "https://googletagmanager.com/", timeout: 20)
+        if case .blocked = tab.interstitial { check(true, "адрес трекера целиком — экран «Ward остановил эту страницу»") }
+        else { info("страница трекера: \(tab.interstitial.map { "\($0)" } ?? "открылась") \(tab.url?.absoluteString ?? "")") }
+
+        // 10. Внешний тест блокировщика (справочно).
+        if CommandLine.arguments.contains("--live") {
+            _ = await open(tab, "https://d3ward.github.io/toolz/adblock.html", timeout: 30)
+            try? await Task.sleep(for: .seconds(20))
+            let text = await evaluate(tab, "return document.body ? document.body.innerText : ''") as? String ?? ""
+            let lines = text.split(separator: "\n").filter { $0.contains("%") || $0.lowercased().contains("blocked") }.prefix(6)
+            info("d3ward adblock test: \(lines.joined(separator: " | "))")
+        }
+
+        server.stop()
+        return ok
+    }
+
+    /// Открыть адрес и дождаться конца загрузки (или экрана-предупреждения).
+    static func open(_ tab: Tab, _ address: String, timeout: Double = 20) async -> Bool {
+        guard let url = URL(string: address) else { return false }
+        let before = tab.loadsFinished
+        tab.load(url)
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            try? await Task.sleep(for: .milliseconds(200))
+            if tab.interstitial != nil { return false }
+            if tab.loadsFinished > before, let view = tab.webViewIfLoaded, !view.isLoading { return true }
+        }
+        return false
+    }
+
+    static func evaluate(_ tab: Tab, _ js: String) async -> Any? {
+        guard let view = tab.webViewIfLoaded else { return nil }
+        do { return try await view.callAsyncJavaScript(js, arguments: [:], in: nil, in: .page) } catch {
+            print("  скрипт: \(error.localizedDescription)")
+            return nil
+        }
+    }
+}
+
+extension Array {
+    subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }
+}

@@ -1,0 +1,90 @@
+name: Ward (macOS)
+
+on:
+  push:
+    paths:
+      - "Ward/**"
+      - ".github/workflows/ward-macos.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ward-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: Ward
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"; sw_vers; swift --version
+
+      # Списки фильтров на сегодня — в бандл (scripts/build.sh скачивает их сам).
+      - name: Build Ward.app + DMG
+        run: ./scripts/build.sh
+
+      - name: Self-test logic (offline)
+        run: dist/Ward.app/Contents/MacOS/Ward --selftest-logic
+
+      # Настоящий WebKit: сборка всех правил, стенд на этом Mac с рекламой и трекерами,
+      # отпечаток браузера, очистка ссылок, опасные адреса, HTTPS.
+      - name: Self-test WebKit (end-to-end)
+        timeout-minutes: 15
+        env:
+          WARD_HOME: ${{ runner.temp }}/ward-home
+        run: dist/Ward.app/Contents/MacOS/Ward --selftest-webkit --live
+
+      - name: UI screenshots
+        run: |
+          OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
+          # Правила один раз собраны самопроверкой — демо берёт их готовыми.
+          for S in start page shield danger insecure private settings settings-lists settings-data settings-search; do
+            HOME_DIR="$RUNNER_TEMP/demo-$S"; mkdir -p "$HOME_DIR"
+            cp -R "$RUNNER_TEMP/ward-home/Rules" "$HOME_DIR/" 2>/dev/null || true
+            WARD_HOME="$HOME_DIR" dist/Ward.app/Contents/MacOS/Ward --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
+            PID=$!
+            case $S in start) sleep 45;; page) sleep 30;; shield) sleep 34;; settings*) sleep 14;; *) sleep 20;; esac
+            screencapture -x "$OUT/window-$S.png" || echo "screencapture не сработал"
+            kill $PID 2>/dev/null || true
+            sleep 2
+          done
+
+      - name: Crash reports
+        if: always()
+        run: |
+          for f in $(ls -t ~/Library/Logs/DiagnosticReports/Ward*.ips 2>/dev/null | head -2); do
+            echo "=== $f"
+            python3 - "$f" <<'PY'
+          import json, sys
+          text = open(sys.argv[1]).read()
+          body = json.loads(text[text.index("\n") + 1:])
+          print("exception:", body.get("exception"), "\ntermination:", body.get("termination", {}).get("indicator"))
+          for t in body.get("threads", []):
+              if t.get("triggered"):
+                  for fr in t.get("frames", [])[:25]:
+                      img = body["usedImages"][fr["imageIndex"]].get("name", "?")
+                      print("  ", img, fr.get("symbol", hex(fr.get("imageOffset", 0))), fr.get("sourceFile", ""), fr.get("sourceLine", ""))
+          PY
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Ward-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ward-dmg
+          path: Ward/dist/Ward.dmg
+          if-no-files-found: error
+          compression-level: 0
