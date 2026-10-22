@@ -1,0 +1,96 @@
+{
+  "database": 226,
+  "type": "practice",
+  "practice": "Wages and minimum wages",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that goods move as gifts that create duties to give and return, so pay comes through reciprocal exchange and standing rather than a price set in a market. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that obligations to give and return bind people together, so a worker's pay can be a favour that the giver may withdraw, and those without standing have no claim to a fixed sum. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a family farm balances its work against household needs, so the household sets its own output, and work is measured against what the family needs rather than against a wage rate. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption, so output stops once household needs are met, and any hired help is paid whatever rate the household can afford, with no floor to protect it. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central authority collects goods and redistributes them to workers and officials, so pay arrives as regular allocations from common stores, with no wage bargain needed to fix it. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre allocates surplus, so each worker's share depends on the centre's decisions rather than on any set rate or bargain, and a worker who loses that share has no market to turn to. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that labour is held through ownership, so the cost of labour is fixed in advance rather than set by a wage market, which lets owners plan output and costs. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that labour is extracted through ownership, so enslaved people receive no wage and no floor, and what they are given is set by the owner, with no contract to enforce. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that a lord gives land and protection in return for labour services, so a tenant has a secure holding and protection in hard times. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that peasants owe labour services and rents to a lord, so money wages are rare, labour is owed whatever it would earn, and tenants cannot move freely to seek better pay. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "The case England's Statute of Artificers: wages fixed by local justices reports that pay in urban trades came under guild authority, while farm wages were left to local justices. The account rests on summaries, not the statute's text, and research on enforcement is divided, so no verdict is given.",
+      "worst": "Inferred from its principle that masters control entry and set statutes, so pay in a closed trade is set by the masters, and newcomers wait outside it with no route to better pay. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state regulates trade toward a surplus, so employers in export trades get predictable labour costs under state rules, and employment in those trades is backed by policy. There is no documented case in the pool.",
+      "worst": "The case England's Statute of Artificers: wages fixed by local justices reports that justices fixed rates each year, subject to central approval, and that farm wages were left to them. The account rests on summaries, not the statute's text. Summaries describe a cap on wages among its aims, not verified here; if so, the act set a ceiling, not a legal minimum. Pay fixed from above, and possibly capped, is the worst practice here. Source: University of Exeter labour-history web page (year not given); D. M. Woodward, The Local Historian (1969); R. Keith Kelsall, Wage Regulation under the Statute of Artificers (1938)"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that only the land yields a net product and grain trade should be free, so farm pay follows what the land yields and food prices follow supply. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only agriculture creates a net product, so artisans and other workers outside farming are counted as unproductive, and pay in those trades gets no state floor and is left to the market. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "The case New Jersey's 1992 minimum wage rise and fast-food jobs reports a 1994 study that found no sign of job cuts, and a 2000 critique by Neumark and Wascher that argued different data show job losses. The sources give no verdict on the dispute, so pay set by competition with no legal floor is best only if the critique holds.",
+      "worst": "Inferred from its principle that the state stays out, so pay is left to bargaining between each worker and each employer, and low-paid workers have no floor if they lack other offers. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, so wage rates signal where labour is scarce, workers move to where pay is highest, and no planner sets them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion distorts production, so pay in a boom fuelled by cheap credit is set by borrowed demand and can fall sharply when credit tightens and jobs are lost. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "The case New Jersey's 1992 minimum wage rise and fast-food jobs reports that a 2000 critique by Neumark and Wascher argued that different data show job losses, while a 1994 study found no sign of job cuts. The sources give no verdict, so pay left to markets, with no legal floor, is best if the critique is right.",
+      "worst": "Inferred from its principle that steady money, deregulation and privatisation leave pay to markets, so workers with little bargaining power can face low pay with no floor and no public body to check it. There is no documented case in the pool. Source: Friedman, Capitalism and Freedom; Harvey, A Brief History of Neoliberalism"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Inferred from its principle that public spending rises in slumps, so demand and jobs are kept up when the economy turns down, and pay is less likely to fall sharply. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that spending falls in booms, so public pay and wage support can be held down in strong years and cut in slumps, leaving workers to bear the swing of the cycle. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
+    },
+    {
+      "model": "Social market economy",
+      "best": "The case Germany's 2015 minimum wage and employment reports that several studies of a legal minimum of 8.50 euros an hour find mostly small to moderate effects. The sources are abstracts and snippets, not full studies, and the studies use different data, so their figures are not directly comparable.",
+      "worst": "Inferred from its principle that a legal order curbs monopoly, so where few employers hire in a town they may hold pay down unless that order checks them. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "The case Saltsjöbaden Agreement: pay bargained by unions and employers reports that unions and employers bargained pay and conditions with each other, with the government largely on the sidelines, through a joint council and grievance procedures. The sources differ on its scope, and none describes a statutory minimum wage.",
+      "worst": "Inferred from its principle that national bargaining sets terms for whole sectors, so workers outside the bargain, or new to it, get terms they had no part in setting. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state directs credit and export targets to chosen industries and disciplines firms by performance, so pay in favoured export firms can track output, and state support is tied to measured results. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state picks the favoured industries, so pay in other sectors lags, and workers there have no floor and little say in how pay is set. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that land rather than labour is taxed, so wages carry no tax of this kind, and the rent of land funds public services. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that land values carry public funding, so public pay and services rise and fall with land prices, and a downturn in land values can cut budgets for the workers who run them. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities replace wage competition, so members share work and its product in common rather than selling their labour to the highest bidder. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities are built by example, so pay depends on founders' vision and small funds, and workers outside the communities have no floor to protect them. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that mutual credit lent at cost and free contracts let workers keep the full value of their work, so pay is the whole product of labour rather than a share taken by rent. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free contracts set terms, so a worker without a mutual to join may accept whatever pay is offered, with no floor to stop it. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    <<NEXT>>
