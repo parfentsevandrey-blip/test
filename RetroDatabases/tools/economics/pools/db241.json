@@ -1,0 +1,92 @@
+{
+  "database": 241,
+  "practice": "Games, gambling and lotteries",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "EN1",
+      "case": "English state lottery-loans",
+      "years": "1694 to 1826",
+      "claim": "A History Today article describes state lotteries as a fixture of English public finance for 132 years, from 1694 to 1826. Its last draw, held at Coopers' Hall on 18 October 1826, was the 170th state lottery since the 1694 launch. Jackson Tait's Queen's University thesis counts 170 lottery-loans, describes them as a long-term borrowing method used as an emergency fallback in wars, and argues that the draws were central to the financial revolution after 1688. Historians credit the lotteries with a major role in eighteenth-century Exchequer finance but have studied their abolition little; James Raven's article on the abolition asks why the state dropped lotteries as a revenue tool.",
+      "source": "History Today, 'Lotteries and Government Finance in England'; Jackson Tait, doctoral thesis, Queen's University; James Raven, 'Abolition of the English State Lotteries', The Historical Journal",
+      "url": "https://www.historytoday.com/node/50541",
+      "caveat": "All three sources were seen only as search summaries, and none of their publication years is shown in the results, so the dates here should be cited as given. The start of an earlier harbour lottery under Elizabeth I is disputed: History Today gives 1566, while the National Archives catalogue dates a royal harbour lottery to 1567 to 1568, and the two may describe the same venture. The results do not say why the state gave up lotteries. The link to Mercantilism is an inference: the sources describe state borrowing for wars, not trade policy.",
+      "relevant_to": [
+        "Mercantilism"
+      ]
+    },
+    {
+      "id": "IE1",
+      "case": "Irish Hospitals' Sweepstake",
+      "years": "1930 to 1987",
+      "claim": "Hospital fundraising by lottery began in 1930 under the Irish Free State. A 1930 statute gave it legal authority; when that law lapsed in 1934, the wider public-hospital statutes took over. An On This Day history blog dates the first draw to 17 November 1930. Falling donations to voluntary hospitals during the economic war helped prompt the scheme, and the state stayed solvent only by limiting its own spending. Pools were tied to three English races (the Grand National, the Epsom Derby and either the Cambridgeshire or the Cesarewitch), and much of the money came from Britain and North America. Net proceeds went to hospitals through the Hospitals' Trust Fund, with grants overseen by a Hospitals Commission. A 1934 statute aimed at large lotteries outlawed promotion and the public listing of winners, which hurt the sweep's popularity. The sources disagree on how much reached hospitals: one blog post puts it under a tenth of turnover, while the history page of the company asked to run the sweep argues that the trust's directors were the main winners, and a catalogue entry calls that company's dealings partly opaque.",
+      "source": "On This Day history blog (entry for 17 November 1930); Marie Coleman's 2009 UCD Press history of the sweep (named in the search summary; text not read); a University of Cumbria research portal review of a book titled The Irish Sweep (author not shown); a company history page from the firm asked to run the sweep (year not shown); an archive catalogue entry (name not shown in results)",
+      "url": "https://research.cumbria.ac.uk/en/publications/book-review-the-irish-sweep-a-history-of-the-irish-hospitals-swee/",
+      "caveat": "Most of the detail comes from search summaries, which do not say which page gives each statement, and the book review's text was not read. The Cumbria page is a review of a book titled The Irish Sweep; the search summary does not confirm that this is Coleman's book. The share reaching hospitals is contested, and no reconciled figure is given. The company's history page is an interested source, and the blog is informal. Coleman's history, covering 1930 to 1987, is said to probe the sweep's darker side, but its text was not read. The link to Monetarist neoliberalism is an inference from the state's spending limits and its use of a private operator.",
+      "relevant_to": [
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "US1",
+      "case": "New Hampshire sweepstakes (1964)",
+      "years": "1963 to 1964",
+      "claim": "After five tries in the 1950s and early 1960s, State Representative Larry Pickett's sweepstakes bill won legislative approval in 1963. The lottery's anniversary account says municipal ballots backed it in 198 of 211 communities and that first ticket sales opened on 12 March 1964. Kevin Flynn's book American Sweepstakes places the first drawing, around a horse race with eleven thoroughbreds, on 12 September 1964, held amid opposition from the Catholic Church and federal authorities. The sources disagree on timing: an online encyclopaedia (secondary) entry on state-run lotteries places voter approval in 1963, while the lottery's anniversary materials imply that the local vote came in March 1964, two days before ticket sales.",
+      "source": "New Hampshire Lottery 50th-anniversary article (carried by a gaming trade news site; year not shown); Kevin Flynn, American Sweepstakes (book, listed on a New Hampshire history site; year not shown); online encyclopaedia (secondary), 'State-run lotteries'",
+      "url": "https://publicgaming.com/news-categories/lottery/12551-new-hampshire-lottery-marks-50th-anniversary",
+      "caveat": "The lottery's own anniversary account is promotional, and the book is seen only through a bookshop listing and the search summary, which does not say which source gives each figure. The 1963 and March 1964 dates conflict and should be given as a dispute, not as one date. The Catholic Church's opposition is reported second-hand from the book summary. The results do not say why the bill passed, so the link to Keynesian welfare capitalism is an inference: a state raising public money from a game.",
+      "relevant_to": [
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "MO1",
+      "case": "Macau ends the single casino franchise",
+      "years": "1999 to 2022",
+      "claim": "Stanley Ho's STDM had controlled Macau's casino market for roughly four decades. After the 1999 handover, officials chose to open the franchise to bidding when it expired. Lawmakers approved legislation in July 2001 that ended the single-franchise arrangement, and the tender attracted 21 firms. The contract was extended by three months at the end of 2001. Three licences went to SJM (an STDM subsidiary), Galaxy Casino and Wynn Resorts (Macau), announced on 8 February 2002, and STDM's exclusivity lapsed on 1 April 2002. Gaming revenue rose from about MOP 29 billion in 2003 to MOP 361 billion in 2013, and by 2007 gambling income had passed Las Vegas's. Accounts differ on the concession length (one says a maximum of 25 years, AFP reporting says 20 years) and on the 2002 entrants: one account adds Venetian (now Sands China), MGM China and Melco-PBL through later sub-concessions, while a Macau university thesis places Venetian, MGM Grand Paradise and Melco Crown among the 2002 entrants. Officials cut licence periods to ten years in January 2022.",
+      "source": "History article 'The History and Development of Casino Gaming in Macau' (publisher not named in results); AFP reporting, as cited in search results (year not shown); a Macau university thesis (title not shown); trade and news pieces on Macau gaming in the results, including Macau Business and Malay Mail (2022)",
+      "url": "https://www.acgcs.org/articles/the-history-and-development-of-casino-gaming-in-macau",
+      "caveat": "These are search summaries of trade, news and thesis pages, not the pages themselves, and the summary does not say which source gives each figure. The sources conflict on concession length and on which operators entered in 2002, and the record should say so. The 2022 change is reported from a later news piece. The 2007 comparison with Las Vegas is undated and not checked, and the revenue figures come from one source with no cross-check. The links to Monetarist neoliberalism and Chinese market socialism are hints: the sources describe the tender rules, not the government's economic thinking.",
+      "relevant_to": [
+        "Monetarist neoliberalism",
+        "Chinese market socialism"
+      ]
+    },
+    {
+      "id": "CN1",
+      "case": "China's welfare lottery",
+      "years": "1987 onward",
+      "claim": "China's welfare lottery began in 1987 to channel income toward social welfare. A 2012 Al Jazeera feature reported that its money then went to nursing homes, disaster relief and the social security fund. Sources disagree on the launch day: one China Daily piece gives 26 July 1987 for first tickets in Shijiazhuang, while another source says sales began on 27 July.",
+      "source": "Al Jazeera, feature 'China catches lottery fever' (2012); China Daily reporting on the 1987 launch (years not shown in results)",
+      "url": "https://www.aljazeera.com/features/2012/12/28/china-catches-lottery-fever",
+      "caveat": "Only one news feature, from 2012, is cited for where the money went, and the results give no official figures for proceeds or for later years. The launch-day dispute is between two accounts, neither confirmed by an official record. The 1994 sports lottery is left out because its only source is a trade magazine. The link to Chinese market socialism is a hint: the sources describe a state-run welfare game, not a theory of ownership.",
+      "relevant_to": [
+        "Chinese market socialism"
+      ]
+    },
+    {
+      "id": "GB1",
+      "case": "UK Gambling Act 2005 and its review",
+      "years": "2005 to 2024",
+      "claim": "The Gambling Act 2005 put a single regulator, the Gambling Commission, in place of the Gaming Board for Great Britain. It sets three objectives: keeping gambling from feeding crime or disorder, keeping it fair and open, and protecting children and other vulnerable people. The Commission licenses operators and personal licences, councils (Licensing Boards in Scotland) decide premises licences, and the Commission must pursue the objectives while permitting gambling it judges reasonably consistent with them. Council pages disagree on when the Act took effect: Ribble Valley gives 1 September 2007 and West Lancashire gives 31 January 2007. A review was first unveiled in 2020, after an all-party parliamentary group and a House of Lords inquiry each judged one necessary. An April 2023 law-firm article reports that the government has since released a white paper. The Gambling Commission's advice says the Act's core still holds but calls for legislative and regulatory change, and a 2023 law-firm update lists six planned consultations, four of them tied to the review.",
+      "source": "Ribble Valley council and West Lancashire council licensing pages (undated); Gambling Commission, advice to government on the review of the Gambling Act 2005 (year not shown); Lewis Silkin, law-firm update (2023); a law-firm article of April 2023 (firm not confirmed in results)",
+      "url": "https://www.ribblevalley.gov.uk/licensing/gambling-act-2005",
+      "caveat": "Most of the detail comes from council guidance and law-firm updates, not from the statute, and the summary does not say which page gives each point; the legislation itself was not read. The commencement dates conflict. The review material runs to 2023, and the newest page is dated June 2024, so the results do not show whether the white paper became law. The link to Social market economy is a hint: the Act sets a legal order for a licensed market.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "NR1",
+      "case": "Nordic gambling operators, 2024 to 2025",
+      "years": "2024 to 2025",
+      "claim": "Svenska Spel (Sweden) reported that its Q2 net profit, without its discontinued land-based arm, fell 30.9% to SEK 345 million, a decline partly tied to a gambling tax increase in July 2024. Norsk Tipping (Norway) faces a possible fine of up to NOK 10.2 million after an error in its Eurojackpot game.",
+      "source": "CDC Gaming, trade news brief on Svenska Spel's Q2 results (year not shown); Casino Beats (Swedish-language page), September 2025, on Norsk Tipping's possible fine",
+      "url": "https://cdcgaming.com/brief/svenska-spel-hails-stable-q2-despite-31-profit-decline/",
+      "caveat": "Both are trade-press briefs based on company results and news reports, seen only as search summaries. The Q2 figure excludes a discontinued arm, so it is not a full-year profit. The fine is only possible, and the results do not say what the Eurojackpot error was. Nothing in the results covers 2026. The operators' ownership is not stated in the results, so the link to Nordic social democracy is a hint about taxing gambling, not a documented policy aim.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    }
+  ]
+}
