@@ -69,8 +69,11 @@ jobs:
       - name: Self-test exit with model on Metal
         run: |
           set +e
-          dist/Utter.app/Contents/MacOS/Utter --selftest-exit-raw; echo "без освобождения: код $?"
-          dist/Utter.app/Contents/MacOS/Utter --selftest-exit; CODE=$?
+          # Сбой зависит от наборов резидентности Metal: на виртуальной машине их может не быть.
+          UTTER_VERBOSE=1 dist/Utter.app/Contents/MacOS/Utter --selftest-exit-raw > raw.log 2>&1; RAW=$?
+          grep -iE "residency|rset|GGML_ASSERT|модель|выхожу" raw.log; echo "без освобождения: код $RAW"
+          UTTER_VERBOSE=1 dist/Utter.app/Contents/MacOS/Utter --selftest-exit > fixed.log 2>&1; CODE=$?
+          grep -iE "GGML_ASSERT|модель|выхожу" fixed.log
           echo "с освобождением: код $CODE"
           exit $CODE
 
