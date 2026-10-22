@@ -6,52 +6,52 @@
     {
       "model": "Gift economy",
       "best": "Inferred from its principle that places and support move through reciprocal obligation, students and teachers repay help with service and trust, so learning rests on known networks rather than fees. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that favours are returned, admission and posts go to kin and allies, while outsiders wait without a route in; no documented case in the pool. There is no documented case in the pool. Source: Sahlins, Stone Age Economics"
+      "worst": "Inferred from its principle that favours are returned, admission and posts go to kin and allies, while outsiders wait without a route in. There is no documented case in the pool. Source: Sahlins, Stone Age Economics"
     },
     {
       "model": "Household and peasant economy",
       "best": "Inferred from its principle that study is timed to household needs, so families plan schooling around labour and harvest and universities serve local farming communities. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production serves consumption, so families withdraw young people from study whenever household labour is short, and higher learning goes mainly to households that can spare workers; no documented case in the pool. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+      "worst": "Inferred from its principle that production serves consumption, so families withdraw young people from study whenever household labour is short, and higher learning goes mainly to households that can spare workers. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
     },
     {
       "model": "Redistributive economy",
       "best": "Inferred from its principle that central revenue funds scribal and administrative schools, so officials are trained and supported from a common store of resources. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the centre collects surplus and allocates it by rank, so places and support go to officials and favoured households, while graduates serve the centre by allocation; no documented case in the pool. There is no documented case in the pool. Source: Polanyi, The Great Transformation"
+      "worst": "Inferred from its principle that the centre collects surplus and allocates it by rank, so places and support go to officials and favoured households, while graduates serve the centre by allocation. There is no documented case in the pool. Source: Polanyi, The Great Transformation"
     },
     {
       "model": "Slave economy",
       "best": "Inferred from its principle that trade income pays for colleges that train managers, merchants and surveyors efficiently for the trade, so the institutions serve the owning class. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that labour is extracted through ownership, so enslaved people are denied any education and places are reserved for owners and their children; no documented case in the pool. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+      "worst": "Inferred from its principle that labour is extracted through ownership, so enslaved people are denied any education and places are reserved for owners and their children. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
     },
     {
       "model": "Feudalism",
       "best": "Inferred from its principle that lords and the Church protect and fund schools for clerks in return for service, so learning is tied to local protection and justice. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that services are owed to a lord, so schooling is tied to bonded service and the children of manorial tenants cannot leave the manor to study; no documented case in the pool. There is no documented case in the pool. Source: Bloch, Feudal Society"
+      "worst": "Inferred from its principle that services are owed to a lord, so schooling is tied to bonded service and the children of manorial tenants cannot leave the manor to study. There is no documented case in the pool. Source: Bloch, Feudal Society"
     },
     {
       "model": "Guild economy",
       "best": "The case Student guilds at the University of Bologna records student-run guild-style bodies that governed the school, unlike Paris where the masters did. The founding date is disputed, so this record gives no date.",
-      "worst": "Inferred from its principle that masters control entry and statutes fix training, so new entrants wait for places and a closed body sets who may teach and learn; no documented case in the pool. There is no documented case in the pool. Source: Epstein, Freedom and Growth"
+      "worst": "Inferred from its principle that masters control entry and statutes fix training, so new entrants wait for places and a closed body sets who may teach and learn. There is no documented case in the pool. Source: Epstein, Freedom and Growth"
     },
     {
       "model": "Mercantilism",
       "best": "Inferred from its principle that the state aims for a surplus of trained skills, so universities are funded to supply officials and trades that serve national trade goals. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state regulates trade toward national gain, so study is steered to serve state trade goals and graduates are channelled to them; no documented case in the pool. There is no documented case in the pool. Source: Heckscher, Mercantilism"
+      "worst": "Inferred from its principle that the state regulates trade toward national gain, so study is steered to serve state trade goals and graduates are channelled to them. There is no documented case in the pool. Source: Heckscher, Mercantilism"
     },
     {
       "model": "Physiocracy",
       "best": "Inferred from its principle that only agriculture creates a net product, so universities are funded from land rent to train agronomists and estate managers. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a single tax on land funds the state, so study in other fields is starved of funds and general higher education is left thin; no documented case in the pool. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy"
+      "worst": "Inferred from its principle that a single tax on land funds the state, so study in other fields is starved of funds and general higher education is left thin. There is no documented case in the pool. Source: Meek, The Economics of Physiocracy"
     },
     {
       "model": "Classical laissez-faire capitalism",
       "best": "Inferred from its principle that competition among private providers raises quality, so colleges compete for students on teaching and price while the state only enforces contracts. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state stays out, so students bear the full price of study and colleges may charge what applicants can pay; no documented case in the pool. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+      "worst": "Inferred from its principle that the state stays out, so students bear the full price of study and colleges may charge what applicants can pay. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
     },
     {
       "model": "Austrian free-market economics",
       "best": "Inferred from its principle that prices carry knowledge spread across many people, so tuition and course prices signal which skills are wanted, and no planner sets them. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that credit expansion distorts production, so cheap student credit draws too many people into courses that the jobs market cannot absorb; no documented case in the pool. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society (1945)"
+      "worst": "Inferred from its principle that credit expansion distorts production, so cheap student credit draws too many people into courses that the jobs market cannot absorb. There is no documented case in the pool. Source: Hayek, The Use of Knowledge in Society"
     },
     {
       "model": "Monetarist neoliberalism",
@@ -61,12 +61,12 @@
     {
       "model": "Keynesian welfare capitalism",
       "best": "Inferred from its principle that public spending rises in slumps, so funded places and student grants expand when jobs are scarce, keeping people in study rather than out of work. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that spending falls in booms, so places and grants are cut in strong years and widened only in slumps, and intake swings with the business cycle; no documented case in the pool. There is no documented case in the pool. Source: Beveridge, Social Insurance and Allied Services (1942)"
+      "worst": "Inferred from its principle that spending falls in booms, so places and grants are cut in strong years and widened only in slumps, and intake swings with the business cycle. There is no documented case in the pool. Source: Beveridge, Social Insurance and Allied Services"
     },
     {
       "model": "Social market economy",
       "best": "The case Germany's abolition of university tuition fees reports that modest fees backed by loans and exemptions need not deter applicants. The year of the final abolition step is not confirmed, and no study in the results reports enrolment after abolition.",
-      "worst": "Inferred from its principle that a legal order curbs monopoly, so if that order is weak, a few universities or lenders could dominate places and set fees; no documented case in the pool. There is no documented case in the pool. Source: Erhard, Wohlstand für Alle (1957)"
+      "worst": "Inferred from its principle that a legal order curbs monopoly, so if that order is weak, a few universities or lenders could dominate places and set fees. There is no documented case in the pool. Source: Erhard, Wohlstand für Alle"
     },
     {
       "model": "Nordic social democracy",
@@ -76,47 +76,47 @@
     {
       "model": "Developmental state",
       "best": "Inferred from its principle that the state directs funds to chosen fields, so places and research grants expand where export industries need skilled graduates and programmes are kept only if they place them. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state picks the favoured fields, so a wrong choice leaves graduates without work and shuts out study in other fields; no documented case in the pool. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982)"
+      "worst": "Inferred from its principle that the state picks the favoured fields, so a wrong choice leaves graduates without work and shuts out study in other fields. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle"
     },
     {
       "model": "Georgism",
       "best": "Inferred from its principle that the rent of land funds public services, so a levy on land value can fund universities and student places, leaving less need for tuition charges. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that land values carry the funding, so university budgets rise and fall with land prices, and a downturn in land values cuts places; no documented case in the pool. There is no documented case in the pool. Source: George, Progress and Poverty"
+      "worst": "Inferred from its principle that land values carry the funding, so university budgets rise and fall with land prices, and a downturn in land values cuts places. There is no documented case in the pool. Source: George, Progress and Poverty"
     },
     {
       "model": "Utopian socialism",
       "best": "Inferred from its principle that cooperative communities built by example replace wage competition, so colleges are founded as associations of students and teachers that share their work and learning. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that communities are built by example, so a college depends on its founders' vision and small budgets, and closes when the founders leave; no documented case in the pool. There is no documented case in the pool. Source: Fourier, Le Nouveau Monde industriel (1829)"
+      "worst": "Inferred from its principle that communities are built by example, so a college depends on its founders' vision and small budgets, and closes when the founders leave. There is no documented case in the pool. Source: Fourier, Le Nouveau Monde industriel"
     },
     {
       "model": "Mutualism",
       "best": "The case Student guilds at the University of Bologna records students from the same homeland forming nations to protect each other against local statutes. The founding date is disputed, so this record gives no date.",
-      "worst": "Inferred from its principle that mutual credit is lent at cost, so student loans go only to members of the mutual, and a default by a few members falls on the rest; no documented case in the pool. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+      "worst": "Inferred from its principle that mutual credit is lent at cost, so student loans go only to members of the mutual, and a default by a few members falls on the rest. There is no documented case in the pool. Source: Proudhon, What Is Property?"
     },
     {
       "model": "Cooperative economy",
       "best": "Student-run bodies governed the school in the case Student guilds at the University of Bologna, unlike Paris where the masters did, so students held control. The founding date is disputed, so this record gives no date.",
-      "worst": "Inferred from its principle that members own and share the surplus, so a small or closed membership may run the institution for insiders and leave newcomers out; no documented case in the pool. There is no documented case in the pool. Source: Mondragón cooperatives (from 1956)"
+      "worst": "Inferred from its principle that members own and share the surplus, so a small or closed membership may run the institution for insiders and leave newcomers out. There is no documented case in the pool. Source: Mondragón cooperatives"
     },
     {
       "model": "Anarcho-communism",
       "best": "Inferred from its principle that goods are shared by need within federated communes, so study is open to anyone who needs it, and learning is shared among communes without contracts. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that there is no state and no contract, so no body can certify a qualification or hold a college to account, and teaching depends on goodwill alone; no documented case in the pool. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+      "worst": "Inferred from its principle that there is no state and no contract, so no body can certify a qualification or hold a college to account, and teaching depends on goodwill alone. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
     },
     {
       "model": "Syndicalism",
       "best": "Inferred from its principle that workers' organisations run industry directly, so staff and student unions run the university through their own bodies and win terms by collective action. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that strikes are the main weapon, so prolonged strikes can halt teaching and leave students without terms or credit for the time lost; no documented case in the pool. There is no documented case in the pool. Source: Pelloutier, Histoire des Bourses du travail (1902)"
+      "worst": "Inferred from its principle that strikes are the main weapon, so prolonged strikes can halt teaching and leave students without terms or credit for the time lost. There is no documented case in the pool. Source: Pelloutier, Histoire des Bourses du travail"
     },
     {
       "model": "Fabian socialism",
       "best": "Inferred from its principle that democratic and gradual reform builds public enterprise and a national minimum, so universities are public, funded nationally, with a guaranteed minimum of student support. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that public enterprise is run by officials and changes gradually, so places and fees change slowly and reforms wait on each stage; no documented case in the pool. There is no documented case in the pool. Source: Founding of the Fabian Society"
+      "worst": "Inferred from its principle that public enterprise is run by officials and changes gradually, so places and fees change slowly and reforms wait on each stage. There is no documented case in the pool. Source: Founding of the Fabian Society"
     },
     {
       "model": "Guild socialism",
       "best": "Inferred from its principle that workers and consumers share control through guild-like councils, so staff and students sit on councils that govern each college alongside the state. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that several councils share control, so no single body decides, and decisions on places and courses stall between staff, students and the state; no documented case in the pool. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+      "worst": "Inferred from its principle that several councils share control, so no single body decides, and decisions on places and courses stall between staff, students and the state. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
     },
     {
       "model": "Command socialism",
@@ -126,22 +126,22 @@
     {
       "model": "Market socialism",
       "best": "Inferred from its principle that managers follow market prices, so each institution is run by its managers to price-based budgets, within investment set by a central board. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the central board sets the rules and the investment, so places and buildings may lag demand when the board is slow to act; no documented case in the pool. There is no documented case in the pool. Source: Yugoslav workers' self-management (1950s)"
+      "worst": "Inferred from its principle that the central board sets the rules and the investment, so places and buildings may lag demand when the board is slow to act. There is no documented case in the pool. Source: Yugoslav workers' self-management (1950s)"
     },
     {
       "model": "Marxian communism",
       "best": "Inferred from its principle that distribution follows need once the state withers away and classes disappear, so study and places go to those who need them. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that ability and need are judged for distribution, so a central authority decides who is judged able and who needs study, leaving little room for choice; no documented case in the pool. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+      "worst": "Inferred from its principle that ability and need are judged for distribution, so a central authority decides who is judged able and who needs study, leaving little room for choice. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
     },
     {
       "model": "Chinese market socialism",
       "best": "Inferred from its principle that public ownership of key sectors works alongside markets, so public universities remain state institutions that take some fees, and special zones pilot new student finance. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that price reform is gradual under party direction, so fees and support change in stages set from the centre, and access varies by region; no documented case in the pool. There is no documented case in the pool. Source: Naughton, The Chinese Economy (2007)"
+      "worst": "Inferred from its principle that price reform is gradual under party direction, so fees and support change in stages set from the centre, and access varies by region. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
     },
     {
       "model": "Participatory economics",
       "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, so students and staff shape courses, budgets and places through councils, and teaching loads are balanced in complexity. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that repeated proposals and council votes decide places, so each round of planning takes time and places can arrive late; no documented case in the pool. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+      "worst": "Inferred from its principle that repeated proposals and council votes decide places, so each round of planning takes time and places can arrive late. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
     },
     {
       "model": "Corporatism and fascist economics",
@@ -151,37 +151,37 @@
     {
       "model": "Islamic economics",
       "best": "Inferred from its principle that interest is prohibited and finance shares profit and risk, so students are financed through shared-risk arrangements and trust, and zakat funds grants for those who cannot pay. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that finance shares profit and risk, so student finance depends on graduates' earnings, and a poor year for graduates falls on lender and student alike; no documented case in the pool. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985)"
+      "worst": "Inferred from its principle that finance shares profit and risk, so student finance depends on graduates' earnings, and a poor year for graduates falls on lender and student alike. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System"
     },
     {
       "model": "Buddhist economics",
       "best": "Inferred from its principle that economic life serves well-being, so colleges stay small, local and moderate in cost, and study serves the community and its well-being. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production is small-scale and local, so small colleges lack the scale for specialist courses and advanced research, and students must travel or go without; no documented case in the pool. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful (1973)"
+      "worst": "Inferred from its principle that production is small-scale and local, so small colleges lack the scale for specialist courses and advanced research, and students must travel or go without. There is no documented case in the pool. Source: Schumacher, Small Is Beautiful"
     },
     {
       "model": "Distributism",
       "best": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, so each college and its local trades decide their own courses and admissions within a common framework. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that widespread small enterprise is the aim, so study is steered toward trades and small firms, and students who want careers in large institutions are underserved; no documented case in the pool. There is no documented case in the pool. Source: Belloc, The Servile State (1912)"
+      "worst": "Inferred from its principle that widespread small enterprise is the aim, so study is steered toward trades and small firms, and students who want careers in large institutions are underserved. There is no documented case in the pool. Source: Belloc, The Servile State"
     },
     {
       "model": "Steady-state and degrowth economics",
       "best": "Inferred from its principle that activity stays within planetary limits with a social floor under everyone, so higher education is part of that floor and student numbers are kept within what the planet can bear. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that there is no growth imperative, so places are capped to hold numbers within planetary limits, and some who want to study are turned away; no documented case in the pool. There is no documented case in the pool. Source: Raworth, Doughnut Economics (2017)"
+      "worst": "Inferred from its principle that there is no growth imperative, so places are capped to hold numbers within planetary limits, and some who want to study are turned away. There is no documented case in the pool. Source: Raworth, Doughnut Economics"
     },
     {
       "model": "Universal basic income",
       "best": "Inferred from its principle that every citizen receives an unconditional income, so students can study without debt, since the income covers living costs while they learn. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, so a fixed sum that does not keep pace with costs covers too little of study and living costs; no documented case in the pool. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All (1995)"
+      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, so a fixed sum that does not keep pace with costs covers too little of study and living costs. There is no documented case in the pool. Source: Van Parijs, Real Freedom for All"
     },
     {
       "model": "Modern monetary theory",
       "best": "Inferred from its principle that a government issuing its own currency can fund full employment, so public money pays for places and staff, and inflation rather than debt sets the limit. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that inflation is the real limit, so if spending on places outruns the capacity of staff and buildings, the cost of teaching and of housing near campuses rises; no documented case in the pool. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+      "worst": "Inferred from its principle that inflation is the real limit, so if spending on places outruns the capacity of staff and buildings, the cost of teaching and of housing near campuses rises. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
     },
     {
       "model": "Commons governance",
       "best": "Inferred from its principle that a community sharing a resource governs it with rules it designs, so students and staff who share a library or lab write and enforce its rules. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a community designs and enforces its own rules, so rules may close access to outsiders and shared facilities may be run for members only; no documented case in the pool. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+      "worst": "Inferred from its principle that a community designs and enforces its own rules, so rules may close access to outsiders and shared facilities may be run for members only. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
     }
   ],
   "compromise": {
