@@ -13,6 +13,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(HERE, "build", "raw")
+RAW_DUPS = os.path.join(HERE, "build", "raw_dups")
 IMG_SRC = os.path.join(HERE, "build", "img_src")
 IMG = os.path.join(HERE, "build", "img")
 OUT = os.path.join(HERE, "data", "listings.json")
@@ -97,13 +98,7 @@ def listing(state, order, notes):
 
     price = bt["prices"]["rur"]  # CIAN's own conversion when the offer is priced in $ or €
     area = num(o.get("totalArea"))
-    tax = bt.get("tax") or {}
-    if bt.get("vatType") == "included":
-        vat = "НДС включён"
-    elif tax.get("type") == "noTax":
-        vat = "Без НДС (УСН)"
-    else:
-        vat = "НДС не включён"
+    vat = vat_label(bt)
     note = notes.get(str(o["cianId"]), {})
     # Floor plans are often uploaded as ordinary photos; notes.json lists them by index.
     plan_idx = set(note.get("plans", []))
@@ -112,6 +107,15 @@ def listing(state, order, notes):
     hero = note.get("hero")
     if hero is not None:
         photos.insert(0, photos.pop([p["fullUrl"] for p in photos].index(o["photos"][hero]["fullUrl"])))
+    photos = [p["fullUrl"] for p in photos]
+    layouts = [p["fullUrl"] for p in layouts]
+    # Other brokers' offers of the same building often have better shots and
+    # cleaner floor plans; notes.json lists the ones picked by hand.
+    others = note.get("fromOthers") or {}
+    photos = ([others["hero"]] if others.get("hero") else photos[:1]) + others.get("photos", []) + \
+        [u for u in photos if u != others.get("hero")][0 if others.get("hero") else 1:]
+    if others.get("plans"):
+        layouts = others["plans"]
     agent = od.get("agent") or {}
     income = note.get("income")
 
@@ -151,12 +155,39 @@ def listing(state, order, notes):
         "verdict": note.get("verdict"),
         "verdictText": note.get("verdictText"),
         "description": (o.get("description") or "").strip(),
-        "photos": [p["fullUrl"] for p in photos],
-        "layouts": [p["fullUrl"] for p in layouts],
+        "photos": photos,
+        "layouts": layouts,
+        "conflicts": note.get("conflicts", []),
         "seller": {"name": agent.get("companyName") or agent.get("name"), "type": agent.get("accountType")},
         "published": o.get("humanizedEditDate"),
         "views": (od.get("stats") or {}).get("totalViewsFormattedString"),
         "priceChanges": len(od.get("priceChanges") or []),
+    }
+
+
+def vat_label(bt):
+    if bt.get("vatType") == "included":
+        return "НДС включён"
+    if (bt.get("tax") or {}).get("type") == "noTax":
+        return "Без НДС (УСН)"
+    return "НДС не включён"
+
+
+def seller_row(state, main=False):
+    """One line of the "who sells it" table."""
+    od = state["offerData"]
+    o = od["offer"]
+    bt = o["bargainTerms"]
+    agent = od.get("agent") or {}
+    area = num(o.get("totalArea"))
+    price = bt["prices"]["rur"]
+    return {
+        "id": o["cianId"], "url": f"https://www.cian.ru/sale/commercial/{o['cianId']}/", "main": main,
+        "seller": agent.get("companyName") or agent.get("name") or "Частное лицо",
+        "price": price, "currency": bt["currency"],
+        "priceOrig": None if bt["currency"] == "rur" else f"{CURRENCY.get(bt['currency'], bt['currency'])}{bt['price'] / 1e6:.1f}".replace(".", ",") + " млн",
+        "area": area, "ppm2": round(price / area) if area else None, "vat": vat_label(bt),
+        "photos": len(o["photos"]), "updated": o.get("humanizedEditDate"),
     }
 
 
@@ -178,6 +209,17 @@ def main():
     order = list(dict.fromkeys(re.findall(r"/commercial/(\d+)", open(os.path.join(HERE, "listings.txt")).read())))
     items = [listing(page_state(os.path.join(RAW, f"{cid}.html")), i + 1, notes) for i, cid in enumerate(order)]
     warn_duplicates(items)
+
+    # Every broker selling the same building (see find_duplicates.py).
+    dups = json.load(open(os.path.join(HERE, "data", "duplicates.json"), encoding="utf-8"))
+    for it in items:
+        rows = [seller_row(page_state(os.path.join(RAW, f"{it['id']}.html")), main=True)]
+        rows += [seller_row(page_state(os.path.join(RAW_DUPS, f"{cid}.html"))) for cid in dups.get(str(it["id"]), [])]
+        for r in rows:  # a broker selling only part of the building is not a price point for the whole
+            r["part"] = bool(r["area"] and it["area"] and r["area"] < 0.9 * it["area"])
+        it["sellers"] = sorted(rows, key=lambda r: (r["part"], r["price"]))
+        whole = [r["price"] for r in rows if not r["part"]]
+        it["priceMin"], it["priceMax"] = min(whole), max(whole)
 
     urls = sorted({u for it in items for u in it["photos"]})
     with ThreadPoolExecutor(6) as pool:

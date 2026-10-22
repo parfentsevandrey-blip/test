@@ -26,6 +26,11 @@ def mln(v, digits=1):
     return f"{v / 1e6:,.{digits}f}".replace(",", NBSP).replace(".", ",") + NBSP + "млн"
 
 
+def mln_short(v):
+    """3360000 -> "3,36 млн", 7000000 -> "7 млн"."""
+    return f"{v / 1e6:.2f}".rstrip("0").rstrip(".").replace(".", ",") + NBSP + "млн"
+
+
 def thousands(v):
     return f"{v / 1e3:,.0f}".replace(",", NBSP) + NBSP + "тыс."
 
@@ -208,12 +213,15 @@ def main():
         "income": with_income,
         "districts": sorted({i["district"].replace("район ", "") for i in items}),
         "firstLine": sum(1 for i in items if i["verdict"] == "first"),
+        "offers": sum(len(i["sellers"]) for i in items),
+        "mostSellers": max(items, key=lambda i: len(i["sellers"])),
+        "widest": max(items, key=lambda i: i["priceMax"] / i["priceMin"]),
         "doubt": [i for i in items if i["verdict"] == "doubt"],
         "notFirst": [i for i in items if i["verdict"] == "no"],
     }
 
     env = Environment(loader=FileSystemLoader(HERE), autoescape=True, trim_blocks=True, lstrip_blocks=True)
-    env.filters.update(money=money, mln=mln, area=area, thousands=thousands)
+    env.filters.update(money=money, mln=mln, area=area, thousands=thousands, mln_short=mln_short)
     env.globals.update(plural=plural)
     html = env.get_template("template.html").render(
         items=items, stats=stats, overview_map=map_jpeg("overview"), overview_svg=overview_svg,
