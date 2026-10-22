@@ -1,0 +1,92 @@
+{
+  "database": 238,
+  "practice": "Film, music and the arts",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "AR1",
+      "case": "Reich Chamber of Culture and compulsory membership",
+      "years": "1933",
+      "claim": "A 1933 US diplomatic dispatch on the Reich Chamber of Culture reports that membership was obligatory not only for creative workers but also for those who reproduced, sold or distributed creative output, such as typesetters and music publishers.",
+      "source": "US State Department, Foreign Relations of the United States, 1933 (diplomatic dispatch)",
+      "url": "https://history.state.gov/historicaldocuments/frus1933v02/d183",
+      "caveat": "Rests on one dispatch, read only through a search summary. The link is the only 1933 US dispatch in the results, and its text was not opened. The results do not show the film chamber's own membership rules or how film workers were vetted, so no film claim is made. Other summary points (an 'Aryan certificate' test and about 185,000 card-index entries) are not tied to a linked page and are left out.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "AR2",
+      "case": "Arts Council of Great Britain, from its 1946 royal charter",
+      "years": "1946 (royal charter); split into separate councils in 1994",
+      "claim": "The wartime body CEMA was renamed the Arts Council of Great Britain after the war. The council received its royal charter on 9 August 1946, a few months after its first chairman, Keynes, died in April 1946. Keynes had used his government influence to secure substantial funding and had the council report to the Treasury rather than to a minister, which set an 'arm's-length' principle. After his death the council's funding fell considerably. Local government was authorised to spend on the arts in 1948, and in 1994 the council was split into separate arts councils for England, Scotland and Wales.",
+      "source": "Arts Council England, online history timeline for the 1940s (undated)",
+      "url": "https://www.artscouncil.org.uk/timeline/1940s",
+      "caveat": "Built from a search summary, not the full timeline. Sources disagree on CEMA's origins: the council's timeline gives a royal charter for CEMA in 1940, other accounts mention no charter, and a 1955-56 annual report dates its origins to winter 1939. A 2016 Museums Association feature says Keynes drafted a charter in June 1945, while the timeline places the drafting after his death. The arm's-length point and the 1948 and 1994 dates are as the summary reports them.",
+      "relevant_to": [
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "AR3",
+      "case": "France's film support fund (CNC) and its levies",
+      "years": "1946 onward; television levy from the 1980s",
+      "claim": "The CNC was set up on 25 October 1946 to protect a French film sector that Hollywood imports threatened to overwhelm. The summary reports that 340 American features opened in France in 1947, against 65 French ones. Its financial autonomy comes from dedicated levies rather than the general state budget: a levy on cinema tickets, now 10.72% of each admission price; a separate television levy on broadcasters' advertising and subscription income, from the 1980s; and a levy of 5.15% of turnover on physical-disc sales and video-on-demand services.",
+      "source": "Audencia, web article 'The CNC: Backbone of French Exception Culturelle' (undated)",
+      "url": "https://culture.audencia.com/cnc-french-audiovisual-experience/",
+      "caveat": "A commentary piece, read through a digest of several results, not the CNC's own pages or a legal text. The digest does not say which page gives each figure, so the 1946 date, the 1947 film counts and the levy rates are unconfirmed. The commentary's names for the levies are not checked.",
+      "relevant_to": [
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "AR4",
+      "case": "Soviet decree against 'formalism' in music",
+      "years": "1948 (decree of 10 February 1948)",
+      "claim": "A Central Committee decree of 10 February 1948, prompted by Muradeli's opera The Great Friendship, branded as 'formalist' any Soviet composer tied to European modernism. A 1949 Partisan Review piece names six composers; a second account names four. One account describes a temporary ban limited to Moscow, another a de facto ban across Russia. A February 1949 Soviet Art piece, relayed in a US diplomatic airgram, concluded that composers had not yet fully met Party requirements.",
+      "source": "Partisan Review, 1949 (vol. 16, no. 8); US State Department, Foreign Relations of the United States, 1949 (airgram)",
+      "url": "https://www.bu.edu/partisanreview/books/PR1949V16N8/HTML/files/assets/basic-html/page77.html",
+      "caveat": "Built from a digest of several pages, which does not say which page gives each detail. The accounts conflict on the number of composers and the reach of the ban. The results cover music only, so no theatre claim is made. One online encyclopaedia (secondary) dates the decree's formal rescission to 1958. The decree text was not found.",
+      "relevant_to": [
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "AR5",
+      "case": "US National Endowment for the Arts (1965)",
+      "years": "1965 onward; grant disputes in the 1980s and 1990s",
+      "claim": "Federal lawmakers launched the National Endowment for the Arts as an independent body in 1965. President Lyndon B. Johnson approved the bill on 29 September 1965, pairing the agency with the National Endowment for the Humanities under one umbrella foundation. It grew out of Johnson's Great Society agenda. Its early grants were modest and tilted toward professional nonprofit groups, largely in cities. It later drew political fire over specific grants in the 1980s and 1990s.",
+      "source": "National Endowment for the Arts, 'National Endowment for the Arts: A History 1965-2008' (agency history; year of publication not shown)",
+      "url": "https://www.arts.gov/sites/default/files/nea-history-1965-2008.pdf",
+      "caveat": "A search summary, not the full history. Sources disagree on novelty: one reference calls 1965 the earliest federal grant aid to artists, while the agency's own history stresses its break from WPA-era programmes. The 1980s and 1990s grant disputes are named but not described.",
+      "relevant_to": [
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "AR6",
+      "case": "South Korea halves its screen quota ahead of US trade talks",
+      "years": "2006 (cut in force from 1 July 2006)",
+      "claim": "In late January 2006 Seoul unveiled a plan to halve its screen quota, tying it to trade talks with Washington. The cabinet approved it in early March, and the nominal annual requirement fell from 146 days to 73 once the new rules took effect on 1 July. Because the cut came mid-year, the 2006 total was 109 days. Hankyoreh coverage described the cut as a precondition Washington set before free-trade talks could begin. Critics argued it would tilt the domestic market toward big-budget Hollywood films, and filmmakers protested, including at the Berlin and Cannes festivals.",
+      "source": "Bilaterals, news report on the cabinet decision (2006); Korean film news reports (2006)",
+      "url": "https://www.bilaterals.org/cabinet-endorses-plan-to-halve",
+      "caveat": "Built from 2006 news summaries, not the articles. The Hankyoreh point, the critics and the protests are as the summary reports them. The results do not show how the trade talks ended or whether the 73-day rule was later changed.",
+      "relevant_to": [
+        "Developmental state",
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "AR7",
+      "case": "Ireland's Basic Income for the Arts pilot",
+      "years": "Pilot extended to February 2026",
+      "claim": "Ireland's Basic Income for the Arts pilot picked 2,000 artists and creatives at random to receive 325 euros a week for three years, paid in monthly instalments, and compared them with another 1,000 people who missed out. Recipients log their time, earnings and wellbeing. Early figures from a first review, as summarised, show that recipients cut back on time in other sectors, that their chance of making a living from arts work alone was about 12 percentage points above the comparison group's, and that the share reporting depression or anxiety in the previous four weeks was almost ten points lower.",
+      "source": "Cultural policy summary of the pilot's first review (secondary; undated)",
+      "url": "https://culturalpolicies.net/?p=14301",
+      "caveat": "The early figures come from a secondary summary, not the review itself, and no full evaluation appeared in the results. The newest coverage dates from late 2025, so the outcome after the February 2026 extension is unconfirmed. One result says the scheme was to become permanent, which no result confirms. The scheme pays a selected group of artists, not every citizen, so it tests only part of the model.",
+      "relevant_to": [
+        "Universal basic income"
+      ]
+    }
+  ]
+}

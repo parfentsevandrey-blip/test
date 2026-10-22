@@ -4,18 +4,6 @@
   "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
   "cases": [
     {
-      "id": "SP1",
-      "case": "Dynamo, the Soviet state security sports society",
-      "years": "1923 onward (Soviet period)",
-      "claim": "The Dynamo sports society was created in 1923, with the GPU as sponsor, at Dzerzhinsky's push. It was the sports wing of Soviet state security, a lineage that traced back to the Cheka and OGPU. Its athletes were supplied by the NKVD, and after World War II by the MVD and KGB. In the Soviet period, top Dynamo athletes held formal service ranks, so their pay and pensions came with that status.",
-      "source": "online encyclopaedia (secondary)",
-      "url": "https://en.wikipedia.org/wiki/Dynamo_Sports_Club",
-      "caveat": "Known from search excerpts of one encyclopaedia entry, which was not opened. No Soviet budget, ministry or enterprise sports-fund figures were found, so state funding appears here only as sponsorship and service-rank pay. The entry's facility count is flagged as unsourced and is left out. Accounts of other societies, such as Spartak, differ and are not used.",
-      "relevant_to": [
-        "Command socialism"
-      ]
-    },
-    {
       "id": "SP2",
       "case": "Green Bay Packers' community ownership",
       "years": "1923 onward",
@@ -26,18 +14,6 @@
       "relevant_to": [
         "Cooperative economy",
         "Commons governance"
-      ]
-    },
-    {
-      "id": "SP3",
-      "case": "Nazi appointment of a Reich sports commissioner",
-      "years": "1933",
-      "claim": "In April 1933 Nazi authorities put Hans von Tschammer und Osten in charge of gymnastics and sport as Reich commissioner. His tenure as Reichssportführer began on 19 July 1933.",
-      "source": "online encyclopaedia (secondary)",
-      "url": "https://en.wikipedia.org/wiki/Hans_von_Tschammer_und_Osten",
-      "caveat": "Known from search excerpts of one encyclopaedia entry, which was not opened; no primary source was found. The results also say that left-wing and church-linked sports groups were outlawed in 1933 and that working-class clubs largely dissolved in the first half of that year, but no cited page is shown to say so, so those points are left out. A separate encyclopaedia entry gives 27 July 1934 for the national league, and that date is not used here.",
-      "relevant_to": [
-        "Corporatism and fascist economics"
       ]
     },
     {
