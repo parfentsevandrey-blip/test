@@ -212,6 +212,29 @@ nonisolated enum SelfTest {
             }
         }
 
+        // 5б. Фразы по отдельности: как их режет детектор речи и что даёт левый контекст.
+        var vad = VoiceDetector(sampleRate: rate, pauseMs: 700)
+        var segments: [[Float]] = []
+        for k in stride(from: 0, to: samples.count, by: 1600) {
+            for e in vad.process(Array(samples[k..<min(samples.count, k + 1600)])) { if case .end(let a) = e { segments.append(a) } }
+        }
+        if vad.speaking { segments.append(vad.finish()) }
+        print("  детектор речи: \(segments.count) фраз(ы): " + segments.map { String(format: "%.1f с", Double($0.count) / Double(rate)) }.joined(separator: ", "))
+        var alone = "", withText = "", withAudio = ""
+        var previousAudio: [Float] = [], previousText = ""
+        for seg in segments {
+            let a = (try? await AsrEngine.shared.transcribe(seg)) ?? ""
+            let b = (try? await AsrEngine.shared.transcribe(seg, context: String(withText.suffix(200)))) ?? ""
+            let c = (try? await AsrEngine.shared.transcribe(previousAudio + seg, prefix: previousText)) ?? ""
+            print("    отдельно: «\(a)»\n    +текст:   «\(b)»\n    +звук:    «\(c)»")
+            alone += (alone.isEmpty ? "" : " ") + a
+            withText += (withText.isEmpty ? "" : " ") + b
+            withAudio += (withAudio.isEmpty ? "" : " ") + c.trimmingCharacters(in: .whitespaces)
+            previousAudio = seg
+            previousText = c.trimmingCharacters(in: .whitespaces)
+        }
+        print("  ошибка слов по фразам: отдельно \(Int(wer(reference, alone) * 100))%, с прошлым текстом \(Int(wer(reference, withText) * 100))%, с прошлым звуком \(Int(wer(reference, withAudio) * 100))%")
+
         // 6. Потоковая диктовка в реальном времени: как с микрофона, кусками по 100 мс.
         let output = Box("")
         let commits = Box<[(Double, Int)]>([])
