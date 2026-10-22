@@ -2335,5 +2335,115 @@
     "colorHex": "#82D369",
     "curated": false,
     "group": "economics"
+  },
+  {
+    "id": 232,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 232: economics of money creation and central banking",
+    "description": "The economic models applied to money creation and central banking: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#83D369",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 233,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 233: economics of banking and credit",
+    "description": "The economic models applied to banking and credit: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#6E69D3",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 234,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 234: economics of pensions and retirement",
+    "description": "The economic models applied to pensions and retirement: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D38D69",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 235,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 235: economics of social and private insurance",
+    "description": "The economic models applied to social and private insurance: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#69D3AC",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 236,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 236: economics of public debt",
+    "description": "The economic models applied to public debt: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#CB69D3",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 237,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 237: economics of media ownership and public broadcasting",
+    "description": "The economic models applied to media ownership and public broadcasting: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#BDD369",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 238,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 238: economics of film, music and the arts",
+    "description": "The economic models applied to film, music and the arts: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#699DD3",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 239,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 239: economics of copyright and cultural property",
+    "description": "The economic models applied to copyright and cultural property: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#D3697E",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 240,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 240: economics of sport and professional leagues",
+    "description": "The economic models applied to sport and professional leagues: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#69D372",
+    "curated": false,
+    "group": "economics"
+  },
+  {
+    "id": 241,
+    "from": 800,
+    "to": 2026,
+    "quota": false,
+    "name": "Database 241: economics of games, gambling and lotteries",
+    "description": "The economic models applied to games, gambling and lotteries: the best and worst practice of each model, and one compromise.",
+    "colorHex": "#9169D3",
+    "curated": false,
+    "group": "economics"
   }
 ]

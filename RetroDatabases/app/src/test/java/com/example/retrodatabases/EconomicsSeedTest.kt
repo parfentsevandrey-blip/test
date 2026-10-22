@@ -7,7 +7,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** The last economics database that the seed data holds; raised as each batch of databases is generated. */
-private const val LAST_ECONOMICS_DATABASE = 231L
+private const val LAST_ECONOMICS_DATABASE = 241L
 
 /**
  * The economics databases (205 to the last one in [LAST_ECONOMICS_DATABASE]): every economic model with its best and

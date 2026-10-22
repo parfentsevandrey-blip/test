@@ -8,7 +8,7 @@ import com.example.retrodatabases.data.RecordEntity
 // (databaseId = the new id, one file per kind) and run python3 tools/build_catalogue.py.
 
 /** Version of the database file: the number of the newest seeded database. */
-const val DATABASE_VERSION = 231
+const val DATABASE_VERSION = 241
 
 /** The catalogue of databases that are created on the first launch, in id order. */
 val seedDatabases: List<DatabaseEntity> = listOf(
@@ -1398,6 +1398,66 @@ val seedDatabases: List<DatabaseEntity> = listOf(
         description = "The economic models applied to automation and technological change: the best and worst practice of each model, and one compromise.",
         colorHex = "#82D369",
     ),
+    DatabaseEntity(
+        id = 232,
+        name = "Database 232: economics of money creation and central banking",
+        description = "The economic models applied to money creation and central banking: the best and worst practice of each model, and one compromise.",
+        colorHex = "#83D369",
+    ),
+    DatabaseEntity(
+        id = 233,
+        name = "Database 233: economics of banking and credit",
+        description = "The economic models applied to banking and credit: the best and worst practice of each model, and one compromise.",
+        colorHex = "#6E69D3",
+    ),
+    DatabaseEntity(
+        id = 234,
+        name = "Database 234: economics of pensions and retirement",
+        description = "The economic models applied to pensions and retirement: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D38D69",
+    ),
+    DatabaseEntity(
+        id = 235,
+        name = "Database 235: economics of social and private insurance",
+        description = "The economic models applied to social and private insurance: the best and worst practice of each model, and one compromise.",
+        colorHex = "#69D3AC",
+    ),
+    DatabaseEntity(
+        id = 236,
+        name = "Database 236: economics of public debt",
+        description = "The economic models applied to public debt: the best and worst practice of each model, and one compromise.",
+        colorHex = "#CB69D3",
+    ),
+    DatabaseEntity(
+        id = 237,
+        name = "Database 237: economics of media ownership and public broadcasting",
+        description = "The economic models applied to media ownership and public broadcasting: the best and worst practice of each model, and one compromise.",
+        colorHex = "#BDD369",
+    ),
+    DatabaseEntity(
+        id = 238,
+        name = "Database 238: economics of film, music and the arts",
+        description = "The economic models applied to film, music and the arts: the best and worst practice of each model, and one compromise.",
+        colorHex = "#699DD3",
+    ),
+    DatabaseEntity(
+        id = 239,
+        name = "Database 239: economics of copyright and cultural property",
+        description = "The economic models applied to copyright and cultural property: the best and worst practice of each model, and one compromise.",
+        colorHex = "#D3697E",
+    ),
+    DatabaseEntity(
+        id = 240,
+        name = "Database 240: economics of sport and professional leagues",
+        description = "The economic models applied to sport and professional leagues: the best and worst practice of each model, and one compromise.",
+        colorHex = "#69D372",
+    ),
+    DatabaseEntity(
+        id = 241,
+        name = "Database 241: economics of games, gambling and lotteries",
+        description = "The economic models applied to games, gambling and lotteries: the best and worst practice of each model, and one compromise.",
+        colorHex = "#9169D3",
+    ),
 )
 
 /** Years each seeded catalogue covers. The tests check the records against them. */
@@ -1633,6 +1693,16 @@ val seedYears: Map<Long, IntRange> = mapOf(
     229L to 800..2026,
     230L to 800..2026,
     231L to 800..2026,
+    232L to 800..2026,
+    233L to 800..2026,
+    234L to 800..2026,
+    235L to 800..2026,
+    236L to 800..2026,
+    237L to 800..2026,
+    238L to 800..2026,
+    239L to 800..2026,
+    240L to 800..2026,
+    241L to 800..2026,
 )
 
 /** Records of every seeded database. They are inserted together with the databases. */
@@ -1668,4 +1738,5 @@ val seedRecords: List<RecordEntity> =
         db210Records + db211Records + db212Records + db213Records + db214Records + db215Records + db216Records +
         db217Records + db218Records + db219Records + db220Records + db221Records + db222Records + db223Records +
         db224Records + db225Records + db226Records + db227Records + db228Records + db229Records + db230Records +
-        db231Records
+        db231Records + db232Records + db233Records + db234Records + db235Records + db236Records + db237Records +
+        db238Records + db239Records + db240Records + db241Records
