@@ -6,117 +6,117 @@
     {
       "model": "Gift economy",
       "best": "Inferred from its principle that goods move as gifts that create reciprocal obligations, so officials are bound to those they serve by mutual duty and trust rather than by price-based pay alone. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that favours create obligations to return, so posts and promotions go to kin and allies, outsiders have no route in, and officials owe loyalty to sponsors rather than to public rules. There is no documented case in the pool. Source: Mauss, The Gift (1925)"
+      "worst": "Inferred from its principle that favours create obligations to return, so posts and promotions go to kin and allies, outsiders have no route in, and officials owe loyalty to sponsors rather than to public rules. There is no documented case in the pool. Source: Mauss, The Gift"
     },
     {
       "model": "Household and peasant economy",
       "best": "Inferred from its principle that a household balances its work against its needs, so local officials keep their work matched to what communities need rather than to output targets. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production serves consumption rather than profit, so officials are pulled back to family work whenever household labour is short, and public duties are the first to be dropped. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy (1925)"
+      "worst": "Inferred from its principle that production serves consumption rather than profit, so officials are pulled back to family work whenever household labour is short, and public duties are the first to be dropped. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
     },
     {
       "model": "Redistributive economy",
       "best": "The case Imperial China's examinations for officials, a newspaper feature and not a historical study, reports that subject-based examinations replaced hereditary privilege, aiming to reward ability over favouritism. In the case The Pendleton Act and the end of federal patronage hiring, federal hiring was tied to merit and competitive examinations, and firing or demoting covered workers for political reasons was barred.",
-      "worst": "Inferred from its principle that a central authority collects surplus and allocates it by rank, so posts and support go to officials and favoured households, and graduates serve the centre by allocation rather than by choice. There is no documented case in the pool. Source: Polanyi, The Great Transformation (1944)"
+      "worst": "Inferred from its principle that a central authority collects surplus and allocates it by rank, so posts and support go to officials and favoured households, and graduates serve the centre by allocation rather than by choice. There is no documented case in the pool. Source: Polanyi, The Great Transformation"
     },
     {
       "model": "Slave economy",
       "best": "Inferred from its principle that output sold through trade pays for the training of clerks and managers, so the administration is trained and staffed to meet the trade's needs. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that labour is extracted through the ownership of people, so enslaved people are denied any education, and clerkships and official posts are reserved for owners and their families. There is no documented case in the pool. Source: Williams, Capitalism and Slavery (1944)"
+      "worst": "Inferred from its principle that labour is extracted through the ownership of people, so enslaved people are denied any education, and clerkships and official posts are reserved for owners and their families. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
     },
     {
       "model": "Feudalism",
       "best": "Inferred from its principle that a lord protects and governs land in return for service, so local officials and justices are tied to the manor and answer to the lord who keeps order and settles disputes. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that peasants owe labour services to a lord, so officials are drawn from the lord's dependants, duties are fixed by custom rather than written rules, and tenants cannot leave the manor to take up public posts. There is no documented case in the pool. Source: Bloch, Feudal Society (1939-1940)"
+      "worst": "Inferred from its principle that peasants owe labour services to a lord, so officials are drawn from the lord's dependants, duties are fixed by custom rather than written rules, and tenants cannot leave the manor to take up public posts. There is no documented case in the pool. Source: Bloch, Feudal Society"
     },
     {
       "model": "Guild economy",
       "best": "Inferred from its principle that masters set entry, training and statutes, so officials pass through fixed stages of training and must meet the statutes before they are admitted to a post. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that masters control entry and fix the statutes, so a closed body decides who may hold posts, new entrants wait for places, and the statutes are changed to protect members. There is no documented case in the pool. Source: Boileau, Le Livre des métiers (c. 1268)"
+      "worst": "Inferred from its principle that masters control entry and fix the statutes, so a closed body decides who may hold posts, new entrants wait for places, and the statutes are changed to protect members. There is no documented case in the pool. Source: Boileau, Le Livre des métiers"
     },
     {
       "model": "Mercantilism",
       "best": "Inferred from its principle that the state regulates trade and production toward national gain, so officials are trained and posted to serve the state's trade and revenue goals. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state regulates trade and production toward its own gain, so officials are posted and promoted for service to the treasury and to favoured trading houses, and oversight of their conduct is weak. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade (1664)"
+      "worst": "Inferred from its principle that the state regulates trade and production toward its own gain, so officials are posted and promoted for service to the treasury and to favoured trading houses, and oversight of their conduct is weak. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade"
     },
     {
       "model": "Physiocracy",
       "best": "Inferred from its principle that one tax on the rent of land should fund the state, so public spending is simple to set and audit, and officials are paid from a single known revenue. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that only agriculture makes a net product, so administrative posts in other fields are starved of funds, officials outside farming are few, and public administration is kept thin. There is no documented case in the pool. Source: Quesnay, Tableau économique (1758)"
+      "worst": "Inferred from its principle that only agriculture makes a net product, so administrative posts in other fields are starved of funds, officials outside farming are few, and public administration is kept thin. There is no documented case in the pool. Source: Quesnay, Tableau économique"
     },
     {
       "model": "Classical laissez-faire capitalism",
       "best": "Inferred from its principle that the state protects property and contracts and otherwise stays out, so public officials are few, their work is confined to enforcing contracts, and posts are kept to what that enforcement needs. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the state stays out, so there are few officials to check one another, no independent body watches over public servants, and misconduct by officials is left to the courts to find after the fact. There is no documented case in the pool. Source: Smith, The Wealth of Nations (1776)"
+      "worst": "Inferred from its principle that the state stays out, so there are few officials to check one another, no independent body watches over public servants, and misconduct by officials is left to the courts to find after the fact. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
     },
     {
       "model": "Austrian free-market economics",
       "best": "Public pay is compared with private-sector pay and corrected when it runs above it, as in the case Japan's first recommended pay cut for national civil servants, which reports that monthly pay had run 7,770 yen above private-sector levels and that the National Personnel Authority recommended a cut averaging 2.03 per cent in 2002.",
-      "worst": "Inferred from its principle that state planning distorts production, so planners set public posts and pay without the knowledge that prices carry, and staffing drifts away from what is needed. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre (1871)"
+      "worst": "Inferred from its principle that state planning distorts production, so planners set public posts and pay without the knowledge that prices carry, and staffing drifts away from what is needed. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre"
     },
     {
       "model": "Monetarist neoliberalism",
       "best": "Inferred from its principle that a smaller state and fewer controls leave less to administer, so the civil service is kept small, its controls are reduced, and public tasks are open to contract with outside providers. There is no documented case in the pool.",
-      "worst": "The case New Zealand's State Sector Act 1988 and fixed-term chief executive contracts, from an opinion commentary, reports that the 1988 reform replaced open-ended tenure for top officials with fixed terms. The commentary argues that short terms expose them to political pressure and encourage short-term thinking, and that political leaders used gaps in the Act to gain sway over appointments. Source: Newsroom (New Zealand news site), commentary 'A largely unnoticed power grab', 2019 (dated 20 November 2019 by its web address)"
+      "worst": "The case New Zealand's State Sector Act 1988 and fixed-term chief executive contracts, from an opinion commentary, reports that the 1988 reform replaced open-ended tenure for state-services chief executives with fixed terms. The commentary argues that short terms expose them to political pressure and encourage short-term thinking, and that political leaders used gaps in the Act to gain sway over appointments. Source: Newsroom (New Zealand news site), commentary 'A largely unnoticed power grab', 2019 (dated 20 November 2019 by its web address)"
     },
     {
       "model": "Keynesian welfare capitalism",
       "best": "Inferred from its principle that public spending rises in slumps, so public posts and training places expand when jobs are scarce, keeping skilled staff in work and services staffed. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that spending falls in booms, so public posts and training places are frozen in strong years and widened only in slumps, leaving services understaffed when demand is high and staffing swinging with the business cycle. There is no documented case in the pool. Source: Keynes, The General Theory (1936)"
+      "worst": "Inferred from its principle that spending falls in booms, so public posts and training places are frozen in strong years and widened only in slumps, leaving services understaffed when demand is high and staffing swinging with the business cycle. There is no documented case in the pool. Source: Keynes, The General Theory"
     },
     {
       "model": "Social market economy",
       "best": "Inferred from its principle that a legal order curbs monopoly, so public contracts and appointments are bound by rules that stop any one supplier or patron from dominating public work. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that competitive markets operate inside a legal order, so if that order is weak, a few agencies or contractors could dominate public contracts, and officials could favour them when awarding work. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft (1947)"
+      "worst": "Inferred from its principle that competitive markets operate inside a legal order, so if that order is weak, a few agencies or contractors could dominate public contracts, and officials could favour them when awarding work. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft"
     },
     {
       "model": "Nordic social democracy",
       "best": "The case Sweden's parliamentary ombudsman and its spread reports that Sweden's Instrument of Government of 1809 set up a parliamentary ombudsman as an independent check on the executive.",
-      "worst": "Inferred from its principle that services are universal and financed by high taxes, so the administration grows with each new entitlement, and officials running universal services face rising caseloads and waiting times when budgets are fixed. There is no documented case in the pool. Source: Saltsjöbaden Agreement (1938)"
+      "worst": "Inferred from its principle that services are universal and financed by high taxes, so the administration grows with each new entitlement, and officials running universal services face rising caseloads and waiting times when budgets are fixed. There is no documented case in the pool. Source: Saltsjöbaden Agreement"
     },
     {
       "model": "Developmental state",
       "best": "The case Hong Kong's Independent Commission Against Corruption after the Godber affair reports that public anger followed, that the colonial administration set up the commission, and that the commission superseded the police Anti-Corruption Office and operates independently of the police and the civil service.",
-      "worst": "Inferred from its principle that the state picks favoured fields and disciplines firms by performance, so promotion follows the chosen sectors' targets, and officials who serve other public duties are passed over. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982)"
+      "worst": "Inferred from its principle that the state picks favoured fields and disciplines firms by performance, so promotion follows the chosen sectors' targets, and officials who serve other public duties are passed over. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle"
     },
     {
       "model": "Georgism",
       "best": "Inferred from its principle that the rent of land should fund public services, so the cost of administration is met from land values rather than from wages or capital. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that land value carries the public purse, so administrative budgets rise and fall with land prices, and a downturn in land values cuts staffing and pay in the public service. There is no documented case in the pool. Source: George, Progress and Poverty (1879)"
+      "worst": "Inferred from its principle that land value carries the public purse, so administrative budgets rise and fall with land prices, and a downturn in land values cuts staffing and pay in the public service. There is no documented case in the pool. Source: George, Progress and Poverty"
     },
     {
       "model": "Utopian socialism",
       "best": "Inferred from its principle that cooperative communities built by example replace wage competition, so public services are organised as voluntary associations whose members share duties and decide rules together. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that communities are built by example, so public services depend on their founders' vision and small budgets, and they close or drift when the founders leave, with no fixed rules for the administration to follow. There is no documented case in the pool. Source: Owen, A New View of Society (1813)"
+      "worst": "Inferred from its principle that communities are built by example, so public services depend on their founders' vision and small budgets, and they close or drift when the founders leave, with no fixed rules for the administration to follow. There is no documented case in the pool. Source: Owen, A New View of Society"
     },
     {
       "model": "Mutualism",
       "best": "Inferred from its principle that free contracts and mutual credit let workers keep the full value of their work, so public staff are paid for their own labour, and posts that draw income from others are abolished. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that free contracts replace fixed positions, so public work is arranged contract by contract, and no permanent body keeps records, supervises or trains staff across posts. There is no documented case in the pool. Source: Proudhon, What Is Property? (1840)"
+      "worst": "Inferred from its principle that free contracts replace fixed positions, so public work is arranged contract by contract, and no permanent body keeps records, supervises or trains staff across posts. There is no documented case in the pool. Source: Proudhon, What Is Property?"
     },
     {
       "model": "Cooperative economy",
       "best": "Inferred from its principle that members own and control their institutions, one member one vote, so workers and users elect the managers and approve the budgets and rules. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that members own the institution and share its surplus, so a closed membership may run a public agency for insiders, and newcomers, including citizens who use the service, have no say. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers (1844)"
+      "worst": "Inferred from its principle that members own the institution and share its surplus, so a closed membership may run a public agency for insiders, and newcomers, including citizens who use the service, have no say. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers"
     },
     {
       "model": "Anarcho-communism",
       "best": "Inferred from its principle that goods are shared by need within federated communes, so public tasks are filled by those who are needed and rotate among members who volunteer for them. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that there is no state and no contract, so no body can appoint, pay or discipline public officials, and public tasks depend on goodwill alone, with no means of holding anyone to account. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread (1892)"
+      "worst": "Inferred from its principle that there is no state and no contract, so no body can appoint, pay or discipline public officials, and public tasks depend on goodwill alone, with no means of holding anyone to account. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
     },
     {
       "model": "Syndicalism",
       "best": "Inferred from its principle that workers' organisations run industry directly, so public staff and their unions run the service through their own bodies and win pay and terms by collective action. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that strikes are the main weapon, so a prolonged strike can halt a public service and leave citizens without it, and staff, not those who depend on the service, decide when that happens. There is no documented case in the pool. Source: Founding of the French CGT (1895)"
+      "worst": "Inferred from its principle that strikes are the main weapon, so a prolonged strike can halt a public service and leave citizens without it, and staff, not those who depend on the service, decide when that happens. There is no documented case in the pool. Source: Founding of the French CGT"
     },
     {
       "model": "Fabian socialism",
       "best": "Inferred from its principle that democratic and gradual reform builds public enterprise and a national minimum, so public services are provided nationally, with a guaranteed minimum for every citizen and officials answerable to elected bodies. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that public enterprise changes gradually, so reform of the public service proceeds in stages, and officials and elected bodies can delay each stage, slowing needed change. There is no documented case in the pool. Source: Fabian Essays in Socialism (1889)"
+      "worst": "Inferred from its principle that public enterprise changes gradually, so reform of the public service proceeds in stages, and officials and elected bodies can delay each stage, slowing needed change. There is no documented case in the pool. Source: Fabian Essays in Socialism"
     },
     {
       "model": "Guild socialism",
       "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, so staff and service users sit on councils that run each public service alongside the state. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that several councils share control, so no single body decides, and decisions on staffing and services stall between staff councils, user councils and the state, leaving unclear who answers for failures. There is no documented case in the pool. Source: Cole, Self-Government in Industry (1917)"
+      "worst": "Inferred from its principle that several councils share control, so no single body decides, and decisions on staffing and services stall between staff councils, user councils and the state, leaving unclear who answers for failures. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
     },
     {
       "model": "Command socialism",
@@ -126,22 +126,22 @@
     {
       "model": "Market socialism",
       "best": "Inferred from its principle that managers follow market prices, so each public enterprise is run to price-based budgets and judged on results, within investment and rules set by a central board. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a central board sets the rules and the investment, so staffing and buildings may lag demand when the board is slow to act, and managers who follow prices must still wait for its approval. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism (1938; Lange's essays date from 1936-1937)"
+      "worst": "Inferred from its principle that a central board sets the rules and the investment, so staffing and buildings may lag demand when the board is slow to act, and managers who follow prices must still wait for its approval. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism"
     },
     {
       "model": "Marxian communism",
       "best": "Inferred from its principle that distribution follows need once classes have disappeared, so public services are provided by need rather than by rank or payment, and no class of officials is set above the rest. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a central authority judges ability and need for distribution, so officials decide who is judged able and who needs a service, leaving citizens little room to choose or to appeal. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme (1875)"
+      "worst": "Inferred from its principle that a central authority judges ability and need for distribution, so officials decide who is judged able and who needs a service, leaving citizens little room to choose or to appeal. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
     },
     {
       "model": "Chinese market socialism",
       "best": "Inferred from its principle that public ownership of key sectors works alongside markets, so state enterprises and agencies keep public accountability, while special zones pilot new ways of paying and hiring public staff. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that price reform is gradual and set under party direction, so pay, posts and rules for officials change in stages set from the centre, and access to public services varies by region. There is no documented case in the pool. Source: Naughton, The Chinese Economy (2007)"
+      "worst": "Inferred from its principle that price reform is gradual and set under party direction, so pay, posts and rules for officials change in stages set from the centre, and access to public services varies by region. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
     },
     {
       "model": "Participatory economics",
       "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, so staff and service users shape public-service budgets, posts and duties through councils, and jobs are balanced in complexity. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that repeated proposals and council votes decide each step, so staffing and budgets for public services take many rounds to settle, and urgent decisions on posts may arrive late. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward (1991)"
+      "worst": "Inferred from its principle that repeated proposals and council votes decide each step, so staffing and budgets for public services take many rounds to settle, and urgent decisions on posts may arrive late. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
     },
     {
       "model": "Corporatism and fascist economics",
@@ -151,41 +151,41 @@
     {
       "model": "Islamic economics",
       "best": "Inferred from its principle that finance shares profit and risk and that trust underpins contracts, so public officials serve under written contracts and public money is held as a trust for the community. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that finance shares profit and risk, so staff pay and public project funding rise and fall with results, and a poor year leaves both public projects and officials' pay unsettled. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System (1985)"
+      "worst": "Inferred from its principle that finance shares profit and risk, so staff pay and public project funding rise and fall with results, and a poor year leaves both public projects and officials' pay unsettled. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System"
     },
     {
       "model": "Buddhist economics",
       "best": "Inferred from its principle that economic life serves well-being, so public administration is kept small and moderate in cost, and public services are run locally in ways that serve their communities. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that production is small-scale and local, so small local agencies lack the scale for specialist posts and advanced training, and some public services may be thin or unavailable in outlying areas. There is no documented case in the pool. Source: Schumacher, Buddhist Economics (first published 1966)"
+      "worst": "Inferred from its principle that production is small-scale and local, so small local agencies lack the scale for specialist posts and advanced training, and some public services may be thin or unavailable in outlying areas. There is no documented case in the pool. Source: Schumacher, Buddhist Economics"
     },
     {
       "model": "Distributism",
       "best": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, so local authorities and their staff decide public-service matters within a common framework, close to the people they serve. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that widespread small enterprise and property are the aim, so public work is steered toward small local bodies, and nationwide services that need scale may be left thin. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum (1891)"
+      "worst": "Inferred from its principle that widespread small enterprise and property are the aim, so public work is steered toward small local bodies, and nationwide services that need scale may be left thin. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum"
     },
     {
       "model": "Steady-state and degrowth economics",
       "best": "Inferred from its principle that economic activity stays within planetary limits with a social floor under everyone, so public administration is kept to what is needed, and public services are guaranteed as a floor for all. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that there is no growth imperative, so the size of the public service is capped to hold spending within limits, and staff and posts may be cut even where demand for services rises. There is no documented case in the pool. Source: Daly, Steady-State Economics (1977)"
+      "worst": "Inferred from its principle that there is no growth imperative, so the size of the public service is capped to hold spending within limits, and staff and posts may be cut even where demand for services rises. There is no documented case in the pool. Source: Daly, Steady-State Economics"
     },
     {
       "model": "Universal basic income",
       "best": "Inferred from its principle that every citizen receives an unconditional income, so administration shrinks as means tests and benefit claims fall away, and officials spend less time checking eligibility. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, so revenue depends on land values and resource prices, and public administration funded from the same base faces cuts when those values fall. There is no documented case in the pool. Source: Paine, Agrarian Justice (1797)"
+      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, so revenue depends on land values and resource prices, and public administration funded from the same base faces cuts when those values fall. There is no documented case in the pool. Source: Paine, Agrarian Justice"
     },
     {
       "model": "Modern monetary theory",
       "best": "Inferred from its principle that a government issuing its own currency can fund full employment, so public posts and training are paid from public money, and inflation rather than debt is the limit on hiring. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that inflation is the real limit, so if public hiring outruns the capacity of staff, training and buildings, the cost of staff and premises rises, and officials may be hired faster than they can be trained and supervised. There is no documented case in the pool. Source: Kelton, The Deficit Myth (2020)"
+      "worst": "Inferred from its principle that inflation is the real limit, so if public hiring outruns the capacity of staff, training and buildings, the cost of staff and premises rises, and officials may be hired faster than they can be trained and supervised. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
     },
     {
       "model": "Commons governance",
       "best": "Inferred from its principle that a community sharing a resource governs it with rules it designs, monitors and enforces, so the staff and users of a shared public service write and enforce its rules together. There is no documented case in the pool.",
-      "worst": "Inferred from its principle that a community designs and enforces its own rules, so rules may close access to outsiders, and a shared public service may be run for members only, with staff accountable to members rather than to wider public authority. There is no documented case in the pool. Source: Ostrom, Governing the Commons (1990)"
+      "worst": "Inferred from its principle that a community designs and enforces its own rules, so rules may close access to outsiders, and a shared public service may be run for members only, with staff accountable to members rather than to wider public authority. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
     }
   ],
   "compromise": {
     "summary": "A civil service recruited by examination and paid with reference to private-sector levels, held to account by an independent ombudsman and anti-corruption commission, and protected from removal for political or racial reasons. Appointments follow published criteria, not party control or patronage, and each change is tested.",
-    "details": "Keeps: examination for entry, rewarding ability over favouritism (Redistributive economy, from Imperial China's examinations for officials); an independent ombudsman (Nordic social democracy, from Sweden's parliamentary ombudsman and its spread); an independent anti-corruption commission (Developmental state, from Hong Kong's Independent Commission Against Corruption after the Godber affair); pay compared with private-sector levels (Austrian free-market economics, from Japan's first recommended pay cut for national civil servants). Blocks: party control of appointments, by published criteria (Command socialism, from The Soviet nomenklatura: party control of appointments); removal of officials for political or racial reasons, by a legal bar and a right of appeal (Corporatism and fascist economics, from Germany's 1933 law removing officials for political or racial reasons). Test: for five years after any change, yearly shares of posts filled by open competition, officials moved for political reasons, and ombudsman complaints upheld. Source: South China Morning Post; varuh-rs.si; Independent Commission Against Corruption; jil.go.jp; globalsecurity.org; University of Oregon."
+    "details": "Keeps: examination for entry (Redistributive economy, from Imperial China's examinations for officials); an independent ombudsman (Nordic social democracy, from Sweden's parliamentary ombudsman and its spread); an independent anti-corruption commission (Developmental state, from Hong Kong's Independent Commission Against Corruption after the Godber affair); pay compared with private-sector levels (Austrian free-market economics, from Japan's first recommended pay cut for national civil servants). Blocks: party control of appointments, by published criteria (Command socialism, from The Soviet nomenklatura: party control of appointments); removal of officials for political or racial reasons, by a legal bar and a right of appeal (Corporatism and fascist economics, from Germany's 1933 law removing officials for political or racial reasons). Test: for five years after any change, yearly shares of posts filled by open competition, and of officials moved for political reasons. Source: South China Morning Post; English web page on the origin of ombudsman institutions; Independent Commission Against Corruption; English archive article of a Japanese labour-policy institute; GlobalSecurity web page on the CPSU nomenklatura; University of Oregon."
   }
 }
