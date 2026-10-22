@@ -1,0 +1,91 @@
+{
+  "database": 234,
+  "practice": "Pensions and retirement",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "PN1",
+      "case": "United States Social Security Act of 1935",
+      "years": "1935 to 1950, including the 1939 amendments",
+      "claim": "The 1935 Act set a payroll levy of 2% on the first 3,000 US dollars of wages, split evenly between workers and employers. Tax receipts began in 1937, the first monthly checks were slated for 1942, and surplus money was to go into federal securities. Sources disagree on the financing. An SSA testimony by Commissioner Jo Anne Barnhart calls the 1935 financing pay-as-you-go, while an older SSA Bulletin article calls the 1935 funding murky, says it never truly ran on a full-reserve basis, and rejects the common view that the 1939 law switched the system from full reserve to pay-as-you-go. The 1939 amendments dropped a tax rise set for 1940, moved the first checks forward from 1942 to 1940, and added benefits for spouses, survivors, young children and dependent parents. The rate stayed at 1% for each side until 1950, when it rose to 1.5%. A 1937 Treasury estimate projected reserves of about 50 billion US dollars after roughly 45 years, and a stable level near 57 billion US dollars some 35 years later. Critics feared the reserve would be borrowed against for ordinary spending.",
+      "source": "Social Security Administration: Social Security Bulletin articles (September and December 1939 are dated; the older article's year is not stated), its program history article, and Commissioner Jo Anne Barnhart's testimony (year not stated)",
+      "url": "https://www.ssa.gov/policy/docs/ssb/v66n1/v66n1p1.html",
+      "caveat": "The sources disagree on whether 1935 was pay-as-you-go, and the claim reports both views. The reserve figures are a 1937 projection, not outcomes. The results are the agency's own history and summaries rather than full texts, and the SSA history page notes that its material is archival and may not reflect current policy. The results do not show which linked page holds each figure.",
+      "relevant_to": [
+        "Keynesian welfare capitalism"
+      ]
+    },
+    {
+      "id": "PN2",
+      "case": "Singapore's Central Provident Fund",
+      "years": "December 1953 (enabling law; one source gives 1955) to 1955 (launch); enrolment figures to 1989; rate figures from the late 1980s",
+      "claim": "The design avoided the cost of a Britain-style old-age pension by mandating savings. Policymakers weighed a pension against a provident fund, and the provident fund won after long deliberation, even though a pension would have paid workers sooner. Payouts were meant to track contributions plus interest. The scheme went live on 1 July 1955, though an earlier plan had targeted 1 May. Employer-funded retirement cover was scarce, reaching only civil servants and staff at some larger firms. Each side initially paid 5% of wages; the combined rate later rose to half of gross pay before a 1986 cut to 35%. Enrolment rose from about 180,000 at the start to about 2.08 million by 1989. Over a long stretch nearly all the money went into Singapore government bonds, which gave the state cheap financing for development. Sources disagree on the enactment date: December 1953 in the National Library Board's Infopedia and a CPF Board anniversary chapter, but 1955 in one online post. They also disagree on the kind of scheme: a 1996 essay calls the 1955 scheme essentially an old-age pension, while other results call it a savings scheme.",
+      "source": "National Library Board: BiblioAsia article on how the CPF scheme came to be, and Infopedia entry (years not stated); CPF Board anniversary chapter (year not stated); HKCER Letters essay (November 1996 reprint)",
+      "url": "https://biblioasia.nlb.gov.sg/vol-20/issue-4/jan-mar-2025/central-provident-fund-cpf/",
+      "caveat": "The launch date, the enrolment figures and the design account come from search summaries rather than full texts. The rate figures date from the late 1980s and need checking with the CPF Board, as the results themselves say. The National Library Board and CPF Board pieces are government bodies' own accounts, and the 1996 essay is a reprint.",
+      "relevant_to": [
+        "Developmental state"
+      ]
+    },
+    {
+      "id": "PN3",
+      "case": "Germany's 1957 pension reform",
+      "years": "1957 (vote of 21 January 1957); later assessments undated",
+      "claim": "Lawmakers approved the overhaul on 21 January 1957 by a large majority after a four-day debate, overcoming objections from business associations and the finance and economics ministries. Pay-as-you-go (Umlageverfahren) financing replaced saving-based pensions, and benefit uprating began to track wages; the average increase reached roughly 60 percent. The pension insurer credits the switch with success and says critics' worst-case forecasts never came true. A German Historical Institute abstract of a 1959 article by a former East German social-security director says the 1957 changes gave retirees a stake in economic growth and insulated pensions from currency erosion, and ranks them among the most notable achievements of Adenauer's administration. A Danish-language blog argues that the indexing rule became nearly impossible to undo in hard economic times, that demographic costs surfaced decades later, and that federal money accounted for over a quarter of pension spending in 1957. A Konrad Adenauer Foundation article notes that a male, full-time employment norm was the guiding ideal.",
+      "source": "Bundestag text archive, entry on the vote of 21 January 1957; Deutsche Rentenversicherung background text (year not stated); German Historical Institute abstract of a 1959 article (abstract year not stated); Konrad Adenauer Foundation article (year not stated); a Danish-language blog (undated)",
+      "url": "https://www.deutsche-rentenversicherung.de/DRV/DE/Home/65_Jahre_Rentenreform/65_jahre_rentenreform_hintergrundtext.html",
+      "caveat": "The search summary does not show which linked page gives the vote, the pay-as-you-go switch or the 60 percent figure, so treat these as unattributed. The pension insurer is an interested party. The abstract is of a 1959 East German article, which the abstract itself warns skews West German policy on this reform. The blog is an opinion piece, and its figures should be checked against official data.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "PN4",
+      "case": "Mondragon's Lagun Aro pension body",
+      "years": "1958 (ministerial order) onward; 2009 proposal; 2024 review",
+      "claim": "According to Mondragon Group timelines, a 1958 ministerial order pushed cooperative members out of Spain's General Social Security System, and the group ties that decision directly to the founding of Lagun Aro. Tu Lankide, the group's publication, presents Lagun Aro as a safety-net scheme for co-op members. A 2024 review in the Basque journal Gizaekoa describes it as a complementary social-provision entity (EPSV) tied to the Mondragon Group. A 2009 Tu Lankide article outlines a proposal to give the public part of the mixed pension system more weight, while making updates to Lagun Aro's own pensions depend on the entity's solvency. The results give no membership figures and no outcome for that proposal.",
+      "source": "Mondragon Group history pages (the group's own timelines; year not stated); Tu Lankide, the group's publication (a 2009 article and a page on Lagun Aro); Gizaekoa, Basque journal (2024 review)",
+      "url": "https://www.mondragon-corporation.com/en/history/",
+      "caveat": "The history pages and Tu Lankide are the group's own publications, so their framing is self-description. The results do not say how Lagun Aro is funded and give no membership or outcome data. A different insurer that shares the name and sells car, home and life policies is not used. The results did not show which linked page holds the 2024 review.",
+      "relevant_to": [
+        "Cooperative economy"
+      ]
+    },
+    {
+      "id": "PN5",
+      "case": "Chile's privatised pension system (AFPs)",
+      "years": "1981 (launch); replacement-rate figures from 2012 to 2022; an OECD figure for 2013",
+      "claim": "AmCham Chile places the system's launch in 1981, and sources give conflicting replacement rates. The OECD's 2013 figure puts Chile at 52% for men and 42% for women. A Dictuc study commissioned by the AFPs reports average rates of 87% for men and 58% for women. A La Tercera report on David Bravo's self-financed estimates gives 80% for men with 35 or more years of contributions before pension-savings withdrawals and 68% after, against 58% and 50% for women; adding the state's Universal Guaranteed Pension (PGU) lifts men's median net rate to 106% for 2012-2019 retirees and 100% for 2020-2022 retirees. A Chilean academic study of workers at one state university in the V Region concludes that replacement rates fall well short of initial projections and trail the old pay-as-you-go system. The AFP industry explains the gap through differing studies and calls the OECD number a projection covering all retirees.",
+      "source": "OECD figure for 2013, as reported in a Diario Financiero article on the AFPs' reply (article year not stated); Dictuc study commissioned by the AFPs (year not stated); La Tercera report on David Bravo's estimates (year not stated); Chilean academic journal article (year not stated); AmCham Chile (year not stated)",
+      "url": "https://www.df.cl/mercados/afp-defienden-sus-cifras-frente-a-informe-de-la-ocde-que-arroja-baja",
+      "caveat": "The sources disagree widely, and the claim reports the spread. None of the results tracks long-run outcomes for the 1981 cohort, the only OECD figure dates from 2013, and most sources are in Spanish. At least one is industry-linked, and the Dictuc work was commissioned by the AFPs. The AmCham piece also calls the system pay-as-you-go, which clashes with its savings design, so only its launch date is used.",
+      "relevant_to": [
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "PN6",
+      "case": "Sweden's notional defined-contribution pension reform",
+      "years": "1992 (outline) to 2003 (implementation); 2001 balancing mechanism; 2006 critique",
+      "claim": "The overhaul was outlined in 1992, approved in principle in 1994, legislated in 1998 and implemented from 1999 to 2003. The results disagree on the legal date: one summary calls a 1994 law the change, while another dates the new legislation to 1998. The reform moved the public scheme from defined benefit to a pay-as-you-go notional tier and a funded, privately run account; of the 18.5% contribution, 16 points went to the notional tier and 2.5 points to the funded account. Longevity feeds into annuity calculations, so workers still in the labour force carry more of the demographic risk, and the scheme sets no ceiling on when people must stop working. Automatic rules for indexation and annuitization, plus a balancing mechanism added in 2001, were meant to limit future legislation and political meddling. Scherman's 2006 NFT analysis reports signs that replacement rates and relative pension levels fall short of the 1994 targets, and says payouts are expected to fall significantly as demographics deteriorate. A study by Qi, Helgertz and Bengtsson finds that retirement ages rose most among highly educated workers, while low-skilled workers saw little change or earlier exits. Sweden appears to have been the first scheme of its kind; Italy, Latvia, Poland and Norway later took up NDC-style designs.",
+      "source": "Scherman (2006), NFT analysis of replacement rates; McGillivray, essay on notional defined-contribution public pensions (year not stated); Qi, Helgertz and Bengtsson, study on NDC and working lives (year not stated); reform timeline from search summaries (year not stated)",
+      "url": "https://nft.nu/nb/node/626",
+      "caveat": "The results include no broad assessment of long-run performance. Scherman's analysis reports signs rather than measured shortfalls, and the sources split between design descriptions and critical assessments. The labour-supply study and the essay give no year, and nothing in the results shows how the 2001 balancing mechanism has worked in practice.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    },
+    {
+      "id": "PN7",
+      "case": "China's unified urban pension system of 1997",
+      "years": "1997 (reform order) to 2002 (analysis)",
+      "claim": "In July 1997 Beijing ordered a unified urban pension system whose design paired a pay-as-you-go basic tier, paying flat benefits tied to regional wages, with a funded tier of individual accounts. A 2002 analysis by Sun and Maxwell portrays the individual accounts as indebted, with yearly deficits growing, and sees the pooling account in the same bind.",
+      "source": "Sun and Maxwell, 2002 analysis (publication not named in the search result); the 1997 design comes from search summaries with no named source",
+      "url": "https://ideas.repec.org/a/wri/journl/v25y2002i2p103-126.html",
+      "caveat": "Most of the material dates from the late 1990s to mid-2000s, so the picture is dated. The search gave only the authors and year for the 2002 analysis, and the linked record may or may not be that analysis; the results do not confirm it. The search summary also reports 2000 deficit figures, but no linked page was shown to give them, so they are left out.",
+      "relevant_to": [
+        "Chinese market socialism"
+      ]
+    }
+  ]
+}
