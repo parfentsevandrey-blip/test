@@ -334,6 +334,11 @@ nonisolated enum SelfTest {
         var o = CoreOptions()
         o.mode = .tun
         o.routing.mode = .all
+        // Свои порты: обычные могут быть заняты другим клиентом на этом Mac.
+        o.socksPort = 25808
+        o.httpPort = 25809
+        o.checkPort = 25812
+        o.metricsPort = 25813
         var direct = Endpoint(proto: .json)
         direct.rawOutbound = #"{"protocol":"freedom"}"#
         let server = Server(id: "direct", name: "Напрямую через ядро", endpoint: direct, link: "")

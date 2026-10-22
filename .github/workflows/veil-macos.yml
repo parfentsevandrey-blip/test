@@ -75,6 +75,25 @@ jobs:
             sleep 2
           done
 
+      - name: Crash reports
+        if: always()
+        run: |
+          for f in $(ls -t ~/Library/Logs/DiagnosticReports/Veil*.ips 2>/dev/null | head -2); do
+            echo "=== $f"
+            python3 - "$f" <<'PY'
+          import json, sys
+          text = open(sys.argv[1]).read()
+          body = json.loads(text[text.index("\n") + 1:])
+          print("exception:", body.get("exception"), "\ntermination:", body.get("termination", {}).get("indicator"))
+          for t in body.get("threads", []):
+              if t.get("triggered"):
+                  for fr in t.get("frames", [])[:25]:
+                      img = body["usedImages"][fr["imageIndex"]].get("name", "?")
+                      print("  ", img, fr.get("symbol", hex(fr.get("imageOffset", 0))), fr.get("sourceFile", ""), fr.get("sourceLine", ""))
+          PY
+          done
+          pgrep -fl xray || echo "оставшихся ядер нет"
+
       # Помощник с правами root, как после установки: системный прокси, сторож и настоящий TUN.
       - name: Self-test helper (root, proxy + TUN)
         env:

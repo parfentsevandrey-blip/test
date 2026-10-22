@@ -66,6 +66,37 @@ nonisolated final class XrayProcess: @unchecked Sendable {
     /// Неожиданное завершение ядра (код выхода).
     var onExit: (@Sendable (Int32) -> Void)?
 
+    /// Все запущенные ядра — чтобы остановить их, даже если Veil закрывают сигналом.
+    private static let registryLock = NSLock()
+    nonisolated(unsafe) private static var registry: [ObjectIdentifier: Weak] = [:]
+    private struct Weak { weak var process: XrayProcess? }
+
+    init() {
+        Self.registryLock.withLock { Self.registry[ObjectIdentifier(self)] = Weak(process: self) }
+    }
+
+    deinit {
+        let id = ObjectIdentifier(self)
+        Self.registryLock.withLock { _ = Self.registry.removeValue(forKey: id) }
+    }
+
+    static func stopAll() {
+        let all = registryLock.withLock { registry.values.compactMap(\.process) }
+        for p in all { p.stop() }
+    }
+
+    /// Ядро, оставшееся от прошлого запуска (Veil убили или он упал), — завершаем по pid-файлу.
+    static func killStale(_ name: String) {
+        let file = AppPaths.runtime.appendingPathComponent("\(name).pid")
+        guard let text = try? String(contentsOf: file, encoding: .utf8), let pid = pid_t(text.trimmingCharacters(in: .whitespacesAndNewlines)), pid > 0 else { return }
+        var buffer = [CChar](repeating: 0, count: 4096)
+        if proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0, String(cString: buffer).hasSuffix("/xray") {
+            kill(pid, SIGTERM)
+            LogBook.shared.add("Завершено ядро, оставшееся от прошлого запуска (pid \(pid))", level: .warning)
+        }
+        try? FileManager.default.removeItem(at: file)
+    }
+
     var running: Bool { lock.withLock { process?.isRunning ?? false } }
 
     /// Запуск с ожиданием строки «Xray … started» (или ошибки) не дольше 8 секунд.
@@ -77,6 +108,7 @@ nonisolated final class XrayProcess: @unchecked Sendable {
         let file = AppPaths.runtime.appendingPathComponent("\(name).json")
         FileManager.default.createFile(atPath: file.path, contents: Data(config.utf8), attributes: [.posixPermissions: 0o600])
 
+        Self.killStale(name)
         let p = Process()
         p.executableURL = binary
         p.arguments = ["run", "-c", file.path]
@@ -117,6 +149,7 @@ nonisolated final class XrayProcess: @unchecked Sendable {
             lock.withLock { process = nil }
             throw Failure.failed("Не удалось запустить ядро: \(error.localizedDescription)")
         }
+        try? "\(p.processIdentifier)".write(to: AppPaths.runtime.appendingPathComponent("\(name).pid"), atomically: true, encoding: .utf8)
         _ = started.wait(timeout: .now() + 8)
         if !p.isRunning {
             let why = box.failure ?? LogBook.shared.lastError ?? "ядро завершилось с кодом \(p.terminationStatus)"

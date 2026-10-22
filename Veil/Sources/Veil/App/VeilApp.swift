@@ -6,8 +6,22 @@ enum Entry {
     static func main() {
         setvbuf(stdout, nil, _IOLBF, 0)
         SelfTest.runIfRequested()
+        // Закрыли сигналом (kill, выход из системы) — ядра и системные настройки не должны остаться.
+        for sig in [SIGTERM, SIGINT, SIGHUP] {
+            signal(sig, SIG_IGN)
+            let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+            source.setEventHandler {
+                MainActor.assumeIsolated { AppModel.shared.shutdown() }
+                XrayProcess.stopAll()
+                Foundation.exit(0)
+            }
+            source.resume()
+            signalSources.append(source)
+        }
         VeilApp.main()
     }
+
+    nonisolated(unsafe) static var signalSources: [DispatchSourceSignal] = []
 }
 
 struct VeilApp: App {
@@ -67,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         AppModel.shared.shutdown()
+        XrayProcess.stopAll()
         return .terminateNow
     }
 
