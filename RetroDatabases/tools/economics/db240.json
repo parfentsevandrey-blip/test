@@ -45,8 +45,8 @@
     },
     {
       "model": "Classical laissez-faire capitalism",
-      "best": "The case Bosman ruling on player transfers reports that a player whose contract had expired could sign for a club in another EU football association without a fee, after the European Court of Justice found that the transfer system restricted workers' free movement. Effects come from secondary coverage, and the judgment itself was not opened.",
-      "worst": "Freedom for clubs to leave a shared league can let a group split the common competition. The case Breakaway that formed the Premier League reports that in 1992 a group of First Division clubs broke away from the Football League to set up a separate top-flight competition. The source is a magazine feature built on recollections and was not opened, and it gives no account of how broadcast money was shared, so no revenue claim is made. Source: FourFourTwo, football magazine feature on the first Premier League season (year not shown in the result)"
+      "best": "The case Bosman ruling on player transfers reports that a player whose contract had expired could sign for a club in another EU football association without a fee, after the European Court of Justice found that the transfer system restricted workers' free movement. Effects come from secondary coverage, and sources differ on which clubs the right covers; neither the judgment nor its catalogue entry was opened.",
+      "worst": "Inferred from its principle that freedom for clubs to leave a shared league can let a group split the common competition. The case Breakaway that formed the Premier League reports that in 1992 a group of First Division clubs broke away from the Football League to set up a separate top-flight competition. The source is a magazine feature built on recollections and was not opened, and no result says how broadcast money was shared, so no revenue claim is made. Source: FourFourTwo, football magazine feature on the first Premier League season (year not shown in the result)"
     },
     {
       "model": "Austrian free-market economics",
@@ -55,8 +55,8 @@
     },
     {
       "model": "Monetarist neoliberalism",
-      "best": "The case Bosman ruling on player transfers reports that nationality limits on EU players in domestic leagues were struck down and that UEFA dropped its three-foreigner squad limit in its competitions, which removes rules on who clubs may sign. The judgment was not opened, and its effects come from secondary coverage.",
-      "worst": "Fewer shared rules can leave clubs free to quit a common body. The case Breakaway that formed the Premier League reports that in 1992 a group of First Division clubs broke away from the Football League to set up a separate top-flight competition. The source is a magazine feature built on recollections and was not opened, and it gives no account of how broadcast money was shared, so no revenue claim is made. Source: FourFourTwo, football magazine feature on the first Premier League season (year not shown in the result)"
+      "best": "The case Bosman ruling on player transfers reports that nationality limits on EU players in domestic leagues were struck down and that UEFA dropped its three-foreigner squad limit in its competitions, which removes rules on who clubs may sign. Neither the judgment nor its catalogue entry was opened, and its effects come from secondary coverage.",
+      "worst": "Inferred from its principle that fewer shared rules can leave clubs free to quit a common body. The case Breakaway that formed the Premier League reports that in 1992 a group of First Division clubs broke away from the Football League to set up a separate top-flight competition. The source is a magazine feature built on recollections and was not opened, and no result says how broadcast money was shared, so no revenue claim is made. Source: FourFourTwo, football magazine feature on the first Premier League season (year not shown in the result)"
     },
     {
       "model": "Keynesian welfare capitalism",
@@ -96,7 +96,7 @@
     {
       "model": "Cooperative economy",
       "best": "The case Green Bay Packers' community ownership reports that residents began buying shares in 1923, when the club was nearly broke, and that individual holdings are capped, a limit the article says discourages hostile takeovers. The article was not opened and its figures conflict, so no figures are given here.",
-      "worst": "Member control can slow a club's access to outside capital. The case German 50+1 rule on club ownership reports that critics say the rule holds back expansion in a commercial market, while supporters say it shields clubs against outside funding. The record rests on one explainer excerpt that was not opened and gives no adoption date. Source: Bundesliga website, explainer (year not shown in the result)"
+      "worst": "Inferred from its principle that member control can slow a club's access to outside capital. The case German 50+1 rule on club ownership reports that critics say the rule holds back expansion in a commercial market, while supporters say it shields clubs against outside funding. The record rests on one explainer excerpt that was not opened and gives no adoption date. Source: Bundesliga website, explainer (year not shown in the result)"
     },
     {
       "model": "Anarcho-communism",
@@ -160,7 +160,7 @@
     },
     {
       "model": "Distributism",
-      "best": "The case Green Bay Packers' community ownership reports that residents began buying shares in the club in 1923, when it was nearly broke, with individual holdings capped, which spreads ownership widely rather than in one owner's hands. The article was not opened and its figures conflict, so no figures are given here.",
+      "best": "The case Green Bay Packers' community ownership reports that residents began buying shares in the club in 1923, when it was nearly broke, with individual holdings capped, a limit the article says discourages hostile takeovers. The article was not opened and its figures conflict, so no figures are given here.",
       "worst": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, so league-wide matters such as shared rules, broadcast arrangements and safety standards may be left unresolved, and small clubs with little scale may struggle to afford good facilities. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
     },
     {

@@ -46,7 +46,7 @@
     {
       "model": "Classical laissez-faire capitalism",
       "best": "Inferred from its principle that competitive markets and private property let artists sell directly to audiences, patrons and publishers, so works are judged by buyers rather than by officials, and firms can specialise in film, recording or publishing. There is no documented case in the pool.",
-      "worst": "France's film support fund (CNC) and its levies: a commentary read through a digest, whose figures are unconfirmed, says Hollywood imports threatened to overwhelm the French film sector, and that a fund paid for by dedicated levies was set up to protect it. Source: Audencia, web article 'The CNC: Backbone of French Exception Culturelle' (undated)"
+      "worst": "Inferred from its principle that the state protects property and contracts and otherwise stays out, art with a small paying audience, such as experimental film, opera or small theatre, may get no public support, and firms that hold the rights to a work decide who may hear or see it. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
     },
     {
       "model": "Austrian free-market economics",
@@ -171,7 +171,7 @@
     {
       "model": "Universal basic income",
       "best": "Ireland's Basic Income for the Arts pilot: early figures, as a secondary summary gives them, show recipients about 12 percentage points more likely to make a living from arts work alone than a comparison group, and the share reporting depression or anxiety in the previous four weeks almost ten points lower. The pilot pays a selected group, not every citizen, and no full evaluation is included.",
-      "worst": "Ireland's Basic Income for the Arts pilot: early figures, as a secondary summary gives them, show that recipients cut back their time in other sectors, so the payment can draw people away from other work. The pilot pays a selected group, not every citizen, so it tests only part of the model. Source: Cultural policy summary of the pilot's first review (secondary; undated)"
+      "worst": "Ireland's Basic Income for the Arts pilot: early figures, as a secondary summary gives them, show that recipients cut back their time in other sectors. The pilot pays a selected group, not every citizen, so it tests only part of the model. Source: Cultural policy summary of the pilot's first review (secondary; undated)"
     },
     {
       "model": "Modern monetary theory",
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "A public arts fund that sits at arm's length from ministers, is paid for from public budgets, and spreads grants across regions and to individual artists. Membership of creative trades stays voluntary, no official may ban a style, and any cut to a screen quota is reviewed in public.",
-    "details": "Keeps: arm's-length funding (Keynesian welfare capitalism; Arts Council of Great Britain, from its 1946 royal charter, as a summary reports). Blocks: compulsory membership (Corporatism and fascist economics; Reich Chamber of Culture and compulsory membership), safeguard: voluntary membership; official style bans (Command socialism; Soviet decree against 'formalism' in music), safeguard: no style ban, and every funding refusal given in writing; unreviewed protection cuts (Monetarist neoliberalism; South Korea halves its screen quota ahead of US trade talks), safeguard: public review of any cut. Test: over five years, reported yearly, the share of arts money reaching individual artists and regional groups, and the share of artists earning from arts work. Source: Arts Council England, online history timeline for the 1940s (undated); US State Department, Foreign Relations of the United States, 1933 (diplomatic dispatch); Partisan Review, 1949 (vol. 16, no. 8); US State Department, Foreign Relations of the United States, 1949 (airgram); Bilaterals, news report on the cabinet decision (2006); Korean film news reports (2006)"
+    "details": "Keeps: arm's-length funding (Keynesian welfare capitalism; Arts Council of Great Britain, from its 1946 royal charter, as a summary reports). Blocks: compulsory membership (Corporatism and fascist economics; Reich Chamber of Culture and compulsory membership, one dispatch read only in summary), safeguard: voluntary membership; official style bans (Command socialism; Soviet decree against 'formalism' in music, via a digest, decree text not found), safeguard: no style ban; trade-linked protection cuts (Monetarist neoliberalism; South Korea halves its screen quota ahead of US trade talks, as 2006 summaries report), safeguard: public review of any cut. Test: over several years, the share of arts money reaching individual artists and regional groups, and the share of artists earning from arts work. Source: Arts Council England, online history timeline for the 1940s (undated); US State Department, Foreign Relations of the United States, 1933 (diplomatic dispatch); Partisan Review, 1949 (vol. 16, no. 8); US State Department, Foreign Relations of the United States, 1949 (airgram); Bilaterals, news report on the cabinet decision (2006); Korean film news reports (2006)"
   }
 }
