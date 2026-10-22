@@ -1,0 +1,191 @@
+{
+  "database": 240,
+  "type": "practice",
+  "practice": "Sport and professional leagues",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that sport runs on reciprocal gifts of time, coaching and loyalty, so volunteers, clubs and supporters repay one another and build the trust that keeps teams and leagues going. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that gifts create obligations to return, so patrons who give money to a club gain claims on selection and posts, while outsiders who cannot give in return wait for places with no route in. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a family-run club balances its work against household needs, so local sport is organised for participation rather than profit, and volunteers play and train around family work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption, so small family-run clubs lack the capital to fund professional play, and young players in households short of labour may leave training when work at home calls. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central authority collects levies and pays them out, so a national fund could pay for grassroots pitches, coaches and access to sport in every region. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre allocates what it collects by rank, so funds for sport flow to officials, favoured clubs and events that serve the centre, while local clubs and mass participation receive little. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that owners control the labour of the people they hold, so a club or academy can plan fixed rosters and long training without losing workers to rivals. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that labour is extracted through ownership, so athletes and trainers are denied pay, education and any right to leave, and they can be sold to other owners without their consent. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that a lord gives land, protection and justice in return for service, so a lord could fund a ground, a team and local games for the manor in exchange for the people's labour. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that peasants owe labour services to a lord, so players bound to a patron must give their time to his teams, lose their land and rights if they leave, and have little power to contest the terms. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that masters and statutes regulate training and quality, so a sport's governing body can set coaching, refereeing and safety standards that every club and athlete must meet. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that statutes fix who may enter and at what stage, so closed bodies keep new clubs, coaches and young players waiting for places, and rules on prices keep the cost of attending matches high for fans. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state seeks a trade surplus and national strength, so it can back national teams, host major events and build facilities that draw foreign spectators and income. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state regulates trade toward national gain, so sport is steered toward prestige and export income, with athletes, clubs and fixtures chosen for their national value rather than for play or participation. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that only land creates a net product, so a single tax on the rent of land could fund public pitches and parks without taxing the labour or capital that clubs use. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a single tax on land should carry the state, so when land rents are low the public money for pitches, coaching and grassroots play may fall short, and sport has no other assured source of funds. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "The case Bosman ruling on player transfers reports that a player whose contract had expired could sign for a club in another EU football association without a fee, after the European Court of Justice found that the transfer system restricted workers' free movement. Effects come from secondary coverage, and the judgment itself was not opened.",
+      "worst": "Freedom for clubs to leave a shared league can let a group split the common competition. The case Breakaway that formed the Premier League reports that in 1992 a group of First Division clubs broke away from the Football League to set up a separate top-flight competition. The source is a magazine feature built on recollections and was not opened, and it gives no account of how broadcast money was shared, so no revenue claim is made. Source: FourFourTwo, football magazine feature on the first Premier League season (year not shown in the result)"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, so ticket, transfer and sponsorship prices show which clubs and events fans want, and no central planner has to set them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion distorts production, so clubs that borrow cheaply to pay for players and stadiums may take on costs they cannot meet, and debt and forced sales follow once credit tightens. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "The case Bosman ruling on player transfers reports that nationality limits on EU players in domestic leagues were struck down and that UEFA dropped its three-foreigner squad limit in its competitions, which removes rules on who clubs may sign. The judgment was not opened, and its effects come from secondary coverage.",
+      "worst": "Fewer shared rules can leave clubs free to quit a common body. The case Breakaway that formed the Premier League reports that in 1992 a group of First Division clubs broke away from the Football League to set up a separate top-flight competition. The source is a magazine feature built on recollections and was not opened, and it gives no account of how broadcast money was shared, so no revenue claim is made. Source: FourFourTwo, football magazine feature on the first Premier League season (year not shown in the result)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Inferred from its principle that public spending rises in slumps, so the state can fund stadiums, coaching and community sport when gate receipts and club budgets fall, keeping players, coaches and grassroots clubs in work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that spending rises in slumps and falls in booms, so public money for sport comes and goes with the cycle, leaving clubs, coaches and youth programmes without steady budgets for long-term plans. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
+    },
+    {
+      "model": "Social market economy",
+      "best": "Inferred from its principle that competitive markets operate inside a legal order that curbs monopoly, so leagues compete for fans and sponsors while rules stop any one owner from dominating a league, and social insurance covers players who are injured or out of work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a legal order must curb monopoly, so the rules that keep competition open can be slow and costly, and a regulator may hold back clubs from new revenue or ownership structures that a market would allow. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "Inferred from its principle that universal public services are paid for by high taxes, so public sports halls, pools and pitches are open to all, and national wage bargaining sets pay for players and coaches across clubs. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that high taxes fund universal services, so sport depends on public budgets that can be squeezed in hard times, and one national pay agreement may hold back clubs with less money or different ambitions. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state directs credit and targets to chosen industries and disciplines firms by performance, so a sports ministry can back chosen sports and academies and withdraw funds from bodies that miss set results. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state picks sectors, so public money may favour chosen sports and clubs, and performance tests may reward medal counts while leaving grassroots play and local clubs short of funds. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that the rent of land funds public services, so a tax on land value could pay for public pitches, parks and pools, and speculation in land for sport venues would fall. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a tax on land value falls whatever the land is used for, so clubs and grounds on valuable urban sites could be taxed off their land, and sport could move to cheaper sites farther from the people who play. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities built by example can replace wage competition, so amateur clubs run by their members can serve as model associations that other communities copy. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that planned associations rest on example and goodwill, so a club built this way may struggle to keep its rules and funding once its founders step back, and members who disagree may have no fixed way to settle it. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that free contracts let workers keep the full value of their work, so players and coaches could move between clubs without a fee taken from their earnings, and clubs could lend to one another at cost. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that mutual credit replaces banks, so a sport's mutual lending fund may be small and slow to reach clubs in need, and abolishing rent on property may leave clubs without secure venues when owners stop renting. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "The case Green Bay Packers' community ownership reports that residents began buying shares in 1923, when the club was nearly broke, and that individual holdings are capped, a limit the article says discourages hostile takeovers. The article was not opened and its figures conflict, so no figures are given here.",
+      "worst": "Member control can slow a club's access to outside capital. The case German 50+1 rule on club ownership reports that critics say the rule holds back expansion in a commercial market, while supporters say it shields clubs against outside funding. The record rests on one explainer excerpt that was not opened and gives no adoption date. Source: Bundesliga website, explainer (year not shown in the result)"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that goods are shared by need within federated communes, so sport, equipment and coaching can be provided free to every member, shared by need rather than by price. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free association replaces contracts, so commitments to teams, fixtures and training can lapse when a member chooses to leave, and a league without binding rules may fail to keep fixtures, safety and fair play. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that trade unions run work through workers' own organisations, so players' associations and club staff unions could run training, pay scales and league rules directly, using strikes when needed. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that strikes, and eventually a general strike, are the tools of change, so a dispute between players or staff and owners could halt a whole league's fixtures, and fans and minor clubs would bear losses from disputes they did not start. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that public enterprise, owned by cities or the nation, can secure a national minimum of welfare, so cities could own pitches, pools and clubs and guarantee every child access to sport. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that change comes gradually by democratic means, so public ownership of sport may grow slowly, leaving players and clubs to wait for reform, and municipal enterprises may be run as bureaucracies that answer to officials more than to players and fans. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control of industry through councils, so players and fans could sit on the councils that set a club's budgets, ticket prices and rules, with the state as one partner among several. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils share control with the state and with consumers, so decisions on clubs, fixtures and prices may be slow and contested, and a council of players and fans may block change that a wider public would accept. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that central plans set output and investment, so the state can build stadiums, pools and training centres quickly and move labour into priority sports for fast results. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state mobilises labour for rapid industrialisation, so athletes and coaches are assigned to priority sports by plan, clubs have no say over their budgets, and fans and grassroots play give way to targets set at the centre. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that public ownership works with market prices, so publicly owned clubs and venues set ticket and wage prices that managers follow, while a central board sets the rules and the investment. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a central board sets the rules and investment of publicly owned clubs, so investment can follow the board's priorities rather than what fans and players want funded, and managers may have little room to change those priorities. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that once classes disappear, distribution follows need, so facilities and coaching are shared by need, and every person can play and train as far as they need to. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that distribution by ability and need waits on a stage of plenty, so until that stage arrives a sport run on this principle may ration places, kit and coaching by the plans of those who govern it. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "Inferred from its principle that public ownership of key sectors works alongside markets and special zones, so clubs and venues in designated zones can compete on price and quality while the state keeps ownership of main assets such as stadiums. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that price reform proceeds gradually under party direction, so the pace of change in sport is set from above, ticket and wage prices may move slowly, and clubs outside the zones may stay under public ownership without room to adapt. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, so players, staff and fans could shape club budgets, fixtures and pricing through rounds of proposals and replies, with unpleasant tasks spread evenly across members. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that repeated proposals take time, so decisions on fixtures, transfers and budgets may be slow to settle, and a long round of councils may miss the deadlines that competitions and funding bodies set. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into state-controlled bodies, so one federation can bring clubs, players and coaches under a single structure, set training rules and fund facilities through one channel. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, so sport can be turned to national display or military training, athletes and clubs follow state orders, and independent federations, fans and grassroots play lose their voice. There is no documented case in the pool. Source: Italian corporative law; Nazi Four-Year Plan"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk and bars interest, so clubs and facilities can be funded through profit-sharing partnerships, and zakat can help families who cannot pay to take part in sport. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that interest is prohibited and profit and risk are shared, so clubs may find it hard to borrow quickly, and partnerships that share risk may leave clubs and players exposed to losses shared with investors who wish to leave. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being, so sport favours moderate spending, small local clubs and non-violent play, with facilities small enough for local people to reach on foot or by bicycle. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production is small-scale and local, so national competitions, large venues and professional salaries may be hard to fund, and small clubs may lack the scale to keep players and coaches in full-time work. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "The case Green Bay Packers' community ownership reports that residents began buying shares in the club in 1923, when it was nearly broke, with individual holdings capped, which spreads ownership widely rather than in one owner's hands. The article was not opened and its figures conflict, so no figures are given here.",
+      "worst": "Inferred from its principle that subsidiarity keeps decisions with the smallest competent body, so league-wide matters such as shared rules, broadcast arrangements and safety standards may be left unresolved, and small clubs with little scale may struggle to afford good facilities. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that activity stays within planetary limits with a social floor under everyone, so sport can focus on play, participation and local facilities rather than on ever larger budgets, travel and broadcast reach. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no need to grow, so clubs that cannot expand may lose investment and players to richer rivals, and leagues that cap spending or travel may find it hard to fund facilities and wages at the level players and fans expect. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen receives an unconditional income, so people can take up sport, coaching or refereeing without a paid job, and mass participation is not limited to people who can afford club fees. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, so sport budgets that depend on those taxes may be squeezed when land values or resource rents fall, and clubs and facilities could lose public funding in those years. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government which issues its own currency can fund full employment, so public money can pay coaches, groundsmen and sports staff directly, and grassroots facilities need not wait for tax income. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so public spending on sport can push up wages and facility costs when the economy is already at full capacity, and clubs may face price rises that public budgets then have to cover. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that communities who share a resource govern it with rules they design, monitor and enforce, so fans and residents who share a club, pitch or park can write and police their own rules for use and access. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that shared rules must be enforced and nested in wider institutions, so a local group running a shared sports ground may lack monitoring and enforcement, may favour its members over outsiders, and may fail when disputes go beyond the group. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "The design keeps community ownership of clubs with a cap on any one holder's stake, keeps shared leagues intact through rules nested in the wider league, and caps borrowing against future player sales. It is tested on ownership, breakaway proposals, club debt and grassroots participation over ten seasons.",
+    "details": "Keeps: community ownership of clubs with a cap on individual holdings (Cooperative economy and Distributism, from the case Green Bay Packers' community ownership). Blocks: a group of clubs breaking away from the shared league (Classical laissez-faire capitalism and Monetarist neoliberalism, from the case Breakaway that formed the Premier League), with the safeguard that any new top-flight competition needs the wider league's agreement and rules nested in it; club debt from cheap borrowing (Austrian free-market economics), with the safeguard of a cap on borrowing against future player sales. Test: over ten seasons, measure each club's largest holding, breakaway proposals, club debt against revenue and grassroots participation. Source: Mental Floss, popular magazine article (year not shown in the result); FourFourTwo, football magazine feature on the first Premier League season (year not shown in the result); Ostrom, Governing the Commons; Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+  }
+}
