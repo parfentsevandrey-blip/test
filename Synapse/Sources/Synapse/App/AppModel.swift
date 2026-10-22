@@ -293,16 +293,24 @@ final class AppModel {
 
     // MARK: - Выжать максимум
 
+    /// Только проверенное: отобранные и модели известных лабораторий с заметным числом загрузок —
+    /// любительские сборки и слияния с неизвестным качеством в подборки не попадают.
+    private var trustedPool: [ModelCard] {
+        let labs = Set(CardBuilder.labs.values)
+        return CardBuilder.dedupe(cards + Curated.cards.filter { c in !cards.contains { $0.id == c.id } })
+            .filter { $0.curated || (labs.contains($0.lab) && $0.downloads >= 2000) }
+    }
+
     /// Модели классом выше рекомендованных, которые этот Mac потянет сжатыми.
     var stretchModels: [Advisor.Stretch] {
         let recs = recommendations
         let everyday = recs.first { $0.role == .balanced }?.card.quality ?? recs.map(\.card.quality).max() ?? 0
-        // Только проверенное: отобранные и модели известных лабораторий с заметным числом загрузок —
-        // любительские сборки и слияния с неизвестным качеством сюда не попадают.
-        let labs = Set(CardBuilder.labs.values)
-        let pool = CardBuilder.dedupe(cards + Curated.cards.filter { c in !cards.contains { $0.id == c.id } })
-            .filter { $0.curated || (labs.contains($0.lab) && $0.downloads >= 2000) }
-        return Array(Advisor.stretch(cards: pool, variants: variants, mac: mac, above: everyday).prefix(18))
+        return Array(Advisor.stretch(cards: trustedPool, variants: variants, mac: mac, above: everyday).prefix(18))
+    }
+
+    /// Модели, которые этот Mac даже не заметит: без нагрева и вентилятора.
+    var quietModels: [Advisor.Quiet] {
+        Array(Advisor.quiet(cards: trustedPool, variants: variants, mac: mac).prefix(18))
     }
 
     /// Рекомендованная на каждый день — для сравнения «во сколько раз крупнее».

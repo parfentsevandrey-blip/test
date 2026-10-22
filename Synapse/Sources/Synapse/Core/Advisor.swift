@@ -366,6 +366,45 @@ extension Advisor {
     }
 }
 
+// MARK: - Тихие и лёгкие
+
+extension Advisor {
+    /// Модель, которую Mac почти не заметит: мало памяти, мало вычислений, ответ — за секунды.
+    nonisolated struct Quiet: Identifiable, Sendable, Hashable {
+        var card: ModelCard
+        var variant: ModelVariant
+        var fit: FitReport
+        var id: String { card.id }
+
+        /// Доля памяти Mac, которую займёт модель.
+        func share(_ mac: MacProfile) -> Double { Double(fit.memory) / Double(max(mac.memory, 1)) }
+        /// Сколько секунд пишется ответ в ~300 слов (≈750 токенов).
+        var answerSeconds: Double { fit.tokensPerSecond > 0 ? 750 / fit.tokensPerSecond : .infinity }
+    }
+
+    /// Не больше четверти памяти: остальные программы ничего не почувствуют.
+    nonisolated static let quietShare = 0.25
+    /// На каждый токен работает не больше ~5 млрд параметров — видеоядро не успевает нагреться.
+    nonisolated static let quietActive = 5.0
+    /// Не медленнее 35 ток/с: ответ готов за десяток-другой секунд, нагрузка короткая.
+    nonisolated static let quietSpeed = 35.0
+
+    /// Модели, которые работают на этом Mac без нагрева и шума вентилятора.
+    nonisolated static func quiet(cards: [ModelCard], variants: [String: [ModelVariant]], mac: MacProfile) -> [Quiet] {
+        let limit = max(2.5 * gb, Double(mac.memory) * quietShare)
+        var result: [Quiet] = []
+        for card in cards where (card.activeParams ?? card.params) <= quietActive && EngineCatalog.supports(card.architecture) {
+            let list = variants[card.id] ?? ModelVariant.estimates(params: card.params)
+            guard let picked = pick(list, card: card, mac: mac), picked.fit.comfortable,
+                  Double(picked.fit.memory) <= limit, picked.fit.tokensPerSecond >= quietSpeed else { continue }
+            result.append(Quiet(card: card, variant: picked.variant, fit: picked.fit))
+        }
+        return result.sorted { a, b in
+            a.card.quality != b.card.quality ? a.card.quality > b.card.quality : a.fit.tokensPerSecond > b.fit.tokensPerSecond
+        }
+    }
+}
+
 extension Format {
     nonisolated static func gb(_ bytes: Double) -> String {
         let v = bytes / Advisor.gb

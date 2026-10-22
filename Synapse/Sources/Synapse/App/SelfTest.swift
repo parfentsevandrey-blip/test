@@ -169,6 +169,15 @@ nonisolated enum SelfTest {
         ok = check(roomy.context == Advisor.defaultContext(pro24) && !roomy.compressKV, "просторная модель: обычный контекст без сжатия") && ok
         let fixed = Advisor.loadPlan(size: 5_000_000_000, params: 8, active: nil, trainContext: 32_768, mac: pro24, context: 65_536, compressKV: true)
         ok = check(fixed.context == 32_768 && fixed.compressKV, "контекст из настроек не больше обученного модели") && ok
+        print("— Тихие и лёгкие")
+        for (name, m) in [("M4 Pro 24 ГБ", pro24), ("Air M1 8 ГБ", macs[0].1)] {
+            let quiet = Advisor.quiet(cards: Curated.cards, variants: [:], mac: m)
+            print("  \(name): " + quiet.map { "\($0.card.name) \($0.variant.quant.name) \(Format.gb(Double($0.fit.memory))) ≈\(Int($0.fit.tokensPerSecond)) ток/с" }.joined(separator: "; "))
+            ok = check(!quiet.isEmpty && quiet.allSatisfy { $0.share(m) <= max(Advisor.quietShare, 2.5 * Advisor.gb / Double(m.memory)) + 0.001
+                && $0.fit.tokensPerSecond >= Advisor.quietSpeed && ($0.card.activeParams ?? $0.card.params) <= Advisor.quietActive },
+                       "\(name): лёгкие модели — не больше четверти памяти, быстрые, мало активных параметров") && ok
+        }
+
         let (a, b) = Format.gbDistinct(20.4 * Advisor.gb, 19.8 * Advisor.gb)
         ok = check(a != b, "объёмы в предупреждении не сливаются: «\(a)» и «\(b)»") && ok
         let shrunk = Advisor.estimate(size: 17_500_000_000, params: 27, active: nil, mac: pro24)

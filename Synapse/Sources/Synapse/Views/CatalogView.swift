@@ -4,16 +4,17 @@ import SwiftUI
 struct CatalogView: View {
     @Environment(AppModel.self) private var model
     @State private var query = ""
-    @State private var filter: Filter = DemoUI.isOn && DemoUI.screen == "stretch" ? .stretch : .all
+    @State private var filter: Filter = !DemoUI.isOn ? .all : DemoUI.screen == "stretch" ? .stretch : DemoUI.screen == "quiet" ? .quiet : .all
     @State private var sort: Sort = .popular
 
     enum Filter: String, CaseIterable, Identifiable {
-        case all, fits, stretch, small, vision, code, reasoning, installed
+        case all, fits, quiet, stretch, small, vision, code, reasoning, installed
         var id: String { rawValue }
         var title: String {
             switch self {
             case .all: "Все"
             case .fits: "Подходят этому Mac"
+            case .quiet: "Тихие и лёгкие"
             case .stretch: "Выжать максимум"
             case .small: "Лёгкие"
             case .vision: "Видят картинки"
@@ -64,6 +65,8 @@ struct CatalogView: View {
             }
             if filter == .stretch && query.isEmpty {
                 StretchList()
+            } else if filter == .quiet && query.isEmpty {
+                QuietList()
             } else {
                 list
             }
@@ -102,8 +105,8 @@ struct CatalogView: View {
                         Button {
                             withAnimation(.snappy) { filter = f }
                         } label: {
-                            if f == .stretch {
-                                Label(f.title, systemImage: "flame.fill").font(.system(size: 12, weight: .medium)).padding(.horizontal, 4)
+                            if f == .stretch || f == .quiet {
+                                Label(f.title, systemImage: f == .stretch ? "flame.fill" : "leaf.fill").font(.system(size: 12, weight: .medium)).padding(.horizontal, 4)
                             } else {
                                 Text(f.title).font(.system(size: 12, weight: .medium)).padding(.horizontal, 4)
                             }
@@ -124,7 +127,7 @@ struct CatalogView: View {
         let source = model.searchResults ?? model.cards
         var list = source.map { ($0, model.fit($0)) }
         switch filter {
-        case .all, .stretch: break
+        case .all, .stretch, .quiet: break
         case .fits: list = list.filter { $0.1?.comfortable == true }
         case .small: list = list.filter { $0.0.params < 5 }
         case .code: list = list.filter { $0.0.tags.contains(.code) }
@@ -525,4 +528,95 @@ struct GuideView: View {
             }
         }
     }
+}
+
+/// «Тихие и лёгкие»: модели, которые этот Mac даже не заметит — без нагрева и шума вентилятора.
+struct QuietList: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let rows = model.quietModels
+        ScrollView {
+            LazyVStack(spacing: 8) {
+                intro
+                if rows.isEmpty {
+                    ContentUnavailableView("Лёгких моделей не нашлось", systemImage: "leaf",
+                                           description: Text("Обновите каталог или снимите фильтр — посмотрите вкладку «Подходят этому Mac»."))
+                        .padding(.top, 30)
+                }
+                ForEach(rows) { q in
+                    QuietRow(quiet: q)
+                        .onTapGesture { model.detailCard = q.card }
+                }
+            }
+            .padding(.horizontal, 28)
+            .padding(.bottom, 24)
+        }
+        .scrollIndicators(.automatic)
+    }
+
+    private var intro: some View {
+        let green = Color(red: 0.2, green: 0.78, blue: 0.5)
+        return ContentCard(padding: 18) {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Тихо и легко на \(model.mac.chipShort) · \(Int(model.mac.memoryGB.rounded())) ГБ", systemImage: "leaf.fill")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(green)
+                Text("Эти модели можно держать открытыми весь день: каждая занимает не больше четверти памяти Mac, а на каждое слово работает не больше \(Int(Advisor.quietActive)) млрд параметров.")
+                Text("Ответ в пару абзацев пишется за секунды, видеоядро не успевает нагреться — вентилятор не включится, батарея почти не тратится, остальные программы ничего не почувствуют.")
+                Text("Они проще больших моделей: для писем, пересказов, перевода, быстрых вопросов и черновиков — в самый раз, для сложного анализа загляните в «Выжать максимум».")
+                    .foregroundStyle(.secondary)
+            }
+            .font(.system(size: 12))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.bottom, 4)
+    }
+}
+
+struct QuietRow: View {
+    @Environment(AppModel.self) private var model
+    let quiet: Advisor.Quiet
+
+    var body: some View {
+        let q = quiet
+        let green = Color(red: 0.2, green: 0.78, blue: 0.5)
+        HStack(alignment: .top, spacing: 14) {
+            ModelAvatar(lab: q.card.lab, size: 42)
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 6) {
+                    Text(q.card.name).font(.system(size: 14, weight: .semibold)).lineLimit(1)
+                    if q.card.curated {
+                        Image(systemName: "checkmark.seal.fill").font(.system(size: 11)).foregroundStyle(Section.catalog.tint).help("Проверено Synapse")
+                    }
+                }
+                Text("\(q.card.lab) · \(q.card.paramsText) параметров · \(q.variant.quant.name)")
+                    .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                let tags = q.card.tags.sorted { $0.rawValue < $1.rawValue }
+                ViewThatFits(in: .horizontal) {
+                    ForEach([3, 2, 1, 0], id: \.self) { n in
+                        HStack(spacing: 5) { ForEach(Array(tags.prefix(n)), id: \.self) { TagPill(tag: $0) } }
+                    }
+                }
+                Text("≈\(Int(q.fit.tokensPerSecond.rounded())) ток/с · ответ в пару абзацев — за \(seconds(q.answerSeconds)) · \(percent(q.share(model.mac))) памяти Mac")
+                    .font(.system(size: 10.5)).foregroundStyle(green).lineLimit(1)
+            }
+            Spacer(minLength: 10)
+            VStack(alignment: .trailing, spacing: 6) {
+                Text(Format.bytes(q.variant.size) + (q.variant.estimated ? "*" : ""))
+                    .font(.system(size: 13, weight: .semibold)).monospacedDigit()
+                FitBadge(fit: q.fit)
+                InstallButton(card: q.card, variant: q.variant.estimated ? nil : q.variant, prominent: false)
+            }
+            .frame(width: 150, alignment: .trailing)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.background.opacity(0.55)))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(green.opacity(0.2)))
+        .contentShape(RoundedRectangle(cornerRadius: 18))
+    }
+
+    private func seconds(_ s: Double) -> String { s < 60 ? "\(max(1, Int(s.rounded()))) с" : "\(Int((s / 60).rounded())) мин" }
+    private func percent(_ x: Double) -> String { x < 0.01 ? "меньше 1%" : "\(Int((x * 100).rounded()))%" }
 }

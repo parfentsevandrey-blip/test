@@ -38,7 +38,7 @@ enum DemoUI {
         switch screen {
         case "foryou": model.section = .forYou
         case "catalog": model.section = .catalog
-        case "stretch":
+        case "stretch", "quiet":
             // Как на Mac пользователя: M4 Pro с 24 ГБ.
             model.mac = Hardware.simulated("Apple M4 Pro", memoryGB: 24, gpuCores: 20, freeDiskGB: 400)
             model.section = .catalog

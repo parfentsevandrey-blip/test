@@ -69,7 +69,7 @@ jobs:
 
       - name: UI screenshots
         run: |
-          for S in welcome onboarding foryou catalog stretch detail feed library settings settings-memory chat vision; do
+          for S in welcome onboarding foryou catalog stretch quiet detail feed library settings settings-memory chat vision; do
             dist/Synapse.app/Contents/MacOS/Synapse --demo-ui $S &
             PID=$!
             if [ "$S" = chat ]; then
