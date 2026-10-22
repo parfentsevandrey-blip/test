@@ -46,7 +46,7 @@
     {
       "model": "Classical laissez-faire capitalism",
       "best": "Inferred from its principle that private property and free contracts let people save and insure for old age, with the state protecting those contracts and otherwise staying out. There is no documented case in the pool.",
-      "worst": "Leaving retirement cover to private employers reached few workers: in Singapore's Central Provident Fund case, employer-funded retirement cover was scarce, reaching only civil servants and staff at some larger firms. Its design account comes from search summaries rather than full texts. Source: National Library Board: BiblioAsia article on how the CPF scheme came to be, and Infopedia entry (years not stated); CPF Board anniversary chapter (year not stated); HKCER Letters essay (November 1996 reprint)"
+      "worst": "In Singapore's Central Provident Fund case, employer-funded retirement cover was scarce, reaching only civil servants and staff at some larger firms. Its design account comes from search summaries rather than full texts, and government bodies give their own accounts. Source: National Library Board: BiblioAsia article on how the CPF scheme came to be, and Infopedia entry (years not stated); CPF Board anniversary chapter (year not stated); HKCER Letters essay (November 1996 reprint)"
     },
     {
       "model": "Austrian free-market economics",
@@ -55,17 +55,17 @@
     },
     {
       "model": "Monetarist neoliberalism",
-      "best": "In Chile's privatised pension system (AFPs), a Dictuc study commissioned by the AFPs reports average rates of 87% for men and 58% for women. Sources disagree widely, and the study is industry-commissioned.",
+      "best": "In Chile's privatised pension system (AFPs), a Dictuc study commissioned by the AFPs reports average rates of 87% for men and 58% for women. Sources disagree widely, none of the results tracks long-run outcomes for the 1981 cohort, and the study is industry-commissioned.",
       "worst": "In Chile's privatised pension system (AFPs), a Chilean academic study of workers at one state university in the V Region concludes that replacement rates fall well short of initial projections and trail the old pay-as-you-go system. Sources disagree widely, and none of the results tracks long-run outcomes for the 1981 cohort. Source: OECD figure for 2013, as reported in a Diario Financiero article on the AFPs' reply (article year not stated); Dictuc study commissioned by the AFPs (year not stated); La Tercera report on David Bravo's estimates (year not stated); Chilean academic journal article (year not stated); AmCham Chile (year not stated)"
     },
     {
       "model": "Keynesian welfare capitalism",
-      "best": "The United States Social Security Act of 1935, as amended in 1939, moved the first checks forward to 1940 and added benefits for spouses, survivors, young children and dependent parents, widening support for households. The results do not show which page holds each figure.",
+      "best": "The United States Social Security Act of 1935, as amended in 1939, moved the first checks forward to 1940 and added benefits for spouses, survivors, young children and dependent parents. The results are the agency's own history and summaries, and do not show which page holds each figure.",
       "worst": "Inferred from its principle that taxes rise in booms and fall in slumps, so a fixed payroll levy that builds a large reserve while benefits lag can draw spending power out of the economy in a slump. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
     },
     {
       "model": "Social market economy",
-      "best": "Germany's 1957 pension reform, approved on 21 January 1957, replaced saving-based pensions with pay-as-you-go financing and began to track benefit rises with wages. The pension insurer, an interested party, credits the switch with success, and the roughly 60 percent average rise is unattributed in the sources.",
+      "best": "Germany's 1957 pension reform, approved on 21 January 1957, replaced saving-based pensions with pay-as-you-go financing and began to track benefit rises with wages. The pension insurer, an interested party, credits the switch with success, and the vote, the pay-as-you-go switch and the roughly 60 percent average rise are unattributed in the sources.",
       "worst": "Germany's 1957 pension reform: a Danish-language blog, an opinion piece whose figures should be checked against official data, argues that the indexing rule became nearly impossible to undo in hard economic times and that demographic costs surfaced decades later. Source: Bundestag text archive, entry on the vote of 21 January 1957; Deutsche Rentenversicherung background text (year not stated); German Historical Institute abstract of a 1959 article (abstract year not stated); Konrad Adenauer Foundation article (year not stated); a Danish-language blog (undated)"
     },
     {
@@ -75,7 +75,7 @@
     },
     {
       "model": "Developmental state",
-      "best": "Singapore's Central Provident Fund mandated savings rather than a pension, and over a long stretch nearly all the money went into Singapore government bonds, which gave the state cheap financing for development. Its design account comes from search summaries rather than full texts.",
+      "best": "Singapore's Central Provident Fund mandated savings rather than a pension, though a 1996 essay calls it essentially an old-age pension; over a long stretch nearly all the money went into Singapore government bonds, which gave the state cheap financing for development. Its design account comes from search summaries rather than full texts, and government bodies give their own accounts.",
       "worst": "Inferred from its principle that the state directs credit to chosen uses, so retirement savings may be steered into state priorities, and savers' returns follow the state's choices rather than their own. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
     },
     {
@@ -96,7 +96,7 @@
     {
       "model": "Cooperative economy",
       "best": "Mondragon's Lagun Aro pension body is presented by the group as a safety-net scheme for co-op members, and its timelines tie its founding to a 1958 ministerial order that pushed members out of Spain's General Social Security System. These are the group's own self-descriptions, and the results give no membership figures.",
-      "worst": "Mondragon's Lagun Aro pension body: a 2009 Tu Lankide article outlines a proposal to give the public part of the mixed pension system more weight, while making updates to Lagun Aro's own pensions depend on the entity's solvency. The results give no outcome for that proposal. Source: Mondragon Group history pages (the group's own timelines; year not stated); Tu Lankide, the group's publication (a 2009 article and a page on Lagun Aro); Gizaekoa, Basque journal (2024 review)"
+      "worst": "Mondragon's Lagun Aro pension body: a 2009 Tu Lankide article outlines a proposal to give the public part of the mixed pension system more weight, while making updates to Lagun Aro's own pensions depend on the entity's solvency. The results give no outcome for that proposal, and it appears in the group's own publication. Source: Mondragon Group history pages (the group's own timelines; year not stated); Tu Lankide, the group's publication (a 2009 article and a page on Lagun Aro); Gizaekoa, Basque journal (2024 review)"
     },
     {
       "model": "Anarcho-communism",
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "One pension for every citizen in three tiers: a pay-as-you-go basic tier with wage-linked, rule-based indexation; a funded tier run by an independent board under published investment rules; and a guaranteed minimum for everyone, with longevity risk shared fairly across generations.",
-    "details": "Keeps: pay-as-you-go financing and wage-linked uprating from Social market economy, in Germany's 1957 pension reform; automatic indexation rules and contribution-linked notional accounts from Nordic social democracy, in Sweden's notional defined-contribution pension reform. Blocks: indexing rules nearly impossible to undo in hard times, with a five-yearly review and a supermajority to change them; longevity risk falling on workers still in employment, with a statutory replacement-rate floor. Test: replacement rates for men and women, by education and cohort, measured every five years over forty years. Source: Bundestag text archive, entry on the vote of 21 January 1957; Deutsche Rentenversicherung background text (year not stated); German Historical Institute abstract of a 1959 article (abstract year not stated); Konrad Adenauer Foundation article (year not stated); a Danish-language blog (undated); Scherman (2006), NFT analysis of replacement rates; McGillivray, essay on notional defined-contribution public pensions (year not stated); Qi, Helgertz and Bengtsson, study on NDC and working lives (year not stated); reform timeline from search summaries (year not stated)"
+    "details": "Keeps: pay-as-you-go financing and wage-linked uprating from Social market economy, in Germany's 1957 pension reform; automatic indexation rules and a pay-as-you-go notional tier from Nordic social democracy, in Sweden's notional defined-contribution pension reform. Blocks: indexing rules nearly impossible to undo in hard times, with a five-yearly review and a supermajority to change them; longevity risk falling on workers still in employment, with a statutory replacement-rate floor. Test: replacement rates for men and women, by education and cohort, measured every five years over forty years. Source: Bundestag text archive, entry on the vote of 21 January 1957; Deutsche Rentenversicherung background text (year not stated); German Historical Institute abstract of a 1959 article (abstract year not stated); Konrad Adenauer Foundation article (year not stated); a Danish-language blog (undated); Scherman (2006), NFT analysis of replacement rates; McGillivray, essay on notional defined-contribution public pensions (year not stated); Qi, Helgertz and Bengtsson, study on NDC and working lives (year not stated); reform timeline from search summaries (year not stated)"
   }
 }
