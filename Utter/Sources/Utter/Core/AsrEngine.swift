@@ -61,12 +61,26 @@ nonisolated final class AsrEngine: @unchecked Sendable {
     private var mtmd: OpaquePointer?
     private var batch: llama_batch?
 
+    // Потоковое распознавание (Voxtral Realtime). Только на `queue`.
+    private var stream: OpaquePointer?
+    private var streamSampler: UnsafeMutablePointer<llama_sampler>?
+    private var embdBatch: llama_batch?
+    private let embdCapacity: Int32 = 64
+    private var streamPos: llama_pos = 0
+    private var streamToken: llama_token = LLAMA_TOKEN_NULL
+    private var streamBytes: [UInt8] = []
+    private var streamTokens: [llama_token] = []
+    private var streamEnded = false
+
     // Под `lock`.
     private var _loaded: String?
     private var _sampleRate = 16000
+    private var _streaming = false
 
     var loadedID: String? { lock.withLock { _loaded } }
     var sampleRate: Int { lock.withLock { _sampleRate } }
+    /// Загружена потоковая модель: распознавание идёт через `streamStart/streamPush/streamFinish`.
+    var streaming: Bool { lock.withLock { _streaming } }
 
     private init() {
         llama_log_set(asrLogCallback, nil)
@@ -149,21 +163,40 @@ nonisolated final class AsrEngine: @unchecked Sendable {
             llama_model_free(model)
             throw AsrError.noAudioSupport
         }
+        let streaming = mtmd_support_audio_stream(mtmd)
+        if asr.realtime && !streaming {
+            mtmd_free(mtmd)
+            llama_free(ctx)
+            llama_model_free(model)
+            throw AsrError.loadFailed("Эта сборка движка не умеет потоковое распознавание.")
+        }
         self.model = model
         self.ctx = ctx
         self.vocab = llama_model_get_vocab(model)
         self.mtmd = mtmd
         self.batch = llama_batch_init(1, 0, 1)
+        if streaming { self.embdBatch = llama_batch_init(embdCapacity, llama_model_n_embd_inp(model), 1) }
         let rate = Int(mtmd_get_audio_sample_rate(mtmd))
         lock.withLock {
             _loaded = asr.id
             _sampleRate = rate > 0 ? rate : 16000
+            _streaming = streaming
         }
         // Прогрев: первая фраза не должна ждать компиляции шейдеров.
-        _ = try? transcribeSync([Float](repeating: 0, count: 16000), prefix: "", context: "", language: "Russian")
+        if streaming {
+            if (try? streamStartSync()) != nil {
+                _ = try? streamPushSync([Float](repeating: 0, count: rate > 0 ? rate : 16000))
+                _ = try? streamFinishSync()
+            }
+        } else {
+            _ = try? transcribeSync([Float](repeating: 0, count: 16000), prefix: "", context: "", language: "Russian")
+        }
     }
 
     private func freeAll() {
+        freeStream()
+        if let embdBatch { llama_batch_free(embdBatch) }
+        embdBatch = nil
         if let batch { llama_batch_free(batch) }
         if let mtmd { mtmd_free(mtmd) }
         if let ctx { llama_free(ctx) }
@@ -173,7 +206,10 @@ nonisolated final class AsrEngine: @unchecked Sendable {
         ctx = nil
         model = nil
         vocab = nil
-        lock.withLock { _loaded = nil }
+        lock.withLock {
+            _loaded = nil
+            _streaming = false
+        }
     }
 
     // MARK: - Распознавание
@@ -250,6 +286,151 @@ nonisolated final class AsrEngine: @unchecked Sendable {
             position += 1
         }
         return String(decoding: pieces.flatMap { $0 }, as: UTF8.self)
+    }
+
+    // MARK: - Потоковое распознавание (Voxtral Realtime)
+
+    /// Начать новую фразу: свежий поток звука и чистая память модели.
+    /// Вызовы выполняются строго по очереди: `streamPush` после `streamStart` того же потока.
+    func streamStart(completion: @escaping @Sendable (Error?) -> Void) {
+        queue.async {
+            do { try self.streamStartSync(); completion(nil) } catch { completion(error) }
+        }
+    }
+
+    /// Добавить звук; `completion` получает весь текст фразы на этот момент.
+    func streamPush(_ samples: [Float], completion: @escaping @Sendable (Result<String, Error>) -> Void) {
+        queue.async {
+            do { completion(.success(try self.streamPushSync(samples))) } catch { completion(.failure(error)) }
+        }
+    }
+
+    /// Конец фразы: модель дописывает то, что ещё «в задержке». `completion` получает окончательный текст.
+    func streamFinish(completion: @escaping @Sendable (Result<String, Error>) -> Void) {
+        queue.async {
+            do { completion(.success(try self.streamFinishSync())) } catch { completion(.failure(error)) }
+        }
+    }
+
+    /// Распознать запись целиком потоковой моделью (самопроверка): кусками по `chunk` отсчётов.
+    func streamTranscribe(_ samples: [Float], chunk: Int = 5120) async throws -> String {
+        try await withCheckedThrowingContinuation { cont in
+            queue.async {
+                do {
+                    try self.streamStartSync()
+                    var i = 0
+                    while i < samples.count {
+                        _ = try self.streamPushSync(Array(samples[i..<min(samples.count, i + chunk)]))
+                        i += chunk
+                    }
+                    cont.resume(returning: try self.streamFinishSync())
+                } catch {
+                    cont.resume(throwing: error)
+                }
+            }
+        }
+    }
+
+    private func freeStream() {
+        if let stream { mtmd_audio_stream_free(stream) }
+        stream = nil
+        if let streamSampler { llama_sampler_free(streamSampler) }
+        streamSampler = nil
+    }
+
+    private func streamStartSync() throws {
+        guard let ctx, let mtmd else { throw AsrError.notLoaded }
+        freeStream()
+        llama_memory_clear(llama_get_memory(ctx), true)
+        guard let s = mtmd_audio_stream_init(mtmd, mtmd_audio_stream_params_default()) else {
+            throw AsrError.failed("поток звука не открылся: \(EngineLog.shared.lastProblem)")
+        }
+        stream = s
+        // Жадный выбор: самый вероятный текст.
+        let sampler = llama_sampler_chain_init(llama_sampler_chain_default_params())!
+        llama_sampler_chain_add(sampler, llama_sampler_init_greedy())
+        streamSampler = sampler
+        streamPos = 0
+        streamToken = LLAMA_TOKEN_NULL
+        streamBytes = []
+        streamTokens = []
+        streamEnded = false
+    }
+
+    private func streamPushSync(_ samples: [Float]) throws -> String {
+        guard let stream else { throw AsrError.notLoaded }
+        if !streamEnded {
+            _ = samples.withUnsafeBufferPointer { mtmd_audio_stream_push(stream, $0.baseAddress, $0.count) }
+            try drainStream()
+        }
+        return streamText
+    }
+
+    private func streamFinishSync() throws -> String {
+        guard let stream else { throw AsrError.notLoaded }
+        if !streamEnded {
+            _ = mtmd_audio_stream_flush(stream, true)
+            try drainStream()
+        }
+        let text = streamText
+        freeStream()
+        return text
+    }
+
+    private var streamText: String {
+        String(decoding: streamBytes, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Всё, что поток готов отдать: строки эмбеддингов (звук + прошлый токен) → модель → следующий токен.
+    /// Модель пишет служебные токены пауз и границ слов — в текст они не идут.
+    private func drainStream() throws {
+        guard let stream, let ctx, let vocab, let sampler = streamSampler, var batch = embdBatch, let model else { throw AsrError.notLoaded }
+        defer { embdBatch = batch }
+        let nEmbd = Int(llama_model_n_embd_inp(model))
+        let nCtx = Int(llama_n_ctx(ctx))
+        while !streamEnded {
+            let n = mtmd_audio_stream_step(stream, streamToken)
+            if n == 0 { return }
+            if n == -1 { streamEnded = true; return }
+            guard n > 0, let rows = mtmd_audio_stream_get_output_embd(stream) else {
+                throw AsrError.failed("поток звука: \(EngineLog.shared.lastProblem)")
+            }
+            if Int(streamPos) + Int(n) >= nCtx - 1 {
+                // Фраза длиннее памяти модели — дальше не пишем (Dictation режет фразы раньше).
+                streamEnded = true
+                return
+            }
+            var done: Int32 = 0
+            while done < n {
+                let m = min(embdCapacity, n - done)
+                batch.n_tokens = m
+                memcpy(batch.embd, rows + Int(done) * nEmbd, Int(m) * nEmbd * MemoryLayout<Float>.size)
+                for k in 0..<Int(m) {
+                    batch.pos[k] = streamPos + llama_pos(k)
+                    batch.n_seq_id[k] = 1
+                    batch.seq_id[k]![0] = 0
+                    batch.logits[k] = done + Int32(k) == n - 1 ? 1 : 0
+                }
+                guard llama_decode(ctx, batch) == 0 else { throw AsrError.failed("декодер: \(EngineLog.shared.lastProblem)") }
+                streamPos += llama_pos(m)
+                done += m
+            }
+            let token = llama_sampler_sample(sampler, ctx, -1)
+            streamToken = token
+            if llama_vocab_is_eog(vocab, token) {
+                streamEnded = true
+                return
+            }
+            if !llama_vocab_is_control(vocab, token) {
+                streamTokens.append(token)
+                streamBytes += piece(token, vocab: vocab)
+                if Self.repeating(streamTokens) {
+                    // Зациклилась на шуме — дальше эту фразу не пишем.
+                    streamEnded = true
+                    return
+                }
+            }
+        }
     }
 
     /// Утверждённый текст + продолжение от модели. Утверждаются только целые слова, поэтому продолжение,

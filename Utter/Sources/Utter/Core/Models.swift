@@ -21,6 +21,9 @@ nonisolated struct AsrModel: Sendable, Hashable, Identifiable {
     var projector: ModelFile
     /// Ориентировочная нагрузка: сколько памяти нужно для работы.
     var memoryGB: Double
+    /// Потоковая модель: слушает звук непрерывно и пишет текст с постоянной задержкой (Voxtral Realtime),
+    /// а не перераспознаёт фразу целиком.
+    var realtime = false
 
     var size: Int64 { model.size + projector.size }
     var folder: URL { AppPaths.models.appendingPathComponent(id, isDirectory: true) }
@@ -48,7 +51,18 @@ nonisolated struct AsrModel: Sendable, Hashable, Identifiable {
         projector: ModelFile(path: "mmproj-Qwen3-ASR-1.7B-Q8_0.gguf", size: 355_709_344, sha256: "46c1d533af3f354ceb37ce855dbceff7da7fa7cf1e6a523df3b13440bd164c0d"),
         memoryGB: 3.2)
 
-    static let all = [fast, accurate]
+    /// Voxtral Mini 4B Realtime (Mistral, 2026): распознаёт поток с задержкой около полсекунды — текст идёт
+    /// за голосом, без «хвоста» после фразы. 13 языков; на русском FLEURS у авторов 6,0% ошибок при 480 мс.
+    /// В llama.cpp — через потоковый ввод звука libmtmd (mtmd_audio_stream).
+    static let instant = AsrModel(
+        id: "voxtral-rt-4b", title: "Voxtral Realtime 4B",
+        summary: "Мгновенная: печатает прямо во время речи, с задержкой около полсекунды, без ожидания конца фразы.",
+        repo: "ggml-org/Voxtral-Mini-4B-Realtime-2602-GGUF",
+        model: ModelFile(path: "Voxtral-Mini-4B-Realtime-2602-Q4_K_M.gguf", size: 2_551_244_000, sha256: "aa7a91fd78a896562642c61950887ec18c999425ab064bfc5ca9e64f8f5b29be"),
+        projector: ModelFile(path: "mmproj-Voxtral-Mini-4B-Realtime-2602-Q8_0.gguf", size: 1_063_756_032, sha256: "f28ae3e40f2b610c1c39b5c936ae854b73d0fc487518c6f69b76c22dbcea9ee3"),
+        memoryGB: 4.6, realtime: true)
+
+    static let all = [fast, accurate, instant]
 
     /// Для Mac с 16 ГБ и больше — точная, иначе быстрая (распознавание идёт всё время, пока вы говорите).
     static var recommended: AsrModel { Hardware.memoryGB >= 15 ? accurate : fast }

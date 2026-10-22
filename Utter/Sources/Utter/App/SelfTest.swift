@@ -14,8 +14,11 @@ nonisolated enum SelfTest {
         var ok = false
         switch mode {
         case "--selftest-logic": ok = logic()
-        case "--selftest-asr": ok = blocking { await asr(gpu: false) }
-        case "--selftest-asr-gpu": ok = blocking { await asr(gpu: true) }
+        case "--selftest-asr": ok = blocking { await asr(.fast, gpu: false) }
+        case "--selftest-asr-gpu": ok = blocking { await asr(.fast, gpu: true) }
+        case "--selftest-asr-realtime":
+            let gpu = args.contains("--gpu")
+            ok = blocking { await asr(.instant, gpu: gpu) }
         case "--selftest-audio": ok = audio()
         case "--selftest-exit", "--selftest-exit-raw":
             // Модель на видеоядре, затем выход: с освобождением (как теперь при выходе из Utter) или без него.
@@ -187,9 +190,8 @@ nonisolated enum SelfTest {
 
     static let reference = "Сегодня я диктую текст на русском языке. Утилита распознаёт речь и печатает её прямо в поле ввода. Это очень удобно для ежедневной работы."
 
-    static func asr(gpu: Bool) async -> Bool {
+    static func asr(_ model: AsrModel, gpu: Bool) async -> Bool {
         var ok = true
-        let model = AsrModel.fast
         print("Модель: \(model.title) (\(model.repo)), \(gpu ? "Metal" : "процессор")")
 
         // 1. Загрузка с проверкой SHA-256.
@@ -228,16 +230,23 @@ nonisolated enum SelfTest {
 
         // 4. Распознавание целиком.
         let t0 = Date()
-        guard let whole = try? await AsrEngine.shared.transcribe(samples) else { return check(false, "распознавание целиком") }
+        let wholeResult: String?
+        if model.realtime {
+            ok = check(AsrEngine.shared.streaming, "движок умеет потоковое распознавание (mtmd_audio_stream)") && ok
+            wholeResult = try? await AsrEngine.shared.streamTranscribe(samples)
+        } else {
+            wholeResult = try? await AsrEngine.shared.transcribe(samples)
+        }
+        guard let whole = wholeResult else { return check(false, "распознавание целиком") }
         let rtf = Date().timeIntervalSince(t0) / seconds
         let w1 = wer(reference, whole)
         print("  → «\(whole)»")
         ok = check(w1 <= 0.15, "распознавание целиком: ошибка слов \(Int(w1 * 100))%, скорость ×\(String(format: "%.1f", 1 / max(rtf, 0.001))) от реального времени") && ok
         ok = check(whole.contains(".") && whole.first?.isUppercase == true, "пунктуация и заглавные буквы на месте") && ok
 
-        // 5. Продолжение с префиксом (основа потоковости).
+        // 5. Продолжение с префиксом (основа потоковости Qwen3-ASR; у потоковой модели его нет).
         let half = Array(samples.prefix(samples.count / 3))
-        if let first = try? await AsrEngine.shared.transcribe(half) {
+        if !model.realtime, let first = try? await AsrEngine.shared.transcribe(half) {
             let words = Committer.words(first)
             let prefix = words.dropLast().joined(separator: " ")
             if let continuation = try? await AsrEngine.shared.transcribe(samples, prefix: prefix) {
@@ -257,7 +266,15 @@ nonisolated enum SelfTest {
         print("  детектор речи: \(segments.count) фраз(ы): " + segments.map { String(format: "%.1f с", Double($0.count) / Double(rate)) }.joined(separator: ", "))
         var alone = "", withText = "", withAudio = ""
         var previousAudio: [Float] = [], previousText = ""
-        for seg in segments {
+        if model.realtime {
+            for seg in segments {
+                let a = (try? await AsrEngine.shared.streamTranscribe(seg)) ?? ""
+                print("    фраза: «\(a)»")
+                alone += (alone.isEmpty ? "" : " ") + a
+            }
+            print("  ошибка слов по фразам (каждая — отдельным потоком): \(Int(wer(reference, alone) * 100))%")
+        }
+        for seg in segments where !model.realtime {
             let a = (try? await AsrEngine.shared.transcribe(seg)) ?? ""
             let b = (try? await AsrEngine.shared.transcribe(seg, context: String(withText.suffix(200)))) ?? ""
             let c = (try? await AsrEngine.shared.transcribe(previousAudio + seg, prefix: previousText)) ?? ""
@@ -268,7 +285,7 @@ nonisolated enum SelfTest {
             previousAudio = seg
             previousText = c.trimmingCharacters(in: .whitespaces)
         }
-        print("  ошибка слов по фразам: отдельно \(Int(wer(reference, alone) * 100))%, с прошлым текстом \(Int(wer(reference, withText) * 100))%, с прошлым звуком \(Int(wer(reference, withAudio) * 100))%")
+        if !model.realtime { print("  ошибка слов по фразам: отдельно \(Int(wer(reference, alone) * 100))%, с прошлым текстом \(Int(wer(reference, withText) * 100))%, с прошлым звуком \(Int(wer(reference, withAudio) * 100))%") }
 
         // 6. Потоковая диктовка в реальном времени: как с микрофона, кусками по 100 мс.
         let output = Box("")
@@ -277,6 +294,7 @@ nonisolated enum SelfTest {
         let fed = Box(0.0)
         let finishedAt = Box(Date.distantFuture)
         var options = Dictation.Options()
+        options.engine = model.realtime ? .realtime : .qwen
         options.sampleRate = rate
         options.pauseMs = 700
         let dictation = Dictation(options: options) { event in

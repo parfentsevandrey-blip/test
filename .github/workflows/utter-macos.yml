@@ -64,6 +64,17 @@ jobs:
         continue-on-error: true
         run: dist/Utter.app/Contents/MacOS/Utter --selftest-asr-gpu
 
+      # Потоковая модель Voxtral Realtime: распознавание целиком, по фразам и диктовка в реальном времени.
+      - name: Self-test realtime recognition (Voxtral, CPU, informational)
+        continue-on-error: true
+        timeout-minutes: 30
+        run: dist/Utter.app/Contents/MacOS/Utter --selftest-asr-realtime
+
+      - name: Self-test realtime recognition (Voxtral, Metal, informational)
+        continue-on-error: true
+        timeout-minutes: 30
+        run: dist/Utter.app/Contents/MacOS/Utter --selftest-asr-realtime --gpu
+
       # Выход с моделью на видеоядре: без освобождения llama.cpp падает в деструкторе (abort, код 134),
       # с освобождением — обычный выход с кодом 0.
       - name: Self-test exit with model on Metal

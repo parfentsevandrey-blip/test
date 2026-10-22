@@ -369,7 +369,7 @@ final class AppModel {
         }
         let engine: Dictation.Engine
         if modelState == .ready {
-            engine = .qwen
+            engine = AsrEngine.shared.streaming ? .realtime : .qwen
         } else if speechGranted {
             engine = .apple
         } else {
@@ -392,7 +392,7 @@ final class AppModel {
         options.engine = engine
         options.pauseMs = pauseMs
         options.commands = commands
-        options.sampleRate = engine == .qwen ? AsrEngine.shared.sampleRate : 16000
+        options.sampleRate = engine == .apple ? 16000 : AsrEngine.shared.sampleRate
         let terms = dictionary.split(whereSeparator: { $0 == "," || $0 == "\n" }).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         if !terms.isEmpty { options.context = Dictation.contextLead + terms.joined(separator: ", ") + "." }
 

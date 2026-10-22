@@ -104,7 +104,7 @@ struct SettingsView: View {
                         model.downloadModel(m)
                     }
                 }
-                Text("Qwen3-ASR работает целиком на вашем Mac через llama.cpp (Metal): звук никуда не отправляется, интернет не нужен.")
+                Text("Модели работают целиком на вашем Mac через llama.cpp (Metal): звук никуда не отправляется, интернет не нужен. Qwen3-ASR перечитывает фразу, пока вы говорите, и выверяет её в конце; Voxtral Realtime слушает поток и пишет следом за голосом.")
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Section("Фразы") {

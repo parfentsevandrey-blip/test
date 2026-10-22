@@ -8,6 +8,8 @@ nonisolated final class Dictation: @unchecked Sendable {
     enum Engine: String, Sendable, Codable {
         /// Qwen3-ASR в llama.cpp — основной.
         case qwen
+        /// Потоковая модель (Voxtral Realtime): звук уходит в модель по мере записи, текст идёт следом.
+        case realtime
         /// Встроенное распознавание macOS (на устройстве) — пока модель не скачана.
         case apple
     }
@@ -61,6 +63,13 @@ nonisolated final class Dictation: @unchecked Sendable {
     private var finished = false
     private var lastLevelEmit = Date.distantPast
     private var capture: AudioCapture?
+
+    // Потоковая модель: поток на каждую фразу.
+    private var streamID = -1
+    /// Сколько отсчётов текущей фразы уже ушло в поток.
+    private var streamFed = 0
+    /// Фразы, чей поток ещё дописывается после конца речи.
+    private var streamPending: Set<Int> = []
 
     // Встроенный распознаватель macOS: сеанс на каждую фразу.
     private var apple: [Int: AppleSession] = [:]
@@ -120,6 +129,7 @@ nonisolated final class Dictation: @unchecked Sendable {
                 utteranceID += 1
                 emit(.speaking(true))
                 if options.engine == .apple { startApple(utteranceID, preroll: vad.utterance) }
+                if options.engine == .realtime { startStream(utteranceID) }
             case .end(let audio):
                 emit(.speaking(false))
                 endUtterance(audio, paused: true)
@@ -127,6 +137,7 @@ nonisolated final class Dictation: @unchecked Sendable {
         }
         if vad.speaking {
             if options.engine == .apple { apple[utteranceID]?.append(samples) }
+            if options.engine == .realtime { pushStream(vad.utterance) }
             // Очень длинная фраза без пауз — режем, иначе растёт задержка.
             if vad.utteranceSeconds(sampleRate: options.sampleRate) > options.maxUtterance { endUtterance(vad.finish(), paused: false) }
         }
@@ -135,6 +146,10 @@ nonisolated final class Dictation: @unchecked Sendable {
 
     /// `paused` — фраза закончилась паузой (её длина входит в звук), а не остановкой.
     private func endUtterance(_ audio: [Float], paused: Bool) {
+        if options.engine == .realtime {
+            finishStream(audio, paused: paused)
+            return
+        }
         if options.engine == .apple {
             apple[utteranceID]?.end()
             // Ждём окончательный результат macOS не дольше 2 секунд.
@@ -256,9 +271,68 @@ nonisolated final class Dictation: @unchecked Sendable {
     }
 
     private func finishIfDone() {
-        guard stopping, !finished, !passRunning, finals.isEmpty, apple.isEmpty else { return }
+        guard stopping, !finished, !passRunning, finals.isEmpty, apple.isEmpty, streamPending.isEmpty else { return }
         finished = true
         emit(.finished(joiner.typed))
+    }
+
+    // MARK: - Потоковая модель (Voxtral Realtime)
+
+    /// Новая фраза — новый поток. Звук фразы, накопленный детектором до начала речи, уйдёт следующим `pushStream`.
+    private func startStream(_ id: Int) {
+        streamID = id
+        streamFed = 0
+        committer.reset()
+        committerID = id
+        AsrEngine.shared.streamStart { error in
+            if let error { self.queue.async { self.emit(.error(error.localizedDescription)) } }
+        }
+    }
+
+    /// Дослать в поток то, что прибавилось к звуку фразы.
+    private func pushStream(_ utterance: [Float]) {
+        guard streamID == utteranceID, utterance.count > streamFed else { return }
+        let chunk = Array(utterance[streamFed...])
+        streamFed = utterance.count
+        let id = streamID
+        let started = Date()
+        AsrEngine.shared.streamPush(chunk) { result in
+            self.queue.async {
+                self.passCount += 1
+                if Self.trace, case .success(let text) = result {
+                    print("[поток \(id), \(String(format: "%.2f", Date().timeIntervalSince(started))) с] «\(text)»")
+                }
+                // Текст идёт за звуком без пересмотра — печатаем по мере утверждения слов.
+                if case .success(let text) = result, id == self.committerID { self.partial(id: id, text: text) }
+            }
+        }
+    }
+
+    private func finishStream(_ audio: [Float], paused: Bool) {
+        guard streamID == utteranceID else { return }
+        let id = streamID
+        if audio.count > streamFed {
+            pushStream(audio)
+        }
+        streamID = -1
+        streamPending.insert(id)
+        let minimum = (paused ? Double(options.pauseMs) / 1000 : 0) + 0.3 + 0.25
+        let tooShort = Double(audio.count) / Double(options.sampleRate) < minimum
+        AsrEngine.shared.streamFinish { result in
+            self.queue.async {
+                self.streamPending.remove(id)
+                switch result {
+                case .success(let text):
+                    if Self.trace { print("[поток \(id), итог] «\(text)»") }
+                    if self.committerID != id { self.committer.reset(); self.committerID = id }
+                    // Обрывок (щелчок, кашель) — не фраза.
+                    self.finalize(id: id, text: tooShort ? "" : text)
+                case .failure(let error):
+                    self.emit(.error(error.localizedDescription))
+                }
+                self.finishIfDone()
+            }
+        }
     }
 
     // MARK: - Встроенное распознавание macOS
