@@ -36,7 +36,7 @@
     {
       "model": "Mercantilism",
       "best": "Inferred from its principle that the state seeks gold and a trade surplus, so credit is steered toward exporters and trades that bring treasure in, and lenders are encouraged to fund them. There is no documented case in the pool.",
-      "worst": "The case English usury laws and their repeal in 1854 reports that lower legal caps on interest shaped the English economy from the 1500s through the Industrial Revolution. Fixing the price of credit by statute is this model's worst practice in banking, since it puts credit under state control. A University of Toronto working paper argues this without its evidence, and the repeal statute is known only from a summary. Source: An Act to repeal the Laws relating to Usury and to the Enrolment of Annuities (1854), text listed on the vLex legal database; University of Toronto working paper no. 439 (year not shown)"
+      "worst": "Inferred from its principle that the state seeks gold, a trade surplus and colonies, so it grants monopolies to favoured companies, which keep rival lenders out, and credit for colonial ventures is set by state priority rather than by risk. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
     },
     {
       "model": "Physiocracy",
@@ -45,7 +45,7 @@
     },
     {
       "model": "Classical laissez-faire capitalism",
-      "best": "The case English usury laws and their repeal in 1854 reports that the repeal statute erased the legal limits on interest, so lenders and borrowers could agree their own rates. The statute is known from a summary, not its full text.",
+      "best": "The case English usury laws and their repeal in 1854 reports that the repeal statute erased the legal limits on interest, with earlier dealings shielded and pawnbrokers carved out. The statute is known from a summary, not its full text, and the carve-outs are not confirmed against it.",
       "worst": "Inferred from its principle that the state stays out of contracts, a lender may set any terms a borrower will accept, so a borrower with no bargaining power, such as one with no collateral, pays what the lender asks, and no legal ceiling on the rate protects them. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
     },
     {
@@ -66,7 +66,7 @@
     {
       "model": "Social market economy",
       "best": "The case Prussia's 1838 savings-bank regulation and the German Sparkassen reports that the 1838 regulation gave savings banks common rules, a public-law footing and state supervision that covered deposit security. The details come from summaries, not full documents, and are not tied to one page.",
-      "worst": "The case Prussia's 1838 savings-bank regulation and the German Sparkassen reports that founding a new bank needed government approval, and that the framework steered investment toward first mortgages and government securities. Under this model's principle of open competition, state approval to enter and state steering of investment are worst practices, and the details come from summaries not tied to one page. Source: DSGV, the German savings banks' association, its own history document (undated); other German-language history sources in the results (not tied to one page)"
+      "worst": "The case Prussia's 1838 savings-bank regulation and the German Sparkassen reports that founding a new bank needed government approval, and that the framework steered investment toward first mortgages and government securities. Inferred from its principle that competition should be open, state approval to enter and state steering of investment are worst practices, and the details come from summaries not tied to one page. Source: DSGV, the German savings banks' association, its own history document (undated); other German-language history sources in the results (not tied to one page)"
     },
     {
       "model": "Nordic social democracy",
@@ -95,7 +95,7 @@
     },
     {
       "model": "Cooperative economy",
-      "best": "The case Alphonse Desjardins and the caisse populaire in Lévis, Quebec reports that the group's own timeline describes its caisses as member-controlled. The case Grameen Bank and microcredit in Bangladesh reports that borrower delegates have held nine of the twelve board seats, though the figures are unaudited and other sources disagree on ownership.",
+      "best": "The case Alphonse Desjardins and the caisse populaire in Lévis, Quebec reports that the group's own timeline describes its caisses as member-controlled. The case Grameen Bank and microcredit in Bangladesh reports that borrower delegates have held nine of the twelve board seats, though the figures are unaudited, the board figure is not tied to one page, and other sources disagree on ownership.",
       "worst": "Inferred from its principle that members own and control the bank, lending can serve members first, so outsiders and non-member workers may be refused credit, and the surplus can flow to those who hold the votes. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives"
     },
     {
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "Lending stays mixed: member-owned credit bodies, public savings banks and private banks lend under one statewide rulebook. Deposit-taking stays apart from securities trading, holding companies answer to the central bank, and losses from bank rescues fall on shareholders and creditors before any public money.",
-    "details": "Keeps: a barrier between commercial and investment banking (Keynesian welfare capitalism; US Glass-Steagall Act of 1933 and its repeal in 1999); central bank oversight of holding companies (Monetarist neoliberalism); member control of lenders (Mutualism; Alphonse Desjardins and the caisse populaire in Lévis, Quebec); a public authority for bank aid (Nordic social democracy; Sweden's bank rescue of 1991 to 1993). Blocks: government approval needed to found a bank, safeguarded by licences on published tests (Social market economy); an open-ended guarantee to creditors, safeguarded by a capped fund, with shareholders losing first (Sweden's bank rescue of 1991 to 1993); debt repaid through labour, safeguarded by a ban on such repayment (Gift economy; Feudalism). Test: over ten years, reviewed biennially, measure small loans made without collateral, arrears, refusals and appeals, and the net public cost of each rescue, with its method. Source: Congressional Research Service report R44349; Desjardins's own history timeline; Journal of Financial Crises case study; DSGV history document; Mauss, The Gift; Bloch, Feudal Society."
+    "details": "Keeps: a barrier between commercial and investment banking (Keynesian welfare capitalism; US Glass-Steagall Act of 1933 and its repeal in 1999); central bank oversight of holding companies (Monetarist neoliberalism); member control of lenders (Mutualism; Alphonse Desjardins and the caisse populaire in Lévis, Quebec); a public authority for bank aid (Nordic social democracy; Sweden's bank rescue of 1991 to 1993). Blocks: government approval needed to found a bank, safeguarded by licences on published tests (Social market economy); public money to rescue lenders at a net cost, safeguarded by a capped fund, with shareholders losing first (Sweden's bank rescue of 1991 to 1993); debt repaid through labour, safeguarded by a ban on such repayment (Gift economy; Feudalism). Test: over ten years, reviewed biennially, measure small loans made without collateral, arrears, refusals and appeals, and the net public cost of each rescue, with its method. Source: Congressional Research Service report R44349; Desjardins's own history timeline; Journal of Financial Crises case study; DSGV history document; Mauss, The Gift; Bloch, Feudal Society."
   }
 }
