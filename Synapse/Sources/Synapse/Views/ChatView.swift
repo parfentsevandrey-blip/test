@@ -271,10 +271,8 @@ struct ChatPane: View {
             }
             composerRow
         }
-        .padding(.leading, 10)
-        .padding(.trailing, 8)
-        .padding(.vertical, 8)
-        .glassEffect(.regular, in: .rect(cornerRadius: 26))
+        .padding(8)
+        .glassEffect(.regular, in: .rect(cornerRadius: ComposerButton.size / 2 + 8))
         .padding(.horizontal, 24)
         .padding(.bottom, 16)
         .padding(.top, 6)
@@ -282,39 +280,27 @@ struct ChatPane: View {
     }
 
     private var composerRow: some View {
+        // Обе круглые кнопки — одного размера и с одинаковыми отступами от краёв: строка симметрична.
         HStack(alignment: .bottom, spacing: 10) {
-            Button(action: pickImages) {
-                Image(systemName: "photo.badge.plus").font(.system(size: 15, weight: .medium)).frame(width: 30, height: 30)
-            }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.circle)
-            .disabled(model.installed.isEmpty || !model.visionReady)
-            .help(model.visionReady ? "Приложить изображение — или перетащите его в окно, или вставьте из буфера ⌘V" : visionHint)
+            ComposerButton(symbol: "photo.badge.plus", fill: .primary.opacity(0.08), foreground: .primary, action: pickImages)
+                .disabled(model.installed.isEmpty || !model.visionReady)
+                .help(model.visionReady ? "Приложить изображение — или перетащите его в окно, или вставьте из буфера ⌘V" : visionHint)
             TextField(placeholder, text: $draft, axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(.system(size: 14))
                 .lineLimit(1...8)
                 .focused($focused)
                 .onSubmit(send)
-                .padding(.vertical, 6)
+                .padding(.vertical, (ComposerButton.size - 18) / 2)
                 .disabled(model.installed.isEmpty)
             if model.isGenerating {
-                Button { model.stopGenerating() } label: {
-                    Image(systemName: "stop.fill").font(.system(size: 13, weight: .bold)).frame(width: 30, height: 30)
-                }
-                .buttonStyle(.glassProminent)
-                .tint(.red)
-                .buttonBorderShape(.circle)
-                .keyboardShortcut(".", modifiers: .command)
-                .help("Остановить (⌘.)")
+                ComposerButton(symbol: "stop.fill", fill: .red, foreground: .white) { model.stopGenerating() }
+                    .keyboardShortcut(".", modifiers: .command)
+                    .help("Остановить (⌘.)")
             } else {
-                Button(action: send) {
-                    Image(systemName: "arrow.up").font(.system(size: 14, weight: .bold)).frame(width: 30, height: 30)
-                }
-                .buttonStyle(.glassProminent)
-                .tint(Section.chat.tint)
-                .buttonBorderShape(.circle)
-                .disabled((draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && model.pendingAttachments.isEmpty) || model.installed.isEmpty)
+                let empty = (draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && model.pendingAttachments.isEmpty) || model.installed.isEmpty
+                ComposerButton(symbol: "arrow.up", fill: empty ? .primary.opacity(0.12) : Section.chat.tint, foreground: .white, action: send)
+                    .disabled(empty)
             }
         }
     }
@@ -684,5 +670,35 @@ struct AttachmentThumb: View {
         guard let image, image.size.width > 0, image.size.height > 0 else { return CGSize(width: size, height: size) }
         let scale = min(size / image.size.width, size / image.size.height)
         return CGSize(width: image.size.width * scale, height: image.size.height * scale)
+    }
+}
+
+/// Круглая кнопка поля ввода: одинаковый размер слева и справа, значок точно по центру.
+struct ComposerButton: View {
+    static let size: CGFloat = 34
+    let symbol: String
+    let fill: Color
+    let foreground: Color
+    let action: () -> Void
+    @Environment(\.isEnabled) private var enabled
+
+    init(symbol: String, fill: Color, foreground: Color, action: @escaping () -> Void) {
+        self.symbol = symbol
+        self.fill = fill
+        self.foreground = foreground
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(foreground)
+                .frame(width: Self.size, height: Self.size)
+                .background(Circle().fill(fill))
+                .contentShape(Circle())
+                .opacity(enabled ? 1 : 0.45)
+        }
+        .buttonStyle(.plain)
     }
 }
