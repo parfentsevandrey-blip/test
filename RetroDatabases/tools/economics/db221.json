@@ -56,7 +56,7 @@
     {
       "model": "Monetarist neoliberalism",
       "best": "Inferred from its principle that a smaller state and fewer controls leave less to administer, so the civil service is kept small, its controls are reduced, and public tasks are open to contract with outside providers. There is no documented case in the pool.",
-      "worst": "The case New Zealand's State Sector Act 1988 and fixed-term chief executive contracts, from an opinion commentary, reports that the 1988 reform replaced open-ended tenure for top officials with fixed terms capped at five years. The commentary argues that short terms expose them to political pressure and encourage short-term thinking, and that political leaders used gaps in the Act to gain sway over appointments. Source: Newsroom (New Zealand news site), commentary 'A largely unnoticed power grab', 2019 (dated 20 November 2019 by its web address)"
+      "worst": "The case New Zealand's State Sector Act 1988 and fixed-term chief executive contracts, from an opinion commentary, reports that the 1988 reform replaced open-ended tenure for top officials with fixed terms. The commentary argues that short terms expose them to political pressure and encourage short-term thinking, and that political leaders used gaps in the Act to gain sway over appointments. Source: Newsroom (New Zealand news site), commentary 'A largely unnoticed power grab', 2019 (dated 20 November 2019 by its web address)"
     },
     {
       "model": "Keynesian welfare capitalism",
@@ -75,7 +75,7 @@
     },
     {
       "model": "Developmental state",
-      "best": "The case Hong Kong's Independent Commission Against Corruption after the Godber affair reports that the commission's enabling ordinance took effect on 15 February 1974, superseded the police Anti-Corruption Office, and operates independently of the police and the civil service.",
+      "best": "The case Hong Kong's Independent Commission Against Corruption after the Godber affair reports that public anger followed, that the colonial administration set up the commission, and that the commission superseded the police Anti-Corruption Office and operates independently of the police and the civil service.",
       "worst": "Inferred from its principle that the state picks favoured fields and disciplines firms by performance, so promotion follows the chosen sectors' targets, and officials who serve other public duties are passed over. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle (1982)"
     },
     {
@@ -146,7 +146,7 @@
     {
       "model": "Corporatism and fascist economics",
       "best": "Inferred from its principle that employers and unions are organised in state-controlled bodies, so public service pay and training are agreed within those bodies, giving the state a steady framework for staff pay and entry. There is no documented case in the pool.",
-      "worst": "The case Germany's 1933 law removing officials for political or racial reasons reports that the Law for the Restoration of the Professional Civil Service took effect on 7 April 1933 and sought to rebuild a national bureaucracy by removing selected classes of career officials. Officials with a Jewish parent or grandparent faced immediate retirement, officials deemed disloyal risked removal without cause, and rulings by top Reich or state agencies could not be appealed. Source: University of Oregon, course page on the 1933 law (undated)"
+      "worst": "The case Germany's 1933 law removing officials for political or racial reasons reports that the Law for the Restoration of the Professional Civil Service sought to rebuild a national bureaucracy by removing selected classes of career officials. Officials with a Jewish parent or grandparent faced immediate retirement, officials deemed disloyal risked removal without cause, and rulings by top Reich or state agencies could not be appealed. Source: University of Oregon, course page on the 1933 law (undated)"
     },
     {
       "model": "Islamic economics",
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "A civil service recruited by examination and paid with reference to private-sector levels, held to account by an independent ombudsman and anti-corruption commission, and protected from removal for political or racial reasons. Appointments follow published criteria, not party control or patronage, and each change is tested.",
-    "details": "Keeps: examination for entry, rewarding ability over favouritism (Redistributive economy, from Imperial China's examinations for officials); an independent ombudsman (Nordic social democracy, from Sweden's parliamentary ombudsman and its spread); an independent anti-corruption commission (Developmental state, from Hong Kong's Independent Commission Against Corruption after the Godber affair); pay compared with private-sector levels (Austrian free-market economics, from Japan's first recommended pay cut for national civil servants). Blocks: party control of appointments, by published criteria (Command socialism, from The Soviet nomenklatura: party control of appointments); removal of officials for political or racial reasons, by a legal bar and a right of appeal (Corporatism and fascist economics, from Germany's 1933 law removing officials for political or racial reasons). Test: for five years after any change, yearly shares of posts filled by open competition, officials moved for political reasons, and ombudsman complaints upheld. Source: South China Morning Post; varuh-rs.si; Independent Commission Against Corruption; Japanese labour-policy institute archive; GlobalSecurity; University of Oregon."
+    "details": "Keeps: examination for entry, rewarding ability over favouritism (Redistributive economy, from Imperial China's examinations for officials); an independent ombudsman (Nordic social democracy, from Sweden's parliamentary ombudsman and its spread); an independent anti-corruption commission (Developmental state, from Hong Kong's Independent Commission Against Corruption after the Godber affair); pay compared with private-sector levels (Austrian free-market economics, from Japan's first recommended pay cut for national civil servants). Blocks: party control of appointments, by published criteria (Command socialism, from The Soviet nomenklatura: party control of appointments); removal of officials for political or racial reasons, by a legal bar and a right of appeal (Corporatism and fascist economics, from Germany's 1933 law removing officials for political or racial reasons). Test: for five years after any change, yearly shares of posts filled by open competition, officials moved for political reasons, and ombudsman complaints upheld. Source: South China Morning Post; varuh-rs.si; Independent Commission Against Corruption; jil.go.jp; globalsecurity.org; University of Oregon."
   }
 }
