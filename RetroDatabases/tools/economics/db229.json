@@ -1,0 +1,191 @@
+{
+  "database": 229,
+  "type": "practice",
+  "practice": "Unemployment and job security",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that gifts create obligations to give and to return, people who lose work are taken in and fed by kin and neighbours, and they repay that help later through service. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that gifts create obligations to return, a person who has lost work is bound to repay past help, and refusing to return a gift or leaving the group can cut them off from all help, since no support is owed to them as a right. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a family farm balances the work it can do against its household's needs, a member who loses wage work can return to the family plot and be fed from its own production. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption rather than profit, a member who loses wage work is absorbed as unpaid labour on the farm, so the unemployment stays hidden, with no wage, pension or retraining, and the family carries any shortfall. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central authority stores goods and redistributes them to workers and officials, people who lose work or a harvest are fed from central stores and set to work on public projects. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre collects goods as tribute and taxes, relief depends on the favour of officials rather than on a right, and the jobless can be called to unpaid state labour with no say in the matter. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that labour is extracted through ownership of people, owners have reason to keep their workforce fed and housed through slack seasons, since replacing it is costly, though this protects the owner's investment rather than any worker's claim. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that people are owned, a person left without work can be sold or moved away from family, denied education and property, and has no wage, no right to leave and no claim on any public relief. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that peasants hold land in return for labour services, the manor keeps families fed from their own holdings when work is short, and protection and justice come from the lord. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that services and rents are owed to the lord, a family that cannot meet them may lose the holding that gives it a living, and because the manor is largely self-supplying there is no wider market to take up work that is lost. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that guilds regulate entry, training and prices, skilled members keep a recognised trade and a fixed place in the craft, so they are less exposed to newcomers who undercut them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that guilds fix entry and prices, outsiders and the unqualified are shut out of the trade, and journeymen who cannot become masters have no route to independent work and may have no claim on the guild when their place is lost. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state aims for a trade surplus and regulates production and trade, work in protected home industries and colonial trade is kept at home, so workers in those trades are less exposed to foreign competition. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state regulates production and trade for a surplus, workers in unprotected trades pay for that protection through dearer goods, and state help goes to favoured industries rather than to people who lose work. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that only agriculture makes a net product and grain should trade freely, food stays cheap and farm work stays open to people who lose other work, while the state is paid for by one tax on land rent rather than by a tax on labour. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only agriculture creates a net product, work outside farming is counted as adding nothing to the product, so people who lose such work get little state support, and a single land tax may raise too little to fund any relief. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "Inferred from its principle that competitive markets and the division of labour create wealth, jobless people can move to where work is wanted and wages adjust, so spells out of work may be shortened without state programmes. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state protects property and contracts and otherwise stays out, people who lose work in a slump have no public income, retraining or insurance and must rely on savings, family or private charity. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge no planner can gather, wages and prices should be free to adjust, and credit is not expanded to drive booms, so the layoffs that follow a bust are expected to be smaller. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that credit expansion distorts production, cheap credit used to stop a slump can build up the distortions that later end in mass layoffs, and state planning can keep the wrong firms going for longer. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "Inferred from its principle that steady money growth, deregulation and open trade let firms hire and shed staff with few rules, so new jobs open as the economy grows and the cost of taking on staff falls. There is no documented case in the pool.",
+      "worst": "A smaller state with easy hiring and firing and thin income support lacks the income security that Denmark's flexicurity model pairs with easy hiring and firing. Kreiner and Svarer (2022) argue that this pairing does not suffice on its own, and that mandatory participation programmes for claimants are needed alongside it; the article was seen only as a summary, so this point is unconfirmed here. Source: Kreiner and Svarer, Journal of Economic Perspectives (2022)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Subsidised short-time work can cut hours, not jobs. A 2010 IAB short report credits Germany's Kurzarbeit short-time work scheme, with working-time drawdowns, as an important contributor to the 2009 fall in hours; a 2014 IAB discussion paper, seen only as an excerpt that omits its crisis years, found no sign of a causal effect on firms' employment levels, which is not proof of no effect and does not measure hours.",
+      "worst": "Inferred from its principle that government spending rises in slumps and falls in booms, spending that is not cut back in good times can build up deficits and debt, and inflation then erodes the real value of jobless benefits and wages. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
+    },
+    {
+      "model": "Social market economy",
+      "best": "Social insurance can carry short-time work in slumps; a 2010 IAB short report credits Germany's Kurzarbeit short-time work scheme, with working-time drawdowns, as an important contributor to the 2009 fall in hours. A 2014 IAB discussion paper, seen only as an excerpt that omits its crisis years, found no sign of a causal effect on firms' employment levels, which is not proof of no effect and does not measure hours.",
+      "worst": "Inferred from its principle that social insurance and worker representation raise the cost of shedding staff, insiders with secure posts can be protected while outsiders, such as new entrants and people between jobs, face longer spells without work. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "Income security paired with active labour-market policy, including mandatory participation for claimants, is the model's best practice. Kreiner and Svarer (2022) argue, about Denmark's flexicurity model, that easy hiring and firing paired with income security does not suffice on its own, and that mandatory participation programmes for claimants are needed alongside it; the article was seen only as a summary, so this point is unconfirmed here.",
+      "worst": "Inferred from its principle that pay is set nationally through strong unions and taxes fund universal services, insiders in secure work can be shielded by bargained rates while young and new entrants find fewer openings at those rates, and high taxes on labour raise the cost of hiring. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state directs credit and export targets to chosen industries, workers who lose jobs in declining sectors can be moved into targeted growing industries, with training planned to match them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that firms are disciplined by their performance, firms that miss targets lose credit and may close, leaving their workers without a firm and with little state support for finding work elsewhere. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that land value is taxed rather than labour and capital, wages and hiring are left untaxed, so a jobless person is not priced out of work by taxes on pay. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the rent of land funds public services, a fall in land values in a slump can shrink the revenue that pays for relief just when unemployment rises, and a land tax gives no income-based support of its own. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities and planned associations replace wage competition, people who lose work are taken into shared work and shared upkeep within the community rather than left to the market. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities are built by example, support depends on what a community can afford and is willing to share, so a community that fails or cannot take in everyone leaves people who lose work with no public claim and no market income. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that mutual credit and free contracts let workers keep the full value of their work and banks lend at cost, a worker who loses a job can borrow at cost through mutual credit and start on their own account. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that rent on property is abolished and banks lend at cost, mutual credit depends on members repaying one another, so a downturn that strains repayment can weaken the network, and no outside body is set up to carry the losses. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Inferred from its principle that members own and control firms and share the surplus between users and workers, a cooperative can keep its members in work through a slump by sharing the surplus and cutting pay before cutting jobs. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that members own and control the firm, a cooperative that fails leaves its members without jobs and without a wider fund to fall back on, and workers who are not admitted as members have no say and no share in the surplus. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that goods are shared by need within federated communes and that there are no wages, a person who loses work is supplied from the common stock according to need, without a test of past earnings. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there are no wages and no state, support depends on the commune's common stock and its judgement of need, so a person whose need is disputed, or who lives where the stock runs short, has no fixed claim and no outside body to appeal to. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Inferred from its principle that trade unions run industry through workers' organisations and use strikes, unions can protect members' jobs and press for new work for those who lose theirs, through bargaining that is backed by strikes. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that unions run industry directly and act through strikes, members of strong unions can protect their own jobs while non-members and the jobless have little voice, and disputes can cut output and jobs in the sectors where they are fought. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that a national minimum of welfare is set by democratic means and public enterprise is run by municipal and national bodies, people who lose work are guaranteed a minimum income and offered public work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that change comes gradually by democratic means, a national minimum may be set low and phased in slowly, and jobless people may wait for public enterprises to grow, with provision varying from one municipality to another. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, people who lose work have a voice in how cuts are made and in the retraining and transfers that follow. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the councils share control with the state as one partner among several, decisions about cuts can be slowed by bargaining between guilds, and people outside the guilds, including the jobless, may have little say over the terms of their support. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that central plans set output and investment and the state mobilises labour, the state can assign a post to every worker, so that people who would otherwise be out of work are given a place in the plan. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state mobilises labour for rapid industrialisation, jobs are assigned by plan rather than by choice, so people are moved where the plan needs them, firms may hold surplus staff out of sight, and a worker who loses a post has little right to choose another. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that public firms follow market prices and a central board sets the rules and the investment, a firm that loses demand is pushed by prices to adjust, and the board can plan retraining and new investment for displaced workers. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that managers in public firms follow prices, firms may shed labour when prices fall, and a central board that controls investment may be slow to replace the jobs lost. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that, once classes disappear, goods are distributed to each according to need, a person who loses work is supplied according to need rather than according to a former wage. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state withers away only after classes disappear, a long transition under a state that controls the economy may leave people who lose work dependent on that state's allocation, with no independent body to appeal to. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "The practice is public re-employment service centres for laid-off state workers. Shanghai's re-employment service centres for laid-off state workers were described in an investigative report that four central government agencies circulated in August 1997; it is seen only as a copy on a Chinese law firm's website, not the official text, so it should be checked before use, and the results give no funding or living-allowance details.",
+      "worst": "Inferred from its principle that public ownership of key sectors sits beside markets and prices change gradually, workers released from restructured state firms may face a gap between losing a post and finding another, with support left to the firms or to the pace of change. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals and jobs are balanced in complexity, a worker who loses a job can be matched by the councils to a balanced job of similar complexity, with the say of those affected. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils plan through repeated proposals and neither markets nor central planners allocate, matching people who lose jobs to new ones may be slow, and with no market or planner to act, a disagreement between councils can leave them without work for longer. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, cuts and rehiring are negotiated inside each corporation under the state's plan, so a slump is met by the plan rather than by the market. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, unions are not free to bargain for the jobless, and people who lose work may be directed into war production or other state-set tasks with little choice of their own. There is no documented case in the pool. Source: Italian corporative law; Nazi Four-Year Plan"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that zakat redistributes wealth and finance shares profit and risk, a person who loses work can draw on zakat and on partnership finance that shares the loss, rather than on debt that carries interest. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that interest is prohibited and trust underpins contracts, a jobless person may depend on the goodwill of partners and on zakat, which may fall short in a wide slump, and a system built on trust may be strained when many partners fail at once. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that economic life serves well-being and production is small-scale and local, a person who loses work can return to small-scale local work on modest needs, so a large wage is less needed to live on. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production is small-scale and local, a local economy with few enterprises may offer few jobs when one closes, and with no state or wider market to back it, people who lose work may depend on local networks alone. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that widespread private property and small enterprise give people a stake, and that subsidiarity keeps decisions with the smallest competent body, a person who loses work can fall back on a small holding or workshop and on help from a nearby body. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that subsidiarity leaves decisions with the smallest competent body, help for people who lose work depends on whether a local body is competent and willing, and a small holder who loses income may lose the only asset that secures a living. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that there is no growth imperative and a social floor sits under everyone, people who lose work are not pushed into a race for growth-driven jobs, and a guaranteed floor keeps them above need while work is shared and reduced. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that economic activity stays within planetary limits, fewer new jobs may be created in a slow economy, work sharing may be pressed on people who would rather keep full pay, and a floor that must fit within those limits may be set below what people need. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "An unconditional income for jobless people showed no difference in job-finding from a comparison group in Finland's basic income trial for unemployed people, which paid a random sample of 2,000 people who had received jobless benefit 560 euros a month without a job-search condition. These preliminary figures cover 2017 only, give no final two-year employment figures, and were seen only in a summary, not the report text.",
+      "worst": "Inferred from its principle that every citizen receives an unconditional income paid for by taxes on land and natural resources, a payment too low to cover housing and living costs leaves people short, and if those taxes raise less than promised, the payment shrinks while job services are cut to make up the difference. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government which issues its own currency can fund full employment, the state can offer people who lose work a public job whenever private demand falls short. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, spending that outruns the economy's capacity can push prices up, eroding the real value of wages and jobless support, and a government may keep spending after prices have begun to rise. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that a community sharing a resource makes and enforces its own rules, members can share work and support among themselves when someone loses a job, with monitoring by people who know one another. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a community designs its own rules within wider institutions, those rules can exclude outsiders and newcomers from shared work and support, and help may depend on a membership that someone who has lost work may no longer hold. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "Income support as of right when work is lost, paid from contributions, with a tax-funded floor for people without them. After a set period, claimants must take up offered retraining or work; short-time work cuts hours before jobs; and the floor is paid without a job-search test, so the two routes can be compared.",
+    "details": "Keeps: income security with mandatory participation for claimants, from Nordic social democracy and Denmark's flexicurity model, whose effectiveness point is unconfirmed; short-time work that cuts hours, from Keynesian welfare capitalism and Germany's Kurzarbeit short-time work scheme; a floor paid without a job-search test, from Universal basic income and Finland's basic income trial for unemployed people. Blocks: easy dismissal with thin income support, from Monetarist neoliberalism, safeguarded by earnings-related benefits and the floor; hidden unemployment, from Command socialism, safeguarded by published counts of jobless and underemployed people. Test: for two years after a job loss, compare job-finding and pay on re-employment between the two routes, using register data, and track hours against headcount in short-time schemes. Source: Kreiner and Svarer, Journal of Economic Perspectives (2022); Institute for Employment Research (IAB), discussion paper 17/2014; Social Insurance Institution of Finland (Kela), The Basic Income Experiment 2017-2018 in Finland: Preliminary Results (2019); Kornai, The Socialist System"
+  }
+}
