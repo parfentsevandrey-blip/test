@@ -1,0 +1,93 @@
+{
+  "database": 225,
+  "practice": "Local government and decentralisation",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "LG1",
+      "case": "Participatory budgeting in Porto Alegre",
+      "years": "1989 onward; interviews in 2004",
+      "claim": "A dissertation by Terence Wood at Victoria University of Wellington compares participatory budgeting in Porto Alegre and Belo Horizonte, drawing on 22 semi-structured interviews from April and May 2004. It reports real but uneven results, with obstacles that have held back what the budgets could deliver. It names two factors that shape outcomes: whether a budget can produce tangible results, and how much a city's population needs municipal services. The two cities' budgets produced some similar outcomes and some different ones.",
+      "source": "Terence Wood, dissertation 'Participatory Democracy in Porto Alegre and Belo Horizonte', Victoria University of Wellington (year not shown in the result); Portuguese-language article in the journal Ensaios (year not shown), for the 1989 start",
+      "url": "https://openaccess.wgtn.ac.nz/articles/thesis/Participatory_Democracy_in_Porto_Alegre_and_Belo_Horizonte/16915630",
+      "caveat": "No quantitative impact study appeared in the results, and the evidence is 22 interviews. The 1989 start comes from the Ensaios article, which covers 1989 to 1995, not from the dissertation. A secondary summary with figures on water, roads and schools was not used, because its source page could not be identified in the results.",
+      "relevant_to": [
+        "Commons governance",
+        "Participatory economics"
+      ]
+    },
+    {
+      "id": "LG2",
+      "case": "Women as village-council heads in India's panchayats",
+      "years": "reservation since the mid-1990s; study published 2004",
+      "claim": "Since the mid-1990s, a random reservation of one third of village-council headships (pradhan seats) for women has been in place in India. Chattopadhyay and Duflo use it to test whether female leaders change policy. They report that reserved seats change which public goods are provided: female leaders put more into infrastructure tied to women's needs. The published study covers 265 councils in West Bengal and Rajasthan.",
+      "source": "Chattopadhyay and Duflo, Econometrica (2004), vol. 72, no. 5; NBER Working Paper 8615 (December 2001)",
+      "url": "https://www.nber.org/system/files/working_papers/w8615/w8615.pdf",
+      "caveat": "The claims come from abstracts and summaries; the full text and its results tables were not read. The sample differs between versions: the NBER abstract gives 165 councils, the published study 265. The record should give the published figure and note the difference.",
+      "relevant_to": [
+        "Commons governance",
+        "Distributism"
+      ]
+    },
+    {
+      "id": "LG3",
+      "case": "China's 1994 tax-sharing reform",
+      "years": "1980s contract system; reform in 1994",
+      "claim": "Under the 1980s contract system, regional governments struck separate deals with Beijing. The 1994 tax-assignment reform (fenshuizhi) moved revenue sharing at least partly toward fixed rules. Its results are disputed: a paper hosted by the Chinese University of Hong Kong calls early results mixed at best, while an IDEAS/RePEc working paper views the reform as having met its two ratio goals, for the central share of revenue and for revenue relative to GDP, and as having aided growth.",
+      "source": "Chinese University of Hong Kong paper on the 1994 reform (year not shown); IDEAS/RePEc working paper 0312 (year not shown)",
+      "url": "https://cuhk.edu.hk/gpa/wang_files/1994.pdf",
+      "caveat": "Both papers were read only through search summaries, and the results give no authors' names for them. The IDEAS paper is at https://ideas.repec.org/p/ays/ispwps/paper0312.html and takes the opposite view. Central revenue shares for 1984 and 1993 came from an unidentified web source and are not used. The record must name the authors after checking the papers.",
+      "relevant_to": [
+        "Chinese market socialism"
+      ]
+    },
+    {
+      "id": "LG4",
+      "case": "Kerala's People's Plan campaign",
+      "years": "1996 target; figures to 2011-12",
+      "claim": "Kerala's decentralised planning campaign had a 1996 target of 35 to 40 per cent for local bodies. A DMEO document (Decentralized Planning Experience in Kerala) reports that around 90 per cent of that commitment was devolved, and that the devolved money carried rules: productive sectors at least 30 per cent, infrastructure at most 30 per cent, and women's development at least 10 per cent. A table attributed to Oommen (2014), reproduced in an MPRA working paper, puts local plan grants at roughly a quarter of state plan outlay on average over 1997-98 to 2011-12. It peaks near 33 per cent in 2002-03 and falls to about 23 per cent by 2011-12.",
+      "source": "DMEO (dmeo.gov.in) document 'Decentralized Planning Experience in Kerala' (year not shown); MPRA working paper 65710, reproducing a table by Oommen (2014)",
+      "url": "https://dmeo.gov.in/sites/default/files/2019-10/Decentralized%20Planning%20Experience%20in%20Kerala.pdf",
+      "caveat": "The DMEO excerpt does not say what the 90 per cent is a share of. Applied to the 35 to 40 per cent base it implies about 31 to 36 per cent of plan funds, while the Oommen table averages about a quarter, so the two sources conflict and the record must give both. Only search excerpts were read; the full DMEO text and the Oommen paper were not. Reader highlights and a publisher's blurb were not used.",
+      "relevant_to": [
+        "Participatory economics"
+      ]
+    },
+    {
+      "id": "LG5",
+      "case": "Fascist replacement of elected mayors by podestà",
+      "years": "1926 to 1927; some cities restored in 1944 and 1945",
+      "claim": "A February 1926 measure curtailed municipal self-rule, removing elected councils and the mayors they chose. Outside Rome, every municipality fell under a podestà, an official combining executive and legislative authority. The post was formally appointed by royal charter, for renewable five-year terms that could be ended at once, but the National Fascist Party did the real choosing. In Rome the council and mayor were scrapped, and a governor picked by the party took over. In Genoa the first fascist podestà took office on 16 December 1926, and Florence's first began on 16 January 1927. Lucca and Grosseto regained their mayors in 1944, and Forlì in 1945.",
+      "source": "online encyclopaedia (secondary), pages on the podestà and on the mayors of Rome, Genoa and Florence (undated)",
+      "url": "https://en.wikipedia.org/wiki/Podest%C3%A0",
+      "caveat": "Every source found is an encyclopaedia page, and the pages repeat one another, so they are not independent confirmation. One page attributes the February 1926 decree to the Senate, which the search result itself doubts, so the record should not name the legal instrument until an Italian legal source is checked. The city dates come from different pages.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "LG6",
+      "case": "Chile's 1981 transfer of public schools to municipalities",
+      "years": "1981 to 1990; study published 1993",
+      "claim": "The 1981 reform put public schools under municipal control and funded them through a per-capita voucher, with identical amounts for public and private schools. A World Bank study by Donald Winkler and Taryn Rounds (1993), covering 1981 to 1990, finds mixed results. Whether the reform improved cost-effectiveness remains unresolved. Non-teaching posts at the education ministry shrank by more than half, and measured learning appears to have slipped. A slight cost-effectiveness edge went to private rather than public schools.",
+      "source": "World Bank study by Donald Winkler and Taryn Rounds (1993)",
+      "url": "https://documents1.worldbank.org/curated/en/632241468766165670/text/multi-page.txt",
+      "caveat": "The URL is the scanned text of the study, which the search summary says is garbled in places, so each figure must be checked against the original. The results give no clean causal estimate of the 1981 transfer on test scores. The 'more than half' figure is a summary's reading of that text.",
+      "relevant_to": [
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "LG7",
+      "case": "New municipalities in Chile and pupil results",
+      "years": "municipalities created 1994 to 2004; study 2022",
+      "claim": "An IDB study by Alcaíno and colleagues (2022) looks at 11 municipalities carved out in 1994 to 2004. Comparing them with areas whose secession bids fell short, it estimates a drop of 0.2 standard deviations in elementary maths in schools in the new municipalities. Staff churn and insecurity rose among teachers and school leaders there. Cutting the footprint of the original municipal networks, by contrast, made no difference to pupil results or staff.",
+      "source": "IDB study by Alcaíno and colleagues (2022), 'Government fragmentation and educational outcomes: evidence on the creation of municipalities in Chile'",
+      "url": "https://publications.iadb.org/en/metadata/31809/government-fragmentation-and-educational-outcomes-evidence-creation-municipalities-chile",
+      "caveat": "The search summary is the only source: the IDB record was not opened, so the 0.2 figure and the comparison design are as the summary reports them. The study concerns new municipalities from 1994 to 2004, not the 1981 school transfer, and measures elementary maths only.",
+      "relevant_to": [
+        "Distributism"
+      ]
+    }
+  ]
+}
