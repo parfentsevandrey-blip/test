@@ -1,0 +1,105 @@
+{
+  "database": 220,
+  "practice": "Elections and political money",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "EL1",
+      "case": "Recall and pay caps in the Paris Commune",
+      "years": "1871",
+      "claim": "Councillors of the 1871 Paris Commune could be recalled at any time, and their pay was capped at an ordinary worker's wage.",
+      "source": "Libcom history article on the Paris Commune (movement-linked history site; year not shown)",
+      "url": "https://libcom.org/history/articles/paris-commune-1871",
+      "caveat": "The source is a movement-linked history site, not an independent history. The excerpt does not show which page states the recall and pay rules, and no result says who could vote, so the franchise is not claimed here.",
+      "relevant_to": [
+        "Marxian communism",
+        "Anarcho-communism"
+      ]
+    },
+    {
+      "id": "EL2",
+      "case": "Union political levy and the Osborne Judgment",
+      "years": "1909 to 1913",
+      "claim": "Labour's funding rested on levies collected through affiliated unions until a 1909 House of Lords ruling, the Osborne Judgment, made them unlawful. Legislation in 1913 gave unions a legal footing for political funds, and members could opt out of the levy without being expelled for doing so.",
+      "source": "online encyclopaedia (secondary), entry on the Osborne Judgment (year not shown)",
+      "url": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/osborne-judgment-0",
+      "caveat": "An encyclopaedia entry, so secondary. The results give no levy amounts or membership figures, and the opt-out wording is a summary, not the statute text.",
+      "relevant_to": [
+        "Fabian socialism",
+        "Syndicalism"
+      ]
+    },
+    {
+      "id": "EL3",
+      "case": "Italy's Acerbo law and the 1924 election",
+      "years": "1923 to 1928",
+      "claim": "The Acerbo law of 1923 gave two-thirds of the Chamber's seats to the list that placed first, provided it won at least a quarter of valid votes. Only the 1924 general election ran under it. Opposition deputies walked out in June 1924 after the killing of the Socialist deputy Giacomo Matteotti, which left Mussolini's supporters in sole command of parliament, and accounts say intimidation and fraud helped the outcome. Law No. 1019 of 17 May 1928 abrogated it, and a 1928 overhaul replaced contested voting with a single slate picked by the Fascist Grand Council. Sources differ on the dates: an online encyclopaedia (secondary) gives Chamber approval on 21 July 1923 and royal assent on 18 November, while one essay gives 18 November as the passage date.",
+      "source": "Verfassungsblog essay of 28 November 2023; online encyclopaedia (secondary) on the Acerbo law; IB revision-guide website (secondary; year not shown)",
+      "url": "https://verfassungsblog.de/prize-and-premiership/",
+      "caveat": "Most detail comes from an encyclopaedia and a revision-guide website, both secondary. The essay is the only scholarly-style item cited. The intimidation-and-fraud point is a glossary summary, not a finding. The mechanism wording is not checked against the law text, and the link to the model is an inference, since the sources cover the electoral law rather than corporations.",
+      "relevant_to": [
+        "Corporatism and fascist economics"
+      ]
+    },
+    {
+      "id": "EL4",
+      "case": "One candidate per district in the 1937 Soviet election",
+      "years": "1937",
+      "claim": "A 2020 academic article contends that the 1937 vote set a lasting pattern of one unopposed nominee per district, put forward under tight party supervision and effectively expected to be endorsed by voters without dissent. A US embassy analysis of the period speculated that the Kremlin may have limited races to one name to keep voters from feeling empowered enough to reject Stalin's associates. Before the vote, the Trotskyist paper Socialist Appeal forecast that 99% of districts would have only one name on the ballot.",
+      "source": "2020 academic article (PDF; title and author not shown); US embassy analysis of the period (US government archive, 1933 to 1939 documents); Socialist Appeal, Trotskyist paper (1937)",
+      "url": "https://old.lawinfo.ru/assets/files/History/2020/3/History_3_20-5.pdf",
+      "caveat": "The 2020 article's title and author are not shown in the result. The embassy line is speculation about motive, and the 99% figure is a partisan forecast. The results do not give the actual share of single-candidate districts.",
+      "relevant_to": [
+        "Command socialism"
+      ]
+    },
+    {
+      "id": "EL5",
+      "case": "State subsidies to Swedish parties",
+      "years": "1965 (approval)",
+      "claim": "A 1968 survey of postwar Swedish party finance places the parliamentary approval of state subsidies to political parties in 1965.",
+      "source": "Scandinavian Political Studies, vol. 3 (1968), survey of postwar Swedish party finance",
+      "url": "https://tidsskrift.dk/scandinavian_political_studies/article/download/32036/29521?inline=1",
+      "caveat": "Only the approval year is stated, and it comes from a summary of the survey. The results do not confirm the 1966 start, the size of the subsidies or any link to trade unions, and a 1970 Riksdag document on collective affiliation motions is unclear. The link to Nordic social democracy is an inference.",
+      "relevant_to": [
+        "Nordic social democracy"
+      ]
+    },
+    {
+      "id": "EL6",
+      "case": "Buckley v. Valeo and Citizens United",
+      "years": "1976 to 2010",
+      "claim": "In Buckley v. Valeo (1976) the Supreme Court kept caps on donations to individual candidates and limits on total giving to several candidates, struck down ceilings on candidate, independent and self-funded spending except caps for candidates who voluntarily accepted public financing, and kept disclosure rules. Citizens United (2010) widened First Amendment protection for independent political spending by corporations and unions, and discarded the part of McConnell that let lawmakers ban corporate independent spending.",
+      "source": "National Conference of State Legislatures page on campaign finance and the Supreme Court (year not shown); online encyclopaedia (secondary), Britannica entry on Buckley v. Valeo; Public Integrity case profile (its Citizens United series)",
+      "url": "https://www.ncsl.org/elections-and-campaigns/campaign-finance-and-the-supreme-court",
+      "caveat": "These are summaries of the rulings, not the opinions, and the results give no vote counts. The McConnell point comes from a summary, not the opinion. The link to Monetarist neoliberalism is an inference, since the rulings rest on free speech rather than economic doctrine.",
+      "relevant_to": [
+        "Monetarist neoliberalism"
+      ]
+    },
+    {
+      "id": "EL7",
+      "case": "The Flick gifts and party donation disclosure",
+      "years": "early 1980s to 1986",
+      "claim": "Gifts from the Flick group to several West German parties set off a scandal in the early 1980s. Otto Lambsdorff, the economy minister, was pushed out of office in 1984 over bribery accusations tied to Friedrich Karl Flick. At a parliamentary hearing Lambsdorff admitted that, as a local FDP treasurer in the 1970s, he had left Flick gifts off the public record although the law required disclosure, and he described this as routine for parties. Under party pressure, Bundestag Speaker Rainer Barzel stepped down after it emerged that he had taken about 1.7 million marks from the Flick group in 1973 to 1979. A 1986 report said the payments were not unlawful on their own, with tax evasion central, and Helmut Kohl blamed excessively strict donation rules rather than the gifts.",
+      "source": "Christian Science Monitor news reports of 1984 and 1986 on the Flick affair",
+      "url": "https://csmonitor.com/1984/1026/102622.html",
+      "caveat": "All sources are news reports from 1984 to 1986, and the excerpts do not tie each statement to one article. The mark figure comes from a summary. Nothing in the results covers the 1967 Party Law, state funding or current donation limits. The link to Social market economy is an inference.",
+      "relevant_to": [
+        "Social market economy"
+      ]
+    },
+    {
+      "id": "EL8",
+      "case": "Village committee elections under the Organic Law",
+      "years": "1987 to 2002",
+      "claim": "The 1998 revision of the Organic Law of the Villagers' Committees moved candidate nomination away from village groups and Party branches toward voters. Article 14 ties nominations to direct voter action and requires more candidates than open seats. Direct village elections became mandatory every three years, but sources disagree on the number of villages: about one million in one overview, roughly 730,000 in others, and more than 658,000 at the end of 2002 in another. Monitors from abroad generally rated the votes they saw as fair, but official estimates put the share of contests with serious procedural flaws at about one third. Perhaps one village in four had fully met the statute's standards by late 2002. An East Asia Forum analysis argues that the law partly shifts oversight of village leaders onto residents.",
+      "source": "Organic Law of the Villagers' Committees of the People's Republic of China, Chinese and English text, 1998 revision; Carter Center report on China's village elections (1999); East Asia Forum analysis (2017)",
+      "url": "https://www.ecoi.net/en/document/270345",
+      "caveat": "The law text is an English translation. The monitor and flaw figures and the one-in-four figure are secondary and are not tied to a named source. The sources disagree on the year of the first version (1987 or 1988) and on the number of villages.",
+      "relevant_to": [
+        "Chinese market socialism"
+      ]
+    }
+  ]
+}

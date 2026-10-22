@@ -46,7 +46,7 @@
       "case": "Kerala's People's Plan campaign",
       "years": "1996 target; figures to 2011-12",
       "claim": "Kerala's decentralised planning campaign had a 1996 target of 35 to 40 per cent for local bodies. A DMEO document (Decentralized Planning Experience in Kerala) reports that around 90 per cent of that commitment was devolved, and that the devolved money carried rules: productive sectors at least 30 per cent, infrastructure at most 30 per cent, and women's development at least 10 per cent. A table attributed to Oommen (2014), reproduced in an MPRA working paper, puts local plan grants at roughly a quarter of state plan outlay on average over 1997-98 to 2011-12. It peaks near 33 per cent in 2002-03 and falls to about 23 per cent by 2011-12.",
-      "source": "DMEO (dmeo.gov.in) document 'Decentralized Planning Experience in Kerala' (year not shown); MPRA working paper 65710, reproducing a table by Oommen (2014)",
+      "source": "DMEO document 'Decentralized Planning Experience in Kerala' (year not shown); MPRA working paper 65710, reproducing a table by Oommen (2014)",
       "url": "https://dmeo.gov.in/sites/default/files/2019-10/Decentralized%20Planning%20Experience%20in%20Kerala.pdf",
       "caveat": "The DMEO excerpt does not say what the 90 per cent is a share of. Applied to the 35 to 40 per cent base it implies about 31 to 36 per cent of plan funds, while the Oommen table averages about a quarter, so the two sources conflict and the record must give both. Only search excerpts were read; the full DMEO text and the Oommen paper were not. Reader highlights and a publisher's blurb were not used.",
       "relevant_to": [
@@ -55,12 +55,12 @@
     },
     {
       "id": "LG5",
-      "case": "Fascist replacement of elected mayors by podestà",
-      "years": "1926 to 1927; some cities restored in 1944 and 1945",
-      "claim": "A February 1926 measure curtailed municipal self-rule, removing elected councils and the mayors they chose. Outside Rome, every municipality fell under a podestà, an official combining executive and legislative authority. The post was formally appointed by royal charter, for renewable five-year terms that could be ended at once, but the National Fascist Party did the real choosing. In Rome the council and mayor were scrapped, and a governor picked by the party took over. In Genoa the first fascist podestà took office on 16 December 1926, and Florence's first began on 16 January 1927. Lucca and Grosseto regained their mayors in 1944, and Forlì in 1945.",
-      "source": "online encyclopaedia (secondary), pages on the podestà and on the mayors of Rome, Genoa and Florence (undated)",
-      "url": "https://en.wikipedia.org/wiki/Podest%C3%A0",
-      "caveat": "Every source found is an encyclopaedia page, and the pages repeat one another, so they are not independent confirmation. One page attributes the February 1926 decree to the Senate, which the search result itself doubts, so the record should not name the legal instrument until an Italian legal source is checked. The city dates come from different pages.",
+      "case": "Fascist replacement of elected mayors by podestà, 1926",
+      "years": "1926",
+      "claim": "An Italian-language anthology dates the end of elected municipal government to 1926. It points to two so-called fascistissime laws and a royal decree of 3 September 1926, and it says that the appointed podestà, serving five-year terms, took over the powers of the mayor, the executive committee and the council. A study of podestà in Bolzano province by Andrea Di Michele dates the reform to two stages between February and September 1926 and treats the abolition of municipal self-rule as a precondition for the totalitarian state.",
+      "source": "Italian-language anthology on the podestà (2023); Andrea Di Michele, study of podestà in Bolzano province (secondary)",
+      "url": "https://storiastoriepn.it/wp-content/uploads//2023/06/antologia-def.pdf",
+      "caveat": "Both sources are in Italian and were read only as search excerpts, not in full. The search did not confirm the legal instrument by name beyond the 1926 decree and the fascistissime laws, so a record should not name the instrument until an Italian legal source is checked. The link to the Di Michele study was not captured.",
       "relevant_to": [
         "Corporatism and fascist economics"
       ]

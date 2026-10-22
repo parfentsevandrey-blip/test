@@ -38,7 +38,7 @@
       "case": "Chile's school voucher reform",
       "years": "1981 onward",
       "claim": "Vouchers could be spent at public or private schools whatever the household's income, a design close to Milton Friedman's 1955 proposal. Enrolment in state-run schools fell from 78 per cent in 1980 to below half by 2007. Socio-economic sorting between schools increased, and lower-income pupils fell further behind their middle-income peers on national tests. Scholars at three universities credit the 1981 reforms with a 3.6 per cent rise in high-school graduation.",
-      "source": "New America, school choice in Chile (newamerica.org); Gazmuri, IZA conference paper on school choice in Chile (2019); Future-ed summary of the Chilean case",
+      "source": "New America, school choice in Chile; Gazmuri, IZA conference paper on school choice in Chile (2019); Future-ed summary of the Chilean case",
       "url": "https://www.newamerica.org/?p=13956",
       "caveat": "Sources differ on the cause of the sorting. A later Gazmuri paper, on a different reform, finds that families' preference for wealthier peers accounts for most of the segregation, more than schools' selection. The 3.6 per cent figure comes from a secondary report of the scholars' work.",
       "relevant_to": [
@@ -107,7 +107,7 @@
       "case": "Francisco Ferrer's Modern School in Barcelona",
       "years": "1901 to 1909, then the Modern School movement",
       "claim": "Ferrer opened an anti-authoritarian school in Barcelona in 1901 to oppose Church control of schooling. The authorities closed it in 1906 after a crackdown. Ferrer was executed in 1909 after the Tragic Week unrest. A Modern School movement followed, including a school in New York in January 1911.",
-      "source": "Albany, Stelton history of the Modern School (albany.edu); Ferrer, The Origin and Ideals of the Modern School (1913), Anarchist Library",
+      "source": "Albany, Stelton history of the Modern School; Ferrer, The Origin and Ideals of the Modern School (1913), Anarchist Library",
       "url": "https://albany.edu/talkinghistory/stelton/steltonhistory.html",
       "caveat": "Sources disagree on the date of the execution (12 or 13 October 1909). The claim does not depend on it.",
       "relevant_to": [
@@ -121,7 +121,7 @@
       "case": "China's exemption from charges for rural compulsory education",
       "years": "2006 to 2007",
       "claim": "Tuition and miscellaneous charges for rural pupils in compulsory education were waived in the western provinces from spring 2006, and in all rural areas from spring 2007. An amendment to the Compulsory Education Law, passed on 29 June 2006 and in force from 1 September, banned tuition and arbitrary fees. Roughly 150 million rural pupils were affected, and the annual cost was about 15 billion yuan. Pupils from migrant families who attended urban schools were not covered.",
-      "source": "US-China Economic and Security Review Commission summaries of State Council documents (cecc.gov); China Daily, 13 December 2006",
+      "source": "US-China Economic and Security Review Commission summaries of State Council documents; China Daily, 13 December 2006",
       "url": "https://www.chinadaily.com.cn/china/2006-12/13/content_757325.htm",
       "caveat": "The number of affected pupils varies between sources, from about 150 million to about 160 million. The sources do not cover outcomes after the 2007 roll-out.",
       "relevant_to": [
@@ -141,19 +141,6 @@
         "Social market economy",
         "Guild economy",
         "Corporatism and fascist economics"
-      ]
-    },
-    {
-      "id": "S11",
-      "case": "Soviet compulsory schooling and the 1939 census",
-      "years": "1930 to 1939",
-      "claim": "A 1930 measure made four years of schooling compulsory for children aged eight and over, and seven years for industrial cities and workers' settlements. The 1939 census put literacy at roughly 81 to 90 per cent, depending on the source and the age group counted. The census figures are treated as unreliable: miscounting and deliberate manipulation are both cited. The government had already rejected the 1937 census as defective.",
-      "source": "online encyclopaedia (secondary), 1939 Soviet census and Education in the Soviet Union (secondary); a 1969 Soviet publication on public education, which gives 90 per cent for 1939, up from 67 per cent in 1930",
-      "url": "https://en.wikipedia.org/wiki/1939_Soviet_census",
-      "caveat": "The sources are secondary or Soviet-era. Check the figures against the primary census publications before a record quotes one.",
-      "relevant_to": [
-        "Command socialism",
-        "Marxian communism"
       ]
     }
   ]
