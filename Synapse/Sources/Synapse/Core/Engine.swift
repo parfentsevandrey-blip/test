@@ -15,6 +15,30 @@ nonisolated struct ModelInfo: Sendable, Equatable {
     var gpu: Bool
     /// Подключён проектор зрения — модель понимает изображения.
     var vision: Bool
+    /// Память контекста (KV-кэш) сжата до 8 бит.
+    var compressedKV = false
+}
+
+/// Как держать модель в памяти. Меняется в Настройках и применяется при следующей загрузке модели.
+nonisolated struct EngineSettings: Sendable, Codable, Hashable {
+    /// Контекст в токенах; 0 — подобрать под память Mac и модель.
+    var context = 0
+    /// Сжимать память контекста до 8 бит: вдвое меньше памяти на контекст, качество почти не меняется.
+    /// `nil` — сжимать сами, когда модель еле помещается.
+    var compressKV: Bool?
+    /// Считать на видеоядре (Metal). Выключать стоит, только если видеоядро сбоит.
+    var gpu = true
+
+    static let contextChoices = [0, 2048, 4096, 8192, 16384, 32768, 65536, 131072]
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        context = try c.decodeIfPresent(Int.self, forKey: .context) ?? 0
+        compressKV = try c.decodeIfPresent(Bool.self, forKey: .compressKV)
+        gpu = try c.decodeIfPresent(Bool.self, forKey: .gpu) ?? true
+    }
 }
 
 nonisolated struct GenerationSettings: Sendable, Codable, Hashable {
@@ -149,11 +173,13 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
 
     /// Загружает модель и создаёт контекст. `gpu: false` — всё на процессоре (запасной путь).
     /// `projector` — файл mmproj: с ним модель видит изображения.
-    func load(path: String, projector: String? = nil, context: Int, gpu: Bool,
+    /// `compressKV` — память контекста в 8 битах (если движок не сможет, останется 16 бит).
+    func load(path: String, projector: String? = nil, context: Int, gpu: Bool, compressKV: Bool = false,
               progress: @escaping @Sendable (Double) -> Void) async throws -> ModelInfo {
         try await withCheckedThrowingContinuation { cont in
             queue.async {
-                do { cont.resume(returning: try self.loadSync(path: path, projector: projector, context: context, gpu: gpu, progress: progress)) }
+                do { cont.resume(returning: try self.loadSync(path: path, projector: projector, context: context, gpu: gpu,
+                                                              compressKV: compressKV, progress: progress)) }
                 catch { cont.resume(throwing: error) }
             }
         }
@@ -187,7 +213,7 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         init(_ report: @escaping @Sendable (Double) -> Void) { self.report = report }
     }
 
-    private func loadSync(path: String, projector: String?, context: Int, gpu: Bool,
+    private func loadSync(path: String, projector: String?, context: Int, gpu: Bool, compressKV: Bool,
                           progress: @escaping @Sendable (Double) -> Void) throws -> ModelInfo {
         freeAll()
 
@@ -224,7 +250,19 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         }
         cparams.abort_callback_data = Unmanaged.passUnretained(self).toOpaque()
 
-        guard let ctx = llama_init_from_model(model, cparams) else {
+        var compressed = false
+        var created: OpaquePointer?
+        if compressKV {
+            // 8-битный KV-кэш требует flash attention; если движок его не включит, контекст не создастся —
+            // тогда обычный 16-битный.
+            var q = cparams
+            q.type_k = GGML_TYPE_Q8_0
+            q.type_v = GGML_TYPE_Q8_0
+            created = llama_init_from_model(model, q)
+            compressed = created != nil
+        }
+        if created == nil { created = llama_init_from_model(model, cparams) }
+        guard let ctx = created else {
             llama_model_free(model)
             throw EngineError.contextFailed(EngineLog.shared.lastProblem)
         }
@@ -260,7 +298,8 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
             layers: Int(llama_model_n_layer(model)),
             format: format,
             gpu: gpu,
-            vision: mtmd != nil
+            vision: mtmd != nil,
+            compressedKV: compressed
         )
         lock.withLock { _loaded = (path, info) }
         return info

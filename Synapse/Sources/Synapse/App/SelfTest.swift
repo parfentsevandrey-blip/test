@@ -152,6 +152,28 @@ nonisolated enum SelfTest {
         let noDisk = Advisor.estimate(size: 20_000_000_000, params: 30, active: nil, mac: Hardware.simulated("Apple M4", memoryGB: 64, freeDiskGB: 10))
         ok = check(noDisk.level == .noDisk, "мало места на диске — предупреждение «\(noDisk.title)»") && ok
 
+        print("— Выжать максимум")
+        let pro24 = Hardware.simulated("Apple M4 Pro", memoryGB: 24, gpuCores: 20)
+        let everyday = Advisor.recommend(cards: Curated.cards, variants: [:], mac: pro24).first { $0.role == .balanced }
+        let stretch = Advisor.stretch(cards: Curated.cards, variants: [:], mac: pro24, above: everyday?.card.quality ?? 0)
+        print("  M4 Pro 24 ГБ, на каждый день — \(everyday?.card.name ?? "—"); на пределе: " + stretch.map {
+            "\($0.card.name) \($0.variant.quant.name) \(Format.bytes($0.variant.size)) ≈\(Int($0.fit.tokensPerSecond)) ток/с, контекст \($0.fit.context) [\($0.fit.title)]" + ($0.needsMoreGPU ? " +память видеоядра" : "")
+        }.joined(separator: "; "))
+        ok = check(!stretch.isEmpty && stretch.allSatisfy { $0.card.quality > (everyday?.card.quality ?? 0) }, "24 ГБ: есть модели классом выше рекомендованной") && ok
+        ok = check(stretch.contains { $0.card.params >= 25 && !$0.needsMoreGPU }, "24 ГБ: модель на 25+ млрд запустится и без подъёма предела") && ok
+        ok = check(stretch.allSatisfy { $0.variant.quant.quality >= Advisor.stretchFloor && $0.fit.tokensPerSecond >= Advisor.stretchMinSpeed },
+                   "сжатие не ниже ~2 бит, скорость не ниже 3 ток/с") && ok
+        let tight = Advisor.loadPlan(size: 15_500_000_000, params: 27, active: nil, trainContext: 262_144, mac: pro24)
+        ok = check(tight.fit.runnable && tight.compressKV, "тесная модель: память контекста сжата, контекст \(tight.context) — «\(tight.fit.title)»") && ok
+        let roomy = Advisor.loadPlan(size: 5_000_000_000, params: 8, active: nil, trainContext: 131_072, mac: pro24)
+        ok = check(roomy.context == Advisor.defaultContext(pro24) && !roomy.compressKV, "просторная модель: обычный контекст без сжатия") && ok
+        let fixed = Advisor.loadPlan(size: 5_000_000_000, params: 8, active: nil, trainContext: 32_768, mac: pro24, context: 65_536, compressKV: true)
+        ok = check(fixed.context == 32_768 && fixed.compressKV, "контекст из настроек не больше обученного модели") && ok
+        let raise = GPUMemory.target(pro24)
+        ok = check(raise.map { $0 > pro24.gpuBudget && $0 <= pro24.memory - 4 * 1_073_741_824 } == true,
+                   "предел видеоядра на 24 ГБ можно поднять до \(raise.map { Format.gb(Double($0)) } ?? "—"), системе остаётся 4 ГБ") && ok
+        ok = check(GPUMemory.target(macs[0].1) == nil, "на 8 ГБ предел не трогаем") && ok
+
         print("— Это железо")
         let mac = Hardware.scan()
         print("  \(mac.chip) · \(mac.modelID) · \(Int(mac.memoryGB)) ГБ · P\(mac.performanceCores)+E\(mac.efficiencyCores) · GPU \(mac.gpuCores) ядер (\(mac.gpuName)) · \(Int(mac.bandwidth)) ГБ/с · бюджет GPU \(Format.gb(Double(mac.gpuBudget))) · свободно \(Format.bytes(mac.freeDisk)) · VM: \(mac.virtualized)")

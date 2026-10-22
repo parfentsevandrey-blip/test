@@ -136,9 +136,14 @@ struct SettingsView: View {
 
     var body: some View {
         TabView {
-            GenerationSettingsView()
-                .padding(24)
+            ScrollView { GenerationSettingsView().padding(24) }
                 .tabItem { Label("Ответы", systemImage: "text.bubble") }
+            ScrollView { EngineSettingsView().padding(24) }
+                .tabItem { Label("Память", systemImage: "memorychip") }
+            ChatBehaviourSettingsView()
+                .padding(24)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .tabItem { Label("Чат", systemImage: "bubble.left.and.text.bubble.right") }
             server
                 .padding(24)
                 .tabItem { Label("Сервер", systemImage: "network") }
@@ -149,7 +154,7 @@ struct SettingsView: View {
                 .padding(24)
                 .tabItem { Label("Движок", systemImage: "gearshape.2") }
         }
-        .frame(width: 560, height: 430)
+        .frame(width: 640, height: 600)
     }
 
     private var server: some View {

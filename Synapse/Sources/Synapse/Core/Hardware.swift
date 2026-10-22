@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import IOKit
 import Metal
@@ -69,6 +70,8 @@ nonisolated enum Hardware {
             || (sysctlInt("kern.hv_vmm_present") ?? 0) == 1
         var budget = Int64(device?.recommendedMaxWorkingSetSize ?? 0)
         if budget <= 0 || budget > memory { budget = Int64(Double(memory) * (memory >= 34_000_000_000 ? 0.75 : 0.66)) }
+        // Предел, поднятый в «Выжать максимум» (sysctl iogpu.wired_limit_mb, до перезагрузки).
+        if let raised = GPUMemory.raisedLimit, raised <= memory { budget = max(budget, raised) }
         let (bw, known) = bandwidth(chip: chip, gpuCores: gpuCores)
         let v = ProcessInfo.processInfo.operatingSystemVersion
         return MacProfile(chip: chip, modelID: sysctlString("hw.model") ?? "Mac", memory: memory,
@@ -159,5 +162,52 @@ nonisolated enum Hardware {
                           gpuCores: gpuCores, bandwidth: bw, bandwidthKnown: known,
                           gpuBudget: Int64(Double(memory) * (memoryGB >= 36 ? 0.75 : 0.66)),
                           freeDisk: Int64(freeDiskGB) * 1_073_741_824, gpuName: chip, virtualized: false, osVersion: "macOS 26")
+    }
+}
+
+/// Сколько памяти macOS разрешает занять видеоядру.
+///
+/// По умолчанию — примерно 2/3 памяти (3/4 на Mac с 36 ГБ и больше). Предел можно поднять командой
+/// `sysctl iogpu.wired_limit_mb`: она действует до перезагрузки, после — всё как было. Это и делает
+/// кнопка в «Выжать максимум»: macOS сама спросит пароль администратора.
+nonisolated enum GPUMemory {
+    static let mb: Int64 = 1_048_576
+
+    /// Поднятый предел в байтах; `nil` — стандартный.
+    static var raisedLimit: Int64? {
+        let value = Hardware.sysctlInt("iogpu.wired_limit_mb") ?? 0
+        return value > 0 ? value * mb : nil
+    }
+
+    /// Сколько можно отдать видеоядру, оставив macOS и программам не меньше 4 ГБ (и не меньше 15% памяти).
+    /// На Mac меньше 16 ГБ не предлагаем: системе самой тесно.
+    static func target(_ mac: MacProfile) -> Int64? {
+        guard mac.memoryGB >= 15, !mac.virtualized else { return nil }
+        let reserve = max(4 * 1_073_741_824, Int64(Double(mac.memory) * 0.15))
+        let target = (mac.memory - reserve) / mb * mb
+        return target > mac.gpuBudget + 512 * mb ? target : nil
+    }
+
+    /// Тот же Mac, если поднять предел.
+    static func unlocked(_ mac: MacProfile) -> MacProfile? {
+        guard let target = target(mac) else { return nil }
+        var m = mac
+        m.gpuBudget = target
+        return m
+    }
+
+    /// Поднять предел (`bytes`) или вернуть стандартный (`nil`). Пароль спрашивает macOS.
+    /// Возвращает текст ошибки; `nil` — получилось, `""` — пользователь отменил.
+    @MainActor
+    static func set(_ bytes: Int64?) async -> String? {
+        let value = bytes.map { $0 / mb } ?? 0
+        let prompt = bytes == nil ? "Synapse возвращает стандартный предел памяти видеоядра."
+            : "Synapse разрешает видеоядру занять до \(value / 1024) ГБ памяти — до перезагрузки Mac."
+        let source = "do shell script \"/usr/sbin/sysctl iogpu.wired_limit_mb=\(value)\" with prompt \"\(prompt)\" with administrator privileges"
+        var error: NSDictionary?
+        NSAppleScript(source: source)?.executeAndReturnError(&error)
+        guard let error else { return nil }
+        let code = error[NSAppleScript.errorNumber] as? Int ?? 0
+        return code == -128 ? "" : (error[NSAppleScript.errorMessage] as? String ?? "ошибка \(code)")
     }
 }

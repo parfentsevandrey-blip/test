@@ -81,10 +81,12 @@ nonisolated enum Advisor {
         (64 + 8 * pow(max(params, 0.5), 0.8)) * 1024
     }
 
-    static func estimate(size: Int64, params: Double, active: Double?, mac: MacProfile, context: Int? = nil) -> FitReport {
+    /// `compressedKV` — память контекста в 8 битах: вдвое меньше.
+    static func estimate(size: Int64, params: Double, active: Double?, mac: MacProfile, context: Int? = nil,
+                         compressedKV: Bool = false) -> FitReport {
         let ctx = context ?? defaultContext(mac)
         let weights = Double(size)
-        let kv = kvPerToken(params: params) * Double(ctx)
+        let kv = kvPerToken(params: params) * Double(ctx) * (compressedKV ? 0.53 : 1)
         let overhead = 0.35 * gb + weights * 0.04
         let need = weights + kv + overhead
         let (comfortable, hard) = budget(mac)
@@ -124,6 +126,32 @@ nonisolated enum Advisor {
             reasons.append("Смесь экспертов: на каждый токен работает лишь часть параметров, поэтому быстрее плотной модели того же размера.")
         }
         return FitReport(level: level, memory: Int64(need), tokensPerSecond: tps, context: ctx, reasons: reasons)
+    }
+
+    /// Как загрузить модель, чтобы она поместилась: контекст и сжатие его памяти.
+    /// `context` и `compressKV` из Настроек: 0 и `nil` — решаем сами. Если не помещается, уменьшаем контекст
+    /// до 2K и сжимаем его память — так запускаются модели «на пределе».
+    static func loadPlan(size: Int64, params: Double, active: Double?, trainContext: Int?, mac: MacProfile,
+                         context: Int = 0, compressKV: Bool? = nil) -> (context: Int, compressKV: Bool, fit: FitReport) {
+        let limit = trainContext ?? .max
+        if context > 0 {
+            let ctx = min(context, limit)
+            let compress = compressKV ?? (estimate(size: size, params: params, active: active, mac: mac, context: ctx).level >= .tight)
+            return (ctx, compress, estimate(size: size, params: params, active: active, mac: mac, context: ctx, compressedKV: compress))
+        }
+        let base = min(defaultContext(mac), limit)
+        var options: [(Int, Bool)] = []
+        if compressKV != true { options.append((base, false)) }
+        if compressKV != false { options.append((base, true)) }
+        for ctx in [4096, 2048] where ctx < base { options.append((ctx, compressKV ?? true)) }
+        let plans = options.map { ctx, compress in
+            (context: ctx, compressKV: compress,
+             fit: estimate(size: size, params: params, active: active, mac: mac, context: ctx, compressedKV: compress))
+        }
+        // Сначала — без тесноты. Если тесно в любом случае — со сжатой памятью контекста (качество то же,
+        // памяти меньше) и самым длинным контекстом, с которым модель запустится.
+        return plans.first { $0.fit.level < .tight } ?? plans.first { $0.fit.runnable && $0.compressKV }
+            ?? plans.first { $0.fit.runnable } ?? plans[plans.count - 1]
     }
 
     static func estimate(_ variant: ModelVariant, card: ModelCard, mac: MacProfile) -> FitReport {
@@ -264,6 +292,59 @@ nonisolated enum Advisor {
         add(.coder, normal.filter { !used.contains($0.card.id) && $0.card.tags.contains(.code) && $0.fit.comfortable && $0.fit.tokensPerSecond >= 8 }
             .max { $0.card.quality < $1.card.quality })
         return result
+    }
+}
+
+// MARK: - Выжать максимум
+
+extension Advisor {
+    /// Модель классом выше рекомендованной, сжатая так, чтобы поместиться в память Mac.
+    nonisolated struct Stretch: Identifiable, Sendable, Hashable {
+        var card: ModelCard
+        var variant: ModelVariant
+        /// Оценка с тем контекстом и сжатием памяти контекста, с которыми Synapse её запустит.
+        var fit: FitReport
+        var compressKV: Bool
+        /// Поместится, только если отдать видеоядру больше памяти.
+        var needsMoreGPU: Bool
+        var id: String { card.id }
+
+        /// Насколько модель крупнее той, что советуем каждый день.
+        func times(_ other: ModelCard) -> Double { card.params / max(other.params, 0.1) }
+    }
+
+    /// Самое сильное сжатие, после которого модель ещё полезна: ниже ~2 бит она начинает путаться.
+    nonisolated static let stretchFloor = 0.7
+    /// Меньше 3 токенов в секунду — ответ из нескольких абзацев ждать минуты.
+    nonisolated static let stretchMinSpeed = 3.0
+
+    /// Лучший вариант модели, который вообще запустится на этом Mac: самое мягкое сжатие из возможных,
+    /// контекст и память контекста ужимаются, если нужно.
+    nonisolated static func squeeze(_ variants: [ModelVariant], card: ModelCard, mac: MacProfile) -> (variant: ModelVariant, fit: FitReport, compressKV: Bool)? {
+        let usable = variants.filter { $0.quant.quality >= stretchFloor && $0.quant.bits <= 9 }.sorted { $0.quant.bits > $1.quant.bits }
+        for v in usable {
+            let plan = loadPlan(size: v.size, params: card.params, active: card.activeParams, trainContext: card.contextLength, mac: mac)
+            if plan.fit.runnable && plan.fit.tokensPerSecond >= stretchMinSpeed { return (v, plan.fit, plan.compressKV) }
+        }
+        return nil
+    }
+
+    /// Модели классом выше `above` (качество рекомендованной), которые этот Mac потянет только сжатыми.
+    /// Если предел видеоядра можно поднять, в список попадают и те, кому нужно больше памяти.
+    nonisolated static func stretch(cards: [ModelCard], variants: [String: [ModelVariant]], mac: MacProfile, above: Double) -> [Stretch] {
+        let unlocked = GPUMemory.unlocked(mac)
+        var result: [Stretch] = []
+        for card in cards where card.quality > above + 2 && EngineCatalog.supports(card.architecture) {
+            let list = variants[card.id] ?? ModelVariant.estimates(params: card.params, deep: true)
+            if let s = squeeze(list, card: card, mac: mac) {
+                result.append(Stretch(card: card, variant: s.variant, fit: s.fit, compressKV: s.compressKV, needsMoreGPU: false))
+            } else if let unlocked, let s = squeeze(list, card: card, mac: unlocked) {
+                result.append(Stretch(card: card, variant: s.variant, fit: s.fit, compressKV: s.compressKV, needsMoreGPU: true))
+            }
+        }
+        return result.sorted { a, b in
+            a.card.quality != b.card.quality ? a.card.quality > b.card.quality : a.card.downloads > b.card.downloads
+        }
     }
 }
 

@@ -69,10 +69,13 @@ jobs:
 
       - name: UI screenshots
         run: |
-          for S in welcome onboarding foryou catalog detail feed library chat vision; do
+          for S in welcome onboarding foryou catalog stretch detail feed library settings settings-memory chat vision; do
             dist/Synapse.app/Contents/MacOS/Synapse --demo-ui $S &
             PID=$!
-            if [ "$S" = chat ] || [ "$S" = vision ]; then sleep 50; else sleep 16; fi
+            if [ "$S" = chat ]; then
+              # Пока модель пишет, окно чата должно стоять на месте.
+              sleep 30; screencapture -x "$RUNNER_TEMP/render/window-chat-streaming.png" || true; sleep 20
+            elif [ "$S" = vision ]; then sleep 50; else sleep 16; fi
             screencapture -x "$RUNNER_TEMP/render/window-$S.png" || echo "screencapture не сработал"
             kill $PID 2>/dev/null || true
             sleep 2

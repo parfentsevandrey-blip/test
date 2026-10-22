@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 /// `--demo-ui <экран>`: CI запускает приложение, оно само открывает нужный экран
 /// (а в чате — задаёт вопрос установленной модели), и с окна снимается скриншот.
@@ -37,6 +38,13 @@ enum DemoUI {
         switch screen {
         case "foryou": model.section = .forYou
         case "catalog": model.section = .catalog
+        case "stretch":
+            // Как на Mac пользователя: M4 Pro с 24 ГБ.
+            model.mac = Hardware.simulated("Apple M4 Pro", memoryGB: 24, gpuCores: 20, freeDiskGB: 400)
+            model.section = .catalog
+        case "settings", "settings-memory":
+            if let m = model.installed.first { model.select(m) }
+            showSettings(model, memory: screen == "settings-memory")
         case "feed": model.section = .feed
         case "library": model.section = .library
         case "detail":
@@ -63,6 +71,25 @@ enum DemoUI {
             }
         default: break
         }
+    }
+
+    /// Настройки — отдельным окном поверх главного (окно Settings из SwiftUI демо открыть не может).
+    private static var settingsWindow: NSWindow?
+
+    static func showSettings(_ model: AppModel, memory: Bool) {
+        let root = ScrollView {
+            Group {
+                if memory { EngineSettingsView() } else { GenerationSettingsView() }
+            }
+            .padding(24)
+        }
+        .environment(model)
+        .frame(width: 640, height: 760)
+        let window = NSWindow(contentViewController: NSHostingController(rootView: root))
+        window.title = memory ? "Настройки — Память" : "Настройки — Ответы"
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+        settingsWindow = window
     }
 
     /// Картинка для демонстрации зрения: три цветные фигуры на белом.

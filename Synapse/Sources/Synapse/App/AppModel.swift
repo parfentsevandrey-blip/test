@@ -135,6 +135,16 @@ final class AppModel {
         didSet { if let data = try? JSONEncoder().encode(settings) { UserDefaults.standard.set(data, forKey: "settings") } }
     }
 
+    /// Как держать модель в памяти: контекст, сжатие его памяти, видеоядро.
+    var engineSettings: EngineSettings = {
+        if let data = UserDefaults.standard.data(forKey: "engineSettings"), let s = try? JSONDecoder().decode(EngineSettings.self, from: data) { return s }
+        return EngineSettings()
+    }() {
+        didSet { if let data = try? JSONEncoder().encode(engineSettings) { UserDefaults.standard.set(data, forKey: "engineSettings") } }
+    }
+    /// Прокручивать чат вслед за ответом. По умолчанию нет: окно стоит на месте, читать можно с начала.
+    var followReply = UserDefaults.standard.bool(forKey: "followReply") { didSet { UserDefaults.standard.set(followReply, forKey: "followReply") } }
+
     // MARK: Движок
     var engineState: EngineState = .idle
     var loadedModelID: String?
@@ -262,6 +272,50 @@ final class AppModel {
     }
 
     func fit(_ card: ModelCard) -> FitReport? { bestVariant(for: card)?.fit }
+
+    // MARK: - Выжать максимум
+
+    /// Модели классом выше рекомендованных, которые этот Mac потянет сжатыми.
+    var stretchModels: [Advisor.Stretch] {
+        let recs = recommendations
+        let everyday = recs.first { $0.role == .balanced }?.card.quality ?? recs.map(\.card.quality).max() ?? 0
+        let pool = CardBuilder.dedupe(cards + Curated.cards.filter { c in !cards.contains { $0.id == c.id } })
+        return Array(Advisor.stretch(cards: pool, variants: variants, mac: mac, above: everyday).prefix(18))
+    }
+
+    /// Рекомендованная на каждый день — для сравнения «во сколько раз крупнее».
+    var everydayCard: ModelCard? { recommendations.first { $0.role == .balanced }?.card }
+
+    /// Точные списки файлов у кандидатов: сильное сжатие есть не у всех сборщиков.
+    func resolveStretchVariants() async {
+        for s in stretchModels.prefix(10) where variants[s.card.id] == nil { await loadVariants(s.card) }
+    }
+
+    var gpuMemoryBusy = false
+
+    /// Поднять предел памяти видеоядра до перезагрузки (или вернуть стандартный).
+    func setGPUMemory(raise: Bool) {
+        guard !gpuMemoryBusy else { return }
+        let target = raise ? GPUMemory.target(mac) : nil
+        if raise && target == nil { return }
+        gpuMemoryBusy = true
+        Task {
+            defer { gpuMemoryBusy = false }
+            if let error = await GPUMemory.set(target) {
+                if !error.isEmpty { showToast("Не получилось: \(error)") }
+                return
+            }
+            mac = Hardware.scan()
+            showToast(raise ? "Видеоядру доступно до \(Format.gb(Double(mac.gpuBudget))) — до перезагрузки Mac"
+                            : "Вернул стандартный предел памяти видеоядра")
+        }
+    }
+
+    /// Как будет загружена установленная модель: контекст и сжатие памяти контекста.
+    func loadPlan(_ model: InstalledModel) -> (context: Int, compressKV: Bool, fit: FitReport) {
+        Advisor.loadPlan(size: model.size, params: model.params, active: model.activeParams, trainContext: model.contextLength,
+                         mac: mac, context: engineSettings.context, compressKV: engineSettings.compressKV)
+    }
 
     // MARK: - Установка
 
@@ -472,7 +526,7 @@ final class AppModel {
     var selectedModel: InstalledModel? { installed.first { $0.id == loadedModelID } }
 
     func select(_ model: InstalledModel, force: Bool = false) {
-        let fit = Advisor.estimate(size: model.size, params: model.params, active: model.activeParams, mac: mac)
+        let fit = loadPlan(model).fit
         if fit.level == .tooBig && !force {
             fitWarning = FitWarning(model: model, fit: fit)
             return
@@ -480,6 +534,16 @@ final class AppModel {
         loadedModelID = model.id
         UserDefaults.standard.set(model.id, forKey: "lastModel")
         Task { await loadSelectedModel() }
+    }
+
+    /// Загрузить модель заново — после смены настроек движка.
+    func reloadModel() {
+        guard !isGenerating, selectedModel != nil else { return }
+        Task {
+            await LlamaEngine.shared.unload()
+            modelInfo = nil
+            if await loadSelectedModel() { showToast("Модель загружена с новыми настройками") }
+        }
     }
 
     @discardableResult
@@ -491,7 +555,9 @@ final class AppModel {
             return true
         }
         engineState = .loading(0)
-        let context = min(Advisor.defaultContext(mac), model.contextLength ?? .max)
+        let plan = loadPlan(model)
+        let context = plan.context
+        let gpu = engineSettings.gpu && !mac.virtualized
         let progress: @Sendable (Double) -> Void = { p in Task { @MainActor [weak self] in
             guard let self else { return }
             if case .loading = self.engineState { self.engineState = .loading(p) }
@@ -499,12 +565,13 @@ final class AppModel {
         do {
             // Виртуальная машина: видеоядро эмулируется — считаем на процессоре.
             let info = try await LlamaEngine.shared.load(path: model.primaryPath, projector: model.projectorPath, context: context,
-                                                         gpu: !mac.virtualized, progress: progress)
+                                                         gpu: gpu, compressKV: plan.compressKV, progress: progress)
             modelInfo = info
             engineState = .ready
         } catch {
-            if !mac.virtualized, let info = try? await LlamaEngine.shared.load(path: model.primaryPath, projector: model.projectorPath,
-                                                                                context: min(context, 4096), gpu: false, progress: progress) {
+            if gpu, let info = try? await LlamaEngine.shared.load(path: model.primaryPath, projector: model.projectorPath,
+                                                                   context: min(context, 4096), gpu: false, compressKV: plan.compressKV,
+                                                                   progress: progress) {
                 modelInfo = info
                 engineState = .ready
                 showToast("Видеоядро не справилось — модель работает на процессоре")

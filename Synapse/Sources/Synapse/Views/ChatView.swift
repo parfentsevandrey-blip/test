@@ -76,6 +76,10 @@ struct ChatPane: View {
     @Environment(AppModel.self) private var model
     @State private var draft = ""
     @State private var dropTargeted = false
+    /// Видно ли конец переписки — иначе показываем кнопку «вниз».
+    @State private var atBottom = true
+    /// Высота видимой части переписки.
+    @State private var viewport: CGFloat = 600
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -157,6 +161,8 @@ struct ChatPane: View {
                             .id(m.id)
                     }
                     Color.clear.frame(height: 1).id("bottom")
+                    // Место под ответом: новый вопрос поднимается к верху окна, ответ пишется под ним.
+                    Color.clear.frame(height: roomBelow)
                 }
                 .padding(.horizontal, 28)
                 .padding(.vertical, 18)
@@ -164,15 +170,47 @@ struct ChatPane: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollIndicators(.automatic)
+            .onScrollGeometryChange(for: ScrollSpot.self) { geo in
+                ScrollSpot(atBottom: geo.contentOffset.y + geo.containerSize.height >= geo.contentSize.height - roomBelow - 60,
+                           height: geo.containerSize.height.rounded())
+            } action: { _, spot in
+                viewport = spot.height
+                if spot.atBottom != atBottom { withAnimation(.snappy) { atBottom = spot.atBottom } }
+            }
+            // Пока модель пишет, окно стоит на месте: ответ читается с начала, листать можно свободно.
+            // Ехать за текстом — только если так включено в Настройках.
             .onChange(of: chat.messages.last?.text) { _, _ in
-                if model.isGenerating { proxy.scrollTo("bottom", anchor: .bottom) }
+                if model.isGenerating && model.followReply { proxy.scrollTo("bottom", anchor: .bottom) }
             }
+            // Новый вопрос — поднимаем его к верху окна, ответ появляется под ним.
             .onChange(of: chat.messages.count) { _, _ in
-                withAnimation(.smooth) { proxy.scrollTo("bottom", anchor: .bottom) }
+                if model.followReply {
+                    withAnimation(.smooth) { proxy.scrollTo("bottom", anchor: .bottom) }
+                } else if let question = chat.messages.last(where: { $0.role == .user }) {
+                    withAnimation(.smooth) { proxy.scrollTo(question.id, anchor: .top) }
+                }
             }
+            .onChange(of: chat.id) { _, _ in proxy.scrollTo("bottom", anchor: .bottom) }
             .onAppear { proxy.scrollTo("bottom", anchor: .bottom) }
+            .overlay(alignment: .bottom) {
+                if !atBottom {
+                    Button {
+                        withAnimation(.smooth) { proxy.scrollTo("bottom", anchor: .bottom) }
+                    } label: {
+                        Label(model.isGenerating ? "Ответ продолжается ниже" : "К концу переписки", systemImage: "arrow.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .padding(.horizontal, 4)
+                    }
+                    .buttonStyle(.glass)
+                    .padding(.bottom, 8)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .help("Перейти к последнему сообщению")
+                }
+            }
         }
     }
+
+    private var roomBelow: CGFloat { max(0, viewport - 180) }
 
     private var composer: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -262,6 +300,12 @@ struct ChatPane: View {
     }
 }
 
+/// Положение прокрутки переписки.
+nonisolated struct ScrollSpot: Equatable {
+    var atBottom: Bool
+    var height: CGFloat
+}
+
 /// Верхняя панель: выбор модели, её состояние и настройки ответа.
 struct ChatTopBar: View {
     @Environment(AppModel.self) private var model
@@ -305,7 +349,9 @@ struct ChatTopBar: View {
             }
             Button { showSettings.toggle() } label: { Image(systemName: "slider.horizontal.3") }
                 .buttonStyle(.glass)
-                .popover(isPresented: $showSettings, arrowEdge: .bottom) { GenerationSettingsView().padding(18).frame(width: 340) }
+                .popover(isPresented: $showSettings, arrowEdge: .bottom) {
+                    ScrollView { GenerationSettingsView(compact: true).padding(18) }.frame(width: 380, height: 560)
+                }
                 .help("Настройки ответа")
         }
         .padding(.horizontal, 20)
@@ -338,50 +384,6 @@ struct ChatTopBar: View {
         case .idle:
             EmptyView()
         }
-    }
-}
-
-struct GenerationSettingsView: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        @Bindable var model = model
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Как отвечать").font(.system(size: 15, weight: .bold))
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Творчество")
-                    Spacer()
-                    Text(String(format: "%.1f", model.settings.temperature)).monospacedDigit().foregroundStyle(.secondary)
-                }
-                Slider(value: $model.settings.temperature, in: 0...1.5, step: 0.1)
-                Text("0 — точно и одинаково, 1+ — смелее и разнообразнее").font(.system(size: 10.5)).foregroundStyle(.tertiary)
-            }
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("Длина ответа")
-                    Spacer()
-                    Text("до \(model.settings.maxTokens) токенов").monospacedDigit().foregroundStyle(.secondary)
-                }
-                Slider(value: Binding(get: { Double(model.settings.maxTokens) }, set: { model.settings.maxTokens = Int($0) }), in: 256...16384, step: 256)
-            }
-            Toggle("Размышлять перед ответом (если модель умеет)", isOn: $model.settings.thinking)
-            if model.currentChat != nil {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Инструкция для этого чата").font(.system(size: 12, weight: .semibold))
-                    TextEditor(text: Binding(get: { model.currentChat?.systemPrompt ?? "" }, set: { value in
-                        if var c = model.currentChat { c.systemPrompt = value; model.currentChat = c }
-                    }))
-                        .font(.system(size: 12))
-                        .frame(height: 80)
-                        .scrollContentBackground(.hidden)
-                        .padding(6)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(.primary.opacity(0.05)))
-                }
-            }
-            Button("Сбросить") { model.settings = GenerationSettings() }.buttonStyle(.glass)
-        }
-        .font(.system(size: 12.5))
     }
 }
 

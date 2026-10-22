@@ -119,8 +119,11 @@ nonisolated struct ModelVariant: Codable, Sendable, Hashable, Identifiable {
     }
 
     /// Варианты «на глаз» по числу параметров — когда списка файлов ещё нет.
-    static func estimates(params: Double) -> [ModelVariant] {
-        ["Q3_K_M", "IQ4_XS", "Q4_K_M", "Q5_K_M", "Q6_K", "Q8_0"].compactMap { name in
+    /// `deep` — вместе с сильным сжатием (до 2 бит): для «Выжать максимум».
+    static func estimates(params: Double, deep: Bool = false) -> [ModelVariant] {
+        let names = deep ? ["IQ2_XXS", "IQ2_M", "Q2_K", "IQ3_XXS", "IQ3_M", "Q3_K_M", "IQ4_XS", "Q4_K_M", "Q5_K_M", "Q6_K", "Q8_0"]
+            : ["Q3_K_M", "IQ4_XS", "Q4_K_M", "Q5_K_M", "Q6_K", "Q8_0"]
+        return names.compactMap { name in
             guard let q = Quant.named(name) else { return nil }
             let bytes = Int64(params * 1e9 * q.bits / 8 * 1.02)
             return ModelVariant(quant: q, files: [HubFile(type: "file", path: "", size: bytes, lfs: nil)], estimated: true)
