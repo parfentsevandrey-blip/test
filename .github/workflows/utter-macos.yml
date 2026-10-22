@@ -1,0 +1,99 @@
+name: Utter (macOS)
+
+on:
+  push:
+    paths:
+      - "Utter/**"
+      - ".github/workflows/utter-macos.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: utter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: Utter
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"; sw_vers; swift --version; cmake --version | head -1
+          say -v '?' | grep -i ru_ || echo "русских голосов нет"
+
+      # Движок собирается из исходников один раз на версию llama.cpp.
+      - name: Restore llama.cpp engine
+        id: engine-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: Utter/Vendor/llama
+          key: utter-llama-${{ hashFiles('Utter/ENGINE_VERSION', 'Utter/scripts/build-engine.sh') }}-${{ runner.os }}-xcode26
+
+      - name: Build llama.cpp engine from source
+        run: ./scripts/build-engine.sh
+
+      - name: Save llama.cpp engine
+        if: steps.engine-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: Utter/Vendor/llama
+          key: utter-llama-${{ hashFiles('Utter/ENGINE_VERSION', 'Utter/scripts/build-engine.sh') }}-${{ runner.os }}-xcode26
+
+      - name: Build Utter.app + DMG
+        run: ./scripts/build.sh
+
+      - name: Self-test logic (offline)
+        run: dist/Utter.app/Contents/MacOS/Utter --selftest-logic
+
+      # Настоящая модель Qwen3-ASR: загрузка с SHA-256, русская речь (синтез macOS), потоковая диктовка, команды.
+      - name: Self-test speech recognition (CPU)
+        run: dist/Utter.app/Contents/MacOS/Utter --selftest-asr
+
+      - name: Self-test speech recognition (Metal, informational)
+        continue-on-error: true
+        run: dist/Utter.app/Contents/MacOS/Utter --selftest-asr-gpu
+
+      - name: UI screenshots
+        run: |
+          OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
+          VOICE=$(say -v '?' | grep ru_RU | grep -i milena | head -1 | sed 's/ *ru_RU.*//')
+          [ -z "$VOICE" ] && VOICE=$(say -v '?' | grep ru_RU | head -1 | sed 's/ *ru_RU.*//')
+          echo "Голос: $VOICE"
+          say -v "$VOICE" --file-format=WAVE --data-format=LEF32@16000 -o "$OUT/speech.wav" \
+            "Добрый день, коллеги. [[slnc 900]] Отправляю итоги встречи: релиз переносим на следующую неделю, тестирование заканчиваем в пятницу. [[slnc 900]] Новая строка. [[slnc 900]] Спасибо всем за работу!"
+          for S in menu settings settings-recognition onboarding hud; do
+            dist/Utter.app/Contents/MacOS/Utter --demo-ui $S &
+            PID=$!
+            sleep 10
+            screencapture -x "$OUT/window-$S.png" || echo "screencapture не сработал"
+            kill $PID 2>/dev/null || true
+            sleep 2
+          done
+          dist/Utter.app/Contents/MacOS/Utter --demo-ui dictate --audio "$OUT/speech.wav" > "$OUT/dictate.log" 2>&1 &
+          PID=$!
+          for N in $(seq -w 1 14); do
+            sleep 3
+            screencapture -x "$OUT/dictate-$N.png" || true
+          done
+          kill $PID 2>/dev/null || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Utter-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Utter-dmg
+          path: Utter/dist/Utter.dmg
+          if-no-files-found: error
+          compression-level: 0

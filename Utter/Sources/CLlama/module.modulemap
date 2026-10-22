@@ -1,0 +1,10 @@
+module CLlama [system] {
+    header "shim.h"
+    link "UtterEngine"
+    link "c++"
+    link framework "Accelerate"
+    link framework "Metal"
+    link framework "MetalKit"
+    link framework "Foundation"
+    export *
+}
