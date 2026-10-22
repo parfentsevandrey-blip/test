@@ -54,7 +54,7 @@ final class ContentBlocker {
     private var probes = 0
 
     /// Версия формата правил: при изменении компилятора всё собирается заново.
-    static let formatVersion = "3"
+    nonisolated static let formatVersion = "3"
 
     init(folder: URL = AppPaths.rules) {
         self.folder = folder
@@ -337,7 +337,7 @@ final class HiddenPage: NSObject, WKNavigationDelegate {
 
     func run(_ js: String, arguments: [String: Any] = [:], world: WKContentWorld = .page) async -> Any? {
         do {
-            return try await webView.callAsyncJavaScript(js, arguments: arguments, in: nil, in: world)
+            return try await webView.callAsyncJavaScript(js, arguments: arguments, in: nil, contentWorld: world)
         } catch {
             lastError = error
             print("Ward: скрипт не выполнился: \(error.localizedDescription)")

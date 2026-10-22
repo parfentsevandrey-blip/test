@@ -530,7 +530,7 @@ extension Tab: WKUIDelegate {
     }
 
     /// Камера и микрофон — только с вашего согласия, отдельно для каждого сайта.
-    func webView(_ webView: WKWebView, requestMediaCapturePermissionFor origin: WKSecurityOrigin, initiatedByFrame frame: WKFrameInfo, type: WKMediaCaptureType) async -> WKPermissionDecision {
+    func webView(_ webView: WKWebView, decideMediaCapturePermissionsFor origin: WKSecurityOrigin, initiatedBy frame: WKFrameInfo, type: WKMediaCaptureType) async -> WKPermissionDecision {
         let key = "\(origin.host)|\(type.rawValue)"
         if mediaAllowed.contains(key) { return .grant }
         let what: String

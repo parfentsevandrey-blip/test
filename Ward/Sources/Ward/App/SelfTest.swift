@@ -376,7 +376,7 @@ enum SelfTest {
 
     static func evaluate(_ tab: Tab, _ js: String) async -> Any? {
         guard let view = tab.webViewIfLoaded else { return nil }
-        do { return try await view.callAsyncJavaScript(js, arguments: [:], in: nil, in: .page) } catch {
+        do { return try await view.callAsyncJavaScript(js, arguments: [:], in: nil, contentWorld: .page) } catch {
             print("  скрипт: \(error.localizedDescription)")
             return nil
         }
