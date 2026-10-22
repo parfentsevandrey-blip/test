@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <!-- Model files are multi-gigabyte downloads: never back them up. -->
+    <cloud-backup>
+        <exclude domain="external" path="." />
+        <exclude domain="file" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="external" path="." />
+    </device-transfer>
+</data-extraction-rules>
