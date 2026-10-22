@@ -8493,7 +8493,7 @@ Totals: Kotlin main 164,683 (CP-40: 160,072), Kotlin test 461 (461), XML 88 (88)
 ### What changed
 
 - Ten economics databases are in the app: 232 to 236 (money and finance) and 237 to 241 (entertainment and culture). That is 370 records, in generated files `Db232Economics.kt` to `Db241Economics.kt`. `SeedCatalog.kt` now has version 241, with 7,605 records in all.
-- Case pools for 232 to 241 under `tools/economics/pools/`: 6, 6, 7, 8, 8, 8, 7, 6, 7 and 4 cases from two of the pools' builders; the pool for 238 has seven, and the pool for 240 has four after two encyclopaedia-linked cases were removed.
+- Case pools for 232 to 241 under `tools/economics/pools/`: 6 cases for 232, 6 for 233, 7 for 234, 8 for 235, 8 for 236, 8 for 237, 7 for 238, 6 for 239, 4 for 240 (after two encyclopaedia-linked cases were removed) and 7 for 241.
 - Record files `tools/economics/db232.json` to `db241.json`, each reviewed against its pool by a second agent that did not write it.
 - Catalogue rows 232 to 241 added to `tools/databases.json`.
 - `EconomicsSeedTest` covers databases 205 to 241.
@@ -11237,7 +11237,7 @@ Totals: Kotlin main 164,683 (CP-40: 160,072), Kotlin test 461 (461), XML 88 (88)
 ### What changed
 
 - Ten economics databases are in the app: 232 to 236 (money and finance) and 237 to 241 (entertainment and culture). That is 370 records, in generated files `Db232Economics.kt` to `Db241Economics.kt`. `SeedCatalog.kt` now has version 241, with 7,605 records in all.
-- Case pools for 232 to 241 under `tools/economics/pools/`: 6, 6, 7, 8, 8, 8, 7, 6, 7 and 4 cases from two of the pools' builders; the pool for 238 has seven, and the pool for 240 has four after two encyclopaedia-linked cases were removed.
+- Case pools for 232 to 241 under `tools/economics/pools/`: 6 cases for 232, 6 for 233, 7 for 234, 8 for 235, 8 for 236, 8 for 237, 7 for 238, 6 for 239, 4 for 240 (after two encyclopaedia-linked cases were removed) and 7 for 241.
 - Record files `tools/economics/db232.json` to `db241.json`, each reviewed against its pool by a second agent that did not write it.
 - Catalogue rows 232 to 241 added to `tools/databases.json`.
 - `EconomicsSeedTest` covers databases 205 to 241.
