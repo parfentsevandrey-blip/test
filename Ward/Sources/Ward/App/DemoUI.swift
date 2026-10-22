@@ -63,6 +63,7 @@ enum DemoUI {
             model.openWindow?("private")
             for _ in 0..<40 where !model.browsers.contains(where: \.isPrivate) { try? await Task.sleep(for: .milliseconds(250)) }
             print("Ward demo: окон \(model.browsers.count), частных \(model.browsers.filter(\.isPrivate).count)")
+            for _ in 0..<40 where model.browsers.first(where: \.isPrivate)?.window == nil { try? await Task.sleep(for: .milliseconds(250)) }
             if let priv = model.browsers.first(where: \.isPrivate) {
                 priv.newTab(url: URL(string: "https://duckduckgo.com")!, select: false)
                 priv.window?.makeKeyAndOrderFront(nil)
