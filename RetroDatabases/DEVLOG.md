@@ -54,6 +54,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-38 | 2026-10-21 | 151,310 | 457 | 88 | 118 | 151,973 | +3,452 (economics batch 1: databases 205 to 212, 276 records, each file reviewed against its case pool; 49 records name a documented case; generator and tests extended) |
 | CP-39 | 2026-10-22 | 157,305 | 461 | 88 | 118 | 157,972 | +5,999 (economics batches 2 and 3: databases 213 to 225, 481 records, each file reviewed against its case pool; generator and 40 unit tests pass; DATABASE_VERSION 225) |
 | CP-40 | 2026-10-22 | 160,072 | 461 | 88 | 118 | 160,739 | +2,767 (economics batch 4: databases 226 to 231, 222 records, each reviewed against its case pool; generator and 40 unit tests pass; DATABASE_VERSION 231) |
+| CP-41 | 2026-10-22 | 164,683 | 461 | 88 | 118 | 165,350 | +4,611 (economics batch 5: databases 232 to 241, 370 records, each reviewed against its case pool; generator and 40 unit tests pass; DATABASE_VERSION 241) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2706,3 +2707,34 @@ Totals: Kotlin main 160,072 (CP-39: 157,305), Kotlin test 461 (461), XML 88 (88)
 ### Next
 
 Money and finance (232 to 236) and entertainment and culture (237 to 241). Then the rest, databases 242 to 281. Database 206 to refer to the practice compromises for medicine, politics and work. Deepening the batch 1 pools.
+
+## CP-41: economics batch 5 (databases 232 to 241)
+
+Mood: steady. The pool, writer and reviewer cycle works, and the reviews now find mostly wording and caveat problems, with few facts out of place. Several pools were thin, and most of the records in this batch are inferences.
+
+Totals: Kotlin main 164,683 (CP-40: 160,072), Kotlin test 461 (461), XML 88 (88), Gradle and project files 118 (118), total 165,350 (160,739).
+
+### What changed
+
+- Ten economics databases are in the app: 232 to 236 (money and finance) and 237 to 241 (entertainment and culture). That is 370 records, in generated files `Db232Economics.kt` to `Db241Economics.kt`. `SeedCatalog.kt` now has version 241, with 7,605 records in all.
+- Case pools for 232 to 241 under `tools/economics/pools/`: 6, 6, 7, 8, 8, 8, 7, 6, 7 and 4 cases from two of the pools' builders; the pool for 238 has seven, and the pool for 240 has four after two encyclopaedia-linked cases were removed.
+- Record files `tools/economics/db232.json` to `db241.json`, each reviewed against its pool by a second agent that did not write it.
+- Catalogue rows 232 to 241 added to `tools/databases.json`.
+- `EconomicsSeedTest` covers databases 205 to 241.
+
+### Problems found and fixed
+
+- Two pool cases (in 240) linked to Wikipedia pages. The check caught them, and they were removed before any record was written from that pool.
+- A pool builder edited its file after the writer had read it (233). The reviewer was told to check the pool as it then stood.
+- Reviewers again copied model sources with their years, and the years were removed from every reviewed file.
+- Some reviewers' changes were committed in work-in-progress commits before their reviews finished. The final state of each file is the one that the last commit holds, and the messages say so.
+
+### Limits, stated plainly
+
+- The pools were built from search results, and most agents did not open the pages. The caveats say so where it matters.
+- Several models have no pool case in these databases, so their records are inferences. Case-based fields cluster on a few models in each database.
+- The compromise's Source lines name pool sources in short form, to keep the details within 170 words.
+
+### Next
+
+Batch 6 (databases 242 to 265): leisure and free time, social life and community, family and intimate life, environment and resources, and transport. Then batch 7 (266 to 281). Database 206 to refer to the practice compromises for medicine, politics, work, money and entertainment. Deepening the batch 1 pools.
