@@ -1,0 +1,192 @@
+{
+  "database": 227,
+  "type": "practice",
+  "practice": "Trade unions and worker voice",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that goods and help move as gifts that create duties to return them, so workers are heard through their standing in a web of mutual obligation, and disputes are settled by trust. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that favours are returned, so jobs and standing go to kin and allies, while outsiders have no claim to be heard and no way to build the trust that gives a voice. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a family farm works to meet its household's needs, so members decide together how much work to take on and when, and the work is shared among the people who live on the farm. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that work is set by household needs rather than by price, so anyone outside the family has no say over how the work is done and no collective way to press for better terms. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central store collects goods and redistributes them to workers and officials, so work is assigned on a known basis and workers are supported from the common store in lean times. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre allocates goods and work by rank, so workers have no say over their tasks or posts, and complaints reach only the officials who do the allocating. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that output is sold through trade, so owners set work and output directly and avoid any bargaining over terms with the people who do the work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that labour is extracted through the ownership of people, so the enslaved have no right to organise, bargain or be heard, and are denied the education and property that might give them standing. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that a lord owes protection and justice in return for services, so tenants have a hearing in the lord's court, and the services owed are fixed by the arrangement itself. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that peasants owe labour services and rents to a lord, so tenants cannot leave the manor or bargain over their services, and the lord's own court hears their complaints. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that guild statutes set training, quality and entry for masters, journeymen and apprentices alike, so workers have written rules to appeal to and a set path to rise. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that masters control entry, so journeymen may have no route to becoming masters, and the statutes that govern them are set by the masters, leaving the people who work under them with no say in the rules. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state regulates production to earn a trade surplus, so workers in exporting trades can count on steady work that state policy protects. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state regulates production and trade to its own ends, so the terms of work and the movement of labour are set by state rules, and workers have no say in the rules that govern their trades. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that only agriculture makes a net product and that the grain trade should be free, so farm work is valued and farm labour can move to where prices are best. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only agriculture makes a net product, so workers outside farming are treated as adding nothing to the surplus and have little standing when they ask for better pay or conditions. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "Inferred from its principle that competitive labour markets let each worker bargain for pay and move between employers, so terms follow what employers will pay and no body is needed to set them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state protects contracts and otherwise stays out, so workers who combine to bargain have no legal protection for doing so and no claim on the state to hear them. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, so workers and employers learn where work and pay stand from prices, and no planner needs to set the terms of work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that state planning and credit expansion distort production, so jobs and pay set by a planner or by cheap credit may later vanish, and the workers in them bear the loss without a say in the decisions that created those jobs. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "Inferred from its principle that deregulation and open trade let firms and workers agree terms directly, so workers can move to the firms that pay best and pay follows what each worker can offer. There is no documented case in the pool.",
+      "worst": "The case Fall in union density across OECD countries records that average union density across OECD countries fell by roughly half between 1985 and 2023/24, and that an older column says the falls were sharpest in Australia, New Zealand and the UK after the 1980s reforms. That link is the column's own reading, and the figures are rounded from a search summary. Source: OECD report on membership of unions and employers' organisations and bargaining coverage (2025); older VoxEU column (year not stated)"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "The case US National Labor Relations (Wagner) Act made refusing to recognise or bargain with a union an unfair labour practice and gave a new federal agency power to hear workers' complaints, and union membership rose from under 4 million to over 10 million during the decade. The figures come from a search summary that does not say which page gives them.",
+      "worst": "Inferred from its principle that government spending and taxes keep demand and employment high, so workers' say may stop at jobs and pay, while decisions on investment and the organisation of work stay with management. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
+    },
+    {
+      "model": "Social market economy",
+      "best": "The case German works councils and the Works Constitution Act records staff-elected councils that cover every worker at a site regardless of union status, and a 1972 reform that broadened their rights. This comes from a search summary; the article was not read in full.",
+      "worst": "The case German works councils and the Works Constitution Act records that West German lawmakers adopted the 1952 law despite fierce union opposition, and that unions have no standing to direct the councils. This comes from a search summary; the article was not read in full. Source: Legal-history article 'A Forward-Looking History of the German Works Constitution', on a Max Planck Society site (year not stated); report on employee representation in Germany by a Japanese labour institute (year not stated)"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "The case Nordic bargaining coverage and falling union density records a 2022 paper's private-sector bargaining coverage of 85 percent in Sweden, the largest, and 65 percent in Finland. It is known only from a search summary, and a blog piece gives Swedish coverage near eight in ten, so definitions differ.",
+      "worst": "The case Nordic bargaining coverage and falling union density records that union density fell by 21 points in Finland, 18 in Sweden, 15 in Denmark and 5 in Norway, and links the decline largely to institutional reforms in the Nordic Ghent systems. It is known only from a search summary of a paper not read in full, so the figures are unconfirmed. Source: Fafo, paper on collective bargaining coverage and union density in the Nordic countries (2022)"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that the state steers credit and export targets to chosen industries, so workers in favoured sectors may see steady work as their firms meet those targets. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that firms are disciplined by their performance, so workers in firms that miss targets face cuts or closure with no say in the restructuring that follows, and the state alone decides which industries are favoured. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that labour and capital go untaxed, so workers keep more of their pay and public services are paid for from land rent rather than from wages. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a tax on land value is the only levy the policy sets, so it says nothing about unions, bargaining or a say in decisions at work, and pay and conditions are left entirely to the market. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities are run through planned associations, so members who work in them share in decisions about their work, their pay and the rules of the community. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities are built by example from a plan, so the plan and its rules are set by the founders, and members who disagree have little route to change them. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that workers keep the full value of their work, with banks lending at cost, so each worker's share is set by the work done and by the free contracts workers make with one another. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free contracts and mutual credit are the basis of exchange, so workers who lack capital or credit may find no one willing to contract with them, and no collective body to bargain for their terms. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Inferred from its principle that members own and control the firm, one member one vote, so every member who works in it has an equal say in decisions at work and in how the surplus is shared. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that members are both owners and workers, so decisions may favour the members who vote, while workers hired later and outside the membership have no vote and little say over pay or work. There is no documented case in the pool. Source: Rochdale Society of Equitable Pioneers; Mondragón cooperatives"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that work is done in free association, so people join, leave and share tasks as they choose, and decide together within federated communes how the work is done. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free association replaces contracts, so disputes over work and needs are settled by group consensus, and a person with a grievance the group does not share has no binding route to a remedy. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "The case Founding of the French CGT at Limoges records a meeting at Limoges that brought together Bourses du travail and unions, and an encyclopaedia credits the Bourses federation, alongside a federation of unions, with starting the body. This is drawn from encyclopaedia summaries and an e-book, not read in full.",
+      "worst": "Inferred from its principle that unions run industry through strikes and, eventually, a general strike, so a dispute in one industry can halt others, and workers and consumers outside the unions bear the costs with no say in the decision. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that socialism comes by democratic and gradual means, so workers vote in the bodies that run municipal and national enterprises, and changes are settled by ballot rather than by strikes. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that change comes gradually through the state, so workers' organised action is channelled into elections and public boards, and workers in public enterprises have less scope to strike or to take direct control of decisions at work. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, so those who do the work have a standing voice in how it is organised, paid and planned. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state is only one partner among several, so when workers, consumers and the state disagree, decisions may stall, and no single body is able to settle the dispute. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that the state plans output and investment and mobilises labour, so workers are assigned places of work within the plan, and jobs follow the plan's priorities rather than the swings of the market. There is no documented case in the pool.",
+      "worst": "The case Gdańsk agreement and Solidarity, Poland records that a government negotiator and a strike leader signed, on 31 August 1980, the agreement that settled the Gdańsk shipyard strike and opened the way to Solidarity, which a search summary describes as the first of its kind in the Soviet bloc. This is a short popular history, so secondary, and the 'first of its kind' description is unconfirmed. Source: HISTORY, 'This Day in History' web feature for 31 August (year not stated)"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Inferred from its principle that firms follow market prices under rules set by a central board, so managers answer to prices and the rules rather than to orders, and each firm's workers can see the results that buyers pay for. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that managers follow prices and a central board sets the investment, so workers who hold no seat on that board have no direct say in investment or in what the firm produces. There is no documented case in the pool. Source: Lange and Taylor, On the Economic Theory of Socialism; Yugoslav workers' self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that classes disappear, so workers share in deciding how work is done and what is produced, and distribution follows need and ability rather than a wage bargain. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state remains until it withers away, so workers' organisations may be tied to the state's aims during the transition, and their say over pay and work may stay limited until classes disappear. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "Inferred from its principle that special economic zones and markets open new work, so workers in those zones may move between jobs and employers while key sectors stay in public ownership. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that reform runs under party direction, so workers' organisations and pay disputes are shaped by the party rather than by the workers themselves, and workers' say over the pace of change is limited. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that workers' and consumers' councils propose and revise plans, so each worker has a say through council proposals, and jobs are balanced in complexity so that no one is stuck with only the dullest work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that councils plan through repeated proposals, so decisions can be slow and depend on what each council will agree, and a council that cannot reach agreement may hold up the work of many others. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "The case Italy's 1926 Rocco law on strikes and unions put industrial relations under collective contracts that labour courts enforced, and strikes and lockouts fell from 2,086 in 1920 to 23 in 1932, a decline one document ties to the law. That document is one author's reading, which credits the regime, so the verdict is one-sided.",
+      "worst": "The case Italy's 1926 Rocco law on strikes and unions outlawed strikes and lockouts. After the October 1925 Palazzo Vidoni accord made employers and fascist unions each other's only representatives, the regime-aligned confederation gained exclusive representation, and the CGdL and the Catholic CIL were left with no real option but to disband in January 1927. This rests on one document whose author calls the ban a complete success, so the verdict is one-sided. Source: Trinity College Dublin repository document on the Italian corporate state, by a single author (year not stated)"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk, so workers and the firms that employ them share in results, and contracts rest on trust rather than on fixed interest. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that profit and risk are shared, so workers' pay rises and falls with results they may not be able to check, and trust rather than enforced rights underpins their contracts, leaving them with little formal say in decisions at work. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that production is small-scale and local, so workers know their enterprise and its owners well and can be heard directly in decisions about the work they do. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production is kept small, so workers in each enterprise have little scope to bargain with other employers and little collective weight against any one employer in a dispute. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that property is widely held and enterprise is small, so many workers may own a share of the firm they work in and have a say, with their fellows, on what counts as a just wage. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that subsidiarity leaves decisions to the smallest competent body, so a worker in a small firm may have no body above the firm to appeal to in a dispute, and the employer may be the only decider. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that economic activity stays within planetary limits and everyone has a social floor, so work may be shared more widely and workers have a say in how hours and tasks are divided. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no growth imperative, so pay and job claims may be weighed against planetary limits rather than growth, and workers in shrinking sectors may have little say in how the shrinking is managed. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen receives an unconditional income, so no worker must accept any job on any terms, which strengthens each worker's standing when pay and conditions are bargained. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that income arrives whether or not a person works, so the pool of people who depend on wage bargaining may shrink, and unions may lose the members and funding that give them their voice. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government which issues its own currency can fund full employment, so workers who lose jobs have a publicly funded route back to work and need not take any wage on offer. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so wage claims that push prices up may be treated as the problem, and union bargaining over pay may be checked by policy meant to hold inflation down. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that the people who share a resource design, monitor and enforce its rules, so workers who share a workplace or a resource can write and police the rules that govern their work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that rules are enforced by the users, so members with less standing or newer arrivals may be left out of rule-making, and the wider institutions around the group may override its decisions. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "A design in which every worker may organise and bargain under a legal right that a neutral public body enforces. Councils elected by all staff cover each site, sector-wide bargaining sets the baseline, and no state may ban strikes, give one union exclusive rights, or change bargaining law without review.",
+    "details": "Keeps: a legal right to organise and bargain, enforced by a federal agency, from Keynesian welfare capitalism (US National Labor Relations (Wagner) Act); councils elected by all staff, union or not, from Social market economy (German works councils and the Works Constitution Act); sector-wide bargaining, from Nordic social democracy (Nordic bargaining coverage and falling union density). Blocks: strike bans and exclusive representation for one regime-aligned confederation, from Corporatism and fascist economics (Italy's 1926 Rocco law on strikes and unions); safeguard: strikes and rival unions protected by the courts. Blocks: falling density after reforms made without review, from Nordic social democracy; safeguard: any change to bargaining law tested against coverage figures first. Test: union density, bargaining coverage and the share of workers with a council seat, measured each year for ten years. Source: Macmillan-hosted textbook chapter; Max Planck Society legal-history article; Fafo paper (2022); Trinity College Dublin document."
+  }
+}
+
