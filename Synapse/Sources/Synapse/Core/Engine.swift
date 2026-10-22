@@ -726,9 +726,10 @@ nonisolated final class LlamaEngine: @unchecked Sendable {
         let chain = llama_sampler_chain_init(llama_sampler_chain_default_params())!
         if dry {
             // DRY: чем длиннее повторяемая цепочка, тем сильнее штраф. Разрывы — переносы строк, двоеточия, кавычки.
-            let breakers = ["\n", ":", "\"", "*"].map { strdup($0) }
+            let words: [String] = ["\n", ":", "\"", "*"]
+            let breakers: [UnsafeMutablePointer<CChar>?] = words.map { (word: String) -> UnsafeMutablePointer<CChar>? in strdup(word) }
             defer { breakers.forEach { free($0) } }
-            var pointers = breakers.map { UnsafePointer<CChar>($0) }
+            var pointers: [UnsafePointer<CChar>?] = breakers.map { $0.map { UnsafePointer($0) } }
             let d = pointers.withUnsafeMutableBufferPointer {
                 llama_sampler_init_dry(vocab, 0.8, 1.75, 2, 4096, $0.baseAddress, $0.count)
             }
