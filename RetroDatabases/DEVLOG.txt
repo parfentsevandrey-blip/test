@@ -53,6 +53,7 @@ Solo development log for the Android app in this folder. I add an entry at each 
 | CP-37 | 2026-10-21 | 147,861 | 454 | 88 | 118 | 148,521 | +54 (economics paused at the web-search budget: model and sphere lists, generator support, two record kinds, tests; no economics records yet) |
 | CP-38 | 2026-10-21 | 151,310 | 457 | 88 | 118 | 151,973 | +3,452 (economics batch 1: databases 205 to 212, 276 records, each file reviewed against its case pool; 49 records name a documented case; generator and tests extended) |
 | CP-39 | 2026-10-22 | 157,305 | 461 | 88 | 118 | 157,972 | +5,999 (economics batches 2 and 3: databases 213 to 225, 481 records, each file reviewed against its case pool; generator and 40 unit tests pass; DATABASE_VERSION 225) |
+| CP-40 | 2026-10-22 | 160,072 | 461 | 88 | 118 | 160,739 | +2,767 (economics batch 4: databases 226 to 231, 222 records, each reviewed against its case pool; generator and 40 unit tests pass; DATABASE_VERSION 231) |
 
 Non-blank lines: CP-01 4,078; CP-02 4,227.
 
@@ -2674,3 +2675,34 @@ Totals: Kotlin main 157,305 (CP-38: 151,310), Kotlin test 461 (457), XML 88 (88)
 ### Next
 
 Batches 4 to 7 (databases 226 to 281). Database 206 to refer to the practice compromises for medicine and politics. Deepening the batch 1 pools.
+
+## CP-40: economics batch 4 (databases 226 to 231)
+
+Mood: routine now. The reviewers still find the same kinds of problem, mostly in how sources and closing sentences are written, and the fixes are small.
+
+Totals: Kotlin main 160,072 (CP-39: 157,305), Kotlin test 461 (461), XML 88 (88), Gradle and project files 118 (118), total 160,739 (157,972).
+
+### What changed
+
+- Six economics databases are in the app: 226 (wages and minimum wages), 227 (trade unions and worker voice), 228 (working time and paid leave), 229 (unemployment and job security), 230 (worker ownership and co-determination) and 231 (automation and technological change). That is 222 records, in generated files `Db226Economics.kt` to `Db231Economics.kt`. `SeedCatalog.kt` now has version 231, with 7,235 records in all.
+- Case pools for 226 to 231 under `tools/economics/pools/`: 8, 7, 7, 6, 7 and 7 cases.
+- Record files `tools/economics/db226.json` to `db231.json`, each reviewed against its pool by a second agent that did not write it.
+- Catalogue rows 226 to 231 added to `tools/databases.json`.
+- `EconomicsSeedTest` covers databases 205 to 231.
+- `RetroDatabases_source.txt` regenerated: 192,692 lines. It has 81 Cyrillic lines, all in the six assistant files, as before.
+
+### Problems found and fixed
+
+- A record file was committed while its writer was still correcting its JSON syntax, so that commit did not parse. The next commit replaced it with the finished file. Record files should be committed only after their writer has reported.
+- Reviewers again copied model sources with their years. Each reviewed file was corrected after its review, and the years are removed from inferred Source lines in every database from 213 on.
+- The pools for 226 to 231 contain no domain names in source fields, which the pool brief now forbids.
+
+### Limits, stated plainly
+
+- The pools were built from search results. Most pool agents did not open the pages, and the caveats say so where it matters.
+- Most inferred fields have no pool case. Documented cases cluster on the socialist, anarchist and mixed-economy families, and the market families have few.
+- Some compromise Source lines name the pool sources in short form, to keep the details within 170 words.
+
+### Next
+
+Money and finance (232 to 236) and entertainment and culture (237 to 241). Then the rest, databases 242 to 281. Database 206 to refer to the practice compromises for medicine, politics and work. Deepening the batch 1 pools.
