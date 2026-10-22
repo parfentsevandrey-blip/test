@@ -50,7 +50,7 @@
     },
     {
       "model": "Austrian free-market economics",
-      "best": "Competition in note issue, as in Scottish free banking and its end: from 1716, when the Bank of Scotland lost its exclusive right to issue notes, banks and individual merchants issued a wave of notes under £1, per Rockoff's working paper. The 19th-century end is thinly covered, and the sources disagree on the rules.",
+      "best": "Competition in note issue, as in Scottish free banking and its end: a World Bank paper dates it from 1716 but argues that reforms of those years made it a cartel. Rockoff's working paper reports a wave of notes under £1 from banks and individual merchants. The 19th-century end is thinly covered, and sources disagree on the rules and on whether it was truly free banking.",
       "worst": "Inferred from its principle that credit expansion distorts production, so when cheap credit ends, firms that borrowed against it must liquidate, and a bust can spread through the banks. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
     },
     {
@@ -65,7 +65,7 @@
     },
     {
       "model": "Social market economy",
-      "best": "Bundesbank independence under the 1957 statute: section 12 declares the bank independent of Federal Government instructions when it uses its statutory powers, as an ECB working paper summarises it, not the full text. The bank's claim of the lowest G7 inflation from 1956 to 1998 is its own self-assessment.",
+      "best": "Bundesbank independence under the 1957 statute: section 12 declares the bank independent of Federal Government instructions when it uses its statutory powers, as an ECB working paper quotes it, not the full text. Sources say parliament could amend or abolish the bank by ordinary law. The bank's claim of the lowest G7 inflation from 1956 to 1998 is its own self-assessment.",
       "worst": "Inferred from its principle that a legal order must curb monopoly, so credit left to a cartel of banks can favour incumbent firms and shut out newcomers, with its costs falling on borrowers. There is no documented case in the pool. Source: Müller-Armack, Wirtschaftslenkung und Marktwirtschaft; Erhard, Wohlstand für Alle"
     },
     {
@@ -176,7 +176,7 @@
     {
       "model": "Modern monetary theory",
       "best": "Inferred from its principle that a government that issues its own currency can fund full employment, so spending can be financed by money creation while inflation is watched as the real limit. There is no documented case in the pool.",
-      "worst": "German hyperinflation of 1923: a Mises Institute essay says debt monetisation stopped on 15 November 1923, and prices accelerated from May to October 1923. The sources are excerpts, the preprint is not peer reviewed, and they disagree on when the hyperinflation began. Source: arXiv preprint, 2024 (year taken from its identifier), 'The Debt-Inflation Channel of the German (Hyper-)Inflation'; Mises Institute essay on the end of German hyperinflation (year not shown in the search result); gold dealer's article 'The Nightmare German Inflation' (year not shown in the search result)"
+      "worst": "German hyperinflation of 1923: an arXiv preprint says prices accelerated from May to October 1923, and a Mises Institute essay says debt monetisation stopped on 15 November 1923. The sources are excerpts, the results do not show that the preprint was peer reviewed, and they disagree on when the hyperinflation began. Source: arXiv preprint, 2024 (year taken from its identifier), 'The Debt-Inflation Channel of the German (Hyper-)Inflation'; Mises Institute essay on the end of German hyperinflation (year not shown in the search result); gold dealer's article 'The Nightmare German Inflation' (year not shown in the search result)"
     },
     {
       "model": "Commons governance",
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "An independent central bank, bound by statute to a published rule for money growth or price stability and barred from lending directly to the state. Note and deposit issue stay open to competing banks, and entry rules are reviewed so that cartels cannot form.",
-    "details": "Keeps: rule-based money growth from Monetarist neoliberalism, as in Estonia's kroon and its currency board; statutory independence from Social market economy, as in Bundesbank independence under the 1957 statute; open competition in note issue from Austrian free-market economics, as in Scottish free banking and its end, which is thinly covered. Blocks: lending by the central bank to government, with a legal ban on direct monetary finance, as German hyperinflation of 1923 shows; quota credit set by plan, with a legal cap on central bank credit to any one bank, as China's central bank separated from the state lenders suggests; a fixed peg adopted before inflation falls, with a reserve test first; cartel-style entry rules, with an open-entry review every five years. Test: inflation, central bank lending to government and the number of issuing banks, measured yearly over ten years, including one full economic cycle. Source: pool sources of the five cases named above; Kelton, The Deficit Myth, for the inferred principle that inflation, not debt, is the limit."
+    "details": "Keeps: Estonia's kroon and its currency board from Monetarist neoliberalism, on thin sources; statutory independence from Social market economy, as in Bundesbank independence under the 1957 statute, which ordinary law could amend; open competition in note issue from Austrian free-market economics, as in Scottish free banking and its end, thinly covered and said to have become a cartel. Blocks: central bank lending to government, with a legal ban on direct monetary finance, as excerpts on German hyperinflation of 1923 suggest; quota credit set by plan, with a legal cap on central bank credit to any one bank, as China's central bank separated from the state lenders suggests; a fixed peg adopted before inflation falls, with a reserve test first; cartel-style entry rules, with a periodic open-entry review. Test: inflation, central bank lending to government and the number of issuing banks, measured yearly over a full economic cycle. Source: pool sources of these cases; Kelton, The Deficit Myth, for the inferred principle that inflation, not debt, is the limit."
   }
 }
