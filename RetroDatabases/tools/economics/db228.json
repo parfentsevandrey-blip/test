@@ -30,7 +30,7 @@
     },
     {
       "model": "Guild economy",
-      "best": "Inferred from its principle that statutes govern entry and training, so apprentices and journeymen work under written rules that set how each stage of training is completed. There is no documented case in the pool.",
+      "best": "Inferred from its principle that statutes govern entry and work, so apprentices and journeymen work under written rules that set their hours and holidays. There is no documented case in the pool.",
       "worst": "Inferred from its principle that masters control entry and set the statutes, so newcomers wait for places, journeymen have little say over hours or terms, and the rules are written by those who gain from them. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
     },
     {
@@ -46,7 +46,7 @@
     {
       "model": "Classical laissez-faire capitalism",
       "best": "Kellogg's six-hour day at Battle Creek shows a plant splitting its workday into four six-hour shifts from 1930, a work-sharing response to the Depression, which accounts tie to higher productivity, lower labour costs and fewer accidents. Job counts and pay figures conflict between accounts and are unconfirmed.",
-      "worst": "Where hours are left to private contract, no legal cap protects workers, and manufacturers and free-trade Liberals resisted state limits on hours on laissez-faire grounds. Britain's Ten Hours Act for textile mills capped the working day at ten hours for women and young people, after years of pressure from campaigners. Its terms come from encyclopaedia summaries, not the Act's text, and sources disagree on who was covered. Source: Online encyclopaedia (secondary), entries on the Factories Act 1847 and on the Ten Hours Act; Mount Royal Undergraduate Humanities Review (student journal, year not shown in the results)"
+      "worst": "Inferred from its principle that where hours are left to private contract, no legal cap protects workers. Manufacturers and free-trade Liberals resisted state limits on hours on laissez-faire grounds. Britain's Ten Hours Act for textile mills capped the working day at ten hours for women and young people, after years of pressure from campaigners. Its terms come from encyclopaedia summaries, not the Act's text, and sources disagree on who was covered. Source: Online encyclopaedia (secondary), entries on the Factories Act 1847 and on the Ten Hours Act; Mount Royal Undergraduate Humanities Review (student journal, year not shown in the results)"
     },
     {
       "model": "Austrian free-market economics",
@@ -56,11 +56,11 @@
     {
       "model": "Monetarist neoliberalism",
       "best": "Inferred from its principle that deregulation and fewer controls on markets let employers and workers agree hours and leave directly, so working time adjusts to demand and to what each worker prefers. There is no documented case in the pool.",
-      "worst": "The EU Working Time Directive and the UK opt-out shows where deregulation can let individual consent displace a legal cap: the 1993 Directive set a 48-hour average weekly ceiling, and UK rules let a worker's written consent displace it. Unions said about a third of signatories had no genuine option, but these are one side's estimates, and estimates of the share of workers above 48 hours differ. Source: Trades Union Congress (TUC), report and a late-2008 document; Cambridge academic research project; Pinsent Masons (law-firm news on the 2004 consultation); a company blog on the Commission's review (year not shown in the results)"
+      "worst": "The EU Working Time Directive and the UK opt-out shows where deregulation can let individual consent displace a legal cap: the 1993 Directive set a 48-hour average weekly ceiling, and UK rules, as summaries give them, let a worker's written consent displace it. Unions said about a third of signatories had no genuine option, but these are one side's estimates, and estimates of the share of workers above 48 hours differ. Source: Trades Union Congress (TUC), report and a late-2008 document; Cambridge academic research project; Pinsent Masons (law-firm news on the 2004 consultation); a company blog on the Commission's review (year not shown in the results)"
     },
     {
       "model": "Keynesian welfare capitalism",
-      "best": "Keynesian welfare capitalism can use state working-time policy to keep employment high: France's 35-hour week and the 2002 assessment put the job effect at roughly 300,000 positions, as Eurofound relayed the government's own estimate, and no independent estimate is given here.",
+      "best": "Inferred from its principle that government spending can keep employment high, so state working-time policy can serve the same end. France's 35-hour week and the 2002 assessment put the job effect at roughly 300,000 positions, as Eurofound relayed the government's own estimate, and no independent estimate is given here.",
       "worst": "Kellogg's six-hour day at Battle Creek shows that work-sharing in a slump can cut weekly pay: a 1932 Labor Department payroll review concluded that 77 percent of workers earned less each week. That review is known only through accounts, and job counts and pay figures conflict between them and are unconfirmed. Source: InformationWeek (technology trade publication, article; year not shown in the results); other accounts in the results are blogs and podcast pages"
     },
     {
@@ -75,7 +75,7 @@
     },
     {
       "model": "Developmental state",
-      "best": "South Korea's 52-hour weekly ceiling: when the rule took hold in July 2018, the weekly ceiling fell from 68 to 52 hours and the allowance for extra hours beyond the 40-hour base fell from 28 to 12, and annual hours fell by about 10% over a decade from a 2011 peak. The start date is disputed, and the figures are news coverage of OECD data.",
+      "best": "South Korea's 52-hour weekly ceiling: when the rule took hold in July 2018, the ceiling fell from 68 to 52 hours and the allowance for extra hours beyond the 40-hour base fell from 28 to 12, and annual hours fell about 10% over a decade from a 2011 peak. The start date is disputed, the rule's effect cannot be isolated, and most figures are news coverage of OECD data.",
       "worst": "South Korea's 52-hour weekly ceiling sits alongside hours that remained high: Korea ranked fifth of 38 OECD members in 2021 at 1,915 hours against an OECD average of 1,716. The pandemic also trimmed hours, and the entry of Colombia and Costa Rica into the OECD accounts for much of the lower ranking, so the rule's effect cannot be isolated. Source: Asia News Network (news article, year not shown in the results); journal abstract (journal name and year not shown in the results); online encyclopaedia (secondary), for the disputed start date"
     },
     {
@@ -110,7 +110,7 @@
     },
     {
       "model": "Fabian socialism",
-      "best": "Britain's Ten Hours Act for textile mills shows democratic, gradual reform at work: after years of pressure from campaigners, Parliament capped the working day at ten hours for women and young people. Its terms come from encyclopaedia summaries, not the Act's text.",
+      "best": "Britain's Ten Hours Act for textile mills shows democratic, gradual reform at work: after years of pressure from campaigners, Parliament capped the working day at ten hours for women and young people. Its terms come from encyclopaedia summaries, not the Act's text, and sources disagree on who was covered.",
       "worst": "Inferred from its principle that change comes by democratic and gradual stages, so hours and leave limits may arrive late and remain partial until later measures are passed. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
     },
     {
@@ -186,6 +186,6 @@
   ],
   "compromise": {
     "summary": "A statutory weekly ceiling with averaging only through collective agreement, a legal minimum of paid annual and sick leave, parental leave with months reserved for each parent, and any individual opt-out that is written, revocable on short notice and recorded in hours records.",
-    "details": "Keeps: the statutory ceiling with collective averaging (Social market economy; EU Working Time Directive and the UK opt-out), reserved parental months (Nordic social democracy; Sweden's parental insurance and fathers' take-up), and a cap tightened by amendment (Fabian socialism; Britain's Ten Hours Act for textile mills). Blocks: opt-outs that displace the cap (Monetarist neoliberalism), safeguarded by written consent, hours records, no penalty for refusal and seven days' withdrawal notice; unannounced schedule changes (Command socialism), safeguarded by prior consultation; long extra-hours allowances (Developmental state), safeguarded by a 12-hour allowance beyond the 40-hour base; unpaid labour with no leave (Feudalism; Slave economy), safeguarded by statutory paid leave. Test: for five years, measure average weekly hours and the share of workers above 48 hours, whether opt-outs are genuine, and fathers' share of parental days against about 31%. Source: Trades Union Congress report; Population Europe; Max Planck Institute for Demographic Research; Asia News Network; HISTORY; Mount Royal Undergraduate Humanities Review; principles without a case: Bloch, Feudal Society; Williams, Capitalism and Slavery."
+    "details": "Keeps: the statutory ceiling with collective averaging (Social market economy; EU Working Time Directive and the UK opt-out), reserved parental months (Nordic social democracy; Sweden's parental insurance and fathers' take-up), and a cap set by Parliament (Fabian socialism; Britain's Ten Hours Act for textile mills). Blocks: opt-outs that displace the cap (Monetarist neoliberalism), safeguarded by written consent, hours records, no penalty for refusal and seven days' withdrawal notice; a shift to six-day cycles (Command socialism), safeguarded by prior consultation; hours that remain high (Developmental state), safeguarded by a 12-hour allowance beyond the 40-hour base; labour with no leave (Feudalism; Slave economy), safeguarded by statutory paid leave. Test: until its first review, measure average weekly hours, the share of workers above 48 hours, whether opt-outs are genuine, and fathers' share of parental days against about 31%. Source: Trades Union Congress report; Population Europe; Max Planck Institute for Demographic Research; Asia News Network; HISTORY; Mount Royal Undergraduate Humanities Review; principles without a case: Bloch, Feudal Society; Williams, Capitalism and Slavery."
   }
 }
