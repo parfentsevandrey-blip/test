@@ -1,0 +1,191 @@
+{
+  "database": 230,
+  "type": "practice",
+  "practice": "Worker ownership and co-determination",
+  "models": [
+    {
+      "model": "Gift economy",
+      "best": "Inferred from its principle that obligations to give and return bind members of a community to shared work and output, so workers' standing rests on reciprocity rather than on ownership. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that gifts create debts, so workers who receive help or work owe unpaid return and have no formal share in the enterprise they serve. There is no documented case in the pool. Source: Mauss, The Gift; Sahlins, Stone Age Economics"
+    },
+    {
+      "model": "Household and peasant economy",
+      "best": "Inferred from its principle that a family farm works for its own household's needs, so the people who labour on the holding also own it and decide how it is run. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production serves consumption, so hired or outside labourers on the holding have no share in its ownership and no say in its management. There is no documented case in the pool. Source: Chayanov, The Theory of Peasant Economy"
+    },
+    {
+      "model": "Redistributive economy",
+      "best": "Inferred from its principle that a central authority collects and redistributes goods, so workers receive secure provision that does not depend on owning or running their workplace. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the centre collects and allocates the product, so workers hold no ownership of their workplaces and no board seat, and their share depends on allocation by officials. There is no documented case in the pool. Source: Polanyi, The Great Transformation; Polanyi, Arensberg and Pearson, Trade and Market in the Early Empires"
+    },
+    {
+      "model": "Slave economy",
+      "best": "Inferred from its principle that output is sold through trade under a single owner, so one clear line of command decides how the work is organised and who bears its risk. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that labour is extracted through ownership of people, so the enslaved workers have no property, no education and no voice in how their work is organised. There is no documented case in the pool. Source: Williams, Capitalism and Slavery"
+    },
+    {
+      "model": "Feudalism",
+      "best": "Inferred from its principle that peasants receive land, protection and justice in return for service, so cultivators keep a stable holding and a customary claim on the land they work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that peasants owe labour services and rents to a lord, so workers hold no ownership of the manor and no say in its management beyond the customs the lord allows. There is no documented case in the pool. Source: Bloch, Feudal Society; Capitulare de villis"
+    },
+    {
+      "model": "Guild economy",
+      "best": "Inferred from its principle that craft guilds regulate training, quality and prices through statutes, so masters who own their workshops share in writing the rules that govern their trade. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that entry and training are regulated by the guild, so journeymen and apprentices who cannot become masters remain wage workers with no ownership of their workshops and no vote in the statutes. There is no documented case in the pool. Source: Boileau, Le Livre des métiers; Epstein, Freedom and Growth"
+    },
+    {
+      "model": "Mercantilism",
+      "best": "Inferred from its principle that the state regulates production toward national gain, so it can require the firms it charters to keep stable workforces that serve the national trade goals. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state chooses and privileges favoured companies, so the workers in those firms gain no ownership and no board seat, and their interests count only as a means to national wealth. There is no documented case in the pool. Source: Mun, England's Treasure by Forraign Trade; Heckscher, Mercantilism"
+    },
+    {
+      "model": "Physiocracy",
+      "best": "Inferred from its principle that only a single tax on land rent should fund the state, so the labour and capital of cultivators are left untaxed and the people who farm the land keep more of what they produce. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that only the land creates a net product, so the labour of those who work the land is treated as a cost of production and farm workers receive no ownership or board seat in the enterprises that employ them. There is no documented case in the pool. Source: Quesnay, Tableau économique; Meek, The Economics of Physiocracy"
+    },
+    {
+      "model": "Classical laissez-faire capitalism",
+      "best": "John Lewis Partnership: the staff trusts of 1929 and 1950: company history sources date the First Trust Settlement to 18 April 1929, placing the shares of Spedan Lewis in trustees acting for staff. The timeline comes from the company's own pages, and the start date is disputed, with one encyclopaedic summary giving 1920.",
+      "worst": "Inferred from its principle that the state protects property and contracts and otherwise stays out, so owners alone decide, and workers have no legal right to a share in the firm or a seat on its board. There is no documented case in the pool. Source: Smith, The Wealth of Nations"
+    },
+    {
+      "model": "Austrian free-market economics",
+      "best": "Inferred from its principle that prices carry knowledge spread across many people, so owners and workers who bear losses can adjust firms quickly, and worker shares chosen in the market carry the same signals as other shares. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that state planning distorts production, so mandated worker boards or state-set worker ownership would override the choices of owners and blunt the price signals that guide capital. There is no documented case in the pool. Source: Menger, Grundsätze der Volkswirthschaftslehre; Hayek, The Use of Knowledge in Society"
+    },
+    {
+      "model": "Monetarist neoliberalism",
+      "best": "US employee stock ownership plans and firm survival: firms where employees held at least 5% showed roughly a 24% lower chance of disappearing from 1988 to 2001, and such ownership is one route open under market-led rules. The evidence is observational, the two studies share a co-author so they are not independent checks, one is known only from an excerpt, and the measure also counts profit-sharing and 401(k) stock.",
+      "worst": "Inferred from its principle that privatisation sells state firms to owners and deregulation removes controls, so workers gain no legal right to ownership or board seats and keep a say only where new owners choose to give one. There is no documented case in the pool. Source: Friedman, Capitalism and Freedom; Harvey, A Brief History of Neoliberalism"
+    },
+    {
+      "model": "Keynesian welfare capitalism",
+      "best": "Inferred from its principle that public spending rises in slumps to keep demand and employment high, so workers keep their jobs and their bargaining position without needing to own the firm they work in. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that demand is managed from the centre, so workers' jobs depend on public spending decisions taken above the firm, and they hold no ownership of the enterprise and no seat on its board. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
+    },
+    {
+      "model": "Social market economy",
+      "best": "Germany's Co-determination Act of 1976 gives workforce and shareholder benches identical seat counts on the supervisory board of companies that normally employ more than 2,000 people. The threshold and seat split come from excerpts and commentary, and no study of the Act's effects was found.",
+      "worst": "Germany's Co-determination Act of 1976 lets the chair's ballot break supervisory-board deadlocks in favour of the shareholder side, though sources disagree on who elects the chair, and the tie-break section number is unconfirmed. Source: Act on the Co-determination of Employees, English translation of the amended Act (publisher and year not shown); Dammann and Eidenmüller, 'Codetermination: A Poor Fit for U.S. Corporations' (working paper; year not shown); Eurofound, '700 companies covered by 1976 Co-determination Act' (year not shown); Federal Agency for Civic Education (bpb), German-language piece marking the 40th anniversary (year not shown)"
+    },
+    {
+      "model": "Nordic social democracy",
+      "best": "Inferred from its principle that strong unions and national wage bargaining give workers a collective voice over pay across whole sectors, so workers have a say in their conditions without owning the firm. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that voice runs through national bargains and unions rather than through ownership or board seats, so workers in firms with no union, or outside the bargains, have little formal say in the enterprise. There is no documented case in the pool. Source: Saltsjöbaden Agreement; Esping-Andersen, The Three Worlds of Welfare Capitalism"
+    },
+    {
+      "model": "Developmental state",
+      "best": "Inferred from its principle that credit and export targets go to firms judged by performance, so workers in firms that meet those targets gain steady work and skills in the industries the state has chosen. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state chooses industries and sets performance targets, so workers hold no ownership of their firms and no board seat, and their work is directed by targets set above the firm. There is no documented case in the pool. Source: Johnson, MITI and the Japanese Miracle; Amsden, Asia's Next Giant"
+    },
+    {
+      "model": "Georgism",
+      "best": "Inferred from its principle that taxes fall on the value of land rather than on labour and capital, so workers and their firms keep more of the return on their own work, and any share in ownership is left to choice. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that land rent funds public services, so the model says nothing about who owns firms or sits on their boards, and workers in firms that change hands have no protected say in the change. There is no documented case in the pool. Source: George, Progress and Poverty"
+    },
+    {
+      "model": "Utopian socialism",
+      "best": "Inferred from its principle that cooperative communities and planned associations replace wage competition and private profit, so the people who do the work share ownership of the enterprise and its product. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that communities are built by example rather than by law, so worker ownership depends on the goodwill of founders and members, while wage workers outside these communities get no ownership and no seat on any board. There is no documented case in the pool. Source: Owen, A New View of Society; Fourier, Le Nouveau Monde industriel"
+    },
+    {
+      "model": "Mutualism",
+      "best": "Inferred from its principle that mutual credit lets workers keep the full value of their work, so workers who pool their labour and credit can own the enterprises they run. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that free contracts and mutual credit make joining a matter of choice, so workers without capital or credit may stay on wage terms, with no ownership and no say in the enterprise they serve. There is no documented case in the pool. Source: Proudhon, What Is Property?"
+    },
+    {
+      "model": "Cooperative economy",
+      "best": "Worker-recovered factories in Argentina: a retrospective article citing UBA and INAES registry data reports more than 400 recovered firms still operating. The figure comes from that one article, the excerpt does not show the registry years, and counts vary widely.",
+      "worst": "Worker-recovered factories in Argentina: a Peter Ranis analysis suggests only about 150 were still operating when judged by productivity gains, so not every worker-run firm passes that test. The Ranis figure is a judgement based on productivity, its page is not linked, and no consistent series of counts was found. Source: 'Self-management in Argentina 20 Years After 2001' (publisher and year not shown in the excerpt), citing UBA and INAES registry data; Peter Ranis, analysis of worker-run enterprises in Argentina (year not shown)"
+    },
+    {
+      "model": "Anarcho-communism",
+      "best": "Inferred from its principle that there are no wages, so the members of each commune share their work and its product in common, with no employer and no owner standing above them. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that there is no state, so no law gives workers a share in firms or a seat on their boards, and a dispute between communes has no authority to settle it. There is no documented case in the pool. Source: Kropotkin, The Conquest of Bread"
+    },
+    {
+      "model": "Syndicalism",
+      "best": "Worker-recovered factories in Argentina: a retrospective article citing UBA and INAES registry data reports more than 400 recovered firms still operating, run by their workers. The count comes from one article, its registry years are not shown, and counts vary widely across sources.",
+      "worst": "Inferred from its principle that strikes and eventually a general strike are the means, so the model relies on conflict to win control and says little about how firms are then governed, or how workers outside the unions gain a say. There is no documented case in the pool. Source: Founding of the French CGT; Pelloutier, Histoire des Bourses du travail"
+    },
+    {
+      "model": "Fabian socialism",
+      "best": "Inferred from its principle that public enterprise is run through democratic bodies, so the people who work in those enterprises share a democratic say in how they are run. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that change comes gradually through public ownership, so workers in private firms gain no ownership or board seat until the state takes their firm over, and their say waits on that process. There is no documented case in the pool. Source: Fabian Essays in Socialism; Founding of the Fabian Society"
+    },
+    {
+      "model": "Guild socialism",
+      "best": "Inferred from its principle that workers and consumers share control of industry through guild-like councils, so the people who work in an industry hold a standing voice in how it is run, beside the state. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state is one partner among several, so a state partner can outweigh worker and consumer councils on industry decisions, and the councils' say may be only as large as the state allows. There is no documented case in the pool. Source: Cole, Self-Government in Industry"
+    },
+    {
+      "model": "Command socialism",
+      "best": "Inferred from its principle that state ownership replaces private shareholders, so no private owner takes a firm's surplus, and the plan sets output, prices and investment for every firm alike. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state mobilises labour for rapid industrialisation, so workers hold no ownership of their enterprises and no board seat, and they are directed to targets set above the firm. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
+    },
+    {
+      "model": "Market socialism",
+      "best": "Workers' councils in Yugoslavia after the 1950 reform: council membership grew from about 105,000 in 1952 to nearly 485,000 by 1983, figures that a Socialism and Democracy article attributes to Potts. The figures come from excerpts, and sources disagree on how far central planning was dismantled.",
+      "worst": "Workers' councils in Yugoslavia after the 1950 reform: one critical essay argues that council votes on steering committees were largely formal, so council membership alone does not show that workers controlled decisions. The critical readings are opinion essays, and only excerpts were read. Source: World Bank study, 'Understanding self-management in Yugoslavia' (year not shown); Socialism and Democracy, 'Workers' Councils in Yugoslavia: Successes and Failures', vol. 25 no. 3 (year not shown); Springer chapter on socialist self-management (year not shown); online encyclopaedia (secondary) on socialist self-management"
+    },
+    {
+      "model": "Marxian communism",
+      "best": "Inferred from its principle that once classes disappear, the means of production are held in common, so the workers who run each enterprise share its ownership and its product. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that workers' say depends on a transition led through a state that is meant to wither away, so the model gives no firm rules on ownership or board seats while the state still stands. There is no documented case in the pool. Source: Marx, Critique of the Gotha Programme"
+    },
+    {
+      "model": "Chinese market socialism",
+      "best": "Employee stock ownership plans and productivity in listed Chinese firms: a study in The Economic and Labour Relations Review finds that these plans raised total factor productivity, working through more R&D spending and lower agency costs. The gains were largest at non-state-owned firms, and the study is known only from an excerpt that does not show its sample period, year or authors.",
+      "worst": "Inferred from its principle that key sectors stay in public ownership under party direction, so workers in those firms have no ownership of their enterprises and no board seat, and any share plans sit inside the state's control rather than the workers' own. There is no documented case in the pool. Source: Naughton, The Chinese Economy"
+    },
+    {
+      "model": "Participatory economics",
+      "best": "Inferred from its principle that workers' and consumers' councils plan through repeated proposals, so the people who do the work have a direct and standing say in what their workplace produces and how it is organised. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that planning runs through repeated rounds of proposals, so workers who cannot give time to those rounds, or to the councils that run them, lose their say over their own workplace. There is no documented case in the pool. Source: Albert and Hahnel, Looking Forward"
+    },
+    {
+      "model": "Corporatism and fascist economics",
+      "best": "Inferred from its principle that employers and unions are organised into state-controlled corporations, so labour and management share one formal structure in which unions hold a set place in industrial decisions. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the state directs industry toward national goals, including war, so unions sit inside state-controlled corporations rather than acting independently, and workers have no ownership of firms and no board seat of their own. There is no documented case in the pool. Source: Italian corporative law; Nazi Four-Year Plan"
+    },
+    {
+      "model": "Islamic economics",
+      "best": "Inferred from its principle that finance shares profit and risk, so a worker who contributes labour in a partnership can share in the firm's profit rather than being paid a fixed sum alone. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that finance shares profit and risk, so a worker who contributes labour rather than capital may carry losses without a vote in how the enterprise is run. There is no documented case in the pool. Source: Chapra, Towards a Just Monetary System; Founding of the Mit Ghamr savings bank"
+    },
+    {
+      "model": "Buddhist economics",
+      "best": "Inferred from its principle that production is small-scale and local, so the people who work a small enterprise can own and manage it directly and keep close control over its work. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that production should be small-scale, local and non-violent, so the model gives no rule for ownership or board seats in larger firms, and workers in those firms have no assured share or say. There is no documented case in the pool. Source: Schumacher, Buddhist Economics; Schumacher, Small Is Beautiful"
+    },
+    {
+      "model": "Distributism",
+      "best": "Inferred from its principle that widespread private property and small enterprise let many workers own the means of their work, with subsidiarity keeping decisions with the smallest competent body. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that property spreads through small enterprise, so the model gives no rule for workers in large firms, who may stay on wages with no share in the firm and no seat on its board. There is no documented case in the pool. Source: Leo XIII, Rerum Novarum; Belloc, The Servile State"
+    },
+    {
+      "model": "Steady-state and degrowth economics",
+      "best": "Inferred from its principle that there is no growth imperative, so a firm can be run for steady jobs and a social floor under its staff rather than for maximum returns to outside owners, which leaves room for worker say. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that activity stays within planetary limits, so a firm that must shrink to fit them may cut jobs, and the model gives no rule for who owns the firm or sits on its board when that happens. There is no documented case in the pool. Source: Daly, Steady-State Economics; Raworth, Doughnut Economics"
+    },
+    {
+      "model": "Universal basic income",
+      "best": "Inferred from its principle that every citizen receives an unconditional income, so workers can refuse poor terms or leave a job without losing their means of living, which strengthens their voice over conditions in the firm. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that the income is paid for by taxes on land and natural resources, so the model gives workers no ownership of firms and no board seat, and it leaves the governance of the workplace untouched. There is no documented case in the pool. Source: Paine, Agrarian Justice; Van Parijs, Real Freedom for All"
+    },
+    {
+      "model": "Modern monetary theory",
+      "best": "Inferred from its principle that a government which issues its own currency can fund full employment, so workers who can always find work have stronger bargaining power over pay and conditions. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that inflation, not debt, is the real limit, so the model gives no rule for worker ownership or board seats, and public job schemes may set terms that the firms and their workers do not control. There is no documented case in the pool. Source: Kelton, The Deficit Myth"
+    },
+    {
+      "model": "Commons governance",
+      "best": "Inferred from its principle that users who design, monitor and enforce their own rules can govern a shared resource well, so the workers who share a workplace could write and enforce its rules themselves. There is no documented case in the pool.",
+      "worst": "Inferred from its principle that a commons is governed by the community that shares it, so workers outside the commons, or in firms not run as commons, have no ownership of shared assets and no say in the rules that govern them. There is no documented case in the pool. Source: Ostrom, Governing the Commons"
+    }
+  ],
+  "compromise": {
+    "summary": "Workers in firms above a set size hold employee shares and equal seats on the supervisory board, with a neutral rule for deadlocks, so that neither owners nor workers win ties by default. The share plans reach every employee, not only senior staff.",
+    "details": "Keeps: equal seat counts on the supervisory board (Social market economy, Germany's Co-determination Act of 1976) and survival-linked ownership (Monetarist neoliberalism, US employee stock ownership plans and firm survival). Blocks: a shareholder casting vote on deadlocks, safeguarded by a neutral chair; ownership without a board seat, safeguarded by worker seats. Test: over thirteen years, the span of the 1988 to 2001 US study, survival and deadlock outcomes against matched firms without the plans. Source: Act on the Co-determination of Employees, English translation of the amended Act (publisher and year not shown); Dammann and Eidenmüller, 'Codetermination: A Poor Fit for U.S. Corporations' (working paper; year not shown); Eurofound, '700 companies covered by 1976 Co-determination Act' (year not shown); Federal Agency for Civic Education (bpb), German-language piece marking the 40th anniversary (year not shown); Park, Kruse and Sesil, study on whether employee ownership enhances firm survival (Rutgers University; year not shown); Blasi, Kruse and Weltmann, 'Firm Survival and Performance in Privately Held ESOP Companies' (book chapter, 2013, Emerald)"
+  }
+}
