@@ -1,0 +1,77 @@
+{
+  "database": 230,
+  "practice": "Worker ownership and co-determination",
+  "note": "Documented cases found by web search on 22 October 2026. Each claim is what the cited source reports. Where sources disagree, the case says so. A record may cite a case from this pool only; any other claim must be written as an inference from the model's principle.",
+  "cases": [
+    {
+      "id": "WO1",
+      "case": "Germany's Co-determination Act of 1976",
+      "years": "1976 (amended 2015)",
+      "claim": "The English translation of the Act dates it to 4 May 1976 (Federal Law Gazette I, p. 1153) and gives a 2015 amendment as its latest version. Excerpts of the statute and commentary say that where a company normally employs more than 2,000 people, the workforce and shareholder benches of the supervisory board hold identical seat counts, and the chair's ballot breaks deadlocks, which favours the shareholder side. A Eurofound summary says the chair holds two votes in a tie. The Dammann and Eidenmüller working paper presents shareholder election of the chair as a fallback for when the board cannot agree; the Eurofound summary says shareholders choose the chair in every case, so the sources disagree on who picks the chair. A bpb piece marking the 40th anniversary of the Bundestag vote calls the Act still valid.",
+      "source": "Act on the Co-determination of Employees, English translation of the amended Act (publisher and year not shown); Dammann and Eidenmüller, 'Codetermination: A Poor Fit for U.S. Corporations' (working paper; year not shown); Eurofound, '700 companies covered by 1976 Co-determination Act' (year not shown); Federal Agency for Civic Education (bpb), German-language piece marking the 40th anniversary (year not shown)",
+      "url": "https://www.worker-participation.eu/sites/default/files/2024-10/DE-%20MitbestG%20-%20(amended)%20-%20en.pdf",
+      "caveat": "Search excerpts only. The 2,000-employee threshold and the seat split come from fragments of the statute and from commentary, and the excerpts do not show which page states which rule. The tie-break section number is not confirmed. The bpb and Eurofound items are read only as excerpts. No study of the Act's effects on firms was found in these results.",
+      "relevant_to": ["Social market economy"]
+    },
+    {
+      "id": "WO2",
+      "case": "ULGOR, the first Mondragon cooperative: founding date",
+      "years": "1955 to 1956 (start date disputed)",
+      "claim": "The Mondragon corporate site dates the blessing of the foundation stone of ULGOR, the first cooperative, to 14 April 1956. Other accounts in the results start the story a year earlier: five founders took control of the business in October 1955, and the operation moved from Vitoria to Mondragon the following April.",
+      "source": "MONDRAGON Corporation, corporate 'Introduction' page (company source; year not shown); other accounts in the results, sources not named in the excerpts",
+      "url": "https://www.mondragon-corporation.com/en/about-us/",
+      "caveat": "The 1956 date is the company's own dating. The 1955 account rests on sources the excerpts do not name, and no independent check was found. Membership, voting and group-size figures in the search summaries are not tied to a page, so this case leaves them out.",
+      "relevant_to": ["Cooperative economy"]
+    },
+    {
+      "id": "WO3",
+      "case": "John Lewis Partnership: the staff trusts of 1929 and 1950",
+      "years": "1920 to 1950 (start date disputed)",
+      "claim": "Company history sources in the results date the First Trust Settlement to 18 April 1929. It placed the shares of Spedan Lewis, the founder's son, in John Lewis, Peter Jones and the Odney Estate under trustees acting for staff. The arrangement paid him £1 million in bonds over 30 years, and he kept practical control. A second settlement in April 1950 moved all his remaining shares and final authority to the trustees. Profit-sharing became formal in 1920. The Partnership's own Memory Store site puts its workforce above 80,000 partners, and the results say outside investors hold no shares today. One encyclopaedic summary dates the start to 1920, not 1929.",
+      "source": "John Lewis Partnership, 'The history of the Partnership' (company careers site; year not shown); John Lewis Partnership Memory Store (company archive; year not shown); online encyclopaedia (secondary) for the 1920 start date",
+      "url": "https://www.jlpjobs.com/blog/the-history-of-the-partnership/",
+      "caveat": "The timeline comes from the company's own pages, which have a stake in the story, and the excerpts are summaries rather than the pages. The start date (1920 or 1929) and the headcount are disputed in the results, and another online reference gives a lower headcount. A trust for employees is not a cooperative, so its governance is not covered here.",
+      "relevant_to": ["Cooperative economy"]
+    },
+    {
+      "id": "WO4",
+      "case": "US employee stock ownership plans and firm survival",
+      "years": "1988 to 2001 (survival); 1988 to 1999 (matched comparison)",
+      "claim": "Park, Kruse and Sesil followed the full set of US public companies from 1988 to 2001. Firms where employees held at least 5% showed roughly a 24% lower chance of disappearing over that span. Productivity was also higher at these firms, but the authors tie the survival edge to steadier employment rather than to productivity. Blasi, Kruse and Weltmann's 2013 book chapter compares privately held ESOP firms with matched non-ESOP peers over 1988 to 1999: bankruptcy or closure ran at roughly half the peers' rate, and disappearance for any reason about 40% lower. Neither study credits higher productivity for the gap; the chapter's authors suggest that other workplace practices which build commitment may be the real driver.",
+      "source": "Park, Kruse and Sesil, study on whether employee ownership enhances firm survival (Rutgers University; year not shown); Blasi, Kruse and Weltmann, 'Firm Survival and Performance in Privately Held ESOP Companies' (book chapter, 2013, Emerald)",
+      "url": "https://smlr.rutgers.edu/sites/smlr/files/Documents/Faculty-Staff-Docs/does%20employee%20ownership%20enhance%20firm%20survival.pdf",
+      "caveat": "Both studies share co-author Douglas Kruse and use 1988 data, so they are not independent checks. The Park study's ownership measure also counts profit-sharing and 401(k) stock, not only ESOPs. The evidence is observational, and the chapter is known only from a search excerpt.",
+      "relevant_to": ["Monetarist neoliberalism", "Cooperative economy"]
+    },
+    {
+      "id": "WO5",
+      "case": "Employee stock ownership plans and productivity in listed Chinese firms",
+      "years": "not stated in the excerpt",
+      "claim": "A study of listed Chinese firms, published in The Economic and Labour Relations Review, finds that employee stock ownership plans raised total factor productivity, working through more R&D spending and lower agency costs. The gains were largest at non-state-owned firms and where free-riding was less of a problem. The study reports that its results survive endogeneity checks.",
+      "source": "The Economic and Labour Relations Review, article on employee stock ownership plans and firm productivity in China (Cambridge Core; authors and year not shown)",
+      "url": "https://www.cambridge.org/core/journals/the-economic-and-labour-relations-review/article/abs/employee-stock-ownership-plans-and-firm-productivity-in-china/76D98AC4E43146FA93DB9CDC2CD5DEF0",
+      "caveat": "Known only from a search excerpt: the sample period, the year and the authors are not shown. The study is observational and covers listed firms only, so it says little about unlisted firms or cooperatives.",
+      "relevant_to": ["Chinese market socialism"]
+    },
+    {
+      "id": "WO6",
+      "case": "Workers' councils in Yugoslavia after the 1950 reform",
+      "years": "1946 to 1983 (planning from 1946; council figures 1952 to 1983)",
+      "claim": "The World Bank study says Soviet-style central planning, put in place in 1946, ran for about four years before the 1950 reform. The statute is dated June 1950 in most accounts (one gives 27 June). An online encyclopaedia credits Edvard Kardelj with largely shaping the 1950 law, which it says nearly eliminated the central planning agency. A Springer chapter places a 1952 League of Communists congress and a 1953 constitutional law, the first to give self-management constitutional status, after the 1950 law. Council membership grew from about 105,000 in 1952 to nearly 485,000 by 1983, figures that a Socialism and Democracy article attributes to Potts. Sources disagree on how fast central planning ended: another historical study says the planning apparatus stayed in place and a further planning law followed at the end of 1951. One critical essay argues that council votes on steering committees were largely formal.",
+      "source": "World Bank study, 'Understanding self-management in Yugoslavia' (year not shown); Socialism and Democracy, 'Workers' Councils in Yugoslavia: Successes and Failures', vol. 25 no. 3 (year not shown); Springer chapter on socialist self-management (year not shown); online encyclopaedia (secondary) on socialist self-management",
+      "url": "https://documents1.worldbank.org/curated/en/532061468915640475/pdf/Understanding-self-management-in-Yugoslavia.pdf",
+      "caveat": "Search excerpts only, several cut off mid-sentence. Sources disagree on how far central planning was dismantled. The critical readings are opinion essays, and the historical study is not named in the excerpt. The World Bank and journal items are the most scholarly here, but only excerpts were read.",
+      "relevant_to": ["Market socialism", "Guild socialism"]
+    },
+    {
+      "id": "WO7",
+      "case": "Worker-recovered factories in Argentina",
+      "years": "2001 onward",
+      "claim": "A retrospective article, 'Self-management in Argentina 20 Years After 2001', citing UBA and INAES registry data, reports more than 400 recovered firms (empresas recuperadas) still operating. A Peter Ranis analysis suggests that only about 150 were still operating when judged by productivity gains. The figures diverge across sources.",
+      "source": "'Self-management in Argentina 20 Years After 2001' (publisher and year not shown in the excerpt), citing UBA and INAES registry data; Peter Ranis, analysis of worker-run enterprises in Argentina (year not shown)",
+      "url": "https://geo.coop/articles/self-management-argentina-20-years-after-2001",
+      "caveat": "The 400-firm figure comes from one article, and the excerpt does not show the registry years. The Ranis figure is a judgement based on productivity, and its page is not linked in this case. Counts vary widely, and no consistent series was found.",
+      "relevant_to": ["Cooperative economy", "Syndicalism"]
+    }
+  ]
+}
