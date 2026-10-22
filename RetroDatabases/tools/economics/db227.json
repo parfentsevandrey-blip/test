@@ -56,17 +56,17 @@
     {
       "model": "Monetarist neoliberalism",
       "best": "Inferred from its principle that deregulation and open trade let firms and workers agree terms directly, so workers can move to the firms that pay best and pay follows what each worker can offer. There is no documented case in the pool.",
-      "worst": "The case Fall in union density across OECD countries records that average union density across OECD countries fell by roughly half between 1985 and 2023/24, and that an older column says the falls were sharpest in Australia, New Zealand and the UK after the 1980s reforms. That link is the column's own reading, and the figures are rounded from a search summary. Source: OECD report on membership of unions and employers' organisations and bargaining coverage (2025); older VoxEU column (year not stated)"
+      "worst": "The case Fall in union density across OECD countries records that average union density across OECD countries fell by roughly half between 1985 and 2023/24, and that an older column says the falls were sharpest in Central and Eastern Europe after central planning ended, and in Australia, New Zealand and the UK after the 1980s reforms. Those links are the column's own reading, and the figures are rounded from a search summary. Source: OECD report on membership of unions and employers' organisations and bargaining coverage (2025); older VoxEU column (year not stated)"
     },
     {
       "model": "Keynesian welfare capitalism",
-      "best": "The case US National Labor Relations (Wagner) Act made refusing to recognise or bargain with a union an unfair labour practice and gave a new federal agency power to hear workers' complaints, and union membership rose from under 4 million to over 10 million during the decade. The figures come from a search summary that does not say which page gives them.",
+      "best": "The case US National Labor Relations (Wagner) Act made refusing to recognise or bargain with a union an unfair labour practice and gave a new federal agency power to hear workers' complaints, and union membership rose from under 4 million to over 10 million during the decade. The claims come from a search summary that does not say which page gives them.",
       "worst": "Inferred from its principle that government spending and taxes keep demand and employment high, so workers' say may stop at jobs and pay, while decisions on investment and the organisation of work stay with management. There is no documented case in the pool. Source: Keynes, The General Theory; Beveridge, Social Insurance and Allied Services"
     },
     {
       "model": "Social market economy",
       "best": "The case German works councils and the Works Constitution Act records staff-elected councils that cover every worker at a site regardless of union status, and a 1972 reform that broadened their rights. This comes from a search summary; the article was not read in full.",
-      "worst": "The case German works councils and the Works Constitution Act records that West German lawmakers adopted the 1952 law despite fierce union opposition, and that unions have no standing to direct the councils. This comes from a search summary; the article was not read in full. Source: Legal-history article 'A Forward-Looking History of the German Works Constitution', on a Max Planck Society site (year not stated); report on employee representation in Germany by a Japanese labour institute (year not stated)"
+      "worst": "The case German works councils and the Works Constitution Act records that West German lawmakers adopted the 1952 law despite fierce union opposition, and that unions have no standing to direct the councils. This comes from a search summary; the article was not read in full, and the labour institute report was not opened. Source: Legal-history article 'A Forward-Looking History of the German Works Constitution', on a Max Planck Society site (year not stated); report on employee representation in Germany by a Japanese labour institute (year not stated)"
     },
     {
       "model": "Nordic social democracy",
@@ -121,7 +121,7 @@
     {
       "model": "Command socialism",
       "best": "Inferred from its principle that the state plans output and investment and mobilises labour, so workers are assigned places of work within the plan, and jobs follow the plan's priorities rather than the swings of the market. There is no documented case in the pool.",
-      "worst": "The case Gdańsk agreement and Solidarity, Poland records that a government negotiator and a strike leader signed, on 31 August 1980, the agreement that settled the Gdańsk shipyard strike and opened the way to Solidarity, which a search summary describes as the first of its kind in the Soviet bloc. This is a short popular history, so secondary, and the 'first of its kind' description is unconfirmed. Source: HISTORY, 'This Day in History' web feature for 31 August (year not stated)"
+      "worst": "Inferred from its principle that the state plans output and investment and mobilises labour, so workers are directed to their work by the plan, and with no independent body to bargain for them their say over pay and conditions is limited to what the plan allows. There is no documented case in the pool. Source: Kornai, The Socialist System; First Five-Year Plan"
     },
     {
       "model": "Market socialism",
@@ -145,7 +145,7 @@
     },
     {
       "model": "Corporatism and fascist economics",
-      "best": "The case Italy's 1926 Rocco law on strikes and unions put industrial relations under collective contracts that labour courts enforced, and strikes and lockouts fell from 2,086 in 1920 to 23 in 1932, a decline one document ties to the law. That document is one author's reading, which credits the regime, so the verdict is one-sided.",
+      "best": "The case Italy's 1926 Rocco law on strikes and unions put industrial relations under collective contracts that labour courts enforced, and strikes and lockouts fell from 2,086 in 1920 to 23 in 1932, a decline one document ties to the law. That document is one author's reading, which credits the regime, and no second source for the dispute counts was found, so the verdict is one-sided.",
       "worst": "The case Italy's 1926 Rocco law on strikes and unions outlawed strikes and lockouts. After the October 1925 Palazzo Vidoni accord made employers and fascist unions each other's only representatives, the regime-aligned confederation gained exclusive representation, and the CGdL and the Catholic CIL were left with no real option but to disband in January 1927. This rests on one document whose author calls the ban a complete success, so the verdict is one-sided. Source: Trinity College Dublin repository document on the Italian corporate state, by a single author (year not stated)"
     },
     {
@@ -186,7 +186,7 @@
   ],
   "compromise": {
     "summary": "A design in which every worker may organise and bargain under a legal right that a neutral public body enforces. Councils elected by all staff cover each site, sector-wide bargaining sets the baseline, and no state may ban strikes, give one union exclusive rights, or change bargaining law without review.",
-    "details": "Keeps: a legal right to organise and bargain, enforced by a federal agency, from Keynesian welfare capitalism (US National Labor Relations (Wagner) Act); councils elected by all staff, union or not, from Social market economy (German works councils and the Works Constitution Act); sector-wide bargaining, from Nordic social democracy (Nordic bargaining coverage and falling union density). Blocks: strike bans and exclusive representation for one regime-aligned confederation, from Corporatism and fascist economics (Italy's 1926 Rocco law on strikes and unions); safeguard: strikes and rival unions protected by the courts. Blocks: falling density after reforms made without review, from Nordic social democracy; safeguard: any change to bargaining law tested against coverage figures first. Test: union density, bargaining coverage and the share of workers with a council seat, measured each year for ten years. Source: Macmillan-hosted textbook chapter; Max Planck Society legal-history article; Fafo paper (2022); Trinity College Dublin document."
+    "details": "Keeps: a legal right to organise and bargain, enforced by a federal agency, from Keynesian welfare capitalism (US National Labor Relations (Wagner) Act); councils elected by all staff, union or not, from Social market economy (German works councils and the Works Constitution Act); sector-wide bargaining, from Nordic social democracy (Nordic bargaining coverage and falling union density). Blocks: strike bans and exclusive representation for one regime-aligned confederation, from Corporatism and fascist economics (Italy's 1926 Rocco law on strikes and unions); safeguard: strikes and rival unions protected by the courts. Blocks: falling density after reforms, from Nordic social democracy; safeguard: any change to bargaining law tested against coverage figures first. Test: union density, bargaining coverage and the share of workers with a council seat, measured each year for ten years. Source: Macmillan-hosted textbook chapter; Max Planck Society legal-history article; Fafo paper (2022); Trinity College Dublin document."
   }
 }
 
