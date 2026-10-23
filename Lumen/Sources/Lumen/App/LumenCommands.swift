@@ -6,23 +6,25 @@ struct LumenCommands: Commands {
     let model: AppModel
 
     private var engine: PlayerEngine { model.engine }
-    private var inPlayer: Bool { model.screen == .player && engine.hasMedia }
+    private var inPlayer: Bool { engine.phase == .ready }
 
     var body: some Commands {
         CommandGroup(replacing: .newItem) {
             Button("Открыть…") { model.presentOpenPanel() }
                 .keyboardShortcut("o")
-            Button("Открыть папку…") { model.presentOpenPanel(folders: true) }
-                .keyboardShortcut("o", modifiers: [.command, .shift])
-            Divider()
             Button("Добавить субтитры…") { model.presentSubtitlePanel() }
                 .keyboardShortcut("o", modifiers: [.command, .option])
                 .disabled(!inPlayer)
+            Divider()
             Button("Сохранить кадр") { engine.captureFrame() }
                 .keyboardShortcut("s", modifiers: [.command, .shift])
                 .disabled(!inPlayer || !engine.info.hasVideo)
             Button("Показать в Finder") { model.revealCurrentInFinder() }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
+                .disabled(!engine.hasMedia)
+            Divider()
+            Button("Закрыть видео") { engine.close() }
+                .keyboardShortcut("w", modifiers: [.command, .shift])
                 .disabled(!engine.hasMedia)
         }
 
@@ -53,31 +55,20 @@ struct LumenCommands: Commands {
             Button("Обычная скорость") { engine.setRate(1) }
                 .keyboardShortcut("\\", modifiers: [])
                 .disabled(!inPlayer)
-            Divider()
-            Button("Следующее видео") { engine.next() }
-                .keyboardShortcut(.rightArrow, modifiers: [.command])
-                .disabled(!inPlayer || !engine.hasNext)
-            Button("Предыдущее видео") { engine.previous() }
-                .keyboardShortcut(.leftArrow, modifiers: [.command])
-                .disabled(!inPlayer)
-            Divider()
-            Button(engine.loopA != nil && engine.loopB == nil ? "Поставить точку B" : "Поставить точку A") { engine.markLoop() }
-                .keyboardShortcut("b", modifiers: [])
-                .disabled(!inPlayer)
-            Button("Сбросить повтор A–B") { engine.clearLoop() }
-                .disabled(engine.loopA == nil)
-            Picker("Повтор", selection: Binding(get: { engine.repeatMode }, set: { engine.repeatMode = $0 })) {
-                Text("Выключен").tag(RepeatMode.off)
-                Text("Текущее видео").tag(RepeatMode.one)
-                Text("Вся очередь").tag(RepeatMode.all)
+            if engine.hasPlaylist {
+                Divider()
+                Button("Следующий файл") { engine.next() }
+                    .keyboardShortcut(.rightArrow, modifiers: [.command])
+                    .disabled(!engine.hasNext)
+                Button("Предыдущий файл") { engine.previous() }
+                    .keyboardShortcut(.leftArrow, modifiers: [.command])
             }
-            Toggle("Перемешать", isOn: Binding(get: { engine.shuffle }, set: { engine.shuffle = $0 }))
         }
 
         CommandMenu("Видео") {
             Button("Полноэкранный режим") { model.toggleFullScreen() }
                 .keyboardShortcut("f", modifiers: [])
-                .disabled(model.screen != .player)
+                .disabled(!engine.hasMedia)
             Button("Картинка в картинке") { engine.togglePictureInPicture() }
                 .keyboardShortcut("p", modifiers: [])
                 .disabled(!inPlayer)
@@ -92,12 +83,6 @@ struct LumenCommands: Commands {
                 .disabled(!inPlayer)
             Button("Сбросить геометрию") { engine.resetTransform() }
                 .disabled(!inPlayer)
-            Divider()
-            Menu("Стиль изображения") {
-                ForEach(VideoAdjustments.presets) { preset in
-                    Button(preset.name) { engine.applyPreset(preset) }
-                }
-            }
         }
 
         CommandMenu("Звук") {
@@ -113,8 +98,8 @@ struct LumenCommands: Commands {
             if !engine.audioOptions.isEmpty {
                 Divider()
                 Picker("Дорожка", selection: Binding(get: { engine.selectedAudio }, set: { engine.selectAudio($0) })) {
-                    ForEach(Array(engine.audioOptions.enumerated()), id: \.offset) { index, name in
-                        Text(name).tag(index)
+                    ForEach(engine.audioOptions) { option in
+                        Text(option.title).tag(option.id).disabled(!option.available)
                     }
                 }
             }
@@ -135,16 +120,6 @@ struct LumenCommands: Commands {
                 .disabled(!inPlayer)
             Button("Добавить файл субтитров…") { model.presentSubtitlePanel() }
                 .disabled(!inPlayer)
-        }
-
-        CommandGroup(before: .sidebar) {
-            Button("Библиотека") { model.showLibrary() }
-                .keyboardShortcut("l", modifiers: [.command])
-                .disabled(model.screen == .library)
-            Button("Вернуться к видео") { model.resumeCurrent() }
-                .keyboardShortcut("p", modifiers: [.command, .shift])
-                .disabled(model.screen == .player || !engine.hasMedia)
-            Divider()
         }
     }
 }

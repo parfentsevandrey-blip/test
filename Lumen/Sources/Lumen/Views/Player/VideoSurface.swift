@@ -2,30 +2,27 @@ import AVFoundation
 import AppKit
 import SwiftUI
 
-/// Слой AVPlayerLayer в SwiftUI. Масштаб, поворот, отражение и скругление
-/// применяются прямо к CALayer — без перерисовки SwiftUI и с аппаратным композитингом.
+/// Слой с картинкой движка (AVPlayerLayer или AVSampleBufferDisplayLayer) в SwiftUI. Масштаб, поворот,
+/// отражение и скругление применяются прямо к CALayer — без перерисовки SwiftUI и с аппаратным композитингом.
 struct VideoSurface: NSViewRepresentable {
-    let engine: PlayerEngine
+    let videoLayer: CALayer?
     var cornerRadius: CGFloat
-    var gravity: VideoGravity
     var zoom: CGFloat
     var rotation: Int
     var mirrored: Bool
 
     func makeNSView(context: Context) -> PlayerLayerView {
-        let view = PlayerLayerView()
-        view.playerLayer.player = engine.player
-        engine.attachPictureInPicture(to: view.playerLayer)
-        return view
+        PlayerLayerView()
     }
 
     func updateNSView(_ view: PlayerLayerView, context: Context) {
-        view.configure(cornerRadius: cornerRadius, gravity: gravity.avGravity, zoom: zoom, rotation: rotation, mirrored: mirrored)
+        view.host(videoLayer)
+        view.configure(cornerRadius: cornerRadius, zoom: zoom, rotation: rotation, mirrored: mirrored)
     }
 }
 
 final class PlayerLayerView: NSView {
-    let playerLayer = AVPlayerLayer()
+    private var playerLayer: CALayer = CALayer()
     private var zoom: CGFloat = 1
     private var rotation = 0
     private var mirrored = false
@@ -38,9 +35,19 @@ final class PlayerLayerView: NSView {
         root.masksToBounds = true
         root.cornerCurve = .continuous
         layer = root
-        playerLayer.videoGravity = .resizeAspect
-        playerLayer.backgroundColor = NSColor.black.cgColor
         root.addSublayer(playerLayer)
+    }
+
+    func host(_ video: CALayer?) {
+        let next = video ?? CALayer()
+        guard next !== playerLayer else { return }
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        playerLayer.removeFromSuperlayer()
+        playerLayer = next
+        layer?.addSublayer(next)
+        applyGeometry()
+        CATransaction.commit()
     }
 
     @available(*, unavailable)
@@ -49,12 +56,12 @@ final class PlayerLayerView: NSView {
     override var isFlipped: Bool { true }
     override var mouseDownCanMoveWindow: Bool { false }
 
-    func configure(cornerRadius: CGFloat, gravity: AVLayerVideoGravity, zoom: CGFloat, rotation: Int, mirrored: Bool) {
+    func configure(cornerRadius: CGFloat, zoom: CGFloat, rotation: Int, mirrored: Bool) {
+        guard layer?.cornerRadius != cornerRadius || self.zoom != zoom || self.rotation != rotation || self.mirrored != mirrored else { return }
         CATransaction.begin()
         CATransaction.setAnimationDuration(0.35)
         CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeInEaseOut))
         layer?.cornerRadius = cornerRadius
-        if playerLayer.videoGravity != gravity { playerLayer.videoGravity = gravity }
         self.zoom = zoom
         self.rotation = rotation
         self.mirrored = mirrored

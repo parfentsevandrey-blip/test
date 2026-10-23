@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Набор Matroska/WebM-файлов для самопроверки демультиплексора (только для CI).
+# Набор тестовых файлов для самопроверки движка воспроизведения (только для CI).
 set -euo pipefail
+SCRIPTS="$(cd "$(dirname "$0")" && pwd)"
 OUT="$1"
 mkdir -p "$OUT"
 cd "$OUT"
@@ -66,10 +67,34 @@ Dialogue: 0,0:00:01.00,0:00:03.00,Default,,0,0,0,,{\b1}Жирный{\b0} тек�
 ASS
 $FF $SRC -i subs.ass -t 6 -map 0:v -map 1:a -map 3:s -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a libmp3lame -c:s ass h264_mp3_ass.mkv
 
-# WebM: VP9 + Opus (VP9 перекодируется в HEVC, Opus пропускается с пометкой)
+# WebM: VP9 (аппаратный декодер VideoToolbox) + Opus
 $FF $SRC -t 5 -map 0:v -map 1:a -c:v libvpx-vp9 -deadline realtime -cpu-used 8 -b:v 1M -c:a libopus vp9_opus.webm
 
 # AV1 (аппаратный декодер есть только на M3 и новее — на раннере может не декодироваться)
 $FF $SRC -t 4 -map 0:v -map 1:a -c:v libsvtav1 -preset 12 -pix_fmt yuv420p -c:a aac av1_aac.mkv || true
+
+# DTS 5.1 (звук Blu-ray и рипов) рядом с AAC: DTS macOS не умеет — его декодирует сам Lumen
+$FF $SRC -t 8 \
+  -filter_complex "[1:a][2:a]amerge=inputs=2,pan=5.1|FL=c0|FR=c1|FC=c0|LFE=c1|BL=c0|BR=c1[dts]" \
+  -map 0:v -map 1:a -map "[dts]" \
+  -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a:0 aac -c:a:1 dca -strict -2 \
+  -metadata:s:a:0 language=eng -metadata:s:a:1 language=rus -metadata:s:a:1 title="Дубляж" \
+  -disposition:a:1 default -disposition:a:0 0 \
+  h264_aac_dts.mkv
+
+# FLAC и PCM — звук без потерь
+$FF $SRC -t 6 -map 0:v -map 1:a -map 2:a -c:v libx264 -preset veryfast -pix_fmt yuv420p \
+  -c:a:0 flac -c:a:1 pcm_s16le h264_flac_pcm.mkv
+
+# Субтитры Blu-ray (PGS): ffmpeg их не кодирует, поток пишет scripts/make-pgs.py
+python3 "$SCRIPTS/make-pgs.py" pgs.sup
+$FF -f lavfi -i testsrc2=size=1280x720:rate=24 -f lavfi -i sine=frequency=440:sample_rate=48000 -t 8 \
+  -c:v libx264 -preset veryfast -pix_fmt yuv420p -c:a aac pgs_base.mkv
+$FF -i pgs_base.mkv -i pgs.sup -map 0 -map 1 -c copy -copyts -metadata:s:s:0 language=rus h264_pgs.mkv
+rm -f pgs_base.mkv pgs.sup
+
+# Обычный MP4 со встроенными субтитрами — играет системный AVPlayer
+$FF $SRC -i subs.srt -t 8 -map 0:v -map 1:a -map 3:s -c:v libx264 -preset veryfast -pix_fmt yuv420p \
+  -c:a aac -c:s mov_text -metadata:s:s:0 language=rus -movflags +faststart h264_aac_text.mp4
 
 ls -la

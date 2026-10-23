@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Боковая стеклянная панель с вкладками: изображение, очередь, информация.
+/// Боковая стеклянная панель: дорожки звука и субтитров, сведения о файле.
 struct SidePanel: View {
     @Environment(AppModel.self) private var model
     @Binding var panel: PlayerPanel?
@@ -46,8 +46,7 @@ struct SidePanel: View {
             ScrollView {
                 Group {
                     switch panel {
-                    case .adjust: AdjustPanel()
-                    case .queue: QueuePanel()
+                    case .tracks: TracksPanel()
                     case .info: InfoPanel()
                     case nil: EmptyView()
                     }
@@ -58,8 +57,8 @@ struct SidePanel: View {
             .scrollEdgeEffectStyle(.soft, for: .all)
         }
         .padding(14)
-        .frame(width: 340)
-        .glassEffect(.regular, in: .rect(cornerRadius: 30))
+        .frame(width: 330)
+        .glassEffect(.regular, in: .rect(cornerRadius: 28))
     }
 }
 
@@ -68,231 +67,116 @@ private struct PanelSection<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(title.uppercased())
                 .font(.system(size: 10.5, weight: .bold))
                 .tracking(0.8)
                 .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
+        .padding(12)
         .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.white.opacity(0.06)))
     }
 }
 
-private struct AdjustSlider: View {
-    let title: String
-    let symbol: String
-    @Binding var value: Double
-    let range: ClosedRange<Double>
-    let neutral: Double
-    var format: (Double) -> String = { String(format: "%+.2f", $0) }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Label(title, systemImage: symbol)
-                    .font(.system(size: 12, weight: .medium))
-                Spacer()
-                Text(format(value))
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(value == neutral ? .secondary : .primary)
-                    .contentTransition(.numericText(value: value))
-                    .onTapGesture(count: 2) { withAnimation(.smooth) { value = neutral } }
-                    .help("Двойной щелчок — сбросить")
-            }
-            Slider(value: $value, in: range)
-                .controlSize(.small)
-        }
-    }
-}
-
-struct AdjustPanel: View {
+/// Звук и субтитры текущего видео: всё видно сразу, переключение — один щелчок.
+/// Дорожки, которые macOS не воспроизводит, показаны приглушёнными, без всплывающих ошибок.
+struct TracksPanel: View {
     @Environment(AppModel.self) private var model
-    @AppStorage(Prefs.ambientEnabled) private var ambientEnabled = true
-    @AppStorage(Prefs.ambientIntensity) private var ambientIntensity = 0.85
-    @AppStorage(Prefs.cinemaStage) private var cinemaStage = true
-    @AppStorage(Prefs.subtitleScale) private var subtitleScale = 1.0
-    @AppStorage(Prefs.subtitleGlass) private var subtitleGlass = true
 
     var body: some View {
-        @Bindable var engine = model.engine
+        let engine = model.engine
         VStack(spacing: 12) {
-            PanelSection(title: "Стиль") {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 88), spacing: 8)], spacing: 8) {
-                    ForEach(VideoAdjustments.presets) { preset in
-                        let selected = engine.adjustments == preset.value
-                        Button { engine.applyPreset(preset) } label: {
-                            VStack(spacing: 6) {
-                                Image(systemName: preset.symbol)
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .symbolEffect(.bounce, value: selected)
-                                Text(preset.name).font(.system(size: 11.5, weight: .semibold))
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 58)
-                            .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(selected ? AnyShapeStyle(.tint.opacity(0.45)) : AnyShapeStyle(.white.opacity(0.07))))
-                            .contentShape(RoundedRectangle(cornerRadius: 14))
-                        }
-                        .buttonStyle(PressScaleStyle())
+            PanelSection(title: "Звук") {
+                if engine.audioOptions.isEmpty {
+                    Text("В файле нет звука").font(.system(size: 12.5)).foregroundStyle(.secondary).padding(.horizontal, 4)
+                }
+                ForEach(engine.audioOptions) { option in
+                    TrackRow(title: option.title, detail: option.detail, selected: engine.selectedAudio == option.id,
+                             enabled: option.available) {
+                        engine.selectAudio(option.id)
                     }
                 }
             }
 
-            PanelSection(title: "Тонкая настройка") {
-                AdjustSlider(title: "Экспозиция", symbol: "plusminus.circle", value: $engine.adjustments.exposure, range: -1...1, neutral: 0)
-                AdjustSlider(title: "Яркость", symbol: "sun.max", value: $engine.adjustments.brightness, range: -0.3...0.3, neutral: 0)
-                AdjustSlider(title: "Контраст", symbol: "circle.lefthalf.filled", value: $engine.adjustments.contrast, range: 0.6...1.6, neutral: 1,
-                             format: { String(format: "%.2f", $0) })
-                AdjustSlider(title: "Насыщенность", symbol: "drop", value: $engine.adjustments.saturation, range: 0...2, neutral: 1,
-                             format: { String(format: "%.2f", $0) })
-                AdjustSlider(title: "Сочность", symbol: "sparkles", value: $engine.adjustments.vibrance, range: -1...1, neutral: 0)
-                AdjustSlider(title: "Теплота", symbol: "thermometer.medium", value: $engine.adjustments.warmth, range: -1...1, neutral: 0)
-                AdjustSlider(title: "Резкость", symbol: "triangle", value: $engine.adjustments.sharpness, range: 0...1.5, neutral: 0,
-                             format: { String(format: "%.2f", $0) })
-                AdjustSlider(title: "Виньетка", symbol: "circle.dashed", value: $engine.adjustments.vignette, range: 0...1.5, neutral: 0,
-                             format: { String(format: "%.2f", $0) })
-                Button {
-                    withAnimation(.smooth) { engine.adjustments = VideoAdjustments() }
-                } label: {
-                    Label("Сбросить всё", systemImage: "arrow.counterclockwise")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.glass)
-                .disabled(engine.adjustments.isIdentity)
-            }
-
-            PanelSection(title: "Геометрия") {
-                Picker("Масштаб", selection: $engine.gravity) {
-                    ForEach(VideoGravity.allCases, id: \.self) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                HStack {
-                    Button { engine.rotate() } label: { Label("Повернуть", systemImage: "rotate.right") }
-                    Button { engine.mirrored.toggle() } label: { Label("Отразить", systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right") }
-                }
-                .buttonStyle(.glass)
-                .controlSize(.small)
-                AdjustSlider(title: "Увеличение", symbol: "plus.magnifyingglass",
-                             value: Binding(get: { Double(engine.zoom) }, set: { engine.zoom = CGFloat($0) }),
-                             range: 1...3, neutral: 1, format: { String(format: "%.1f×", $0) })
-            }
-
-            PanelSection(title: "Атмосфера") {
-                Toggle("Живая подсветка из кадра", isOn: $ambientEnabled)
-                if ambientEnabled {
-                    AdjustSlider(title: "Интенсивность", symbol: "light.max", value: $ambientIntensity, range: 0.2...1, neutral: 0.85,
-                                 format: { "\(Int($0 * 100))%" })
-                }
-                Toggle("Сцена: видео парит над свечением", isOn: $cinemaStage)
-            }
-            .toggleStyle(.switch)
-            .controlSize(.small)
-
             PanelSection(title: "Субтитры") {
-                AdjustSlider(title: "Размер", symbol: "textformat.size", value: $subtitleScale, range: 0.6...1.8, neutral: 1,
-                             format: { "\(Int($0 * 100))%" })
-                Toggle("Стеклянная подложка", isOn: $subtitleGlass)
-                    .toggleStyle(.switch)
-                    .controlSize(.small)
-            }
-        }
-        .font(.system(size: 12.5))
-    }
-}
-
-struct QueuePanel: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        @Bindable var engine = model.engine
-        VStack(spacing: 12) {
-            HStack(spacing: 8) {
-                Button { engine.shuffle.toggle() } label: { Image(systemName: "shuffle") }
-                    .buttonStyle(.glass)
-                    .tint(engine.shuffle ? .accentColor : nil)
-                    .help("Перемешать")
-                Button { engine.cycleRepeat() } label: { Image(systemName: engine.repeatMode.symbol) }
-                    .buttonStyle(.glass)
-                    .tint(engine.repeatMode != .off ? .accentColor : nil)
-                    .help("Повтор")
-                Spacer()
-                Button { model.presentOpenPanel() } label: { Label("Добавить", systemImage: "plus") }
-                    .buttonStyle(.glass)
-            }
-            .controlSize(.small)
-
-            VStack(spacing: 4) {
-                ForEach(Array(engine.queue.enumerated()), id: \.element.id) { index, item in
-                    QueueRow(item: item, index: index, isCurrent: index == engine.queueIndex)
-                        .onTapGesture { engine.playQueueItem(at: index) }
-                        .contextMenu {
-                            Button("Воспроизвести") { engine.playQueueItem(at: index) }
-                            Button("Убрать из очереди") { engine.removeFromQueue(at: IndexSet(integer: index)) }
-                                .disabled(index == engine.queueIndex)
-                            if index > 0 {
-                                Button("Поднять выше") { engine.moveInQueue(from: IndexSet(integer: index), to: index - 1) }
-                            }
-                        }
+                ForEach(engine.subtitleOptions) { option in
+                    TrackRow(title: option.title, detail: option.detail, selected: engine.subtitleChoice == option.choice) {
+                        engine.selectSubtitle(option.choice)
+                    }
                 }
-            }
-            if engine.queue.count <= 1 {
-                Text("Откройте папку (⇧⌘O) — все видео в ней встанут в очередь")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 8)
+                if engine.subtitleChoice != .off {
+                    HStack(spacing: 8) {
+                        Text("Задержка").foregroundStyle(.secondary)
+                        Spacer()
+                        Button { engine.shiftSubtitles(by: -0.1) } label: { Image(systemName: "minus") }
+                            .buttonStyle(.glass).controlSize(.small)
+                        Text(String(format: "%+.1f с", engine.subtitleDelay))
+                            .monospacedDigit().frame(width: 54)
+                        Button { engine.shiftSubtitles(by: 0.1) } label: { Image(systemName: "plus") }
+                            .buttonStyle(.glass).controlSize(.small)
+                    }
+                    .font(.system(size: 12.5, weight: .medium))
+                    .padding(.horizontal, 4)
+                    .padding(.top, 4)
+                }
+                Button {
+                    model.presentSubtitlePanel()
+                } label: {
+                    Label("Добавить файл субтитров…", systemImage: "plus.circle")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 12.5, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 4)
+                .padding(.top, 4)
             }
         }
     }
 }
 
-private struct QueueRow: View {
-    @Environment(AppModel.self) private var model
-    let item: MediaItem
-    let index: Int
-    let isCurrent: Bool
+private struct TrackRow: View {
+    let title: String
+    var detail = ""
+    let selected: Bool
+    var enabled = true
+    let action: () -> Void
+
     @State private var hovering = false
 
     var body: some View {
-        HStack(spacing: 10) {
-            ZStack {
-                if let image = model.library.thumbnails[item.id] {
-                    Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)
-                } else {
-                    Rectangle().fill(.white.opacity(0.08))
-                    Image(systemName: "film").foregroundStyle(.secondary)
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 11, weight: .bold))
+                    .opacity(selected ? 1 : 0)
+                    .frame(width: 14)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(title).lineLimit(1)
+                        .font(.system(size: 13, weight: selected ? .semibold : .regular))
+                    if !detail.isEmpty {
+                        Text(detail).lineLimit(1)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                if isCurrent {
-                    Rectangle().fill(.black.opacity(0.4))
-                    Image(systemName: "waveform")
-                        .symbolEffect(.variableColor.iterative, isActive: model.engine.isPlaying)
-                        .foregroundStyle(.white)
-                }
+                Spacer(minLength: 0)
             }
-            .frame(width: 72, height: 40)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.title)
-                    .font(.system(size: 12.5, weight: isCurrent ? .semibold : .regular))
-                    .lineLimit(2)
-                Text(TimeFormat.string(item.duration))
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-            }
-            Spacer(minLength: 0)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 5)
+            .background(RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(.white.opacity(selected ? 0.13 : (hovering && enabled ? 0.07 : 0))))
+            .contentShape(Rectangle())
         }
-        .padding(6)
-        .background(RoundedRectangle(cornerRadius: 12, style: .continuous)
-            .fill(.white.opacity(isCurrent ? 0.14 : (hovering ? 0.07 : 0))))
-        .contentShape(Rectangle())
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.4)
         .onHover { hovering = $0 }
-        .task { await model.library.loadThumbnail(for: item) }
+        .help(enabled ? "" : "Этот формат звука macOS не воспроизводит")
     }
 }
 
@@ -304,14 +188,10 @@ struct InfoPanel: View {
         let info = engine.info
         VStack(spacing: 12) {
             PanelSection(title: "Файл") {
-                row("Имя", engine.current?.url.lastPathComponent ?? "—")
+                row("Имя", engine.url?.lastPathComponent ?? "—")
                 row("Контейнер", info.container)
                 row("Размер", info.fileSize > 0 ? Units.bytes(info.fileSize) : "—")
                 row("Длительность", TimeFormat.string(info.duration))
-                if let converted = info.convertedFrom {
-                    row("Исходные кодеки", converted)
-                    row("Воспроизведение", "Собственный демультиплексор Lumen")
-                }
             }
             if info.hasVideo {
                 PanelSection(title: "Видео") {
@@ -328,13 +208,6 @@ struct InfoPanel: View {
                 row("Частота", info.sampleRate > 0 ? String(format: "%.1f кГц", info.sampleRate / 1000) : "—")
                 row("Дорожек", "\(max(engine.audioOptions.count, info.audioCodec == nil ? 0 : 1))")
             }
-            if !engine.notes.isEmpty {
-                PanelSection(title: "Замечания") {
-                    ForEach(engine.notes, id: \.self) { note in
-                        Text(note).font(.system(size: 12)).foregroundStyle(.secondary)
-                    }
-                }
-            }
             PanelSection(title: "Горячие клавиши") {
                 ForEach(Self.shortcuts, id: \.0) { key, action in
                     row(key, action)
@@ -349,9 +222,9 @@ struct InfoPanel: View {
         ("↑ ↓", "Громкость"),
         (", .", "Покадрово"),
         ("[ ] \\", "Скорость"),
-        ("S / A", "Субтитры / дорожка"),
+        ("S / A", "Субтитры / звук по кругу"),
+        ("T", "Звук и субтитры"),
         ("G H", "Сдвиг субтитров"),
-        ("B", "Повтор A–B"),
         ("F / ⏎", "Полный экран"),
         ("P", "Картинка в картинке"),
         ("Z R", "Масштаб, поворот"),

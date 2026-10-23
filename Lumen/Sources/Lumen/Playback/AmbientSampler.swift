@@ -23,30 +23,16 @@ nonisolated struct AmbientPalette: Equatable, Sendable {
     }
 }
 
-/// Сэмплирует кадры через уменьшенный вывод AVPlayerItemVideoOutput.
-/// Масштабирование делает видеоконвейер, поэтому на CPU разбирается картинка 64×36.
+/// Берёт у движка уменьшенный кадр (64×36) несколько раз в секунду и раскладывает его на сетку цветов.
+/// Масштабирует видеоконвейер, поэтому на CPU разбираются считанные тысячи точек.
 @Observable
 final class AmbientSampler {
     private(set) var palette: AmbientPalette = .neutral
 
-    @ObservationIgnored private var output: AVPlayerItemVideoOutput?
+    @ObservationIgnored var source: (() -> CVPixelBuffer?)?
     @ObservationIgnored private var task: Task<Void, Never>?
-    @ObservationIgnored private var forceNext = false
 
-    func attach(to item: AVPlayerItem) {
-        let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-            kCVPixelBufferWidthKey as String: 64,
-            kCVPixelBufferHeightKey as String: 36,
-        ])
-        output.suppressesPlayerRendering = false
-        item.add(output)
-        self.output = output
-        forceNext = true
-    }
-
-    func detach() {
-        output = nil
+    func reset() {
         withAnimation(.smooth(duration: 1.2)) { palette = .neutral }
     }
 
@@ -55,7 +41,7 @@ final class AmbientSampler {
         task = Task { [weak self] in
             while !Task.isCancelled {
                 self?.sample()
-                try? await Task.sleep(for: .milliseconds(110))
+                try? await Task.sleep(for: .milliseconds(120))
             }
         }
     }
@@ -67,22 +53,16 @@ final class AmbientSampler {
 
     /// Пересчитать после перемотки на паузе.
     func refresh() {
-        forceNext = true
         Task { [weak self] in
-            for _ in 0..<6 {
-                try? await Task.sleep(for: .milliseconds(80))
+            for _ in 0..<5 {
+                try? await Task.sleep(for: .milliseconds(90))
                 self?.sample()
             }
         }
     }
 
     private func sample() {
-        guard let output else { return }
-        let time = output.itemTime(forHostTime: CACurrentMediaTime())
-        guard forceNext || output.hasNewPixelBuffer(forItemTime: time),
-              let buffer = output.copyPixelBuffer(forItemTime: time, itemTimeForDisplay: nil) else { return }
-        forceNext = false
-        guard let next = Self.analyze(buffer) else { return }
+        guard let buffer = source?(), let next = Self.analyze(buffer) else { return }
         guard next.distance(to: palette) > 0.025 else { return }
         withAnimation(.easeInOut(duration: 0.7)) { palette = next }
     }

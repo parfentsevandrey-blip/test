@@ -5,11 +5,7 @@ import UniformTypeIdentifiers
 
 @Observable
 final class AppModel {
-    enum Screen { case library, player }
-
-    var screen: Screen = .library
-    let library: MediaLibrary
-    let engine: PlayerEngine
+    let engine = PlayerEngine()
     private(set) var isFullScreen = false
     private(set) var chromeVisible = true
 
@@ -18,9 +14,6 @@ final class AppModel {
 
     init() {
         Prefs.registerDefaults()
-        let library = MediaLibrary()
-        self.library = library
-        engine = PlayerEngine(library: library)
         engine.onVideoReady = { [weak self] size in self?.fitWindow(to: size) }
     }
 
@@ -28,51 +21,35 @@ final class AppModel {
 
     static let contentTypes: [UTType] = {
         var types: [UTType] = [.movie, .video, .audiovisualContent, .audio, .mpeg4Movie, .quickTimeMovie]
-        for ext in MatroskaRemuxer.fileExtensions {
+        for ext in MediaResolver.matroskaExtensions {
             if let t = UTType(filenameExtension: ext) { types.append(t) }
         }
         return types
     }()
 
+    /// Бросили файл (или несколько, или папку) — сразу играем. Файлы субтитров подключаются к текущему видео.
     func open(_ urls: [URL]) {
+        let subtitles = urls.filter { SubtitleParser.fileExtensions.contains($0.pathExtension.lowercased()) }
+        if !subtitles.isEmpty, engine.hasMedia, subtitles.count == urls.count {
+            subtitles.forEach(engine.addSubtitleFile)
+            return
+        }
         let files = expand(urls)
         guard !files.isEmpty else {
             NSSound.beep()
             return
         }
-        let items = library.add(files)
-        files.prefix(10).forEach { NSDocumentController.shared.noteNewRecentDocumentURL($0) }
-        engine.open(items)
-        withAnimation(.smooth(duration: 0.55)) { screen = .player }
+        engine.open(files)
+        window?.makeKeyAndOrderFront(nil)
     }
 
-    func play(_ item: MediaItem, in list: [MediaItem]) {
-        let index = list.firstIndex(of: item) ?? 0
-        engine.open(list, startAt: index)
-        withAnimation(.smooth(duration: 0.55)) { screen = .player }
-    }
-
-    func resumeCurrent() {
-        guard engine.hasMedia else { return }
-        withAnimation(.smooth(duration: 0.55)) { screen = .player }
-        engine.play()
-    }
-
-    func showLibrary() {
-        engine.pause()
-        engine.persistPosition()
-        setChromeVisible(true)
-        withAnimation(.smooth(duration: 0.55)) { screen = .library }
-    }
-
-    func presentOpenPanel(folders: Bool = false) {
+    func presentOpenPanel() {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = true
-        panel.canChooseFiles = !folders
+        panel.canChooseFiles = true
         panel.allowedContentTypes = Self.contentTypes
         panel.prompt = "Открыть"
-        panel.message = folders ? "Выберите папку — все видео в ней встанут в очередь" : "Выберите видео или папку"
         panel.begin { [weak self] response in
             guard response == .OK else { return }
             let urls = panel.urls
@@ -92,7 +69,7 @@ final class AppModel {
     }
 
     func revealCurrentInFinder() {
-        guard let url = engine.current?.url else { return }
+        guard let url = engine.url else { return }
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 

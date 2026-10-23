@@ -47,23 +47,41 @@ jobs:
         run: ./scripts/build.sh
 
       # Тестовые файлы генерируются ffmpeg только здесь, в CI. В приложение он не попадает:
-      # Lumen читает Matroska собственным кодом.
-      - name: Generate Matroska fixtures
+      # Lumen читает Matroska, DTS и PGS собственным кодом.
+      - name: Generate fixtures
         run: |
           brew install --quiet ffmpeg >/dev/null
           ./scripts/make-fixtures.sh "$RUNNER_TEMP/fixtures"
 
-      - name: Self-test demuxer on real files
+      # Настоящее воспроизведение через движок плеера: открытие, звук, перемотка,
+      # переключение дорожек, субтитры (текст и Blu-ray), шаг кадра, снимок.
+      - name: Self-test playback engine
         run: python3 scripts/selftest.py "dist/Lumen.app/Contents/MacOS/Lumen" "$RUNNER_TEMP/fixtures" "$RUNNER_TEMP/selftest"
 
-      # Настоящее воспроизведение через движок плеера (с «Исполняется», обложкой,
-      # перемоткой и цветокоррекцией) — и для MKV, и для обычного MP4.
-      - name: Self-test playback engine
+      - name: Screenshots
+        if: always()
         run: |
-          BIN="dist/Lumen.app/Contents/MacOS/Lumen"
-          "$BIN" --selftest-playback "$RUNNER_TEMP/fixtures/h264_aac_ac3_srt.mkv"
-          "$BIN" --selftest-playback "$RUNNER_TEMP/selftest/h264_aac_ac3_srt.mkv.out/media.mp4"
-          "$BIN" --selftest-playback "$RUNNER_TEMP/fixtures/hevc10_hdr_eac3.mkv"
+          OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
+          FX="$RUNNER_TEMP/fixtures"
+          shot() {
+            dist/Lumen.app/Contents/MacOS/Lumen "${@:2}" &
+            PID=$!; sleep 7
+            screencapture -x "$OUT/$1.png" || true
+            kill $PID 2>/dev/null || true; sleep 2
+          }
+          shot empty --demo-island=0.5,1
+          shot pgs --demo-open="$FX/h264_pgs.mkv" --demo-seek=1.6 --demo-subtitle=1 --demo-island=0.5,1
+          shot tracks --demo-open="$FX/h264_aac_dts.mkv" --demo-seek=3 --demo-panel=tracks --demo-island=0.5,1
+          shot island-corner --demo-open="$FX/h264_aac_ac3_srt.mkv" --demo-seek=1.5 --demo-subtitle=1 --demo-island=0,0
+          shot island-right --demo-open="$FX/vp9_opus.webm" --demo-seek=2 --demo-island=1,0.5
+          shot mp4 --demo-open="$FX/h264_aac_text.mp4" --demo-seek=1.5 --demo-subtitle=1 --demo-island=0.5,1
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Lumen-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
 
       - uses: actions/upload-artifact@v4
         with:

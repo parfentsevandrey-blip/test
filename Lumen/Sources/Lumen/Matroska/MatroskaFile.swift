@@ -66,8 +66,8 @@ nonisolated struct MKVChapter: Sendable {
     var end: Double?
 }
 
-/// Ссылка на блок внутри файла. Сами кадры не копируются до момента записи.
-nonisolated struct MKVBlockRef {
+/// Ссылка на блок внутри файла. Сами кадры не копируются, пока не понадобятся.
+nonisolated struct MKVBlockRef: Sendable {
     var track: UInt32
     var flags: UInt8
     var isKey: Bool
@@ -82,7 +82,16 @@ nonisolated struct MKVBlockRef {
     var lacing: UInt8 { (flags >> 1) & 0x03 }
 }
 
-/// Разобранный файл Matroska / WebM: дорожки, главы и полный индекс блоков.
+/// Точка индекса Cues: в этот момент у дорожки ключевой кадр, кластер начинается с `clusterOffset`.
+nonisolated struct MKVCuePoint: Sendable {
+    var time: Int64
+    var track: UInt64
+    var clusterOffset: Int
+}
+
+/// Файл Matroska / WebM: заголовок, дорожки, главы и индекс перемотки. Кадры читаются потоком,
+/// с любого места (`MKVBlockReader`) — файл не индексируется целиком и не копируется, поэтому даже
+/// 80-гигабайтный ремукс открывается мгновенно.
 nonisolated final class MatroskaFile: @unchecked Sendable {
     let file: MappedFile
     private(set) var docType = "matroska"
@@ -91,19 +100,22 @@ nonisolated final class MatroskaFile: @unchecked Sendable {
     private(set) var title: String?
     private(set) var tracks: [MKVTrack] = []
     private(set) var chapters: [MKVChapter] = []
-    private(set) var blocks: [MKVBlockRef] = []
+    private(set) var cues: [MKVCuePoint] = []
+    /// Начало данных сегмента (от него считаются позиции в SeekHead и Cues) и первого кластера.
+    private(set) var segmentStart = 0
+    private(set) var segmentEnd = 0
+    private(set) var firstCluster: Int?
 
-    /// - Parameter progress: доля прочитанного файла при индексации (0…1).
-    init(url: URL, progress: ((Double) -> Void)? = nil) throws {
+    init(url: URL) throws {
         file = try MappedFile(url: url)
-        try parse(progress: progress)
+        try parse()
     }
 
     func track(number: UInt64) -> MKVTrack? { tracks.first { $0.number == number } }
 
-    // MARK: - Разбор
+    // MARK: - Разбор заголовка
 
-    private func parse(progress: ((Double) -> Void)?) throws {
+    private func parse() throws {
         var cursor = EBMLCursor(file: file)
         guard let header = cursor.nextElement(), header.id == MKV.ebmlHeader else {
             throw MatroskaError("Это не файл Matroska/WebM")
@@ -123,28 +135,89 @@ nonisolated final class MatroskaFile: @unchecked Sendable {
             cursor.offset = e.dataEnd
         }
         guard let segment else { throw MatroskaError("В файле нет сегмента Matroska") }
+        segmentStart = segment.dataStart
+        segmentEnd = segment.dataEnd
 
+        // Элементы до первого кластера читаем подряд; то, что лежит после кластеров (обычно Cues,
+        // иногда Chapters), находим по таблице SeekHead, не проходя файл.
+        var seekTargets: [UInt32: Int] = [:]
+        var seen = Set<UInt32>()
         var seg = cursor.children(of: segment)
-        var lastReport = 0
         while let e = seg.nextElement() {
-            switch e.id {
-            case MKV.info: parseInfo(e)
-            case MKV.tracks: parseTracks(e)
-            case MKV.chapters: parseChapters(e)
-            case MKV.cluster:
-                let end = indexCluster(e)
-                seg.offset = end
-                if let progress, end - lastReport > 32 << 20 {
-                    lastReport = end
-                    progress(Double(end) / Double(file.size))
-                }
-                continue
-            default:
-                if e.unknownSize { return } // неизвестный элемент без размера — дальше не пройти
-            }
+            if e.id == MKV.cluster { firstCluster = e.start; break }
+            parseTopLevel(e, seekTargets: &seekTargets)
+            seen.insert(e.id)
+            if e.unknownSize { break }
             seg.offset = e.dataEnd
         }
+        for id in [MKV.tracks, MKV.info, MKV.chapters, MKV.cues] where !seen.contains(id) {
+            guard let position = seekTargets[id], position < file.size else { continue }
+            var c = EBMLCursor(file: file, offset: position, limit: segmentEnd)
+            if let e = c.nextElement(), e.id == id {
+                var ignored: [UInt32: Int] = [:]
+                parseTopLevel(e, seekTargets: &ignored)
+            }
+        }
         if tracks.isEmpty { throw MatroskaError("В файле нет дорожек") }
+        cues.sort { $0.time < $1.time }
+    }
+
+    private func parseTopLevel(_ e: EBMLElement, seekTargets: inout [UInt32: Int]) {
+        switch e.id {
+        case MKV.seekHead: parseSeekHead(e, into: &seekTargets)
+        case MKV.info: parseInfo(e)
+        case MKV.tracks: if tracks.isEmpty { parseTracks(e) }
+        case MKV.chapters: parseChapters(e)
+        case MKV.cues: if cues.isEmpty { parseCues(e) }
+        default: break
+        }
+    }
+
+    private func parseSeekHead(_ element: EBMLElement, into targets: inout [UInt32: Int]) {
+        var c = EBMLCursor(file: file).children(of: element)
+        while let seek = c.nextElement() {
+            defer { c.offset = seek.dataEnd }
+            guard seek.id == MKV.seek else { continue }
+            var id: UInt32 = 0
+            var position: UInt64?
+            var s = c.children(of: seek)
+            while let x = s.nextElement() {
+                if x.id == MKV.seekID { id = UInt32(truncatingIfNeeded: s.uint(x)) }
+                if x.id == MKV.seekPosition { position = s.uint(x) }
+                s.offset = x.dataEnd
+            }
+            if let position, id != 0, targets[id] == nil { targets[id] = segmentStart + Int(clamping: position) }
+        }
+    }
+
+    private func parseCues(_ element: EBMLElement) {
+        var c = EBMLCursor(file: file).children(of: element)
+        let scale = Int64(timecodeScale)
+        while let point = c.nextElement() {
+            defer { c.offset = point.dataEnd }
+            guard point.id == MKV.cuePoint else { continue }
+            var time: Int64 = 0
+            var p = c.children(of: point)
+            while let x = p.nextElement() {
+                switch x.id {
+                case MKV.cueTime: time = Int64(p.uint(x)) * scale
+                case MKV.cueTrackPositions:
+                    var track: UInt64 = 0
+                    var cluster: UInt64?
+                    var t = p.children(of: x)
+                    while let y = t.nextElement() {
+                        if y.id == MKV.cueTrack { track = t.uint(y) }
+                        if y.id == MKV.cueClusterPosition { cluster = t.uint(y) }
+                        t.offset = y.dataEnd
+                    }
+                    if let cluster {
+                        cues.append(MKVCuePoint(time: time, track: track, clusterOffset: segmentStart + Int(clamping: cluster)))
+                    }
+                default: break
+                }
+                p.offset = x.dataEnd
+            }
+        }
     }
 
     private func parseInfo(_ element: EBMLElement) {
@@ -303,50 +376,22 @@ nonisolated final class MatroskaFile: @unchecked Sendable {
         chapters.sort { $0.start < $1.start }
     }
 
-    /// Индексирует блоки кластера и возвращает смещение его конца.
-    private func indexCluster(_ cluster: EBMLElement) -> Int {
-        var c = EBMLCursor(file: file).children(of: cluster)
-        var clusterTime: Int64 = 0
-        let scale = Int64(timecodeScale)
-        while true {
-            let before = c.offset
-            guard let e = c.nextElement() else { return c.limit }
-            if cluster.unknownSize, MKV.topLevel.contains(e.id) { return before }
-            switch e.id {
-            case MKV.clusterTimecode:
-                clusterTime = Int64(c.uint(e))
-            case MKV.simpleBlock:
-                if var ref = blockRef(start: e.dataStart, end: e.dataEnd, clusterTime: clusterTime, scale: scale) {
-                    ref.isKey = ref.flags & 0x80 != 0
-                    blocks.append(ref)
-                }
-            case MKV.blockGroup:
-                var g = c.children(of: e)
-                var ref: MKVBlockRef?
-                var hasReference = false
-                var duration: Int64?
-                while let x = g.nextElement() {
-                    switch x.id {
-                    case MKV.block: ref = blockRef(start: x.dataStart, end: x.dataEnd, clusterTime: clusterTime, scale: scale)
-                    case MKV.referenceBlock: hasReference = true
-                    case MKV.blockDuration: duration = Int64(g.uint(x)) * scale
-                    default: break
-                    }
-                    g.offset = x.dataEnd
-                }
-                if var ref {
-                    ref.isKey = !hasReference
-                    ref.duration = duration
-                    blocks.append(ref)
-                }
-            default:
-                if e.unknownSize { return c.limit }
-            }
-            c.offset = e.dataEnd
+    // MARK: - Перемотка
+
+    /// Кластер, с которого начинать чтение, чтобы получить ключевой кадр не позже `time` (нс).
+    func clusterOffset(before time: Int64, track: UInt64?) -> Int? {
+        let points = track.map { t in cues.filter { $0.track == t } } ?? cues
+        let list = points.isEmpty ? cues : points
+        guard !list.isEmpty else { return nil }
+        var lo = 0, hi = list.count - 1, best = 0
+        while lo <= hi {
+            let mid = (lo + hi) / 2
+            if list[mid].time <= time { best = mid; lo = mid + 1 } else { hi = mid - 1 }
         }
+        return list[best].clusterOffset
     }
 
-    private func blockRef(start: Int, end: Int, clusterTime: Int64, scale: Int64) -> MKVBlockRef? {
+    func blockRef(start: Int, end: Int, clusterTime: Int64, scale: Int64) -> MKVBlockRef? {
         var c = EBMLCursor(file: file, offset: start, limit: end)
         guard let track = c.readVInt(), c.offset + 3 <= end else { return nil }
         let rel = Int16(bitPattern: UInt16(file.byte(c.offset)) << 8 | UInt16(file.byte(c.offset + 1)))

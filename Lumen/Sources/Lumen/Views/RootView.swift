@@ -6,32 +6,55 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            switch model.screen {
-            case .library:
-                LibraryView()
-                    .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 0.985)),
-                                            removal: .opacity.combined(with: .scale(scale: 1.015))))
-            case .player:
+            if model.engine.hasMedia {
                 PlayerView()
-                    .transition(.asymmetric(insertion: .opacity.combined(with: .scale(scale: 1.03)),
-                                            removal: .opacity))
+                    .transition(.opacity)
+            } else {
+                EmptyStage()
+                    .transition(.opacity)
             }
             if dropTargeted {
                 DropOverlay()
                     .transition(.opacity)
             }
         }
-        .frame(minWidth: 760, minHeight: 480)
+        .frame(minWidth: 640, minHeight: 400)
         .background(Color.black)
         .background(WindowAccessor { model.attach(window: $0) })
         .preferredColorScheme(.dark)
         .tint(Color(red: 0.45, green: 0.62, blue: 1))
+        .animation(.smooth(duration: 0.4), value: model.engine.hasMedia)
         .dropDestination(for: URL.self) { urls, _ in
             model.open(urls)
             return true
         } isTargeted: { targeted in
             withAnimation(.smooth(duration: 0.25)) { dropTargeted = targeted }
         }
+    }
+}
+
+/// Пустое окно: бросьте файл — и смотрите. Ничего больше.
+struct EmptyStage: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        VStack(spacing: 18) {
+            Image(systemName: "play.rectangle.on.rectangle")
+                .font(.system(size: 46, weight: .light))
+                .foregroundStyle(.secondary)
+            Text("Перетащите видео в окно")
+                .font(.system(size: 18, weight: .semibold, design: .rounded))
+            Button("Открыть…") { model.presentOpenPanel() }
+                .buttonStyle(.glass)
+                .controlSize(.large)
+                .keyboardShortcut("o")
+            Text("MKV, MP4, MOV, WebM и звук · ⌘O")
+                .font(.system(size: 12))
+                .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2) { model.presentOpenPanel() }
     }
 }
 
@@ -42,21 +65,18 @@ struct DropOverlay: View {
     var body: some View {
         ZStack {
             Color.black.opacity(0.45)
-            VStack(spacing: 16) {
+            VStack(spacing: 14) {
                 Image(systemName: "arrow.down.circle.fill")
-                    .font(.system(size: 54, weight: .semibold))
+                    .font(.system(size: 50, weight: .semibold))
                     .symbolRenderingMode(.hierarchical)
                     .symbolEffect(.bounce.up.byLayer, options: .repeat(.continuous))
                 Text("Отпустите, чтобы смотреть")
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                Text("Файлы и папки целиком — папка встанет в очередь")
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
             }
-            .padding(46)
-            .glassEffect(.regular.tint(.accentColor.opacity(0.2)), in: .rect(cornerRadius: 36))
+            .padding(42)
+            .glassEffect(.regular.tint(.accentColor.opacity(0.2)), in: .rect(cornerRadius: 34))
             .overlay {
-                RoundedRectangle(cornerRadius: 36, style: .continuous)
+                RoundedRectangle(cornerRadius: 34, style: .continuous)
                     .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [10, 8], dashPhase: phase))
                     .foregroundStyle(.white.opacity(0.5))
             }

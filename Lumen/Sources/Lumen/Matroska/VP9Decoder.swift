@@ -2,11 +2,10 @@ import AVFoundation
 import CoreMedia
 import VideoToolbox
 
-/// VP9 (типичный WebM с YouTube) AVPlayer не открывает. Декодируем его
-/// системным декодером VideoToolbox и сразу кодируем аппаратным HEVC (медиадвижок M4 Pro).
-nonisolated final class VP9Transcoder {
-    let outputHint: CMFormatDescription
-    let encoderSettings: [String: Any]
+/// VP9 (типичный WebM с YouTube) системный слой видео не принимает в сжатом виде. Декодируем его
+/// аппаратным декодером VideoToolbox и показываем готовые кадры — без перекодирования и без ожидания.
+nonisolated final class VP9Decoder {
+    let format: CMVideoFormatDescription
     private let session: VTDecompressionSession
     private let collector = FrameCollector()
 
@@ -15,69 +14,43 @@ nonisolated final class VP9Transcoder {
         let header = firstFrame.flatMap(VP9Header.init(frame:)) ?? VP9Header(profile: 0, bitDepth: 8)
         var ext = FormatFactory.colorExtensions(track.colour)
         ext[kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms] =
-            ["vpcC": VP9Transcoder.vpcC(header: header, colour: track.colour)] as CFDictionary
+            ["vpcC": VP9Decoder.vpcC(header: header, colour: track.colour)] as CFDictionary
         var fd: CMVideoFormatDescription?
         let status = CMVideoFormatDescriptionCreate(
             allocator: kCFAllocatorDefault, codecType: kCMVideoCodecType_VP9,
             width: Int32(track.pixelWidth), height: Int32(track.pixelHeight),
             extensions: ext as CFDictionary, formatDescriptionOut: &fd)
         guard status == noErr, let fd else { throw MatroskaError("VP9: не удалось описать формат") }
-
         let tenBit = header.bitDepth > 8
-        let pixelFormat = tenBit ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange : kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange
         let attributes: [CFString: Any] = [
-            kCVPixelBufferPixelFormatTypeKey: pixelFormat,
+            kCVPixelBufferPixelFormatTypeKey: tenBit ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange : kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
             kCVPixelBufferIOSurfacePropertiesKey: [:] as CFDictionary,
         ]
         var session: VTDecompressionSession?
         let spec: [CFString: Any] = [kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder: true]
         let created = VTDecompressionSessionCreate(
-            allocator: kCFAllocatorDefault, formatDescription: fd,
-            decoderSpecification: spec as CFDictionary,
-            imageBufferAttributes: attributes as CFDictionary,
-            outputCallback: nil, decompressionSessionOut: &session)
-        guard created == noErr, let session else {
-            throw MatroskaError("Декодер VP9 недоступен на этом Mac (\(created))")
-        }
+            allocator: kCFAllocatorDefault, formatDescription: fd, decoderSpecification: spec as CFDictionary,
+            imageBufferAttributes: attributes as CFDictionary, outputCallback: nil, decompressionSessionOut: &session)
+        guard created == noErr, let session else { throw MatroskaError("Декодер VP9 недоступен на этом Mac (\(created))") }
         self.session = session
-        outputHint = fd
-
-        let width = track.pixelWidth
-        let height = track.pixelHeight
-        var compression: [String: Any] = [
-            AVVideoQualityKey: 0.72,
-            AVVideoExpectedSourceFrameRateKey: 60,
-            AVVideoAllowFrameReorderingKey: true,
-        ]
-        if tenBit { compression[AVVideoProfileLevelKey] = kVTProfileLevel_HEVC_Main10_AutoLevel as String }
-        encoderSettings = [
-            AVVideoCodecKey: AVVideoCodecType.hevc,
-            AVVideoWidthKey: width,
-            AVVideoHeightKey: height,
-            AVVideoCompressionPropertiesKey: compression,
-        ]
+        format = fd
     }
 
     deinit { VTDecompressionSessionInvalidate(session) }
 
-    /// Декодирует кадр; возвращает готовые к записи сэмплы с пиксельными буферами.
-    func decode(_ buffer: CMBlockBuffer, timing: CMSampleTimingInfo, isKey: Bool) throws -> [CMSampleBuffer] {
-        var timing = timing
-        let sample = try SampleFactory.sample(buffer, format: outputHint, timing: &timing)
+    /// Декодирует кадр; возвращает готовые к показу сэмплы (невидимые кадры VP9 картинки не дают).
+    func decode(_ sample: CMSampleBuffer) -> [CMSampleBuffer] {
         let collector = self.collector
-        let status = VTDecompressionSessionDecodeFrame(session, sampleBuffer: sample, flags: [], infoFlagsOut: nil) { status, _, image, pts, duration in
+        _ = VTDecompressionSessionDecodeFrame(session, sampleBuffer: sample, flags: [], infoFlagsOut: nil) { status, _, image, pts, duration in
             guard status == noErr, let image else { return }
             collector.add(image: image, pts: pts, duration: duration)
         }
-        // Невидимые кадры VP9 (altref) и мелкие сбои пропускаем, не роняя всю конвертацию.
-        if status != noErr && status != kVTVideoDecoderBadDataErr { throw MatroskaError("Ошибка декодирования VP9 (\(status))") }
         return collector.drain()
     }
 
-    func flush() throws -> [CMSampleBuffer] {
-        VTDecompressionSessionFinishDelayedFrames(session)
+    func reset() {
         VTDecompressionSessionWaitForAsynchronousFrames(session)
-        return collector.drain()
+        _ = collector.drain()
     }
 
     /// Конфигурация VP Codec (атом vpcC, версия 1).

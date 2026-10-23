@@ -66,64 +66,6 @@ struct GlassChip: View {
     }
 }
 
-/// Кольцо прогресса с градиентом и свечением.
-struct ProgressRing: View {
-    var progress: Double?
-    var lineWidth: CGFloat = 7
-    var colors: [Color] = [.cyan, .blue, .purple, .pink, .cyan]
-
-    @State private var spin = false
-
-    var body: some View {
-        ZStack {
-            Circle().stroke(.white.opacity(0.1), lineWidth: lineWidth)
-            Circle()
-                .trim(from: 0, to: progress.map { max(0.02, $0) } ?? 0.28)
-                .stroke(AngularGradient(colors: colors, center: .center),
-                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .rotationEffect(.degrees(progress == nil && spin ? 360 : 0))
-                .shadow(color: .cyan.opacity(0.6), radius: 10)
-                .animation(.smooth(duration: 0.4), value: progress)
-        }
-        .onAppear {
-            withAnimation(.linear(duration: 1.1).repeatForever(autoreverses: false)) { spin = true }
-        }
-    }
-}
-
-/// Название с переливом — медленный блик проходит по градиентному тексту.
-struct ShimmerTitle: View {
-    let text: String
-    var size: CGFloat = 46
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: reduceMotion)) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-            let phase = CGFloat((t / 4).truncatingRemainder(dividingBy: 1))
-            Text(text)
-                .font(.system(size: size, weight: .heavy, design: .rounded))
-                .foregroundStyle(
-                    LinearGradient(colors: [.white, Color(red: 0.75, green: 0.85, blue: 1), Color(red: 0.95, green: 0.75, blue: 1)],
-                                   startPoint: .topLeading, endPoint: .bottomTrailing)
-                )
-                .overlay {
-                    LinearGradient(stops: [
-                        .init(color: .clear, location: phase - 0.15),
-                        .init(color: .white.opacity(0.9), location: phase),
-                        .init(color: .clear, location: phase + 0.15),
-                    ], startPoint: .leading, endPoint: .trailing)
-                    .blendMode(.plusLighter)
-                    .mask {
-                        Text(text).font(.system(size: size, weight: .heavy, design: .rounded))
-                    }
-                }
-        }
-    }
-}
-
 /// Даёт доступ к NSWindow, в котором живёт SwiftUI-иерархия.
 struct WindowAccessor: NSViewRepresentable {
     let onWindow: (NSWindow) -> Void
@@ -142,13 +84,6 @@ struct WindowAccessor: NSViewRepresentable {
             super.viewDidMoveToWindow()
             if let window { onWindow?(window) }
         }
-    }
-}
-
-extension View {
-    /// Стеклянная панель-карточка с концентрическими скруглениями.
-    func glassPanel(cornerRadius: CGFloat = 26, tint: Color? = nil) -> some View {
-        glassEffect(.regular.tint(tint), in: .rect(cornerRadius: cornerRadius))
     }
 }
 

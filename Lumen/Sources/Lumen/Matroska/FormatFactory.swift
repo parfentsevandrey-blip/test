@@ -149,6 +149,39 @@ nonisolated enum FormatFactory {
         }
     }
 
+    /// Звук, который декодирует системный AudioToolbox, но не принимает рендерер напрямую.
+    static func decodable(_ t: MKVTrack) -> Audio? {
+        let rate = t.samplingFrequency > 0 ? t.samplingFrequency : 48000
+        let channels = max(1, t.channels)
+        switch t.codecID {
+        case "A_FLAC":
+            // В Matroska — «fLaC» и блоки метаданных; системному декодеру нужен атом dfLa: версия, флаги, те же блоки.
+            guard let config = t.codecPrivate, config.count > 8 else { return nil }
+            var cookie = Data([0, 0, 0, 0])
+            cookie.append(config.dropFirst(4))
+            let depth = t.bitDepth ?? 16
+            let flags: UInt32 = depth <= 16 ? 1 : depth <= 20 ? 2 : depth <= 24 ? 3 : 4
+            var asbd = AudioStreamBasicDescription(
+                mSampleRate: rate, mFormatID: kAudioFormatFLAC, mFormatFlags: flags, mBytesPerPacket: 0,
+                mFramesPerPacket: 0, mBytesPerFrame: 0, mChannelsPerFrame: UInt32(channels), mBitsPerChannel: 0, mReserved: 0)
+            return make(&asbd, cookie: cookie).map { Audio(format: $0, framesPerPacket: 4608, sampleRate: rate) }
+        case "A_OPUS":
+            var asbd = AudioStreamBasicDescription(
+                mSampleRate: 48000, mFormatID: kAudioFormatOpus, mFormatFlags: 0, mBytesPerPacket: 0,
+                mFramesPerPacket: 960, mBytesPerFrame: 0, mChannelsPerFrame: UInt32(min(channels, 8)), mBitsPerChannel: 0, mReserved: 0)
+            // Для многоканального Opus декодеру нужна таблица каналов из заголовка OpusHead.
+            return make(&asbd, cookie: channels > 2 ? t.codecPrivate : nil).map { Audio(format: $0, framesPerPacket: 5760, sampleRate: 48000) }
+        case "A_ALAC":
+            guard let config = t.codecPrivate, !config.isEmpty else { return nil }
+            var asbd = AudioStreamBasicDescription(
+                mSampleRate: rate, mFormatID: kAudioFormatAppleLossless, mFormatFlags: 0, mBytesPerPacket: 0,
+                mFramesPerPacket: 4096, mBytesPerFrame: 0, mChannelsPerFrame: UInt32(channels), mBitsPerChannel: 0, mReserved: 0)
+            return make(&asbd, cookie: config).map { Audio(format: $0, framesPerPacket: 4096, sampleRate: rate) }
+        default:
+            return nil
+        }
+    }
+
     private static func eac3(_ t: MKVTrack, firstFrame: Data?) -> Audio? {
         guard let frame = firstFrame, let h = EAC3Config.header(frame) else {
             return simple(kAudioFormatEnhancedAC3, rate: t.samplingFrequency, channels: t.channels, frames: 1536)
@@ -248,5 +281,80 @@ nonisolated enum FormatFactory {
         es.append(descriptor(0x04, decoderConfig))
         es.append(descriptor(0x06, Data([0x02])))
         return descriptor(0x03, es)
+    }
+}
+
+/// Бокс dec3 (ETSI TS 102 366, приложение F) из заголовка первого кадра E-AC-3.
+/// Без него QuickTime/MP4 не видит дорожку Dolby Digital Plus.
+nonisolated enum EAC3Config {
+    struct Header {
+        var fscod: UInt32
+        var bsid: UInt32
+        var acmod: UInt32
+        var lfeon: UInt32
+        var frameBytes: Int
+        var blocks: Int
+        var sampleRate: Double
+    }
+
+    static func header(_ frame: Data) -> Header? {
+        guard frame.count >= 6, frame[frame.startIndex] == 0x0B, frame[frame.startIndex + 1] == 0x77 else { return nil }
+        var r = BitReader(data: frame)
+        _ = r.read(16)            // syncword
+        _ = r.read(2)             // strmtyp
+        _ = r.read(3)             // substreamid
+        let frmsiz = r.read(11)
+        let fscod = r.read(2)
+        var blocks = 6
+        var rate: Double
+        if fscod == 3 {
+            let fscod2 = r.read(2)
+            rate = [24000, 22050, 16000, 0][Int(fscod2)]
+        } else {
+            blocks = [1, 2, 3, 6][Int(r.read(2))]
+            rate = [48000, 44100, 32000, 0][Int(fscod)]
+        }
+        let acmod = r.read(3)
+        let lfeon = r.read(1)
+        let bsid = r.read(5)
+        guard rate > 0 else { return nil }
+        return Header(fscod: fscod == 3 ? 3 : fscod, bsid: bsid, acmod: acmod, lfeon: lfeon,
+                      frameBytes: (Int(frmsiz) + 1) * 2, blocks: blocks, sampleRate: rate)
+    }
+
+    static func dec3(_ h: Header) -> Data {
+        let kbps = UInt32(Double(h.frameBytes * 8) * h.sampleRate / Double(h.blocks * 256) / 1000)
+        var w = BitWriter()
+        w.write(min(kbps, 8191), 13)  // data_rate
+        w.write(0, 3)                 // num_ind_sub (= 1 поток)
+        w.write(h.fscod, 2)
+        w.write(h.bsid, 5)
+        w.write(0, 1)                 // reserved
+        w.write(0, 1)                 // asvc
+        w.write(0, 3)                 // bsmod
+        w.write(h.acmod, 3)
+        w.write(h.lfeon, 1)
+        w.write(0, 3)                 // reserved
+        w.write(0, 4)                 // num_dep_sub
+        w.write(0, 1)                 // reserved
+        return w.data
+    }
+}
+
+nonisolated struct BitWriter {
+    private(set) var data = Data()
+    private var current: UInt8 = 0
+    private var used = 0
+
+    mutating func write(_ value: UInt32, _ bits: Int) {
+        for i in stride(from: bits - 1, through: 0, by: -1) {
+            current = (current << 1) | UInt8((value >> UInt32(i)) & 1)
+            used += 1
+            if used == 8 {
+                data.append(current)
+                current = 0
+                used = 0
+            }
+        }
     }
 }

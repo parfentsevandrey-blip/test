@@ -13,7 +13,9 @@ nonisolated enum Prefs {
     static let autoSubtitles = "autoSubtitles"
     static let skipInterval = "skipInterval"
     static let volume = "volume"
-    static let skimmingPreviews = "skimmingPreviews"
+    /// Положение панели управления: доли свободного места по горизонтали и вертикали.
+    static let islandX = "islandX"
+    static let islandY = "islandY"
 
     static func registerDefaults() {
         UserDefaults.standard.register(defaults: [
@@ -22,13 +24,14 @@ nonisolated enum Prefs {
             fitWindowToVideo: true,
             ambientEnabled: true,
             ambientIntensity: 0.85,
-            cinemaStage: true,
+            cinemaStage: false,
             subtitleScale: 1.0,
-            subtitleGlass: true,
+            subtitleGlass: false,
             autoSubtitles: false,
             skipInterval: 10.0,
             volume: 1.0,
-            skimmingPreviews: true,
+            islandX: 0.5,
+            islandY: 1.0,
         ])
     }
 

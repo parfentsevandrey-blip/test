@@ -27,7 +27,7 @@ struct SubtitleOverlay: View {
     let lift: CGFloat
 
     @AppStorage(Prefs.subtitleScale) private var scale = 1.0
-    @AppStorage(Prefs.subtitleGlass) private var glass = true
+    @AppStorage(Prefs.subtitleGlass) private var glass = false
 
     var body: some View {
         GeometryReader { geo in
@@ -40,6 +40,7 @@ struct SubtitleOverlay: View {
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(glass ? 0.35 : 0.9), radius: glass ? 2 : 3, y: 1)
+                        .shadow(color: .black.opacity(glass ? 0 : 0.8), radius: 1)
                         .padding(.horizontal, glass ? 18 : 0)
                         .padding(.vertical, glass ? 9 : 0)
                         .glassEffect(glass ? .regular.tint(.black.opacity(0.28)) : .identity, in: .rect(cornerRadius: 16))
@@ -90,58 +91,10 @@ struct HUDView: View {
     }
 }
 
-struct PreparingCard: View {
-    let title: String
-    let progress: Double?
-    let message: String
-    let onCancel: () -> Void
-
-    var body: some View {
-        VStack(spacing: 18) {
-            ZStack {
-                ProgressRing(progress: progress, lineWidth: 8)
-                    .frame(width: 92, height: 92)
-                if let progress {
-                    Text("\(Int(progress * 100))%")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .contentTransition(.numericText(value: progress))
-                        .animation(.smooth, value: Int(progress * 100))
-                } else {
-                    Image(systemName: "film")
-                        .font(.system(size: 24, weight: .semibold))
-                        .symbolEffect(.breathe)
-                }
-            }
-            VStack(spacing: 6) {
-                Text(title)
-                    .font(.system(size: 16, weight: .semibold))
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                Text(message)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.secondary)
-                    .contentTransition(.opacity)
-            }
-            if progress != nil {
-                Text("Копия кэшируется: следующий запуск будет мгновенным")
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(.tertiary)
-            }
-            Button("Отмена", action: onCancel)
-                .buttonStyle(.glass)
-                .controlSize(.large)
-        }
-        .padding(30)
-        .frame(width: 380)
-        .glassEffect(.regular, in: .rect(cornerRadius: 34))
-    }
-}
-
 struct FailureCard: View {
     let message: String
     let onRetry: () -> Void
-    let onLibrary: () -> Void
+    let onOpen: () -> Void
 
     var body: some View {
         VStack(spacing: 16) {
@@ -149,14 +102,14 @@ struct FailureCard: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.yellow)
                 .symbolEffect(.wiggle, options: .nonRepeating)
-            Text("Не получилось открыть видео")
+            Text("Не получилось воспроизвести")
                 .font(.system(size: 17, weight: .semibold))
             Text(message)
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             HStack(spacing: 10) {
-                Button("Библиотека", action: onLibrary).buttonStyle(.glass)
+                Button("Открыть другой…", action: onOpen).buttonStyle(.glass)
                 Button("Повторить", action: onRetry).buttonStyle(.glassProminent)
             }
             .controlSize(.large)
@@ -221,28 +174,6 @@ struct CaptureToast: View {
     }
 }
 
-struct NotesBanner: View {
-    let notes: [String]
-    let onDismiss: () -> Void
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "info.circle.fill").foregroundStyle(.yellow)
-            VStack(alignment: .leading, spacing: 3) {
-                ForEach(notes, id: \.self) { Text($0) }
-            }
-            .font(.system(size: 12, weight: .medium))
-            Button(action: onDismiss) { Image(systemName: "xmark").font(.system(size: 10, weight: .bold)) }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .frame(maxWidth: 520)
-        .glassEffect(.regular, in: .rect(cornerRadius: 18))
-    }
-}
-
 /// Для аудиофайлов: стеклянный диск с «дышащей» волной вместо пустого чёрного экрана.
 struct AudioOnlyView: View {
     let title: String
@@ -263,38 +194,24 @@ struct AudioOnlyView: View {
     }
 }
 
-/// Верхняя панель: назад в библиотеку, название с бейджами качества и боковые панели.
+/// Верхняя строка: название с бейджами качества, снимок кадра и боковые панели.
 struct PlayerTopBar: View {
     @Environment(AppModel.self) private var model
     @Binding var panel: PlayerPanel?
-    let tint: Color
-
-    @Namespace private var glass
 
     private var engine: PlayerEngine { model.engine }
 
     var body: some View {
         HStack(spacing: 12) {
-            Button {
-                model.showLibrary()
-            } label: {
-                Label("Библиотека", systemImage: "chevron.backward")
-                    .font(.system(size: 13, weight: .semibold))
-            }
-            .buttonStyle(.glass)
-            .controlSize(.large)
-            .help("Библиотека (⌘L)")
-
             HStack(spacing: 8) {
                 Text(engine.displayTitle)
-                    .font(.system(size: 13.5, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .lineLimit(1)
                 if let resolution = engine.info.resolutionLabel { Badge(text: resolution) }
                 if let hdr = engine.info.dynamicRange { Badge(text: hdr, glow: true) }
-                if let codec = engine.info.videoCodec { Badge(text: codec, subtle: true) }
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.vertical, 7)
             .glassEffect(.regular, in: .capsule)
 
             Spacer(minLength: 12)
@@ -320,7 +237,6 @@ struct PlayerTopBar: View {
                         }
                     }
                 }
-                .controlSize(.large)
                 .buttonBorderShape(.circle)
             }
         }

@@ -162,6 +162,9 @@ nonisolated enum MKV {
     static let segment: UInt32 = 0x18538067
 
     static let seekHead: UInt32 = 0x114D9B74
+    static let seek: UInt32 = 0x4DBB
+    static let seekID: UInt32 = 0x53AB
+    static let seekPosition: UInt32 = 0x53AC
     static let info: UInt32 = 0x1549A966
     static let timecodeScale: UInt32 = 0x2AD7B1
     static let duration: UInt32 = 0x4489
@@ -215,6 +218,11 @@ nonisolated enum MKV {
     static let referenceBlock: UInt32 = 0xFB
 
     static let cues: UInt32 = 0x1C53BB6B
+    static let cuePoint: UInt32 = 0xBB
+    static let cueTime: UInt32 = 0xB3
+    static let cueTrackPositions: UInt32 = 0xB7
+    static let cueTrack: UInt32 = 0xF7
+    static let cueClusterPosition: UInt32 = 0xF1
     static let chapters: UInt32 = 0x1043A770
     static let editionEntry: UInt32 = 0x45B9
     static let chapterAtom: UInt32 = 0xB6

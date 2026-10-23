@@ -5,18 +5,6 @@ import Combine
 import Observation
 import SwiftUI
 
-nonisolated enum RepeatMode: String, CaseIterable, Sendable {
-    case off, one, all
-
-    var symbol: String {
-        switch self {
-        case .off: "repeat"
-        case .one: "repeat.1"
-        case .all: "repeat"
-        }
-    }
-}
-
 nonisolated enum VideoGravity: String, CaseIterable, Sendable {
     case fit, fill, stretch
 
@@ -67,69 +55,91 @@ enum SubtitleChoice: Hashable {
 struct SubtitleOption: Identifiable, Hashable {
     let choice: SubtitleChoice
     let title: String
+    var detail = ""
     var id: SubtitleChoice { choice }
 }
 
-/// Всё состояние воспроизведения. Живёт на главном акторе; тяжёлая работа
-/// (перепаковка, кадры, анализ) уходит в фоновые задачи.
+/// Субтитры-картинки (Blu-ray), готовые к показу поверх кадра.
+struct SubtitleBitmap: Equatable {
+    struct Piece {
+        var rect: CGRect
+        var image: CGImage
+    }
+
+    let start: Double
+    let canvas: CGSize
+    let pieces: [Piece]
+
+    static func == (a: SubtitleBitmap, b: SubtitleBitmap) -> Bool { a.start == b.start && a.canvas == b.canvas }
+
+    init?(_ pgs: PGSImage) {
+        start = pgs.start
+        canvas = CGSize(width: pgs.canvasWidth, height: pgs.canvasHeight)
+        pieces = pgs.objects.compactMap { object in
+            guard object.width > 0, object.height > 0, object.rgba.count >= object.width * object.height * 4,
+                  let provider = CGDataProvider(data: Data(object.rgba) as CFData),
+                  let image = CGImage(width: object.width, height: object.height, bitsPerComponent: 8, bitsPerPixel: 32,
+                                      bytesPerRow: object.width * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                                      provider: provider, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+            else { return nil }
+            return Piece(rect: CGRect(x: object.x, y: object.y, width: object.width, height: object.height), image: image)
+        }
+        guard canvas.width > 0, canvas.height > 0, !pieces.isEmpty else { return nil }
+    }
+}
+
+/// Состояние плеера. Само воспроизведение — в `PlaybackCore`: AVPlayer для того, что macOS открывает сама,
+/// и собственный потоковый движок для Matroska. Здесь — время, дорожки, субтитры и всё, что видит интерфейс.
 @Observable
 final class PlayerEngine {
     enum Phase: Equatable {
         case idle
-        case preparing(progress: Double?, message: String)
+        case opening
         case ready
         case failed(String)
     }
 
-    static let speeds: [Float] = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3]
+    static let speeds: [Float] = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
 
-    let player = AVPlayer()
     let ambient = AmbientSampler()
-    let previewer = ScrubPreviewer()
 
     private(set) var phase: Phase = .idle
-    private(set) var current: MediaItem?
+    private(set) var core: PlaybackCore?
+    private(set) var url: URL?
     private(set) var info = MediaInfo()
-    private(set) var notes: [String] = []
     private(set) var currentTime: Double = 0
     private(set) var duration: Double = 0
     private(set) var isPlaying = false
-    private(set) var isBuffering = false
     private(set) var rate: Float = 1
     private(set) var chapters: [ChapterMark] = []
 
     var volume: Float = 1 {
         didSet {
-            player.volume = volume
+            core?.setVolume(volume, muted: isMuted)
             UserDefaults.standard.set(Double(volume), forKey: Prefs.volume)
         }
     }
-    var isMuted = false { didSet { player.isMuted = isMuted } }
+    var isMuted = false { didSet { core?.setVolume(volume, muted: isMuted) } }
 
     // Дорожки
-    private(set) var audioOptions: [String] = []
+    private(set) var audioOptions: [AudioOption] = []
     private(set) var selectedAudio = 0
     private(set) var subtitleOptions: [SubtitleOption] = []
     private(set) var subtitleChoice: SubtitleChoice = .off
     private(set) var subtitleText: String?
-    var subtitleDelay: Double = 0 { didSet { updateExternalSubtitle() } }
+    private(set) var subtitleImage: SubtitleBitmap?
+    var subtitleDelay: Double = 0
 
     // Картинка
-    var adjustments = VideoAdjustments() { didSet { adjustmentsChanged() } }
-    var gravity: VideoGravity = .fit
+    var gravity: VideoGravity = .fit { didSet { core?.setGravity(gravity.avGravity) } }
     var zoom: CGFloat = 1
     var rotation = 0
     var mirrored = false
 
-    // Очередь
-    private(set) var queue: [MediaItem] = []
-    private(set) var queueIndex = 0
-    var repeatMode: RepeatMode = .off
-    var shuffle = false
-
-    // A-B повтор
-    private(set) var loopA: Double?
-    private(set) var loopB: Double?
+    // Несколько брошенных файлов играют по порядку.
+    private(set) var playlist: [URL] = []
+    private(set) var playlistIndex = 0
 
     // Уведомления интерфейса
     private(set) var hud: HUDMessage?
@@ -141,39 +151,21 @@ final class PlayerEngine {
     /// Вызывается, когда известен размер кадра (для подгонки окна).
     @ObservationIgnored var onVideoReady: ((CGSize) -> Void)?
 
-    @ObservationIgnored private weak var library: MediaLibrary?
-    @ObservationIgnored private let adjustmentBox = AdjustmentBox()
     @ObservationIgnored private let nowPlaying = NowPlayingBridge()
-    @ObservationIgnored private let legibleBridge = LegibleBridge()
-    @ObservationIgnored private var legibleOutput: AVPlayerItemLegibleOutput?
-    @ObservationIgnored private var audioGroup: AVMediaSelectionGroup?
-    @ObservationIgnored private var legibleGroup: AVMediaSelectionGroup?
     @ObservationIgnored private var externalSubtitles: [SubtitleTrackData] = []
-    @ObservationIgnored private var source: PlaybackSource?
     @ObservationIgnored private var loadTask: Task<Void, Never>?
+    @ObservationIgnored private var tickTask: Task<Void, Never>?
     @ObservationIgnored private var hudTask: Task<Void, Never>?
-    @ObservationIgnored private var itemObservers: Set<AnyCancellable> = []
-    @ObservationIgnored private var playerObservers: Set<AnyCancellable> = []
-    @ObservationIgnored private var timeObserver: Any?
     @ObservationIgnored private var pip: AVPictureInPictureController?
-    @ObservationIgnored private var compositionActive = false
-    @ObservationIgnored private var seekTarget: CMTime?
+    @ObservationIgnored private var pipObserver: AnyCancellable?
+    @ObservationIgnored private var seekTarget: Double?
+    @ObservationIgnored private var seekPrecise = true
     @ObservationIgnored private var seekInFlight = false
     @ObservationIgnored private var lastPersist: Double = 0
-    @ObservationIgnored private var artwork: CGImage?
 
-    init(library: MediaLibrary) {
-        self.library = library
+    init() {
         let stored = UserDefaults.standard.double(forKey: Prefs.volume)
         volume = Float(stored == 0 ? 1 : stored)
-        player.volume = volume
-        player.preventsDisplaySleepDuringVideoPlayback = true
-        player.appliesMediaSelectionCriteriaAutomatically = false
-        legibleBridge.onText = { [weak self] text in
-            guard let self, case .embedded = self.subtitleChoice else { return }
-            self.subtitleText = text
-        }
-        observePlayer()
         nowPlaying.configure(.init(
             play: { [weak self] in self?.play() },
             pause: { [weak self] in self?.pause() },
@@ -187,318 +179,266 @@ final class PlayerEngine {
 
     // MARK: - Открытие
 
-    var hasMedia: Bool { current != nil }
-    var hasNext: Bool { queueIndex + 1 < queue.count || repeatMode == .all }
-    var hasPrevious: Bool { queueIndex > 0 || currentTime > 3 }
-    var displayTitle: String { current?.title ?? "Lumen" }
+    var hasMedia: Bool { url != nil }
+    var hasPlaylist: Bool { playlist.count > 1 }
+    var hasNext: Bool { playlistIndex + 1 < playlist.count }
+    var hasPrevious: Bool { playlistIndex > 0 }
+    var displayTitle: String { url?.deletingPathExtension().lastPathComponent ?? "Lumen" }
 
-    func open(_ items: [MediaItem], startAt index: Int = 0) {
-        guard items.indices.contains(index) else { return }
-        queue = items
-        queueIndex = index
-        load(items[index])
+    /// Точное время прямо из движка — для шкалы, которая перерисовывается в такт экрану.
+    var liveTime: Double {
+        if isScrubbing || seekTarget != nil { return currentTime }
+        return core?.currentTime ?? currentTime
     }
 
-    func enqueue(_ items: [MediaItem]) {
-        let known = Set(queue.map(\.id))
-        queue += items.filter { !known.contains($0.id) }
-    }
-
-    func playQueueItem(at index: Int) {
-        guard queue.indices.contains(index) else { return }
-        queueIndex = index
-        load(queue[index])
-    }
-
-    func removeFromQueue(at offsets: IndexSet) {
-        let currentID = current?.id
-        queue.remove(atOffsets: offsets)
-        queueIndex = queue.firstIndex { $0.id == currentID } ?? 0
-    }
-
-    func moveInQueue(from source: IndexSet, to destination: Int) {
-        let currentID = current?.id
-        queue.move(fromOffsets: source, toOffset: destination)
-        queueIndex = queue.firstIndex { $0.id == currentID } ?? 0
+    func open(_ urls: [URL]) {
+        guard let first = urls.first else { return }
+        playlist = urls
+        playlistIndex = 0
+        load(first)
     }
 
     func next() {
-        guard !queue.isEmpty else { return }
-        if shuffle, queue.count > 1 {
-            var index = queueIndex
-            while index == queueIndex { index = Int.random(in: 0..<queue.count) }
-            playQueueItem(at: index)
-        } else if queueIndex + 1 < queue.count {
-            playQueueItem(at: queueIndex + 1)
-        } else if repeatMode == .all {
-            playQueueItem(at: 0)
-        }
+        guard hasNext else { return }
+        playlistIndex += 1
+        load(playlist[playlistIndex])
     }
 
     func previous() {
-        if currentTime > 3 || queueIndex == 0 {
+        if currentTime > 3 || !hasPrevious {
             seek(to: 0)
         } else {
-            playQueueItem(at: queueIndex - 1)
+            playlistIndex -= 1
+            load(playlist[playlistIndex])
         }
     }
 
-    func stop() {
+    func close() {
         persistPosition()
         loadTask?.cancel()
-        teardownItem()
-        player.replaceCurrentItem(with: nil)
-        current = nil
+        teardown()
+        url = nil
+        playlist = []
         phase = .idle
         nowPlaying.clear()
     }
 
     func retry() {
-        if let current { load(current) }
+        if let url { load(url) }
     }
 
-    private func load(_ item: MediaItem) {
+    private func load(_ url: URL) {
         persistPosition()
         loadTask?.cancel()
-        teardownItem()
-        current = item
+        teardown()
+        self.url = url
         currentTime = 0
-        duration = item.duration
+        duration = 0
         info = MediaInfo()
-        notes = []
         chapters = []
-        loopA = nil
-        loopB = nil
         resumedFrom = nil
-        adjustmentsReset()
-        phase = .preparing(progress: nil, message: "Открываю…")
-        loadTask = Task { [weak self] in await self?.prepare(item) }
+        subtitleDelay = 0
+        zoom = 1
+        rotation = 0
+        mirrored = false
+        phase = .opening
+        loadTask = Task { [weak self] in await self?.prepare(url) }
     }
 
-    private func prepare(_ item: MediaItem) async {
+    private func prepare(_ url: URL) async {
         do {
-            let source = try await MediaResolver.resolve(item.url) { [weak self] fraction, message in
-                Task { @MainActor in
-                    guard let self, self.current?.id == item.id, case .preparing = self.phase else { return }
-                    self.phase = .preparing(progress: fraction, message: message)
-                }
+            let core: PlaybackCore
+            if MediaResolver.isMatroska(url) {
+                core = try await MatroskaCore.open(url)
+            } else {
+                core = try await AVPlayerCore.open(url)
             }
-            try Task.checkCancellation()
-            let asset = AVURLAsset(url: source.url, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
-            var info = try await AssetInspector.inspect(asset, original: item.url)
-            try Task.checkCancellation()
-            if let manifest = source.manifest {
-                info.convertedFrom = [manifest.sourceVideoCodec, manifest.sourceAudioCodecs.first].compactMap { $0 }.joined(separator: " + ")
-                if info.chapters.isEmpty { info.chapters = manifest.chapters }
+            let sidecars = SubtitleParser.sidecars(for: url)
+            let loaded = await Task.detached(priority: .userInitiated) {
+                sidecars.compactMap { try? SubtitleParser.load($0) }.filter { !$0.cues.isEmpty }
+            }.value
+            guard !Task.isCancelled, self.url == url else {
+                core.teardown()
+                return
             }
-            await start(item: item, asset: asset, source: source, info: info)
+            start(core, url: url, sidecars: loaded)
         } catch is CancellationError {
         } catch {
-            guard current?.id == item.id else { return }
+            guard self.url == url else { return }
             phase = .failed(error.localizedDescription)
         }
     }
 
-    private func start(item: MediaItem, asset: AVURLAsset, source: PlaybackSource, info: MediaInfo) async {
-        self.source = source
-        self.info = info
-        duration = info.duration
-        chapters = info.chapters
-        notes = source.manifest?.notes ?? []
-
-        let playerItem = AVPlayerItem(asset: asset)
-        playerItem.audioTimePitchAlgorithm = .spectral
-        playerItem.preferredForwardBufferDuration = 8
-
-        // Дорожки звука и встроенные субтитры
-        audioGroup = try? await asset.loadMediaSelectionGroup(for: .audible)
-        legibleGroup = try? await asset.loadMediaSelectionGroup(for: .legible)
-        guard current?.id == item.id, !Task.isCancelled else { return }
-
-        let names = source.manifest?.audioNames ?? []
-        let audible = audioGroup?.options ?? []
-        audioOptions = audible.enumerated().map { index, option in
-            names.count == audible.count ? names[index] : option.displayName
-        }
-        if let group = audioGroup, let selected = group.defaultOption ?? group.options.first {
-            playerItem.select(selected, in: group)
-            selectedAudio = group.options.firstIndex(of: selected) ?? 0
-        }
-
-        if let legibleGroup, !legibleGroup.options.isEmpty {
-            let output = AVPlayerItemLegibleOutput()
-            output.suppressesPlayerRendering = true
-            output.setDelegate(legibleBridge, queue: .main)
-            playerItem.add(output)
-            legibleOutput = output
-            if legibleGroup.allowsEmptySelection { playerItem.select(nil, in: legibleGroup) }
-        }
-
-        // Внешние субтитры: из перепаковки и файлы рядом с видео.
-        var external = source.manifest?.subtitles ?? []
-        let sidecars = SubtitleParser.sidecars(for: item.url)
-        let loaded = await Task.detached(priority: .userInitiated) {
-            sidecars.compactMap { try? SubtitleParser.load($0) }.filter { !$0.cues.isEmpty }
-        }.value
-        external += loaded
-        externalSubtitles = external
+    private func start(_ core: PlaybackCore, url: URL, sidecars: [SubtitleTrackData]) {
+        self.core = core
+        info = core.info
+        duration = core.info.duration
+        chapters = core.chapters
+        audioOptions = core.audioOptions
+        selectedAudio = core.selectedAudio
+        externalSubtitles = sidecars
         rebuildSubtitleOptions()
+        core.setVolume(volume, muted: isMuted)
+        core.setGravity(gravity.avGravity)
 
-        ambient.attach(to: playerItem)
-        player.replaceCurrentItem(with: playerItem)
-        observe(playerItem)
-        previewer.reset(url: source.url, duration: info.duration)
-        if !adjustments.isIdentity { rebuildComposition() }
+        pip = core.makePictureInPicture()
+        pipObserver = pip?.publisher(for: \.isPictureInPictureActive)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] active in self?.isPictureInPictureActive = active }
+
+        if UserDefaults.standard.bool(forKey: Prefs.autoSubtitles),
+           let first = subtitleOptions.first(where: { $0.choice != .off }) {
+            selectSubtitle(first.choice, announce: false)
+        }
 
         // Продолжение просмотра
-        let saved = library?.item(id: item.id)?.position ?? 0
-        if UserDefaults.standard.bool(forKey: Prefs.resumePlayback), saved > 15, info.duration > 0, saved < info.duration * 0.95 {
-            PlayerCallbacks.seek(player, to: CMTime(seconds: saved, preferredTimescale: 600), tolerance: .zero) { _ in }
+        var startAt = 0.0
+        let saved = ResumeStore.position(for: url)
+        if UserDefaults.standard.bool(forKey: Prefs.resumePlayback), saved > 15, duration > 0, saved < duration * 0.95 {
+            startAt = saved
             currentTime = saved
             resumedFrom = saved
             Task { [weak self] in
-                try? await Task.sleep(for: .seconds(7))
+                try? await Task.sleep(for: .seconds(6))
                 self?.resumedFrom = nil
             }
         }
 
-        if UserDefaults.standard.bool(forKey: Prefs.autoSubtitles),
-           let first = subtitleOptions.first(where: { $0.choice != .off }) {
-            selectSubtitle(first.choice)
-        }
-
-        library?.update(item.id) {
-            $0.lastPlayedAt = Date()
-            $0.duration = info.duration
-        }
-        phase = .ready
+        ambient.source = { [weak core] in core?.ambientFrame() }
         if info.hasVideo { onVideoReady?(info.displaySize) }
-        player.playImmediately(atRate: rate)
-        ambient.start()
-        captureArtwork(for: item, url: source.url)
+        seekInFlight = true
+        core.seek(to: startAt, precise: true) { [weak self, weak core] in
+            guard let self, let core, self.core === core else { return }
+            self.seekInFlight = false
+            self.phase = .ready
+            core.play(rate: self.rate)
+            self.isPlaying = true
+            self.ambient.start()
+            self.updateNowPlaying()
+        }
+        startTicking()
     }
 
-    private func teardownItem() {
-        itemObservers.removeAll()
-        if let output = legibleOutput, let item = player.currentItem { item.remove(output) }
-        legibleOutput = nil
-        audioGroup = nil
-        legibleGroup = nil
+    private func teardown() {
+        tickTask?.cancel()
+        tickTask = nil
+        core?.teardown()
+        core = nil
+        pip = nil
+        pipObserver = nil
+        isPictureInPictureActive = false
         externalSubtitles = []
         subtitleOptions = []
         subtitleChoice = .off
         subtitleText = nil
+        subtitleImage = nil
         audioOptions = []
         selectedAudio = 0
-        compositionActive = false
         seekTarget = nil
         seekInFlight = false
+        isPlaying = false
         ambient.stop()
-        ambient.detach()
-        player.pause()
+        ambient.source = nil
+        ambient.reset()
     }
 
-    // MARK: - Наблюдение
+    // MARK: - Такт
 
-    private func observePlayer() {
-        timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 10), queue: .main) { [weak self] time in
-            MainActor.assumeIsolated { self?.tick(time.seconds) }
-        }
-        player.publisher(for: \.timeControlStatus)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] status in
-                guard let self else { return }
-                let playing = status != .paused
-                if playing != self.isPlaying {
-                    self.isPlaying = playing
-                    playing ? self.ambient.start() : self.ambient.stop()
-                    self.updateNowPlaying()
-                    if !playing { self.persistPosition() }
-                }
-                self.isBuffering = status == .waitingToPlayAtSpecifiedRate
+    private func startTicking() {
+        tickTask = Task { [weak self] in
+            while !Task.isCancelled {
+                self?.tick()
+                try? await Task.sleep(for: .milliseconds(50))
             }
-            .store(in: &playerObservers)
-    }
-
-    private func observe(_ item: AVPlayerItem) {
-        item.publisher(for: \.status)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] status in
-                guard let self, status == .failed else { return }
-                self.phase = .failed(self.player.currentItem?.error?.localizedDescription ?? "Не удалось воспроизвести файл")
-            }
-            .store(in: &itemObservers)
-        NotificationCenter.default.publisher(for: AVPlayerItem.didPlayToEndTimeNotification, object: item)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.itemDidEnd() }
-            .store(in: &itemObservers)
-    }
-
-    private func tick(_ seconds: Double) {
-        guard seconds.isFinite, !isScrubbing, seekTarget == nil else { return }
-        currentTime = seconds
-        if let a = loopA, let b = loopB, seconds >= b {
-            seek(to: a)
         }
-        updateExternalSubtitle()
-        if isPlaying, abs(seconds - lastPersist) > 5 { persistPosition() }
+    }
+
+    private func tick() {
+        guard let core, phase == .ready || phase == .opening else { return }
+        if let failure = core.failure {
+            phase = .failed(failure)
+            return
+        }
+        if core.pollEnd() {
+            itemDidEnd()
+            return
+        }
+        let playing = core.isPlaying
+        if playing != isPlaying, !seekInFlight {
+            isPlaying = playing
+            playing ? ambient.start() : ambient.stop()
+            updateNowPlaying()
+            if !playing { persistPosition() }
+        }
+        guard !isScrubbing, seekTarget == nil, !seekInFlight else { return }
+        let time = core.currentTime
+        // Подписи времени обновляются четыре раза в секунду — чаще им незачем, а интерфейс не пересчитывается зря.
+        if (time * 4).rounded(.down) != (currentTime * 4).rounded(.down) { currentTime = time }
+        updateSubtitles(at: time)
+        if isPlaying, abs(time - lastPersist) > 5 { persistPosition() }
     }
 
     private func itemDidEnd() {
-        guard let current else { return }
-        library?.update(current.id) { $0.position = $0.duration }
-        if repeatMode == .one {
-            seek(to: 0)
-            play()
-        } else if UserDefaults.standard.bool(forKey: Prefs.autoplayNext), hasNext {
+        guard let url else { return }
+        ResumeStore.forget(url)
+        isPlaying = false
+        currentTime = duration
+        ambient.stop()
+        if UserDefaults.standard.bool(forKey: Prefs.autoplayNext), hasNext {
             next()
-        } else {
-            isPlaying = false
         }
     }
 
     // MARK: - Управление
 
     func play() {
-        guard player.currentItem != nil else { return }
+        guard let core, phase == .ready else { return }
         if duration > 0, currentTime >= duration - 0.3 { seek(to: 0) }
-        player.playImmediately(atRate: rate)
+        core.play(rate: rate)
+        isPlaying = true
+        ambient.start()
+        updateNowPlaying()
     }
 
-    func pause() { player.pause() }
+    func pause() {
+        core?.pause()
+        isPlaying = false
+        ambient.stop()
+        persistPosition()
+        updateNowPlaying()
+    }
 
     func togglePlay() {
+        guard phase == .ready else { return }
         let willPlay = !isPlaying
         willPlay ? play() : pause()
         flash(willPlay ? "play.fill" : "pause.fill", willPlay ? "Воспроизведение" : "Пауза")
     }
 
     func seek(to seconds: Double, precise: Bool = true) {
-        guard player.currentItem != nil else { return }
+        guard core != nil, phase == .ready else { return }
         let clamped = max(0, min(seconds, max(duration - 0.05, 0)))
         currentTime = clamped
-        seekTarget = CMTime(seconds: clamped, preferredTimescale: 600)
-        if !seekInFlight { performSeek(precise: precise) }
-        updateExternalSubtitle()
+        seekTarget = clamped
+        seekPrecise = precise
+        if !seekInFlight { performSeek() }
+        updateSubtitles(at: clamped)
     }
 
-    /// «Догоняющая» перемотка: не ставим в очередь сотню запросов при скраббинге,
-    /// а всегда переходим к последней цели после завершения текущей.
-    private func performSeek(precise: Bool) {
-        guard let target = seekTarget else { return }
+    /// «Догоняющая» перемотка: при скраббинге не копим сотню запросов,
+    /// а после завершения текущего сразу переходим к последней цели.
+    private func performSeek() {
+        guard let core, let target = seekTarget else { return }
         seekInFlight = true
-        let tolerance = precise ? CMTime.zero : CMTime(seconds: 0.4, preferredTimescale: 600)
-        PlayerCallbacks.seek(player, to: target, tolerance: tolerance) { [weak self] _ in
-            Task { @MainActor in
-                guard let self else { return }
-                if self.seekTarget == target {
-                    self.seekTarget = nil
-                    self.seekInFlight = false
-                    if !self.isPlaying { self.ambient.refresh() }
-                    self.updateNowPlaying()
-                } else {
-                    self.performSeek(precise: precise)
-                }
+        seekTarget = nil
+        core.seek(to: target, precise: seekPrecise) { [weak self, weak core] in
+            guard let self, let core, self.core === core else { return }
+            self.seekInFlight = false
+            if self.seekTarget != nil {
+                self.performSeek()
+            } else {
+                if !self.isPlaying { self.ambient.refresh() }
+                self.updateNowPlaying()
             }
         }
     }
@@ -513,12 +453,14 @@ final class PlayerEngine {
     }
 
     func stepFrame(_ count: Int) {
-        pause()
-        player.currentItem?.step(byCount: count)
+        guard let core, phase == .ready else { return }
+        isPlaying = false
+        core.step(count)
         Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(60))
-            guard let self else { return }
-            self.currentTime = self.player.currentTime().seconds
+            try? await Task.sleep(for: .milliseconds(80))
+            guard let self, let core = self.core else { return }
+            self.currentTime = core.currentTime
+            self.updateSubtitles(at: self.currentTime)
             self.ambient.refresh()
         }
         flash(count > 0 ? "forward.frame.fill" : "backward.frame.fill", count > 0 ? "Кадр вперёд" : "Кадр назад")
@@ -526,8 +468,7 @@ final class PlayerEngine {
 
     func setRate(_ value: Float) {
         rate = value
-        player.defaultRate = value
-        if isPlaying { player.rate = value }
+        core?.setRate(value)
         flash("gauge.with.dots.needle.67percent", Self.rateLabel(value))
         updateNowPlaying()
     }
@@ -539,7 +480,7 @@ final class PlayerEngine {
     }
 
     static func rateLabel(_ r: Float) -> String {
-        r == 1 ? "1×" : (r.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(r))×" : "\(String(format: "%g", r))×")
+        r.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(r))×" : "\(String(format: "%g", r))×"
     }
 
     func changeVolume(by delta: Float) {
@@ -560,68 +501,46 @@ final class PlayerEngine {
         return "speaker.wave.3.fill"
     }
 
-    // MARK: - A-B
-
-    func markLoop() {
-        if loopA == nil || loopB != nil {
-            loopA = currentTime
-            loopB = nil
-            flash("a.circle.fill", "Точка A")
-        } else if let a = loopA, currentTime > a + 0.3 {
-            loopB = currentTime
-            flash("repeat.circle.fill", "Повтор A–B")
-            seek(to: a)
-        }
-    }
-
-    func clearLoop() {
-        loopA = nil
-        loopB = nil
-        flash("xmark.circle", "Повтор выключен")
-    }
-
-    func cycleRepeat() {
-        let all = RepeatMode.allCases
-        repeatMode = all[(all.firstIndex(of: repeatMode)! + 1) % all.count]
-        flash(repeatMode.symbol, ["off": "Без повтора", "one": "Повтор файла", "all": "Повтор очереди"][repeatMode.rawValue] ?? "")
-    }
-
     // MARK: - Дорожки
 
     func selectAudio(_ index: Int) {
-        guard let group = audioGroup, group.options.indices.contains(index), let item = player.currentItem else { return }
-        item.select(group.options[index], in: group)
-        selectedAudio = index
-        flash("waveform", audioOptions[safe: index] ?? "Дорожка \(index + 1)")
+        guard let core, audioOptions.indices.contains(index), audioOptions[index].available else { return }
+        core.selectAudio(index)
+        selectedAudio = core.selectedAudio
+        info = core.info
+        flash("waveform", audioOptions[index].title)
     }
 
     func cycleAudio() {
-        guard audioOptions.count > 1 else { return }
-        selectAudio((selectedAudio + 1) % audioOptions.count)
+        let playable = audioOptions.filter(\.available).map(\.id)
+        guard playable.count > 1 else { return }
+        let position = playable.firstIndex(of: selectedAudio) ?? 0
+        selectAudio(playable[(position + 1) % playable.count])
     }
 
     private func rebuildSubtitleOptions() {
         var options = [SubtitleOption(choice: .off, title: "Выключены")]
-        for (i, option) in (legibleGroup?.options ?? []).enumerated() {
-            options.append(SubtitleOption(choice: .embedded(i), title: option.displayName))
+        for subtitle in core?.subtitles ?? [] {
+            options.append(SubtitleOption(choice: .embedded(subtitle.id), title: subtitle.title,
+                                          detail: subtitle.kind == .image ? "Blu-ray" : ""))
         }
         for (i, track) in externalSubtitles.enumerated() {
-            options.append(SubtitleOption(choice: .external(i), title: track.name))
+            options.append(SubtitleOption(choice: .external(i), title: track.name, detail: "Файл"))
         }
         subtitleOptions = options
     }
 
     func selectSubtitle(_ choice: SubtitleChoice) {
+        selectSubtitle(choice, announce: true)
+    }
+
+    private func selectSubtitle(_ choice: SubtitleChoice, announce: Bool) {
         subtitleChoice = choice
         subtitleText = nil
-        if let group = legibleGroup, let item = player.currentItem {
-            if case .embedded(let i) = choice, group.options.indices.contains(i) {
-                item.select(group.options[i], in: group)
-            } else if group.allowsEmptySelection {
-                item.select(nil, in: group)
-            }
-        }
-        updateExternalSubtitle()
+        subtitleImage = nil
+        if case .embedded(let id) = choice { core?.selectSubtitle(id) } else { core?.selectSubtitle(nil) }
+        updateSubtitles(at: currentTime)
+        guard announce else { return }
         let title = subtitleOptions.first { $0.choice == choice }?.title ?? ""
         flash(choice == .off ? "captions.bubble" : "captions.bubble.fill", choice == .off ? "Субтитры выключены" : title)
     }
@@ -645,53 +564,31 @@ final class PlayerEngine {
 
     func shiftSubtitles(by delta: Double) {
         subtitleDelay = (subtitleDelay + delta * 10).rounded() / 10
+        updateSubtitles(at: currentTime)
         flash("timer", "Субтитры \(subtitleDelay >= 0 ? "+" : "")\(String(format: "%.1f", subtitleDelay)) с")
     }
 
-    private func updateExternalSubtitle() {
-        guard case .external(let i) = subtitleChoice, externalSubtitles.indices.contains(i) else { return }
-        let text = externalSubtitles[i].text(at: currentTime - subtitleDelay)
+    private func updateSubtitles(at time: Double) {
+        let t = time - subtitleDelay
+        var text: String?
+        var image: PGSImage?
+        switch subtitleChoice {
+        case .off: break
+        case .embedded:
+            text = core?.subtitleText(at: t)
+            image = core?.subtitleImage(at: t)
+        case .external(let i):
+            if externalSubtitles.indices.contains(i) { text = externalSubtitles[i].text(at: t) }
+        }
         if text != subtitleText { subtitleText = text }
+        if let image {
+            if subtitleImage?.start != image.start { subtitleImage = SubtitleBitmap(image) }
+        } else if subtitleImage != nil {
+            subtitleImage = nil
+        }
     }
 
     // MARK: - Картинка
-
-    private func adjustmentsReset() {
-        compositionActive = false
-    }
-
-    private func adjustmentsChanged() {
-        adjustmentBox.value = adjustments
-        let needsComposition = !adjustments.isIdentity
-        if needsComposition != compositionActive {
-            rebuildComposition()
-        } else if needsComposition, !isPlaying {
-            refreshFrame()
-        }
-    }
-
-    private func rebuildComposition() {
-        guard let item = player.currentItem, info.hasVideo else { return }
-        guard !adjustments.isIdentity else {
-            item.videoComposition = nil
-            compositionActive = false
-            refreshFrame()
-            return
-        }
-        item.videoComposition = PlayerCallbacks.composition(for: item.asset, applying: adjustmentBox)
-        compositionActive = true
-        refreshFrame()
-    }
-
-    private func refreshFrame() {
-        guard !isPlaying, player.currentItem != nil else { return }
-        player.seek(to: player.currentTime(), toleranceBefore: .zero, toleranceAfter: .zero)
-    }
-
-    func applyPreset(_ preset: VideoAdjustments.Preset) {
-        withAnimation(.smooth) { adjustments = preset.value }
-        flash(preset.symbol, preset.name)
-    }
 
     func cycleGravity() {
         let all = VideoGravity.allCases
@@ -712,17 +609,6 @@ final class PlayerEngine {
         gravity = .fit
     }
 
-    // MARK: - Картинка в картинке
-
-    func attachPictureInPicture(to layer: AVPlayerLayer) {
-        guard AVPictureInPictureController.isPictureInPictureSupported() else { return }
-        pip = AVPictureInPictureController(playerLayer: layer)
-        pip?.publisher(for: \.isPictureInPictureActive)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] active in self?.isPictureInPictureActive = active }
-            .store(in: &playerObservers)
-    }
-
     func togglePictureInPicture() {
         guard let pip else {
             flash("pip", "Картинка в картинке недоступна")
@@ -734,20 +620,18 @@ final class PlayerEngine {
     // MARK: - Снимок кадра
 
     func captureFrame() {
-        guard let source, let current, info.hasVideo else { return }
-        let time = player.currentTime()
-        let box = adjustments.isIdentity ? nil : adjustmentBox
-        let stamp = TimeFormat.string(time.seconds).replacingOccurrences(of: ":", with: ".")
+        guard let core, info.hasVideo else { return }
+        let stamp = TimeFormat.string(currentTime).replacingOccurrences(of: ":", with: ".")
         let folder = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask)[0].appendingPathComponent("Lumen", isDirectory: true)
-        let url = folder.appendingPathComponent("\(current.title) — \(stamp).png")
-        let mediaURL = source.url
+        let file = folder.appendingPathComponent("\(displayTitle) — \(stamp).png")
         Task { [weak self] in
-            guard let image = await Thumbnailer.exactFrame(url: mediaURL, at: time, adjustments: box) else { return }
-            let saved = await Task.detached(priority: .userInitiated) { Thumbnailer.writePNG(image, to: url) }.value
+            guard let image = await core.snapshot() else { return }
+            let saved = await Task.detached(priority: .userInitiated) { Thumbnailer.writePNG(image, to: file) }.value
             guard let self, saved else { return }
+            let picture = NSImage(cgImage: image, size: .zero)
             NSPasteboard.general.clearContents()
-            NSPasteboard.general.writeObjects([NSImage(cgImage: image, size: .zero)])
-            withAnimation(.bouncy) { self.capture = CapturedFrame(image: NSImage(cgImage: image, size: .zero), url: url) }
+            NSPasteboard.general.writeObjects([picture])
+            withAnimation(.bouncy) { self.capture = CapturedFrame(image: picture, url: file) }
             try? await Task.sleep(for: .seconds(4))
             withAnimation(.smooth) { self.capture = nil }
         }
@@ -768,50 +652,53 @@ final class PlayerEngine {
     func dismissResume() { resumedFrom = nil }
 
     func persistPosition() {
-        guard let current, duration > 0, phase == .ready else { return }
-        let time = player.currentTime().seconds
-        guard time.isFinite else { return }
+        guard let url, let core, duration > 0, phase == .ready else { return }
+        let time = core.currentTime
         lastPersist = time
-        library?.update(current.id) {
-            $0.position = time
-            $0.duration = self.duration
-        }
+        ResumeStore.save(time, duration: duration, for: url)
     }
 
     private func updateNowPlaying() {
-        guard let current else { return }
-        nowPlaying.update(title: current.title, duration: duration, elapsed: currentTime,
-                          rate: isPlaying ? rate : 0, artwork: artwork)
-    }
-
-    private func captureArtwork(for item: MediaItem, url: URL) {
-        let grabber = FrameGrabber(url: url, maxSize: CGSize(width: 720, height: 405), tolerance: 3)
-        let at = info.duration > 0 ? min(info.duration * 0.12, 600) : 1
-        let needsThumbnail = library?.thumbnails[item.id] == nil
-        Task { [weak self] in
-            guard let image = await grabber.image(at: at), let self else { return }
-            self.artwork = image
-            if needsThumbnail { self.library?.setThumbnail(image, for: item.id) }
-            self.updateNowPlaying()
-        }
+        guard url != nil else { return }
+        nowPlaying.update(title: displayTitle, duration: duration, elapsed: liveTime,
+                          rate: isPlaying ? rate : 0, artwork: nil)
     }
 }
 
-/// Всё, что система вызывает на своих потоках (завершение перемотки, фильтр кадров
-/// композиции), создаётся здесь — вне главного актора. Иначе Swift 6 считает такие
-/// замыкания изолированными на главном акторе и аварийно останавливает процесс.
-nonisolated enum PlayerCallbacks {
-    static func seek(_ player: AVPlayer, to time: CMTime, tolerance: CMTime,
-                     completion: @escaping @Sendable (Bool) -> Void) {
-        player.seek(to: time, toleranceBefore: tolerance, toleranceAfter: tolerance, completionHandler: completion)
+/// Где остановились в каждом файле. Только позиции — без библиотеки и истории.
+nonisolated enum ResumeStore {
+    private static let key = "resumePositions"
+    private static let limit = 300
+
+    static func position(for url: URL) -> Double {
+        let all = UserDefaults.standard.dictionary(forKey: key) as? [String: [Double]] ?? [:]
+        return all[url.standardizedFileURL.path]?.first ?? 0
     }
 
-    static func composition(for asset: AVAsset, applying box: AdjustmentBox) -> AVVideoComposition {
-        AVMutableVideoComposition(asset: asset) { request in
-            let source = request.sourceImage
-            let output = box.apply(to: source.clampedToExtent()).cropped(to: source.extent)
-            request.finish(with: output, context: nil)
+    static func save(_ time: Double, duration: Double, for url: URL) {
+        guard time.isFinite else { return }
+        var all = UserDefaults.standard.dictionary(forKey: key) as? [String: [Double]] ?? [:]
+        let path = url.standardizedFileURL.path
+        if time < 15 || time > duration * 0.95 {
+            all[path] = nil
+        } else {
+            all[path] = [time, Date().timeIntervalSince1970]
         }
+        if all.count > limit {
+            let oldest = all.sorted { ($0.value.last ?? 0) < ($1.value.last ?? 0) }.prefix(all.count - limit)
+            for (k, _) in oldest { all[k] = nil }
+        }
+        UserDefaults.standard.set(all, forKey: key)
+    }
+
+    static func forget(_ url: URL) {
+        var all = UserDefaults.standard.dictionary(forKey: key) as? [String: [Double]] ?? [:]
+        all[url.standardizedFileURL.path] = nil
+        UserDefaults.standard.set(all, forKey: key)
+    }
+
+    static func clear() {
+        UserDefaults.standard.removeObject(forKey: key)
     }
 }
 

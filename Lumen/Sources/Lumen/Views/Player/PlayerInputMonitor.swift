@@ -31,7 +31,7 @@ final class PlayerInputMonitor {
     }
 
     private func handle(_ event: NSEvent) -> Bool {
-        guard let context, context.model.screen == .player else { return false }
+        guard let context, context.model.engine.hasMedia else { return false }
         if event.type == .scrollWheel { return scroll(event, context) }
 
         let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
@@ -74,14 +74,12 @@ final class PlayerInputMonitor {
         case "a": engine.cycleAudio()
         case "g": engine.shiftSubtitles(by: -0.1)
         case "h": engine.shiftSubtitles(by: 0.1)
-        case "b": engine.markLoop()
         case "p": engine.togglePictureInPicture()
         case "z": engine.cycleGravity()
         case "r": engine.rotate()
         case "n": shift ? engine.previous() : engine.next()
         case "i": context.togglePanel(.info)
-        case "e": context.togglePanel(.adjust)
-        case "q": context.togglePanel(.queue)
+        case "t": context.togglePanel(.tracks)
         case "=", "+": engine.changeVolume(by: 0.05)
         case "-": engine.changeVolume(by: -0.05)
         case "0"..."9":
@@ -121,22 +119,20 @@ final class PlayerInputMonitor {
 }
 
 enum PlayerPanel: String, CaseIterable, Identifiable {
-    case adjust, queue, info
+    case tracks, info
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .adjust: "Изображение"
-        case .queue: "Очередь"
+        case .tracks: "Звук и субтитры"
         case .info: "Инфо"
         }
     }
 
     var symbol: String {
         switch self {
-        case .adjust: "slider.horizontal.3"
-        case .queue: "list.bullet.below.rectangle"
+        case .tracks: "captions.bubble"
         case .info: "info.circle"
         }
     }

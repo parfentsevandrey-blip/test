@@ -1,14 +1,11 @@
 import AppKit
 import SwiftUI
 
-/// Точка входа: обычный запуск или самопроверка ремуксера в CI (`--selftest-remux`).
+/// Точка входа: обычный запуск или самопроверка воспроизведения в CI (`--selftest-playback файл`).
 @main
 enum Entry {
     static func main() {
         let args = CommandLine.arguments
-        if let i = args.firstIndex(of: "--selftest-remux"), args.count > i + 2 {
-            exit(SelfTest.run(input: URL(fileURLWithPath: args[i + 1]), output: URL(fileURLWithPath: args[i + 2])))
-        }
         if let i = args.firstIndex(of: "--selftest-playback"), args.count > i + 1 {
             PlaybackSelfTest.run(URL(fileURLWithPath: args[i + 1]))
         }
@@ -45,6 +42,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func attach(_ model: AppModel) {
         guard self.model == nil else { return }
         self.model = model
+        DemoUI.run(model)
         if !pending.isEmpty {
             model.open(pending)
             pending = []
@@ -55,14 +53,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let model { model.open(urls) } else { pending += urls }
     }
 
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        DemoUI.prepare()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        Task.detached(priority: .background) { MediaResolver.trimCache() }
+        Task.detached(priority: .background) { MediaResolver.removeLegacyCache() }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
     func applicationWillTerminate(_ notification: Notification) {
         model?.engine.persistPosition()
-        model?.library.saveNow()
     }
 }

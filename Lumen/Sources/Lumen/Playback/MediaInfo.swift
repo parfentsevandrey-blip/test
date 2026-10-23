@@ -16,7 +16,6 @@ nonisolated struct MediaInfo: Sendable, Equatable {
     var fileSize: Int64 = 0
     var container: String = ""
     var chapters: [ChapterMark] = []
-    var convertedFrom: String?
 
     var isHDR: Bool { dynamicRange != nil }
 
