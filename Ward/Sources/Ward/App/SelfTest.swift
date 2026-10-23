@@ -239,7 +239,9 @@ enum SelfTest {
                                ("сигналы отпечатка", Scripts.fingerprintRelay(token: "wtest")), ("учёт скрытого", Scripts.countHidden),
                                ("наблюдатель", Scripts.observer), ("проверка селекторов", Scripts.validateSelectors), ("отпечаток холста", MiniHTTP.canvasProbe),
                                ("скриптлеты", scriptlets), ("процедурная косметика", Scripts.procedural([".a:has-text(x)"]) ?? ""),
-                               ("отказ от cookie", Scripts.consent), ("SponsorBlock", Scripts.sponsorBlock), ("плашки", Scripts.annoyances)] {
+                               ("отказ от cookie", Scripts.consent), ("SponsorBlock", Scripts.sponsorBlock), ("плашки", Scripts.annoyances),
+                               ("изолятор", Isolation.script(Isolation.legend(site: "example.com", secret: "t"), event: "wtest")),
+                               ("сигналы изолятора", Isolation.relay(token: "wtest"))] {
             js.exception = nil
             js.setObject(source, forKeyedSubscript: "src" as NSString)
             js.evaluateScript("new Function('list', src)")
@@ -660,6 +662,41 @@ enum SelfTest {
                    "cookie контейнера и одноразовой вкладки не попали в общее хранилище") && ok
         let otherContainer = await cookies(model.store(for: model.containers[2]))
         ok = check(!otherContainer.contains("ward_test"), "другой контейнер этих cookie не видит") && ok
+
+        // 17б. Изолятор: своя банка данных, вымышленное устройство, отказ во всех разрешениях;
+        // обычная вкладка, открывшая сайт из изолятора, отдаёт его в банку.
+        let jar = "127.0.0.1"
+        model.prefs.isolatedSites.insert(jar)
+        let iTab = browser.newTab(url: nil, select: false, isolated: jar)
+        let iWeb = iTab.webView
+        iWeb.frame = host.bounds
+        host.addSubview(iWeb)
+        let defaultBeforeJar = await cookies(WKWebsiteDataStore.default())
+        _ = await open(iTab, "http://127.0.0.1:\(p)/iso.html")
+        try? await Task.sleep(for: .seconds(1.5))
+        let iso = await evaluate(iTab, "return window.results") as? [String: Any] ?? [:]
+        let legend = Isolation.legend(site: jar, secret: model.prefs.isolationSecret)
+        info("изолятор: \(iso), попытки \(iTab.isolationAttempts), легенда \(legend.screenWidth)×\(legend.screenHeight), \(legend.cores) ядер")
+        ok = check(iso["geo"] as? Int == 1 && iso["perm"] as? String == "denied", "изолятор: геопозиция — «запрещено», и опрос разрешений отвечает так же") && ok
+        ok = check((iso["gum"] as? String).map { $0 == "NotAllowedError" || $0 == "none" } == true && (iso["devices"] as? Int ?? -1) == 0,
+                   "изолятор: камера и микрофон — отказ, список устройств пуст") && ok
+        ok = check((iso["clip"] as? String).map { $0 != "read" } == true && (iso["notif"] as? String).map { $0 == "denied" || $0 == "none" } == true,
+                   "изолятор: буфер обмена не читается, уведомления запрещены") && ok
+        ok = check(iso["cores"] as? Int == legend.cores && iso["screen"] as? Int == legend.screenWidth && iso["native"] as? Bool == true,
+                   "изолятор: устройство из легенды, подменённые функции выглядят встроенными") && ok
+        ok = check(iTab.isolationAttempts.keys.count >= 3, "изолятор записал попытки (\(iTab.isolationAttempts))") && ok
+        let jarCookies = await cookies(iTab.dataStore)
+        let defaultAfterJar = await cookies(WKWebsiteDataStore.default())
+        ok = check(jarCookies.contains("ward_iso") && !defaultAfterJar.contains("ward_iso") && defaultAfterJar == defaultBeforeJar,
+                   "cookie изолятора живут только в его банке") && ok
+        let jarTabsBefore = browser.tabs.filter { $0.isolatedSite == jar }.count
+        tab.load(URL(string: "http://127.0.0.1:\(p)/clean.html?jar")!)
+        try? await Task.sleep(for: .seconds(2))
+        let jarTabsAfter = browser.tabs.filter { $0.isolatedSite == jar }.count
+        ok = check(jarTabsAfter == jarTabsBefore + 1, "сайт из изолятора, открытый в обычной вкладке, ушёл в свою банку") && ok
+        for t in browser.tabs where t.isolatedSite == jar { browser.close(t) }
+        await model.setIsolated(false, site: jar)
+        _ = await open(tab, "http://localhost:\(p)/clean.html")
 
         // 18. Уборка за закрытым сайтом: вкладки 127.0.0.1 закрыты — его данные удаляются, открытый localhost остаётся.
         _ = await open(tab, "http://localhost:\(p)/cookie.html?keep")

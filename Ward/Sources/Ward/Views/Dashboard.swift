@@ -31,6 +31,8 @@ struct SecurityDashboard: View {
                                title: "отказов от cookie", caption: "Ward сам нажал «Отклонить» в окнах согласия")
                     MetricTile(icon: "rectangle.on.rectangle.slash.fill", tint: .mint, value: stats.annoyancesHidden,
                                title: "плашек убрано", caption: "«Подпишитесь», «Отключите блокировщик», рассылки — поверх статей")
+                    MetricTile(icon: "cube.transparent.fill", tint: .teal, value: model.isolationAttemptsTotal,
+                               title: "отказов в изоляторе", caption: "Геопозиция, камера, буфер обмена, отпечаток — запертые сайты получили отказ или подделку")
                     MetricTile(icon: "scissors", tint: .mint, value: stats.cleanedLinks,
                                title: "ссылок очищено", caption: "Метки utm, fbclid, gclid убраны до перехода")
                     MetricTile(icon: "lock.fill", tint: .green, value: stats.upgraded,
@@ -61,6 +63,9 @@ struct SecurityDashboard: View {
                     DashboardCard(title: "Прямо сейчас", icon: "dot.radiowaves.left.and.right") {
                         LiveFeed(events: model.recent)
                     }
+                }
+                DashboardCard(title: "Изолятор", icon: "cube.transparent.fill") {
+                    IsolationBreakdown(stats: stats)
                 }
                 ProtectionLevel()
                 HStack {
@@ -336,6 +341,73 @@ struct KindDonut: View {
     }
 }
 
+/// Что запертые в изоляторе сайты пытались о вас узнать.
+struct IsolationBreakdown: View {
+    @Environment(AppModel.self) private var model
+    let stats: Stats
+
+    var body: some View {
+        let sites = Array(Set(model.prefs.isolatedSites).union(stats.isolation.keys)).sorted { total($0) != total($1) ? total($0) > total($1) : $0 < $1 }
+        VStack(alignment: .leading, spacing: 12) {
+            Text(sites.isEmpty
+                 ? "В изоляторе пока никого. Банки, госуслуги, маркетплейсы и соцсети Ward предложит запереть сам: у такого сайта будет своя «банка» данных и вымышленное устройство, а геопозицию, камеру, микрофон, уведомления и буфер обмена он не получит. Запереть любой сайт можно в щите."
+                 : "Запертые сайты живут в своих «банках»: вход сохраняется, но видят они вымышленное устройство, а на любые запросы доступа получают отказ. Вот что они пытались получить.")
+                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            ForEach(sites, id: \.self) { site in
+                let tried = stats.isolation[site] ?? [:]
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        SiteTile(host: site, size: 18)
+                        Text(Punycode.display(site).text).font(.callout.weight(.semibold)).lineLimit(1)
+                        if let kind = Isolation.category(of: site) {
+                            Text(kind).font(.caption).foregroundStyle(.secondary)
+                        }
+                        if !model.isIsolated(site) {
+                            Text("выпущен").font(.caption).foregroundStyle(.orange)
+                        }
+                        Spacer()
+                        Text("\(Format.count(total(site))) \(Format.plural(total(site), "попытка", "попытки", "попыток"))")
+                            .monospacedDigit().foregroundStyle(.secondary).font(.callout)
+                    }
+                    if tried.isEmpty {
+                        Text("Пока ничего лишнего не просил.").font(.caption).foregroundStyle(.tertiary).padding(.leading, 26)
+                    } else {
+                        FlowChips(items: Isolation.Attempt.allCases.compactMap { a in
+                            tried[a.rawValue].map { (a, $0) }
+                        })
+                        .padding(.leading, 26)
+                    }
+                }
+            }
+        }
+    }
+
+    private func total(_ site: String) -> Int { (stats.isolation[site] ?? [:]).values.reduce(0, +) }
+}
+
+/// Плашки «что пытался получить ×N» в несколько строк.
+private struct FlowChips: View {
+    let items: [(Isolation.Attempt, Int)]
+
+    var body: some View {
+        let columns = [GridItem(.adaptive(minimum: 170), spacing: 6, alignment: .leading)]
+        LazyVGrid(columns: columns, alignment: .leading, spacing: 6) {
+            ForEach(items, id: \.0) { attempt, n in
+                HStack(spacing: 5) {
+                    Image(systemName: attempt.icon).foregroundStyle(.teal)
+                    Text(attempt.title).lineLimit(1)
+                    Text("×\(Format.count(n))").monospacedDigit().foregroundStyle(.secondary)
+                }
+                .font(.caption)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.teal.opacity(0.1), in: Capsule())
+                .help("\(attempt.title): \(attempt.answer)")
+            }
+        }
+    }
+}
+
 struct FingerprintBreakdown: View {
     let stats: Stats
     @State private var grow = 0.0
@@ -451,6 +523,7 @@ struct ProtectionLevel: View {
             Item(id: "links", title: "Очистка ссылок", detail: "Метки слежки и переходники", on: p.cleanLinks) { model.prefs.cleanLinks = true },
             Item(id: "https", title: "Только HTTPS", detail: "Без незашифрованных страниц", on: p.httpsOnly) { model.prefs.httpsOnly = true },
             Item(id: "consent", title: "Отказ от cookie", detail: "Сам нажимает «Отклонить»", on: p.consentReject) { model.prefs.consentReject = true },
+            Item(id: "isolation", title: "Изолятор для «пылесосов»", detail: "Банки, госуслуги, магазины — в своих банках", on: p.suggestIsolation || !p.isolatedSites.isEmpty) { model.prefs.suggestIsolation = true },
             Item(id: "annoyances", title: "Назойливые плашки", detail: "«Подпишитесь», рассылки, запрет прокрутки", on: p.blockAnnoyances) { model.prefs.blockAnnoyances = true },
             Item(id: "cname", title: "Скрытые трекеры", detail: "Проверка поддоменов (CNAME)", on: p.cnameDetection) { model.prefs.cnameDetection = true },
             Item(id: "phishing", title: "Подделки под сайты", detail: "Похожие имена банков и почты", on: p.phishingWarnings) { model.prefs.phishingWarnings = true },

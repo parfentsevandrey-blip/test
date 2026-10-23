@@ -109,6 +109,28 @@ struct ProtectionSettings: View {
                               isOn: $model.prefs.blockWebRTC)
             }
             Section {
+                SettingToggle(title: "Предлагать изолятор",
+                              detail: "Банкам, госуслугам, маркетплейсам, соцсетям и операторам связи Ward предложит отдельную «банку»: свои cookie и данные (вход сохраняется), вымышленное устройство, молчаливый отказ на геопозицию, камеру, микрофон, уведомления, чтение буфера обмена и датчики. Строгий режим в изоляторе не включается — сайт и так заперт.",
+                              isOn: $model.prefs.suggestIsolation)
+                if model.prefs.isolatedSites.isEmpty {
+                    Text("Сейчас в изоляторе никого. Запереть сайт можно в щите на его странице.")
+                        .font(.callout).foregroundStyle(.secondary)
+                } else {
+                    ForEach(model.prefs.isolatedSites.sorted(), id: \.self) { site in
+                        HStack {
+                            Image(systemName: "cube.transparent.fill").foregroundStyle(.teal)
+                            Text(Punycode.display(site).text)
+                            if let kind = Isolation.category(of: site) { Text(kind).foregroundStyle(.secondary) }
+                            Spacer()
+                            Button("Выпустить") { Task { await model.setIsolated(false, site: site) } }
+                                .help("Сайт будет открываться как обычно; всё, что он накопил в изоляторе (и вход), удалится")
+                        }
+                    }
+                }
+            } header: {
+                Text("Изолятор")
+            }
+            Section {
                 SettingToggle(title: "Пропускать вставки в роликах",
                               detail: "Ward узнаёт отрезки ролика по первым четырём знакам хеша его id — сервер не знает, какой ролик вы смотрите. Ничего не отправляется обратно.",
                               isOn: $model.prefs.sponsorBlock)

@@ -75,7 +75,7 @@ struct BrowserCommands: Commands {
                 .keyboardShortcut("t", modifiers: [.command, .option])
                 .disabled(browser == nil || browser?.isPrivate == true)
             Divider()
-            Button("Открыть адрес…") { tab?.focusRequest += 1 }.keyboardShortcut("l").disabled(browser == nil)
+            Button("Открыть адрес…") { browser?.addressFocus += 1 }.keyboardShortcut("l").disabled(browser == nil)
             Button("Вернуть закрытую вкладку") { browser?.reopenClosed() }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
                 .disabled(browser == nil || AppModel.shared.closedTabs.isEmpty)

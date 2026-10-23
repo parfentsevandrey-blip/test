@@ -188,6 +188,14 @@ struct PageArea: View {
                     .padding(10)
                     .transition(.opacity)
             }
+            if tab.isolatedSite != nil, !tab.isStartPage {
+                IsolationEdge()
+            }
+            if let kind = tab.isolationOffer, tab.interstitial == nil, !tab.passwordWarning {
+                IsolationOffer(tab: tab, browser: browser, kind: kind)
+                    .padding(.top, 10)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
             if tab.passwordWarning, tab.interstitial == nil {
                 PasswordBanner(tab: tab)
                     .padding(.top, 10)
@@ -301,6 +309,52 @@ struct WindowAccessor: NSViewRepresentable {
     func updateNSView(_ view: Probe, context: Context) {
         view.onWindow = onWindow
         if let window = view.window { onWindow(window) }
+    }
+}
+
+/// Рамка изолятора: страница видна «за стеклом банки» — бирюзовая кромка по краю.
+struct IsolationEdge: View {
+    var body: some View {
+        RoundedRectangle(cornerRadius: 0)
+            .strokeBorder(Color.teal.opacity(0.55), lineWidth: 2)
+            .allowsHitTesting(false)
+    }
+}
+
+/// Предложение изолятора для банка, госсервиса, магазина или соцсети.
+struct IsolationOffer: View {
+    @Environment(AppModel.self) private var model
+    let tab: Tab
+    let browser: BrowserState
+    let kind: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "cube.transparent.fill").foregroundStyle(.teal).font(.title2)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Открывать \(tab.site) в изоляторе?").font(.headline)
+                Text("Это \(kind): такие сайты собирают об устройстве всё, до чего дотянутся. В изоляторе у сайта свои cookie и данные, вход сохраняется, но он видит вымышленное устройство, не видит другие сайты, а геопозиция, камера, микрофон, уведомления и буфер обмена ему недоступны.")
+                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Button("Открыть в изоляторе") {
+                        tab.isolationOffer = nil
+                        Task { await model.setIsolated(true, site: tab.site) }
+                    }
+                    .buttonStyle(.borderedProminent).tint(.teal)
+                    Button("Не сейчас") { tab.isolationOffer = nil }
+                    Button("Не предлагать для этого сайта") {
+                        model.declineIsolation(tab.site)
+                        tab.isolationOffer = nil
+                    }
+                    .buttonStyle(.borderless)
+                }
+                .controlSize(.small)
+                .padding(.top, 4)
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: 600)
+        .glassEffect(.regular.tint(.teal.opacity(0.12)), in: RoundedRectangle(cornerRadius: 16))
     }
 }
 

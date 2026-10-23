@@ -113,7 +113,7 @@ struct InterstitialView: View {
         case .lookalike: "Это не подделка"
         case .insecure: "Открыть без защиты"
         case .blocked: "Открыть один раз"
-        case .failed: nil
+        case .failed: tab.isolatedSite == nil && !tab.isPrivate && !tab.site.isEmpty ? "Открыть в изоляторе" : nil
         }
     }
 
@@ -140,7 +140,11 @@ struct InterstitialView: View {
         case .lookalike(let u, _): tab.proceedLookalike(u)
         case .insecure(let u): tab.proceedInsecure(u)
         case .blocked(let u): tab.proceedBlocked(u)
-        case .failed: break
+        case .failed:
+            // Сайт мог сломаться от строгого режима или заблокированных скриптов слежки — в изоляторе ему
+            // это разрешено, потому что он заперт.
+            let site = tab.site
+            Task { await AppModel.shared.setIsolated(true, site: site) }
         }
     }
 }

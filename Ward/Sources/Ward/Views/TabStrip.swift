@@ -71,7 +71,10 @@ struct TabChip: View {
 
     var body: some View {
         HStack(spacing: 7) {
-            if tab.ephemeral {
+            if tab.isolatedSite != nil {
+                Image(systemName: "cube.transparent.fill").font(.caption).foregroundStyle(.teal)
+                    .help("Изолятор: сайт заперт в своей банке с вымышленным устройством")
+            } else if tab.ephemeral {
                 Image(systemName: "flame.fill").font(.caption).foregroundStyle(.orange)
             } else {
                 SiteTile(host: tab.host, size: 16)
@@ -127,6 +130,9 @@ struct TabChip: View {
                     }
                 }
                 Button("Открыть в одноразовой вкладке") { browser.reopen(tab, container: nil, ephemeral: true) }
+                if tab.isolatedSite == nil, !tab.site.isEmpty {
+                    Button("Открыть в изоляторе") { browser.isolate(tab) }
+                }
             }
         }
     }

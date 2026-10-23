@@ -171,6 +171,26 @@ setTimeout(()=>{const n=document.createElement('div');n.id='news';n.style.cssTex
 </script>
 </body></html>
 """#)
+        // Изолятор: страница просит всё подряд и записывает, что получила.
+        set("/iso.html", html: """
+        <!doctype html><html><head><meta charset="utf-8"><title>Изолятор</title><script>
+        window.results = {};
+        const r = window.results;
+        document.cookie = 'ward_iso=1; path=/';
+        try { localStorage.setItem('ward_iso', '1'); } catch (e) {}
+        r.cores = navigator.hardwareConcurrency; r.screen = screen.width;
+        r.native = String(navigator.geolocation.getCurrentPosition).includes('[native code]');
+        navigator.geolocation.getCurrentPosition(() => r.geo = 'granted', (e) => r.geo = e.code);
+        if (navigator.clipboard) navigator.clipboard.readText().then(() => r.clip = 'read', (e) => r.clip = e.name); else r.clip = 'none';
+        if (typeof Notification !== 'undefined') { r.notif = Notification.permission; Notification.requestPermission().then((x) => r.notifReq = x); } else { r.notif = 'none'; }
+        if (navigator.mediaDevices) {
+          navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(() => r.gum = 'granted', (e) => r.gum = e.name);
+          navigator.mediaDevices.enumerateDevices().then((d) => r.devices = d.length);
+        } else { r.gum = 'none'; r.devices = 0; }
+        if (navigator.permissions) navigator.permissions.query({ name: 'geolocation' }).then((s) => r.perm = s.state, () => r.perm = 'error'); else r.perm = 'none';
+        window.addEventListener('devicemotion', () => {});
+        </script></head><body>изолятор</body></html>
+        """)
         set("/password.html", html: """
         <!doctype html><html><head><meta charset="utf-8"><title>Вход</title></head><body>
         <form><input id="login" type="text"><input id="pw" type="password"></form></body></html>

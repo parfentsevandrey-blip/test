@@ -102,11 +102,26 @@ struct AddressBar: View {
         }
         .onChange(of: address.text) { if focused { address.highlighted = 0; address.update(model) } }
         .onChange(of: tab.url) { if !focused { address.text = display } }
-        .onChange(of: tab.focusRequest) { focused = true }
+        .onChange(of: browser.addressFocus) { focusAddress() }
+        // Переключились на пустую вкладку — сразу можно печатать адрес.
+        .onChange(of: tab.id) { if tab.isStartPage { focusAddress() } }
         .onChange(of: address.focusPage) { focused = false }
         .onAppear {
             address.text = display
-            if tab.isStartPage { focused = true }
+            if tab.isStartPage { focusAddress() }
+        }
+    }
+
+    /// Курсор — в адресную строку. Страница предыдущей вкладки только что ушла из окна вместе со своим фокусом,
+    /// поэтому фокус ставится ещё раз после того, как окно перестроится: иначе первые буквы ушли бы «в никуда»
+    /// и macOS отвечала бы звуком ошибки.
+    private func focusAddress() {
+        focused = true
+        Task {
+            for delay in [16, 60, 180] {
+                try? await Task.sleep(for: .milliseconds(delay))
+                if !focused { focused = true }
+            }
         }
     }
 
@@ -139,6 +154,9 @@ struct AddressBar: View {
     private var securityIcon: some View {
         if focused || tab.url == nil {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+        } else if tab.isolatedSite != nil, tab.interstitial == nil {
+            Image(systemName: "cube.transparent.fill").foregroundStyle(.teal)
+                .help("Изолятор: свои cookie и данные, вымышленное устройство, все разрешения отклоняются")
         } else if tab.interstitial != nil {
             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
         } else if Punycode.display(tab.host).suspicious {

@@ -60,6 +60,14 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
     var showBookmarksBar = true
     /// Прятать плашки «Подпишитесь», «Отключите блокировщик», рассылки и возвращать прокрутку.
     var blockAnnoyances = true
+    /// Сайты, которые всегда открываются в изоляторе (см. `Isolation`).
+    var isolatedSites: Set<String> = []
+    /// Сайты, для которых вы отказались от предложения изолятора.
+    var isolationDeclined: Set<String> = []
+    /// Предлагать изолятор банкам, госуслугам, маркетплейсам и соцсетям.
+    var suggestIsolation = true
+    /// Постоянный секрет «легенды» устройства в изоляторе (создаётся при первом запуске).
+    var isolationSecret = ""
 
     init() {}
 
@@ -113,6 +121,10 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
         siteContainers = v(.siteContainers, d.siteContainers)
         showBookmarksBar = v(.showBookmarksBar, d.showBookmarksBar)
         blockAnnoyances = v(.blockAnnoyances, d.blockAnnoyances)
+        isolatedSites = v(.isolatedSites, d.isolatedSites)
+        isolationDeclined = v(.isolationDeclined, d.isolationDeclined)
+        suggestIsolation = v(.suggestIsolation, d.suggestIsolation)
+        isolationSecret = v(.isolationSecret, d.isolationSecret)
     }
 
     /// Включён ли строгий режим для сайта. `familiar` — сайт есть в истории или избранном.
@@ -172,6 +184,8 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
     var pages = 0
     /// Плашки и окна поверх статьи: «Подпишитесь», «Отключите блокировщик», рассылки.
     var annoyancesHidden = 0
+    /// Изолятор: сайт → что он пытался получить → сколько раз.
+    var isolation: [String: [String: Int]] = [:]
 
     init() {}
 
@@ -197,6 +211,7 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
         sitesCleaned = v(.sitesCleaned, 0)
         pages = v(.pages, 0)
         annoyancesHidden = v(.annoyancesHidden, 0)
+        isolation = v(.isolation, [:])
     }
 
     static func dayKey(_ date: Date = Date()) -> String {

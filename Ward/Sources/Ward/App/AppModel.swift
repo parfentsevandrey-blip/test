@@ -77,6 +77,7 @@ final class AppModel {
             ?? .defaults
         containers = Storage.load([Container].self, "containers.json") ?? Container.defaults
         stats = Storage.load(Stats.self, "stats.json") ?? Stats()
+        if prefs.isolationSecret.isEmpty { prefs.isolationSecret = Self.randomSecret() + Self.randomSecret() }
         historySites = Set(history.entries.map { Hosts.site($0.url.host ?? "") })
     }
 
@@ -160,10 +161,19 @@ final class AppModel {
 
     /// Скрипты для страницы хоста и сколько в них скриптлетов из списков.
     /// `proxied` — окно идёт через прокси: тогда WebRTC выключается сам, иначе он раскрыл бы настоящий IP в обход прокси.
-    func pageScripts(host: String, protected: Bool, secret: String, proxied: Bool = false) -> (list: [WKUserScript], scriptlets: Int) {
+    func pageScripts(host: String, protected: Bool, secret: String, proxied: Bool = false, isolated: String? = nil) -> (list: [WKUserScript], scriptlets: Int) {
         var list: [WKUserScript] = []
         var scriptlets = 0
-        if protected && (prefs.fingerprint || proxied) {
+        if let jar = isolated {
+            // Изолятор: вымышленное устройство, постоянное для сайта, и отказ во всех разрешениях —
+            // даже если на этом сайте защита выключена.
+            let legend = Isolation.legend(site: jar, secret: prefs.isolationSecret)
+            list.append(WKUserScript(source: Scripts.fingerprint(secret: legend.noiseSecret, blockWebRTC: true, event: signalToken),
+                                     injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
+            list.append(WKUserScript(source: Scripts.fingerprintRelay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
+            list.append(WKUserScript(source: Isolation.script(legend, event: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
+            list.append(WKUserScript(source: Isolation.relay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
+        } else if protected && (prefs.fingerprint || proxied) {
             list.append(WKUserScript(source: Scripts.fingerprint(secret: secret, blockWebRTC: prefs.blockWebRTC || proxied,
                                                                  spoofTimezone: prefs.spoofTimezone, spoofLanguage: prefs.spoofLanguage, event: signalToken),
                                      injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
@@ -438,6 +448,58 @@ final class AppModel {
         feed(.consent, "Отказ от cookie", [site, cmp].filter { !$0.isEmpty }.joined(separator: " · "))
     }
 
+    // MARK: - Изолятор
+
+    func isIsolated(_ site: String) -> Bool { !site.isEmpty && prefs.isolatedSites.contains(site) }
+
+    /// Хранилище банки сайта: постоянное и ни с кем не общее.
+    func isolationStore(for site: String) -> WKWebsiteDataStore {
+        let id = Isolation.storeID(for: site)
+        if let store = stores[id] { return store }
+        let store = WKWebsiteDataStore(forIdentifier: id)
+        NetworkPrivacy.apply(to: store, isPrivate: false, prefs: prefs)
+        stores[id] = store
+        return store
+    }
+
+    /// Поместить сайт в изолятор (открытые вкладки сайта переезжают в банку) или выпустить из него.
+    /// Выпущенный сайт теряет всё, что накопил в банке: вход, cookie, хранилище.
+    func setIsolated(_ on: Bool, site: String) async {
+        guard !site.isEmpty else { return }
+        if on {
+            prefs.isolatedSites.insert(site)
+            prefs.isolationDeclined.remove(site)
+            for browser in browsers where !browser.isPrivate {
+                for tab in browser.tabs where tab.site == site && tab.isolatedSite == nil && !tab.ephemeral { browser.isolate(tab) }
+            }
+        } else {
+            prefs.isolatedSites.remove(site)
+            for browser in browsers {
+                for tab in browser.tabs where tab.isolatedSite == site { browser.reopen(tab, container: nil); browser.close(tab) }
+            }
+            await removeIsolationStore(site)
+        }
+    }
+
+    private func removeIsolationStore(_ site: String) async {
+        let id = Isolation.storeID(for: site)
+        stores[id] = nil
+        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+            WKWebsiteDataStore.remove(forIdentifier: id) { _ in cont.resume() }
+        }
+    }
+
+    func declineIsolation(_ site: String) { prefs.isolationDeclined.insert(site) }
+
+    func recordIsolation(_ what: String, site: String) {
+        guard Isolation.Attempt(rawValue: what) != nil, !site.isEmpty else { return }
+        stats.isolation[site, default: [:]][what, default: 0] += 1
+        let title = Isolation.Attempt(rawValue: what)?.title ?? what
+        if what != Isolation.Attempt.trackers.rawValue { feed(.isolation, "Изолятор: \(title.lowercased()) — отказано", site) }
+    }
+
+    var isolationAttemptsTotal: Int { stats.isolation.values.reduce(0) { $0 + $1.values.reduce(0, +) } }
+
     func recordAnnoyance(_ kind: String, site: String = "") {
         stats.annoyancesHidden += 1
         let what = switch kind {
@@ -621,6 +683,8 @@ final class AppModel {
         SecureStore.remove("session.json")
         downloads.clearFinished()
         _ = await clearSiteData(keeping: [])
+        // Банки изолятора тоже: «стереть всё» значит всё.
+        for site in prefs.isolatedSites { await removeIsolationStore(site) }
         cname.forgetAll()
         wiping = false
         openWindow?("browser")
@@ -643,7 +707,7 @@ final class AppModel {
 /// Событие защиты для живой ленты панели безопасности.
 struct SecurityEvent: Identifiable, Equatable {
     enum Kind {
-        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup, annoyance
+        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup, annoyance, isolation
 
         var icon: String {
             switch self {
@@ -660,6 +724,7 @@ struct SecurityEvent: Identifiable, Equatable {
             case .phishing: "exclamationmark.shield.fill"
             case .cleanup: "trash.fill"
             case .annoyance: "rectangle.on.rectangle.slash.fill"
+            case .isolation: "cube.transparent.fill"
             }
         }
 
@@ -675,6 +740,7 @@ struct SecurityEvent: Identifiable, Equatable {
             case .sponsor: .teal
             case .cleanup: .gray
             case .annoyance: .mint
+            case .isolation: .teal
             }
         }
     }

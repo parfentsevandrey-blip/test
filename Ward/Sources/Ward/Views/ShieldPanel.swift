@@ -108,7 +108,9 @@ struct ShieldPanel: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(site.isEmpty ? "Новая вкладка" : Punycode.display(site).text).font(.title3.weight(.semibold)).lineLimit(1)
                 Text(summary).font(.callout).foregroundStyle(.secondary)
-                if let c = tab.container {
+                if tab.isolatedSite != nil {
+                    Label("Изолятор", systemImage: "cube.transparent.fill").font(.caption).foregroundStyle(.teal)
+                } else if let c = tab.container {
                     Label("Контейнер «\(c.name)»", systemImage: "square.stack.3d.up.fill").font(.caption).foregroundStyle(ContainerPalette.color(c.color))
                 } else if tab.ephemeral {
                     Label("Одноразовая вкладка", systemImage: "flame").font(.caption).foregroundStyle(.orange)
@@ -162,6 +164,14 @@ struct ShieldPanel: View {
     @ViewBuilder
     private var notes: some View {
         VStack(alignment: .leading, spacing: 7) {
+            if tab.isolatedSite != nil {
+                let tried = Isolation.Attempt.allCases.filter { (tab.isolationAttempts[$0.rawValue] ?? 0) > 0 && $0 != .trackers }
+                if tried.isEmpty {
+                    note("cube.transparent", "Сайт в изоляторе: свои cookie и данные, вымышленное устройство. Пока он ничего лишнего не просил.", color: .teal)
+                } else {
+                    note("cube.transparent", "Сайт в изоляторе пытался получить: \(tried.map { "\($0.title.lowercased()) — \($0.answer)" }.joined(separator: "; ")).", color: .teal)
+                }
+            }
             if tab.unwrappedRedirect {
                 note("arrow.uturn.right", "Ссылка-переходник пропущена: сайт, откуда вы пришли, не узнал, куда вы ушли.")
             }
@@ -239,6 +249,17 @@ struct ShieldPanel: View {
                     }
                 }
                 if !isPrivate && !tab.ephemeral {
+                    Toggle(isOn: Binding(get: { model.isIsolated(site) }, set: { on in
+                        Task { await model.setIsolated(on, site: site) }
+                    })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Изолятор")
+                            Text(model.isIsolated(site)
+                                 ? "Сайт заперт: своя «банка» данных, вымышленное устройство, все разрешения отклоняются. Если выключить, всё, что он накопил в банке (и вход), удалится."
+                                 : "Запереть сайт в отдельной «банке»: вход сохранится, но сайт увидит вымышленное устройство и не получит ни геопозиции, ни камеры, ни буфера обмена, ни данных других сайтов.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
                     Toggle(isOn: Binding(get: { model.prefs.rememberedSites.contains(site) }, set: { model.setRemembered($0, site: site) })) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Помнить вход")
