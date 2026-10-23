@@ -525,16 +525,6 @@ extension Tab: WKNavigationDelegate {
         let web = scheme == "http" || scheme == "https"
         let protected = !model.isUnprotected(host)
 
-        // Банки: сайт из другой банки (изолятор, корпорация, маска) — страница переезжает в неё, в той же вкладке.
-        // Отправка формы на другой сайт (POST) остаётся на месте: её данные нельзя перенести в другое хранилище.
-        if web, !isPopup, (action.request.httpMethod ?? "GET").uppercased() == "GET" {
-            let wanted = model.jar(forHost: host, privateWindow: isPrivate, ephemeral: ephemeral)
-            if wanted != jar {
-                Task { @MainActor in self.rehome(to: wanted, url: target) }
-                return (.cancel, preferences)
-            }
-        }
-
         // Сайт закреплён за контейнером — открыть его там.
         if web, !isPrivate, !ephemeral, jar == nil, let wanted = model.container(forSite: site), wanted.id != container?.id {
             browser?.newTab(url: target, select: true, after: self, container: wanted)
@@ -586,6 +576,17 @@ extension Tab: WKNavigationDelegate {
                         return (.cancel, preferences)
                     }
                 }
+            }
+        }
+
+        // Банки (после очистки ссылок и проверок: переходник google.com/url не должен увозить в банку Google).
+        // Сайт из другой банки (изолятор, корпорация, маска) — страница переезжает в неё, в той же вкладке.
+        // Отправка формы на другой сайт (POST) остаётся на месте: её данные нельзя перенести в другое хранилище.
+        if web, !isPopup, (action.request.httpMethod ?? "GET").uppercased() == "GET" {
+            let wanted = model.jar(forHost: host, privateWindow: isPrivate, ephemeral: ephemeral)
+            if wanted != jar {
+                Task { @MainActor in self.rehome(to: wanted, url: target) }
+                return (.cancel, preferences)
             }
         }
 

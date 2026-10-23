@@ -723,12 +723,17 @@ enum SelfTest {
         _ = await open(tab, "http://localhost:\(p)/clean.html?before")
         let generation = tab.webViewGeneration
         tab.load(URL(string: "http://127.0.0.1:\(p)/clean.html?jar")!)
-        for _ in 0..<40 where tab.webViewIfLoaded?.url?.host != "127.0.0.1" { try? await Task.sleep(for: .milliseconds(200)) }
+        // В приложении страницу после переезда ставит на место SwiftUI; здесь — сами.
+        func reattach() {
+            if let v = tab.webViewIfLoaded, v.superview !== host { v.frame = host.bounds; host.addSubview(v) }
+        }
+        for _ in 0..<40 where tab.webViewIfLoaded?.url?.host != "127.0.0.1" { reattach(); try? await Task.sleep(for: .milliseconds(200)) }
         ok = check(tab.jar == jar && tab.webViewGeneration > generation && tab.webViewIfLoaded?.url?.host == "127.0.0.1",
                    "сайт из изолятора, открытый в обычной вкладке, переехал в свою банку на месте (\(tab.jar ?? "без банки"))") && ok
         ok = check(tab.canGoBack, "после переезда «Назад» доступно") && ok
         tab.goBack()
-        for _ in 0..<40 where tab.webViewIfLoaded?.url?.host != "localhost" { try? await Task.sleep(for: .milliseconds(200)) }
+        for _ in 0..<60 where tab.webViewIfLoaded?.url?.host != "localhost" { reattach(); try? await Task.sleep(for: .milliseconds(200)) }
+        reattach()
         ok = check(tab.jar == nil && tab.webViewIfLoaded?.url?.host == "localhost", "«Назад» вернул страницу из банки обратно") && ok
         for t in browser.tabs where t.jar == jar { browser.close(t) }
         await model.setIsolated(false, site: jar)
