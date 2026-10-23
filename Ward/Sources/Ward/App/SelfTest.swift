@@ -449,6 +449,7 @@ enum SelfTest {
         model.register(browser)
         guard let tab = browser.selected else { return false }
         let host = NSView(frame: window.contentLayoutRect)
+        attachHost = host
         window.contentView = host
         let web = tab.webView
         web.frame = host.bounds
@@ -838,6 +839,15 @@ enum SelfTest {
         return ok
     }
 
+    /// Окно стенда: сюда ставится страница вкладки после переезда в другую банку (в приложении это делает SwiftUI).
+    static weak var attachHost: NSView?
+
+    static func reattach(_ tab: Tab) {
+        guard let host = attachHost, let view = tab.webViewIfLoaded, view.superview == nil else { return }
+        view.frame = host.bounds
+        host.addSubview(view)
+    }
+
     /// Открыть адрес и дождаться конца загрузки (или экрана-предупреждения).
     static func open(_ tab: Tab, _ address: String, timeout: Double = 20) async -> Bool {
         guard let url = URL(string: address) else { return false }
@@ -845,7 +855,9 @@ enum SelfTest {
         tab.load(url)
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
+            reattach(tab)
             try? await Task.sleep(for: .milliseconds(200))
+            reattach(tab)
             if tab.interstitial != nil { return false }
             if tab.loadsFinished > before, let view = tab.webViewIfLoaded, !view.isLoading { return true }
         }
