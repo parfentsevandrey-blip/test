@@ -309,8 +309,8 @@ enum Island {
         let freeH = max(1, stage.height - island.height - top - margin)
         var x = min(max(Double((point.x - margin - island.width / 2) / freeW), 0), 1)
         var y = min(max(Double((point.y - top - island.height / 2) / freeH), 0), 1)
-        for anchor in [0, 0.5, 1] where abs(x - anchor) < snap { x = anchor }
-        for anchor in [0, 1] where abs(y - anchor) < snap { y = anchor }
+        for anchor: Double in [0, 0.5, 1] where abs(x - anchor) < snap { x = anchor }
+        for anchor: Double in [0, 1] where abs(y - anchor) < snap { y = anchor }
         return (x, y)
     }
 }

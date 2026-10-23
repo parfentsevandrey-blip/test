@@ -223,7 +223,7 @@ final class MatroskaCore: PlaybackCore {
     // MARK: - Картинка
 
     func ambientFrame() -> CVPixelBuffer? {
-        guard let frame = display.sampleBufferRenderer.copyDisplayedPixelBuffer() else { return nil }
+        guard let frame = display.sampleBufferRenderer.displayedPixelBuffer() else { return nil }
         if ambientBuffer == nil {
             CVPixelBufferCreate(kCFAllocatorDefault, 64, 36, kCVPixelFormatType_32BGRA,
                                 [kCVPixelBufferIOSurfacePropertiesKey: [:]] as CFDictionary, &ambientBuffer)
@@ -236,7 +236,7 @@ final class MatroskaCore: PlaybackCore {
     }
 
     func snapshot() async -> CGImage? {
-        guard let frame = display.sampleBufferRenderer.copyDisplayedPixelBuffer() else { return nil }
+        guard let frame = display.sampleBufferRenderer.displayedPixelBuffer() else { return nil }
         let image = CIImage(cvPixelBuffer: frame)
         return ciContext.createCGImage(image, from: image.extent)
     }
