@@ -638,6 +638,21 @@ enum SelfTest {
         ok = check(annoy["header"] as? Bool == true && annoy["bg"] as? Bool == true, "шапка сайта с меню и фон страницы не тронуты") && ok
         ok = check(tab.annoyancesHidden >= 3, "щит знает об убранных плашках (\(tab.annoyancesHidden))") && ok
 
+        // 12в. Плашка Bloomberg: обёртка нулевой высоты, запертые html и body, «туман» из псевдоэлемента.
+        _ = await open(tab, "http://localhost:\(p)/bbg.html")
+        try? await Task.sleep(for: .seconds(5))
+        let wall = await evaluate(tab, """
+        const shown = (id) => { let e = document.getElementById(id); if (!e) return null; for (; e; e = e.parentElement) if (getComputedStyle(e).display === 'none') return false; return true; };
+        const b = getComputedStyle(document.body), nav = getComputedStyle(document.querySelector('nav'), '::after');
+        document.getElementById('open').click();
+        return { wall: shown('wall'), nav: shown('open'), body: [b.overflowY, b.position, b.pointerEvents].join(','),
+                 fog: nav.display !== 'none' && nav.content !== 'none', classes: document.documentElement.className + '|' + document.body.className };
+        """) as? [String: Any] ?? [:]
+        info("плашка Bloomberg: \(wall)")
+        ok = check(wall["wall"] as? Bool == false && wall["nav"] as? Bool == true, "Bloomberg: «Subscribe now… Claim This Offer» убрана, статья на месте") && ok
+        ok = check((wall["body"] as? String)?.hasPrefix("hidden") == false && (wall["body"] as? String)?.contains("none") == false && wall["fog"] as? Bool == false,
+                   "Bloomberg: прокрутка и щелчки вернулись, серый «туман» над статьёй снят") && ok
+
         // 13. Подделка под известный сайт — предупреждение без единого запроса.
         tab.load(URL(string: "https://sberbamk.ru/login")!)
         try? await Task.sleep(for: .seconds(1.5))

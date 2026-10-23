@@ -171,6 +171,38 @@ setTimeout(()=>{const n=document.createElement('div');n.id='news';n.style.cssTex
 </script>
 </body></html>
 """#)
+        // Как у Bloomberg: плашка в fixed-обёртке нулевой высоты, страница заперта классами на html и body,
+        // «туман» — псевдоэлемент шапки, внизу плашки — десяток ссылок.
+        set("/bbg.html", html: #"""
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;font:16px sans-serif}
+nav[data-component=nav]{position:relative;height:60px;background:#111;color:#fff}
+nav a{color:#fff;margin:6px}
+main{padding:40px 60px;height:3000px}
+html._stopScroll_1ot87_3,body._stopScroll_1ot87_3{overflow:hidden!important;position:fixed!important;height:100%!important;width:100%!important;pointer-events:none!important}
+._restrictScroll_1ot87_45 nav[data-component=nav]:after{content:"";position:absolute;left:0;top:60px;width:100%;height:100vh;background:linear-gradient(180deg,#fff3 .57%,#0006 15.48%);z-index:10}
+._sheetWrapper_1ot87_12{position:fixed;bottom:0;z-index:14678;display:block;width:100%;margin:0;box-sizing:border-box;pointer-events:none}
+._sheet_1ot87_12{position:fixed;bottom:0;height:100vh;overflow-y:hidden;z-index:9999;width:100%}
+.wall{position:absolute;bottom:0;left:0;right:0;height:260px;background:#222;color:#fff;pointer-events:auto;text-align:center;animation:fadein 1.5s}
+.wall a{color:#aaa;font-size:11px;margin:3px}
+@keyframes fadein{from{opacity:0;transform:translateY(100%)}to{opacity:1;transform:none}}
+</style></head><body>
+<nav data-component="nav"><b>Bloomberg</b> <a href="/m">Markets</a><a href="/f">Finance</a><a href="/e">Economics</a><a href="/i">Industries</a><a href="/t">Tech</a><a href="/p">Politics</a><a href="/o">Opinion</a><a href="/v">Video</a><a href="/x">More</a></nav>
+<main><h1>Nigeria's Solar Boom Has Newlyweds Coveting Panels</h1><p>Article...</p><button id="open" onclick="window.clicked=1">Share</button></main>
+<div id="fortress-container-root"></div>
+<script>
+setTimeout(() => {
+  document.documentElement.classList.add('_stopScroll_1ot87_3');
+  document.body.classList.add('_stopScroll_1ot87_3', '_restrictScroll_1ot87_45');
+  document.getElementById('fortress-container-root').innerHTML =
+    '<div class="_sheetWrapper_1ot87_12" id="wrap"><div class="_sheet_1ot87_12" id="bsheet"><div class="wall" id="wall">' +
+    '<h2>Subscribe now for unlimited access to Bloomberg.com and the Bloomberg app</h2><p>Global news that uncovers a new tomorrow. Cancel anytime.</p>' +
+    '<button>Claim This Offer</button><div>' + ['Terms of Service','Privacy Policy','Cookie Settings','Help','Contact','Accessibility','Careers','Ad Choices','Sitemap','Trademarks'].map((t, i) => '<a href="/l' + i + '">' + t + '</a>').join('') +
+    '</div></div></div></div>';
+}, 1200);
+</script>
+</body></html>
+"""#)
         // Изолятор: страница просит всё подряд и записывает, что получила.
         set("/iso.html", html: """
         <!doctype html><html><head><meta charset="utf-8"><title>Изолятор</title><script>

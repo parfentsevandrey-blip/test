@@ -535,12 +535,17 @@ extension Scripts {
       'use strict';
       if (window.top !== window || window.__wardAnnoyances) return;
       const state = window.__wardAnnoyances = { hidden: 0, unlocked: 0, kinds: [], scans: 0, layers: 0, skipped: [] };
-      const NAG = /(subscri|sign\s*up|sign\s*in\s+to\s+(continue|read|keep)|log\s*in\s+to\s+(continue|read)|create\s+(a\s+)?(free\s+)?account|register\s+(now|for\s+free)|newsletter|claim\s+(this|your)\s+offer|unlimited\s+access|continue\s+reading|keep\s+reading|already\s+a\s+(subscriber|member)|special\s+offer|limited[-\s]time\s+offer|get\s+the\s+app|open\s+in\s+(the\s+)?app|download\s+(our|the)\s+app|ad\s*-?\s*block|disable\s+your\s+(ad|content)\s*block|whitelist\s+(us|this)|allowlist|support\s+(our\s+)?journalism|подпиш|подписк|оформит|рассылк|зарегистрир|войдите,?\s+чтобы|продолжить\s+чтение|читать\s+дальше|в\s+приложении|скачайте\s+приложение|блокировщик|отключите\s+(adblock|блокир)|abonn|inscri|anmelden|abonnieren|registrieren|werbeblocker|suscr|iscriviti|abbonati)/i;
+      const NAG = /(subscri|sign\s*up|sign\s*in\s+to\s+(continue|read|keep)|log\s*in\s+to\s+(continue|read)|create\s+(a\s+)?(free\s+)?account|register\s+(now|for\s+free)|newsletter|claim\s+(this|your)\s+offer|unlimited\s+access|continue\s+reading|keep\s+reading|already\s+a\s+(subscriber|member)|special\s+offer|limited[-\s]time\s+offer|get\s+the\s+app|open\s+in\s+(the\s+)?app|download\s+(our|the)\s+app|ad\s*-?\s*block|disable\s+your\s+(ad|content)\s*block|whitelist\s+(us|this)|allowlist|support\s+(our\s+)?journalism|paywall|подпиш|подписк|оформит|рассылк|зарегистрир|войдите,?\s+чтобы|продолжить\s+чтение|читать\s+дальше|в\s+приложении|скачайте\s+приложение|блокировщик|отключите\s+(adblock|блокир)|abonn|inscri|anmelden|abonnieren|registrieren|werbeblocker|suscr|iscriviti|abbonati)/i;
       const COOKIE = /cookie|consent|gdpr|cmp|privacy-?center/i;
+      // Классы, которыми сайты запирают страницу под плашкой: запрет прокрутки и «туман» над статьёй.
+      const LOCK = /((stop|restrict|no|disable|lock|prevent|block)[-_]?scroll|scroll[-_]?(lock|block|disabled|restrict)|modal[-_]?open|overflow[-_]?hidden|is[-_]?locked|paywall)/i;
       let lastUser = 0;
       for (const type of ['mousedown', 'keydown', 'touchstart']) addEventListener(type, () => { lastUser = Date.now(); }, true);
-      const seen = new WeakSet();
-      const style = (el) => { try { return getComputedStyle(el); } catch (e) { return null; } };
+      // Решённые слои (убраны или точно не плашка) и сколько раз слой уже смотрели: плашки появляются
+      // с анимацией и меняют размер, поэтому «пока не похоже» — не окончательный ответ.
+      const decided = new WeakSet();
+      const looks = new WeakMap();
+      const style = (el, pseudo) => { try { return getComputedStyle(el, pseudo || null); } catch (e) { return null; } };
       const textOf = (el) => (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 3000);
       const signature = (el) => (el.id || '') + ' ' + (typeof el.className === 'string' ? el.className : '') + ' ' + (el.getAttribute('aria-label') || '');
       const post = (kind) => {
@@ -548,68 +553,96 @@ extension Scripts {
         try { window.webkit.messageHandlers.wardEvent.postMessage({ type: 'annoyance', kind }); } catch (e) {}
       };
 
-      // Ближайший к корню предок с position: fixed (или сам элемент).
-      const fixedRoot = (el) => {
-        let found = null;
+      // Все предки с position: fixed — от ближнего к корню. Плашку часто кладут в «обёртку» нулевого
+      // размера (fixed, без высоты), а настоящий слой — внутрь, тоже fixed.
+      const fixedChain = (el) => {
+        const chain = [];
         for (let a = el, k = 0; a && a !== document.body && a !== document.documentElement && k < 40; a = a.parentElement, k++) {
           const s = style(a);
-          if (s && s.position === 'fixed') found = a;
+          if (s && s.position === 'fixed') chain.push(a);
         }
-        return found;
+        return chain;
       };
 
-      const protectedLayer = (el, s, text) => {
-        if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+      const visibleBox = (el) => {
+        const r = el.getBoundingClientRect();
+        const w = Math.max(0, Math.min(r.right, innerWidth) - Math.max(r.left, 0));
+        const h = Math.max(0, Math.min(r.bottom, innerHeight) - Math.max(r.top, 0));
+        return { r, w, h };
+      };
+
+      // Слой, который точно не плашка (решение окончательное).
+      const semanticallyProtected = (el, nag) => {
         if (el.matches('header, nav, [role="banner"], [role="navigation"], [role="menu"], [role="listbox"], [role="tooltip"]')) return true;
         if (el.querySelector('video, audio, [role="navigation"], nav')) return true;
-        if (document.activeElement && el.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return true;
         if (COOKIE.test(signature(el))) return true;   // окна согласия — забота автоотказа от cookie
-        if (el.querySelectorAll('a[href]').length > 8) return true;   // меню, а не плашка
+        // Много ссылок — меню; но у плашки «подпишитесь» внизу бывают «Условия», «Конфиденциальность», тарифы.
+        const links = el.querySelectorAll('a[href]').length;
+        if ((links > 8 && !nag) || links > 30) return true;
+        return false;
+      };
+
+      // Слой, который сейчас нельзя трогать, но потом — можно (анимация появления, вы печатаете).
+      const notNow = (el, s) => {
+        if (document.fullscreenElement || document.webkitFullscreenElement) return true;
+        if (document.activeElement && el.contains(document.activeElement) && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return true;
         if (s.visibility === 'hidden' || s.display === 'none' || Number(s.opacity) === 0) return true;
         return false;
       };
 
       const hide = (el, kind) => {
         el.style.setProperty('display', 'none', 'important');
+        decided.add(el);
         state.hidden++;
         post(kind);
       };
 
-      // covering — слой действительно лежит поверх страницы в этой точке (а не фоном под ней).
-      const inspect = (el, covering) => {
-        if (!el || seen.has(el) || !covering) return false;
-        seen.add(el);
+      // root — самый внешний fixed-слой (его и прячем), chain — все fixed-слои от точки до него.
+      const inspect = (root, chain) => {
+        if (!root || decided.has(root)) return false;
+        const n = (looks.get(root) || 0) + 1;
+        looks.set(root, n);
+        if (n > 25) return false;
         // Вы только что что-то нажали — значит, окно, скорее всего, открыли сами.
-        if (Date.now() - lastUser < 1200) { state.skipped.push('user:' + (el.id || el.tagName)); return false; }
-        const s = style(el);
-        if (!s) return false;
-        const r = el.getBoundingClientRect();
+        if (Date.now() - lastUser < 1200) { state.skipped.push('user:' + (root.id || root.tagName)); return false; }
+        const s = style(root);
+        if (!s || notNow(root, s)) return false;
+        const text = textOf(root);
+        const nag = NAG.test(text) || chain.some((el) => NAG.test(signature(el)));
+        if (semanticallyProtected(root, nag)) { decided.add(root); return false; }
+        // Размер берём у самого крупного слоя цепочки: обёртка может быть нулевой высоты.
+        let box = null;
+        for (const el of chain) {
+          const b = visibleBox(el);
+          if (!box || b.w * b.h > box.w * box.h) box = b;
+        }
+        const { r, w, h } = box;
         const vw = innerWidth, vh = innerHeight;
-        const w = Math.max(0, Math.min(r.right, vw) - Math.max(r.left, 0));
-        const h = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
         if (w < 40 || h < 30) return false;
         const coverage = (w * h) / (vw * vh);
-        const text = textOf(el);
-        if (protectedLayer(el, s, text)) return false;
-        const nag = NAG.test(text) || NAG.test(signature(el));
         if (coverage > 0.6) {
           // Слой на весь экран: окно-уговор или пустая «шторка» (затемнение, градиент поверх статьи).
-          if (nag || text.length < 12) { hide(el, nag ? 'modal' : 'backdrop'); return true; }
+          if (nag || text.length < 12) { hide(root, nag ? 'modal' : 'backdrop'); return true; }
+          decided.add(root);
           return false;
         }
         const bottom = r.bottom >= vh - 4 && r.top > vh * 0.25;
         const top = r.top <= 4 && r.bottom < vh * 0.6;
-        if (nag && w > vw * 0.45 && (bottom || top)) { hide(el, bottom ? 'bottom-sheet' : 'top-bar'); return true; }
+        if (nag && w > vw * 0.45 && (bottom || top)) { hide(root, bottom ? 'bottom-sheet' : 'top-bar'); return true; }
         // Небольшое всплывающее окно с формой рассылки или кнопкой «Подписаться».
-        if (nag && coverage > 0.03 && el.querySelector('input[type="email"], button, a[role="button"], [role="button"]')) { hide(el, 'popup'); return true; }
+        if (nag && coverage > 0.03 && root.querySelector('input[type="email"], button, a[role="button"], [role="button"]')) { hide(root, 'popup'); return true; }
         return false;
       };
 
-      // Запрет прокрутки, который оставляют такие окна: overflow: hidden и «замороженный» body.
+      // Запрет прокрутки и «некликабельная» страница, которые оставляют такие окна.
       const unlock = () => {
         let changed = false;
         for (const el of [document.documentElement, document.body]) {
           if (!el) continue;
+          // Классы-замки (stopScroll, restrictScroll, modal-open…): вместе с ними уходят и их псевдоэлементы-«туман».
+          for (const name of Array.from(el.classList)) {
+            if (LOCK.test(name)) { el.classList.remove(name); changed = true; }
+          }
           const s = style(el);
           if (!s) continue;
           if (s.overflowY === 'hidden' || s.overflowY === 'clip' || s.overflow === 'hidden') {
@@ -617,10 +650,14 @@ extension Scripts {
             el.style.setProperty('overflow-y', 'auto', 'important');
             changed = true;
           }
-          if (el === document.body && s.position === 'fixed') {
+          if (s.pointerEvents === 'none') { el.style.setProperty('pointer-events', 'auto', 'important'); changed = true; }
+          if (s.position === 'fixed') {
             const y = -parseFloat(s.top || '0') || 0;
             el.style.setProperty('position', 'static', 'important');
-            if (y > 0) scrollTo(0, y);
+            if (el === document.body) {
+              el.style.setProperty('height', 'auto', 'important');
+              if (y > 0) scrollTo(0, y);
+            }
             changed = true;
           }
         }
@@ -635,19 +672,45 @@ extension Scripts {
       };
 
       // «Туман» над статьёй, который рисуют вместе с плашкой: пустой слой с градиентом, сквозь который
-      // проходят щелчки (поэтому его не видно в elementsFromPoint). Убирается только вместе с плашкой.
+      // проходят щелчки (поэтому его не видно в elementsFromPoint), или псевдоэлемент ::before/::after.
+      let fogSheet = null;
+      // Псевдоэлемент-«туман»: у html и body — любой fixed/absolute с градиентом; у шапки и меню — высотой
+      // почти в экран (меню такой высоты не бывает); у остальных — только fixed на весь экран.
+      const fogPseudo = (el, kind) => {
+        for (const pseudo of ['::before', '::after']) {
+          const s = style(el, pseudo);
+          if (!s || s.content === 'none' || s.content === 'normal' || s.display === 'none') continue;
+          if (s.position !== 'fixed' && s.position !== 'absolute') continue;
+          if (!s.backgroundImage.includes('gradient')) continue;
+          const tall = parseFloat(s.height) >= innerHeight * 0.8 || (s.top === '0px' && s.bottom === '0px');
+          if (kind === 'bar' && !tall) continue;
+          if (kind === 'other' && !(s.position === 'fixed' && tall)) continue;
+          if (!fogSheet) {
+            fogSheet = document.createElement('style');
+            fogSheet.textContent = '[data-ward-unfog]::before,[data-ward-unfog]::after{display:none!important}';
+            (document.head || document.documentElement).appendChild(fogSheet);
+          }
+          el.setAttribute('data-ward-unfog', '');
+          return true;
+        }
+        return false;
+      };
       const clearFog = () => {
         const layers = document.querySelectorAll('body > *, body > * > *');
         for (const el of layers) {
-          if (seen.has(el)) continue;
+          if (decided.has(el)) continue;
           const s = style(el);
           if (!s || s.position !== 'fixed' || s.pointerEvents !== 'none' || s.display === 'none') continue;
           if (!s.backgroundImage.includes('gradient') || textOf(el).length > 0) continue;
           const r = el.getBoundingClientRect();
           if (r.width < innerWidth * 0.5 || r.height < 60) continue;
-          seen.add(el);
+          decided.add(el);
           el.style.setProperty('display', 'none', 'important');
         }
+        fogPseudo(document.documentElement, 'root');
+        if (document.body) fogPseudo(document.body, 'root');
+        for (const el of document.querySelectorAll('header, nav, [role="banner"], [role="navigation"]')) fogPseudo(el, 'bar');
+        for (const el of document.querySelectorAll('body > *')) fogPseudo(el, 'other');
       };
 
       const POINTS = [[0.5, 0.5], [0.5, 0.94], [0.5, 0.82], [0.2, 0.92], [0.8, 0.92], [0.5, 0.06], [0.5, 0.3], [0.5, 0.7],
@@ -661,11 +724,12 @@ extension Scripts {
           let stack = [];
           try { stack = document.elementsFromPoint(innerWidth * x, innerHeight * y); } catch (e) { continue; }
           for (const el of stack.slice(0, 6)) {
-            const root = fixedRoot(el);
+            const chain = fixedChain(el);
+            const root = chain[chain.length - 1];
             if (!root || checked.has(root) || !root.contains(stack[0])) continue;
             checked.add(root);
             state.layers++;
-            if (inspect(root, true)) hid = true;
+            if (inspect(root, chain)) hid = true;
           }
         }
         if (hid) clearFog();
@@ -678,8 +742,8 @@ extension Scripts {
         scan();
         const mo = new MutationObserver(schedule);
         mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
-        // Плашки любят появляться по таймеру и после прокрутки.
-        for (const delay of [800, 2000, 4000, 8000, 15000]) setTimeout(scan, delay);
+        // Плашки любят появляться по таймеру, после анимации и после прокрутки.
+        for (const delay of [800, 2000, 4000, 8000, 15000, 30000]) setTimeout(scan, delay);
         addEventListener('scroll', schedule, { passive: true });
         setTimeout(() => mo.disconnect(), 120000);
       };
