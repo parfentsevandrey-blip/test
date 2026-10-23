@@ -82,6 +82,14 @@ nonisolated enum Scripts {
         const mask = (fn, name) => { masks.set(fn, 'function ' + name + '() {\n    [native code]\n}'); return fn; };
         const toString = { toString() { return masks.has(this) ? masks.get(this) : nativeToString.call(this); } }.toString;
         mask(toString, 'toString');
+        // Текст встроенного геттера — по образцу настоящего (в WebKit это «function userAgent() {…}», без «get»).
+        const accessorText = (key) => {
+          try {
+            const ref = Object.getOwnPropertyDescriptor((w.Navigator || w.WorkerNavigator).prototype, 'userAgent').get;
+            return nativeToString.call(ref).replace('userAgent', key);
+          } catch (e) { return 'function ' + key + '() {\n    [native code]\n}'; }
+        };
+        const maskAccessor = (fn, key) => { masks.set(fn, accessorText(key)); return fn; };
 
         // Где на самом деле лежит свойство (у потоков методы живут на прототипах глобального объекта).
         const owner = (obj, key) => {
@@ -106,13 +114,13 @@ nonisolated enum Scripts {
           const original = desc.get;
           const holder = { get [key]() { const value = original.call(this); return impl.call(this, value); } };
           const getter = Object.getOwnPropertyDescriptor(holder, key).get;
-          mask(getter, 'get ' + key);
+          maskAccessor(getter, key);
           Object.defineProperty(target, key, { configurable: desc.configurable, enumerable: desc.enumerable, get: getter, set: desc.set });
         };
         const defineGetter = (target, key, value) => {
           if (!target || key in target) return;
           const getter = Object.getOwnPropertyDescriptor({ get [key]() { return value; } }, key).get;
-          mask(getter, 'get ' + key);
+          maskAccessor(getter, key);
           Object.defineProperty(target, key, { configurable: true, enumerable: true, get: getter });
         };
 
@@ -515,6 +523,14 @@ nonisolated enum Scripts {
       const toString = { toString() { return masks.has(this) ? masks.get(this) : nativeToString.call(this); } }.toString;
       mask(toString, 'toString');
       try { Object.defineProperty(Function.prototype, 'toString', { configurable: true, enumerable: false, writable: true, value: toString }); } catch (e) {}
+      // Текст встроенного геттера и сеттера — по образцу настоящего (в WebKit без «get» и «set»).
+      const accessorText = (key, setter) => {
+        try {
+          if (setter) return nativeToString.call(Object.getOwnPropertyDescriptor(Document.prototype, 'title').set).replace('title', key);
+          return nativeToString.call(Object.getOwnPropertyDescriptor(Navigator.prototype, 'userAgent').get).replace('userAgent', key);
+        } catch (e) { return 'function ' + key + '() {\n    [native code]\n}'; }
+      };
+      const maskAccessor = (fn, key, setter) => { masks.set(fn, accessorText(key, setter)); return fn; };
       const replace = (target, key, impl) => {
         if (!target) return;
         const desc = Object.getOwnPropertyDescriptor(target, key);
@@ -535,14 +551,14 @@ nonisolated enum Scripts {
           set [key](value) { return set.call(this, setImpl ? setImpl.call(this, value) : value); },
         };
         const d = Object.getOwnPropertyDescriptor(holder, key);
-        mask(d.get, 'get ' + key);
-        mask(d.set, 'set ' + key);
+        maskAccessor(d.get, key);
+        maskAccessor(d.set, key, true);
         Object.defineProperty(target, key, { configurable: desc.configurable, enumerable: desc.enumerable, get: getImpl ? d.get : get, set: set ? (setImpl ? d.set : set) : undefined });
       };
       const defineGetter = (target, key, value) => {
         if (!target || key in target) return;
         const getter = Object.getOwnPropertyDescriptor({ get [key]() { return value; } }, key).get;
-        mask(getter, 'get ' + key);
+        maskAccessor(getter, key);
         Object.defineProperty(target, key, { configurable: true, enumerable: true, get: getter });
       };
       const siteOf = (host) => {

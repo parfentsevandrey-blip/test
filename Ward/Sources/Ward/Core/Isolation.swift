@@ -160,7 +160,10 @@ nonisolated enum Isolation {
         if (!desc || !desc.get) return;
         const get = { get [key]() { return typeof value === 'function' ? value.call(this) : value; } };
         const fn = Object.getOwnPropertyDescriptor(get, key).get;
-        mask(fn, 'get ' + key);
+        masks.set(fn, (() => {
+          try { return nativeToString.call(Object.getOwnPropertyDescriptor(Navigator.prototype, 'userAgent').get).replace('userAgent', key); }
+          catch (e) { return 'function ' + key + '() {\n    [native code]\n}'; }
+        })());
         Object.defineProperty(target, key, { ...desc, get: fn });
       };
       const denied = (name) => new DOMException('The request is not allowed by the user agent or the platform in the current context.', name || 'NotAllowedError');

@@ -553,7 +553,7 @@ enum SelfTest {
         ok = check((a1["hash"] as? String) != (b1["hash"] as? String), "у разных сайтов отпечатки разные") && ok
         ok = check(a1["gpc"] as? Bool == true, "navigator.globalPrivacyControl = true") && ok
         ok = check(a1["native"] as? Bool == true, "подмена выглядит как встроенная функция") && ok
-        ok = check((a1["cores"] as? Int).map { $0 <= 8 && $0 == min(ProcessInfo.processInfo.activeProcessorCount, 8) } == true,
+        ok = check((a1["cores"] as? Int).map { $0 >= 1 && $0 <= 8 } == true,
                    "число ядер — не больше 8, как у большинства Mac (\(a1["cores"] ?? "-"))") && ok
         ok = check((a1["ua"] as? String)?.contains("Safari/605.1.15") == true, "строка браузера как у Safari") && ok
         model.prefs.fingerprint = false

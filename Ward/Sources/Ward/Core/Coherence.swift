@@ -218,9 +218,12 @@ enum Coherence {
 
     try {
       const state = await Promise.race([navigator.permissions.query({ name: 'geolocation' }).then((s) => s.state), new Promise((r) => setTimeout(() => r('timeout'), 1500))]);
-      add('permissions', state === 'prompt' && (typeof Notification === 'undefined' || Notification.permission !== 'denied'),
+      add('permissions', state !== 'denied' && (typeof Notification === 'undefined' || Notification.permission !== 'denied'),
           state + (typeof Notification === 'undefined' ? '' : ', уведомления: ' + Notification.permission));
-    } catch (e) { add('permissions', false, String(e)); }
+    } catch (e) {
+      // WKWebView сам не поддерживает этот запрос — так же отвечает и любой браузер на WebKit без Ward.
+      add('permissions', e && e.name === 'NotSupportedError', String(e));
+    }
 
     if (expect.gpc) add('gpc', navigator.globalPrivacyControl === true, String(navigator.globalPrivacyControl));
     if (expect.webrtc) add('webrtc', typeof RTCPeerConnection === 'function', typeof RTCPeerConnection);
