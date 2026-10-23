@@ -1,5 +1,6 @@
 import AppKit
 import CoreServices
+import CryptoKit
 import WebKit
 
 /// Загрузки: в папку «Загрузки», с пометкой «скачано из интернета» — macOS проверит файл перед открытием.
@@ -15,7 +16,10 @@ final class Downloads: NSObject, WKDownloadDelegate {
         var received: Int64 = 0
         var total: Int64 = 0
         var state: State = .running
+        /// SHA-256 готового файла — сверить с тем, что указан на сайте программы.
+        var sha256: String?
         let started = Date()
+        @ObservationIgnored weak var window: NSWindow?
         @ObservationIgnored weak var download: WKDownload?
         @ObservationIgnored var observation: NSKeyValueObservation?
 
@@ -32,8 +36,24 @@ final class Downloads: NSObject, WKDownloadDelegate {
     /// Счётчик для анимации кнопки загрузок.
     private(set) var pulse = 0
 
-    func add(_ download: WKDownload) {
-        let item = Item(name: download.originalRequest?.url?.lastPathComponent ?? "файл", source: download.originalRequest?.url)
+    /// Расширения программ и установщиков: такие файлы без шифрования могут подменить по пути.
+    nonisolated static let executableExtensions: Set<String> = [
+        "dmg", "pkg", "mpkg", "app", "zip", "command", "sh", "tool", "terminal", "scpt", "jar", "exe", "msi", "iso", "img", "xip",
+    ]
+
+    func add(_ download: WKDownload, window: NSWindow? = nil) {
+        let source = download.originalRequest?.url
+        // Адрес из списков вредоносного ПО — загрузку не начинаем вовсе.
+        if let source, AppModel.shared.blocker.index.isDangerous(source) {
+            download.cancel { _ in }
+            let item = Item(name: source.lastPathComponent.isEmpty ? (source.host ?? "файл") : source.lastPathComponent, source: source)
+            item.state = .failed("Остановлено: адрес в списках вредоносного ПО")
+            items.insert(item, at: 0)
+            pulse += 1
+            return
+        }
+        let item = Item(name: source?.lastPathComponent ?? "файл", source: source)
+        item.window = window
         item.download = download
         item.observation = download.progress.observe(\.fractionCompleted, options: [.new]) { @Sendable [weak item] progress, _ in
             let fraction = progress.fractionCompleted
@@ -74,6 +94,22 @@ final class Downloads: NSObject, WKDownloadDelegate {
     // MARK: - WKDownloadDelegate
 
     func download(_ download: WKDownload, decideDestinationUsing response: URLResponse, suggestedFilename: String) async -> URL? {
+        let ext = (suggestedFilename as NSString).pathExtension.lowercased()
+        let source = response.url ?? download.originalRequest?.url
+        if Self.executableExtensions.contains(ext), source?.scheme == "http", let item = item(download) {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "Программа скачивается без шифрования"
+            alert.informativeText = "«\(suggestedFilename)» идёт по незащищённому соединению: по пути её могут подменить. Лучше найти ссылку на HTTPS-странице разработчика."
+            alert.addButton(withTitle: "Не скачивать")
+            alert.addButton(withTitle: "Всё равно скачать")
+            let answer: NSApplication.ModalResponse
+            if let window = item.window { answer = await alert.beginSheetModal(for: window) } else { answer = alert.runModal() }
+            if answer == .alertFirstButtonReturn {
+                item.state = .cancelled
+                return nil
+            }
+        }
         let folder = AppPaths.downloads
         let name = suggestedFilename.isEmpty ? "download" : suggestedFilename.replacingOccurrences(of: "/", with: "_")
         var target = folder.appendingPathComponent(name)
@@ -96,12 +132,26 @@ final class Downloads: NSObject, WKDownloadDelegate {
         guard let item = item(download) else { return }
         item.state = .done
         item.progress = 1
-        if let file = item.file { Self.quarantine(file, source: item.source) }
+        if let file = item.file {
+            Self.quarantine(file, source: item.source)
+            Task {
+                let hash = await Task.detached { Downloads.sha256(of: file) }.value
+                item.sha256 = hash
+            }
+        }
         pulse += 1
     }
 
     func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
         item(download)?.state = .failed(error.localizedDescription)
+    }
+
+    nonisolated static func sha256(of file: URL) -> String? {
+        guard let handle = try? FileHandle(forReadingFrom: file) else { return nil }
+        defer { try? handle.close() }
+        var hasher = SHA256()
+        while let chunk = try? handle.read(upToCount: 1 << 20), !chunk.isEmpty { hasher.update(data: chunk) }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     /// Пометка Gatekeeper: файл из интернета, при открытии macOS проверит подпись и предупредит.

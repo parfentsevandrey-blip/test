@@ -62,6 +62,16 @@ enum SelfTest {
     ||lazy.example^$csp=script-src 'none'
     ||remove.me^
     ||remove.me^$badfilter
+    example.com,~sub.example.com##+js(set, adsOn, false)
+    example.com##+js(aopr, detectAdBlock)
+    example.com##+js(trusted-set-cookie, a, b)
+    example.com##+js(unknown-scriptlet, x)
+    example.org#@#+js()
+    example.org##+js(set, adsOn, false)
+    youtube.*##+js(set, ytAds, false)
+    example.com##.ad:has-text(Реклама)
+    example.com#?#.badge:upward(2)
+    example.com#$#.x { color: red !important; }
     """
 
     static func logic() -> Bool {
@@ -97,6 +107,20 @@ enum SelfTest {
         ok = check(set.blocks.contains { $0.resourceTypes == ["popup"] }, "$popup") && ok
         ok = check(set.blocks.contains { $0.loadType == "third-party" }, "$third-party") && ok
         ok = check(set.blocks.contains { $0.resourceTypes == ["image", "script"] }, "$script,image") && ok
+
+        // Скриптлеты и процедурная косметика
+        let index0 = ProtectionIndex(set)
+        let calls = index0.scriptletCalls(for: "www.example.com")
+        ok = check(calls.contains(#"0["set-constant","adsOn","false"]"#) && calls.contains(#"0["abort-on-property-read","detectAdBlock"]"#) && calls.count == 3,
+                   "скриптлеты для сайта: \(calls)") && ok
+        ok = check(!index0.scriptletCalls(for: "sub.example.com").contains { $0.contains("adsOn") }, "скриптлет «везде, кроме» не действует на исключённом поддомене") && ok
+        ok = check(index0.scriptletCalls(for: "example.org").isEmpty, "#@#+js() выключает скриптлеты сайта") && ok
+        ok = check(index0.scriptletCalls(for: "www.youtube.de").contains { $0.contains("ytAds") }, "домен с любой зоной (youtube.*)") && ok
+        let procedural = index0.proceduralSelectors(for: "example.com")
+        ok = check(procedural.count == 4 && procedural.contains(".x:style(color: red !important;)"), "процедурная косметика и #$#: \(procedural)") && ok
+        let trusted = ScriptletCatalog.call("trusted-set-cookie, a, b", trusted: true)
+        ok = check(trusted != nil && ScriptletCatalog.call("trusted-set-cookie, a, b", trusted: false) == nil, "доверенные скриптлеты — только из списков uBlock Origin") && ok
+        ok = check(ScriptletCatalog.arguments(#"rpnt, script, /a\,b/, 'x y'"#) == ["rpnt", "script", "/a,b/", "x y"], "разбор аргументов скриптлета") && ok
 
         var malware = FilterSet()
         FilterParser.parse("||scam.example^$all\n||phish.example/login^\n", kind: .malware, into: &malware, badfilters: [])
@@ -158,10 +182,36 @@ enum SelfTest {
         history.visit(URL(string: "https://news.ycombinator.com")!, title: "Hacker News")
         ok = check(history.suggestions("git").first?.url.host == "github.com" && history.suggestions("hacker").count == 1, "подсказки из истории") && ok
 
+        // Фишинг
+        ok = check(Punycode.display("xn--e1afmkfd.xn--p1ai").text == "пример.рф" && !Punycode.display("xn--e1afmkfd.xn--p1ai").suspicious, "punycode: пример.рф") && ok
+        ok = check(Punycode.display("xn--80ak6aa92e.com").suspicious, "кириллица под видом латиницы («аррӏе.com») показывается как punycode") && ok
+        ok = check(Lookalike.imitated(host: "sberbamk.ru") == "sberbank.ru" && Lookalike.imitated(host: "paypa1.com") == "paypal.com"
+                   && Lookalike.imitated(host: "gosuslugi-pay.ru") == "gosuslugi.ru" && Lookalike.imitated(host: "paypal.com.secure-login.net") == "paypal.com",
+                   "подделки под известные сайты") && ok
+        let good = ["finance.yahoo.com", "booking.com", "cooking.com", "githubusercontent.com", "login.microsoftonline.com", "online.sberbank.ru", "lenta.ru", "mall.ru"]
+        ok = check(good.allSatisfy { Lookalike.imitated(host: $0) == nil }, "настоящие сайты не считаются подделками") && ok
+
+        // Настройки и сеанс прошлых версий
+        let v1 = try? JSONDecoder().decode(Prefs.self, from: Data(#"{"enabledLists":["easylist","annoyances"]}"#.utf8))
+        ok = check(v1?.enabledLists == ["easylist", "annoyances", "ubo-quick-fixes", "adguard-cname"], "новые списки включаются, выключенные остаются выключенными: \(v1?.enabledLists.sorted() ?? [])") && ok
+        let s1 = try? JSONDecoder().decode(SavedSession.self, from: Data(#"{"windows":[["https://a.com","https://b.com"]]}"#.utf8))
+        ok = check(s1?.windows.first?.count == 2 && s1?.windows.first?.first?.container == nil, "сеанс первой версии читается") && ok
+        let st = try? JSONDecoder().decode(Stats.self, from: Data(#"{"total":5,"byKind":{},"byCompany":{},"days":{},"cleanedLinks":1,"upgraded":0,"since":0}"#.utf8))
+        ok = check(st?.total == 5 && st?.consentsRejected == 0, "счётчики первой версии читаются") && ok
+        var strictPrefs = Prefs()
+        strictPrefs.strictMode = .unfamiliar
+        strictPrefs.relaxedSites = ["bank.ru"]
+        ok = check(strictPrefs.strict(site: "new.com", familiar: false) && !strictPrefs.strict(site: "old.com", familiar: true) && !strictPrefs.strict(site: "bank.ru", familiar: false),
+                   "строгий режим для незнакомых сайтов") && ok
+        ok = check(SponsorBlockClient.prefix("dQw4w9WgXcQ") == "5f6b", "SponsorBlock: в запросе только 4 знака хеша id ролика") && ok
+
         // Скрипты: синтаксис в JavaScriptCore
         let js = JSContext()!
-        for (name, source) in [("отпечаток", Scripts.fingerprint(secret: "test", blockWebRTC: true)), ("наблюдатель", Scripts.observer),
-                               ("проверка селекторов", Scripts.validateSelectors), ("отпечаток холста", MiniHTTP.canvasProbe)] {
+        let scriptlets = Scripts.scriptlets([#"0["set-constant","a","false"]"#, #"1["replace-fetch-response","x","y",""]"#]) ?? ""
+        for (name, source) in [("отпечаток", Scripts.fingerprint(secret: "test", blockWebRTC: true, spoofTimezone: true, spoofLanguage: true)),
+                               ("наблюдатель", Scripts.observer), ("проверка селекторов", Scripts.validateSelectors), ("отпечаток холста", MiniHTTP.canvasProbe),
+                               ("скриптлеты", scriptlets), ("процедурная косметика", Scripts.procedural([".a:has-text(x)"]) ?? ""),
+                               ("отказ от cookie", Scripts.consent), ("SponsorBlock", Scripts.sponsorBlock)] {
             js.exception = nil
             js.setObject(source, forKeyedSubscript: "src" as NSString)
             js.evaluateScript("new Function('list', src)")
@@ -189,6 +239,13 @@ enum SelfTest {
             ok = check(full.trackers["mc.yandex.ru"] != nil || full.trackers["yandex.ru"] != nil, "Яндекс Метрика в трекерах") && ok
             ok = check(full.genericSelectors.contains("#ad_banner"), "EasyList: ###ad_banner") && ok
             ok = check(full.danger.count > 1000, "опасные адреса из URLhaus") && ok
+            let fullIndex = ProtectionIndex(full)
+            let calls = full.scriptlets.values.reduce(0) { $0 + $1.count }
+            let proc = full.procedural.values.reduce(0) { $0 + $1.count }
+            info("скриптлетов: \(calls) на \(full.scriptlets.count) сайтах, процедурных правил: \(proc), для youtube.com: \(fullIndex.scriptletCalls(for: "www.youtube.com").count)")
+            ok = check(calls > 3000 && proc > 1000, "скриптлеты и процедурная косметика из списков") && ok
+            ok = check(fullIndex.scriptletCalls(for: "www.youtube.com").count >= 5, "правила против рекламы YouTube") && ok
+            ok = check(full.trackers["omtrdc.net"] != nil || full.trackers["sc.omtrdc.net"] != nil, "настоящие домены CNAME-трекеров в списках") && ok
         }
         return ok
     }
@@ -369,13 +426,189 @@ enum SelfTest {
             priv.closedWindow()
         }
 
-        // 11. Внешний тест блокировщика (справочно).
+        // 11. Скриптлеты и процедурная косметика (правила для localhost подставляются, как будто они из списков).
+        model.blocker.injectForTest { index in
+            index.scriptlets["localhost"] = [
+                #"0["set-constant","adsOn","false"]"#, #"0["json-prune","ads"]"#, #"0["abort-on-property-read","detectAdBlock"]"#,
+            ]
+            index.procedural["localhost"] = [".promo:has-text(Реклама)", ".badge:upward(2)"]
+        }
+        tab.protectionsChanged()
+        _ = await open(tab, "http://localhost:\(p)/scriptlets.html?s")
+        try? await Task.sleep(for: .seconds(1))
+        let sc = await evaluate(tab, """
+        const shown = (id) => getComputedStyle(document.getElementById(id)).display !== 'none';
+        return { results: window.results, promo1: shown('promo1'), promo2: shown('promo2'),
+                 wrap: getComputedStyle(document.querySelector('.wrap')).display };
+        """) as? [String: Any] ?? [:]
+        let scr = sc["results"] as? [String: String] ?? [:]
+        info("скриптлеты: \(scr), процедурная косметика: \(sc)")
+        ok = check(scr["adsOn"] == "false", "set-constant: сайт не смог включить рекламу") && ok
+        ok = check(scr["pruned"] == "true", "json-prune: рекламные поля убраны из JSON") && ok
+        ok = check(scr["aopr"] == "aborted", "abort-on-property-read: проверка блокировщика прервана") && ok
+        ok = check(sc["promo1"] as? Bool == false && sc["promo2"] as? Bool == true, ":has-text скрывает только рекламный блок") && ok
+        ok = check(sc["wrap"] as? String == "none", ":upward(2) скрывает обёртку") && ok
+        ok = check(tab.scriptletCount == 3, "щит знает, сколько скриптлетов работает (\(tab.scriptletCount))") && ok
+        model.blocker.injectForTest { index in
+            index.scriptlets["localhost"] = nil
+            index.procedural["localhost"] = nil
+        }
+        tab.protectionsChanged()
+
+        // 12. Отказ от cookie: известное окно (OneTrust) и незнакомое — по тексту кнопки.
+        for (page, expected) in [("consent.html", "OneTrust"), ("consent2.html", "по тексту кнопки")] {
+            _ = await open(tab, "http://localhost:\(p)/\(page)")
+            try? await Task.sleep(for: .seconds(2.5))
+            let r = await evaluate(tab, "return window.results.consent || 'нет'") as? String
+            ok = check(r == "rejected" && tab.consentRejected == expected, "cookie: нажато «Отклонить» (\(page): \(r ?? "-"), \(tab.consentRejected ?? "-"))") && ok
+        }
+
+        // 13. Подделка под известный сайт — предупреждение без единого запроса.
+        tab.load(URL(string: "https://sberbamk.ru/login")!)
+        try? await Task.sleep(for: .seconds(1.5))
+        if case .lookalike(_, let original) = tab.interstitial { ok = check(original == "sberbank.ru", "sberbamk.ru — «похоже на подделку под sberbank.ru»") && ok }
+        else { ok = check(false, "sberbamk.ru — предупреждение о подделке (\(String(describing: tab.interstitial)))") && ok }
+
+        // 14. Сайт без HTTPS: сначала HTTPS, потом предупреждение; на странице без шифрования — о пароле.
+        // ward.localtest.me — публичное имя, которое ведёт на 127.0.0.1: для Ward это «настоящий» сайт.
+        let plain = URL(string: "http://ward.localtest.me:\(p)/password.html")!
+        _ = await open(tab, plain.absoluteString, timeout: 20)
+        if case .insecure(let from) = tab.interstitial {
+            check(true, "HTTPS не получился — экран «сайт не поддерживает защищённое соединение»")
+            tab.proceedInsecure(from)
+            let before = tab.loadsFinished
+            for _ in 0..<50 where tab.loadsFinished == before { try? await Task.sleep(for: .milliseconds(200)) }
+            _ = await evaluate(tab, "document.getElementById('pw').focus(); return 1")
+            try? await Task.sleep(for: .seconds(1))
+            ok = check(tab.passwordWarning, "поле пароля на странице без шифрования — предупреждение") && ok
+        } else {
+            info("localtest.me недоступен или HTTPS ответил (\(String(describing: tab.interstitial))) — проверку пароля пропускаю")
+        }
+
+        // 15. Строгий режим (Lockdown Mode WebKit) — без WebGL и WebAssembly.
+        let probe = "const g = document.createElement('canvas').getContext('webgl'); return { webgl: !!g, wasm: typeof WebAssembly !== 'undefined' };"
+        _ = await open(tab, "http://localhost:\(p)/strict.html?normal")
+        let normal = await evaluate(tab, probe) as? [String: Bool] ?? [:]
+        model.setStrict(true, site: "localhost")
+        _ = await open(tab, "http://localhost:\(p)/strict.html?strict")
+        let strict = await evaluate(tab, probe) as? [String: Bool] ?? [:]
+        info("обычный режим: \(normal), строгий: \(strict)")
+        ok = check(tab.strictHere && strict != normal, "строгий режим меняет возможности страницы") && ok
+        model.setStrict(nil, site: "localhost")
+
+        // 16. Размеры элементов: шум в стотысячных долях пикселя, разный у разных сайтов.
+        let rectProbe = "return document.getElementById('box').getBoundingClientRect().width"
+        _ = await open(tab, "http://localhost:\(p)/rects.html")
+        let wa = await evaluate(tab, rectProbe) as? Double ?? 0
+        _ = await open(tab, "http://127.0.0.1:\(p)/rects.html")
+        let wb = await evaluate(tab, rectProbe) as? Double ?? 0
+        ok = check(wa != wb && abs(wa - wb) < 0.001 && abs(wa - 123.4) < 0.01, "getBoundingClientRect: \(wa) / \(wb)") && ok
+
+        // 17. Контейнеры и одноразовые вкладки: cookie не переходят между хранилищами.
+        let work = model.containers[1]
+        let cTab = browser.newTab(url: nil, select: false, container: work)
+        let cWeb = cTab.webView
+        cWeb.frame = host.bounds
+        host.addSubview(cWeb)
+        _ = await open(cTab, "http://127.0.0.1:\(p)/cookie.html?container")
+        let eTab = browser.newTab(url: nil, select: false, ephemeral: true)
+        let eWeb = eTab.webView
+        eWeb.frame = host.bounds
+        host.addSubview(eWeb)
+        let defaultBefore = await cookies(WKWebsiteDataStore.default())
+        _ = await open(eTab, "http://127.0.0.1:\(p)/cookie.html?ephemeral")
+        let inContainer = await cookies(model.store(for: work))
+        let inEphemeral = await cookies(eTab.dataStore)
+        let inDefault = await cookies(WKWebsiteDataStore.default())
+        ok = check(inContainer.contains("ward_test") && inEphemeral.contains("ward_test") && inDefault == defaultBefore,
+                   "cookie контейнера и одноразовой вкладки не попали в общее хранилище") && ok
+        let otherContainer = await cookies(model.store(for: model.containers[2]))
+        ok = check(!otherContainer.contains("ward_test"), "другой контейнер этих cookie не видит") && ok
+
+        // 18. Уборка за закрытым сайтом: вкладки 127.0.0.1 закрыты — его данные удаляются, открытый localhost остаётся.
+        _ = await open(tab, "http://localhost:\(p)/cookie.html?keep")
+        browser.close(cTab)
+        browser.close(eTab)
+        let removed = await model.cleanupClosedSites()
+        let afterContainer = await cookies(model.store(for: work))
+        let afterDefault = await cookies(WKWebsiteDataStore.default())
+        ok = check(!afterContainer.contains("ward_test") && afterDefault.contains("ward_test"),
+                   "данные закрытого сайта удалены (\(removed) записей), открытого — на месте") && ok
+
+        // 19. Прокси: окно идёт через SOCKS5, и имя сайта (DNS) разрешает прокси, а не Mac.
+        let socks = MiniSOCKS(targetPort: p)
+        if (try? socks.start()) != nil {
+            model.prefs.proxyHost = "127.0.0.1"
+            model.prefs.proxyPort = socks.port
+            model.prefs.proxyMode = .all
+            let proxied = "http://proxy-test.ward.invalid:\(p)/clean.html?proxy"
+            _ = await open(tab, proxied, timeout: 20)
+            if case .insecure(let from) = tab.interstitial {
+                tab.proceedInsecure(from)
+                let before = tab.loadsFinished
+                for _ in 0..<50 where tab.loadsFinished == before { try? await Task.sleep(for: .milliseconds(200)) }
+            }
+            let title = await evaluate(tab, "return document.title") as? String
+            info("через прокси: \(socks.requests.map { "\($0.name)\($0.isDomain ? " (имя)" : " (IP)")" })")
+            ok = check(title == "Чистая ссылка", "страница несуществующего для DNS сайта открылась через прокси") && ok
+            ok = check(socks.requests.contains { $0.isDomain && $0.name == "proxy-test.ward.invalid" }, "имя сайта ушло прокси — DNS не утекает") && ok
+            model.prefs.proxyMode = .off
+            socks.stop()
+        }
+
+        // 20. Загрузка: в «Загрузки», с SHA-256.
+        _ = await open(tab, "http://localhost:\(p)/file.bin", timeout: 10)
+        for _ in 0..<50 where model.downloads.items.first?.sha256 == nil { try? await Task.sleep(for: .milliseconds(200)) }
+        if let item = model.downloads.items.first {
+            let expected = Downloads.sha256(of: { () -> URL in
+                let u = FileManager.default.temporaryDirectory.appendingPathComponent("ward-expected.bin")
+                try? MiniHTTP.downloadBody.write(to: u)
+                return u
+            }())
+            ok = check(item.state == .done && item.sha256 == expected, "загрузка завершена, SHA-256 совпадает (\(item.file?.lastPathComponent ?? "-"))") && ok
+            if let file = item.file { try? FileManager.default.removeItem(at: file) }
+        } else {
+            ok = check(false, "загрузка не началась") && ok
+        }
+
+        // 21. История на диске — только в зашифрованном виде.
+        model.saveState()
+        let sealed = Storage.url("history.json.sealed")
+        let sealedData = (try? Data(contentsOf: sealed)) ?? Data()
+        ok = check(!sealedData.isEmpty && !FileManager.default.fileExists(atPath: Storage.url("history.json").path)
+                   && sealedData.range(of: Data("localhost".utf8)) == nil, "история зашифрована (\(sealedData.count) байт, открытого текста нет)") && ok
+
+        // 22. Песочница macOS.
+        let sandboxed = ProcessInfo.processInfo.environment["APP_SANDBOX_CONTAINER_ID"] != nil
+        let realHome = getpwuid(getuid()).map { String(cString: $0.pointee.pw_dir) } ?? "/Users/Shared"
+        let outside = URL(fileURLWithPath: realHome).appendingPathComponent("ward-escape-test-\(UUID().uuidString.prefix(6))")
+        let escaped = (try? Data("x".utf8).write(to: outside)) != nil
+        if escaped { try? FileManager.default.removeItem(at: outside) }
+        ok = check(sandboxed && !escaped, "Ward работает в песочнице: писать вне своей папки нельзя") && ok
+
+        // 23. Сеть (справочно): скрытый трекер через DNS, SponsorBlock, сертификат.
+        if let target = await Task.detached(operation: { CNAMEGuard.canonicalName("metrics.24hourfitness.com") }).value {
+            let kind = model.blocker.index.classify(target, page: "www.24hourfitness.com")
+            check(kind != nil, "CNAME: metrics.24hourfitness.com → \(target) — \(kind.map { "\($0)" } ?? "не трекер")")
+        } else { info("CNAME: имя не разрешилось (нет сети?)") }
+        let segments = await SponsorBlockClient.shared.segments(videoID: "0e3GPea1Tyg", prefs: model.prefs)
+        if segments.isEmpty { info("SponsorBlock: отрезков не пришло (нет сети или база недоступна)") }
+        else { check(true, "SponsorBlock: \(segments.count) \(Format.plural(segments.count, "отрезок", "отрезка", "отрезков")) для ролика (\(segments.compactMap { $0["category"] as? String }.joined(separator: ", ")))") }
+        _ = await open(tab, "https://example.com/", timeout: 20)
+        if let cert = tab.certificate { check(!cert.issuer.isEmpty, "сертификат example.com: \(cert.issuer), до \(cert.notAfter.map { "\($0)" } ?? "?")") }
+        else { info("сертификат: не получен") }
+
+        // 24. Внешний тест блокировщика (справочно).
         if CommandLine.arguments.contains("--live") {
             _ = await open(tab, "https://d3ward.github.io/toolz/adblock.html", timeout: 30)
             try? await Task.sleep(for: .seconds(20))
             let text = await evaluate(tab, "return document.body ? document.body.innerText : ''") as? String ?? ""
             let lines = text.split(separator: "\n").filter { $0.contains("%") || $0.lowercased().contains("blocked") }.prefix(6)
             info("d3ward adblock test: \(lines.joined(separator: " | "))")
+            _ = await open(tab, "https://abrahamjuliot.github.io/creepjs/", timeout: 30)
+            try? await Task.sleep(for: .seconds(25))
+            let creep = await evaluate(tab, "return document.body ? document.body.innerText.slice(0, 600) : ''") as? String ?? ""
+            info("CreepJS: \(creep.replacingOccurrences(of: "\n", with: " | ").prefix(400))")
         }
 
         server.stop()

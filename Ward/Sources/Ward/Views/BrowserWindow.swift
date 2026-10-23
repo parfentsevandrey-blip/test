@@ -16,7 +16,7 @@ struct BrowserWindow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if browser.tabs.count > 1 || browser.isPrivate {
+            if browser.tabs.count > 1 || browser.isPrivate || browser.usesProxy {
                 TabStrip(browser: browser)
                 Divider()
             }
@@ -87,9 +87,33 @@ struct BrowserWindow: View {
             if !model.downloads.items.isEmpty {
                 DownloadsButton()
             }
-            Button { browser.newTab() } label: { Image(systemName: "plus") }
-                .help("Новая вкладка (⌘T)")
+            NewTabMenu(browser: browser)
         }
+    }
+}
+
+/// «+»: новая вкладка; из меню — в контейнере или одноразовая.
+struct NewTabMenu: View {
+    @Environment(AppModel.self) private var model
+    let browser: BrowserState
+
+    var body: some View {
+        Menu {
+            Button("Новая вкладка") { browser.newTab() }
+            if !browser.isPrivate {
+                Button("Одноразовая вкладка") { browser.newTab(ephemeral: true) }
+                Divider()
+                ForEach(model.containers) { c in
+                    Button("В контейнере «\(c.name)»") { browser.newTab(container: c) }
+                }
+            }
+        } label: {
+            Image(systemName: "plus")
+        } primaryAction: {
+            browser.newTab()
+        }
+        .menuIndicator(.hidden)
+        .help("Новая вкладка (⌘T). Удерживайте — контейнеры и одноразовая вкладка")
     }
 }
 
@@ -111,6 +135,11 @@ struct PageArea: View {
             }
             if tab.isLoading, tab.progress < 1 {
                 ProgressLine(progress: tab.progress)
+            }
+            if tab.passwordWarning, tab.interstitial == nil {
+                PasswordBanner(tab: tab)
+                    .padding(.top, 10)
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
     }
@@ -179,6 +208,27 @@ struct WindowAccessor: NSViewRepresentable {
     func updateNSView(_ view: Probe, context: Context) {
         view.onWindow = onWindow
         if let window = view.window { onWindow(window) }
+    }
+}
+
+/// Поле пароля на странице без шифрования.
+struct PasswordBanner: View {
+    let tab: Tab
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "lock.open.trianglebadge.exclamationmark.fill").foregroundStyle(.orange).font(.title3)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Не вводите здесь пароль").font(.headline)
+                Text("Страница открыта без шифрования: пароль увидит любой на пути — провайдер, владелец Wi-Fi, злоумышленник.")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Button { tab.passwordWarning = false } label: { Image(systemName: "xmark") }
+                .buttonStyle(.borderless)
+        }
+        .padding(14)
+        .frame(maxWidth: 560)
+        .glassEffect(.regular.tint(.orange.opacity(0.15)), in: RoundedRectangle(cornerRadius: 16))
     }
 }
 

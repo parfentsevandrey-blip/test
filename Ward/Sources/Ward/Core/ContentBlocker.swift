@@ -284,6 +284,11 @@ final class ContentBlocker {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
+    /// Для самопроверок: добавить в индекс правила, которых нет в списках (например, для localhost).
+    func injectForTest(_ change: (inout ProtectionIndex) -> Void) {
+        change(&index)
+    }
+
     /// Применить правила к вкладке (или снять их, если защита на сайте выключена).
     func apply(to controller: WKUserContentController, enabled: Bool) {
         controller.removeAllContentRuleLists()

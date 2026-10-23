@@ -66,6 +66,11 @@ nonisolated struct FilterSet: Sendable {
     var siteRemoveParams: [String: Set<String>] = [:]
     /// Ссылки-переходники: домен → [(начало пути, параметр с настоящим адресом)].
     var redirectors: [String: [RedirectRule]] = [:]
+    /// Скриптлеты: домен (или «имя.*») → записи «1[…]»/«0[…]»; исключения: домен → вызовы («» — все).
+    var scriptlets: [String: [String]] = [:]
+    var scriptletExceptions: [String: Set<String>] = [:]
+    /// Процедурная косметика: домен → селекторы с операторами uBlock.
+    var procedural: [String: [String]] = [:]
     var stats = Stats()
 
     nonisolated struct Stats: Sendable, Codable {
@@ -107,7 +112,7 @@ nonisolated enum FilterParser {
     ]
     static let allTypes = ["script", "image", "style-sheet", "font", "media", "raw", "ping", "document", "svg-document"]
 
-    static func parse(_ text: String, kind: TrackerKind, into target: inout FilterSet, badfilters: Set<String>) {
+    static func parse(_ text: String, kind: TrackerKind, trusted: Bool = false, into target: inout FilterSet, badfilters: Set<String>) {
         // enumerateLines принимает сбегающее замыкание — inout в него не передать, работаем с копией.
         var set = target
         target = FilterSet() // чтобы большие массивы не копировались при изменении
@@ -117,6 +122,7 @@ nonisolated enum FilterParser {
             let line = raw.trimmingCharacters(in: .whitespaces)
             guard !line.isEmpty, !line.hasPrefix("!"), !line.hasPrefix("["), !line.hasPrefix("# "), line.count < 4096 else { return }
             if badfilters.contains(line) { set.stats.skipped += 1; return }
+            if line.contains("#") && parseSpecial(line, trusted: trusted, into: &set) { return }
             // Процедурная косметика, вставка стилей и скриптов, HTML-фильтры AdGuard — не для WebKit.
             if unsupportedMarkers.contains(where: { line.contains($0) }) {
                 set.stats.cosmetic += 1

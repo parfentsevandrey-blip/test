@@ -1,9 +1,21 @@
 import Foundation
 
+/// Как часто включать «Режим блокировки» (Lockdown Mode) WebKit.
+nonisolated enum StrictMode: String, Codable, CaseIterable, Sendable {
+    case off, unfamiliar, all
+}
+
+/// Через что ходят окна: напрямую или через локальный прокси (например, Veil).
+nonisolated enum ProxyMode: String, Codable, CaseIterable, Sendable {
+    case off, all, privateOnly
+}
+
 /// Настройки Ward. Новые поля читаются с запасными значениями — обновление не сбрасывает настройки.
 nonisolated struct Prefs: Codable, Sendable, Equatable {
     var search: SearchEngine = .duckduckgo
     var enabledLists: Set<String> = Set(FilterList.all.filter(\.enabledByDefault).map(\.id))
+    /// Списки, о которых Ward уже знал: новые списки с обновлением включаются сами, выключенные вами — нет.
+    var knownLists: Set<String> = Set(FilterList.all.map(\.id))
     var fingerprint = true
     var cleanLinks = true
     var httpsOnly = true
@@ -23,30 +35,90 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
     /// Сайты, где выключен JavaScript.
     var noScriptSites: Set<String> = []
     var listsChecked: Date?
+    // Новое во второй версии.
+    var consentReject = true
+    var cleanClosedSites = true
+    var strictMode: StrictMode = .off
+    var strictSites: Set<String> = []
+    var relaxedSites: Set<String> = []
+    var phishingWarnings = true
+    var trustedLookalikes: Set<String> = []
+    var sponsorBlock = true
+    var sponsorCategories: Set<String> = ["sponsor", "selfpromo", "interaction", "exclusive_access"]
+    var proxyMode: ProxyMode = .off
+    var proxyHost = "127.0.0.1"
+    var proxyPort = 10808
+    var cnameDetection = true
+    var spoofTimezone = false
+    var spoofLanguage = false
+    var protectHistory = false
+    /// Камера и микрофон: сайт → разрешено навсегда (true) или запрещено (false).
+    var mediaDecisions: [String: Bool] = [:]
+    var denyMediaByDefault = false
+    /// Сайт → контейнер, в котором он всегда открывается.
+    var siteContainers: [String: UUID] = [:]
 
     init() {}
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let d = Prefs()
-        search = (try? c.decodeIfPresent(SearchEngine.self, forKey: .search)) ?? d.search
-        enabledLists = (try? c.decodeIfPresent(Set<String>.self, forKey: .enabledLists)) ?? d.enabledLists
-        fingerprint = (try? c.decodeIfPresent(Bool.self, forKey: .fingerprint)) ?? d.fingerprint
-        cleanLinks = (try? c.decodeIfPresent(Bool.self, forKey: .cleanLinks)) ?? d.cleanLinks
-        httpsOnly = (try? c.decodeIfPresent(Bool.self, forKey: .httpsOnly)) ?? d.httpsOnly
-        blockWebRTC = (try? c.decodeIfPresent(Bool.self, forKey: .blockWebRTC)) ?? d.blockWebRTC
-        fraudWarnings = (try? c.decodeIfPresent(Bool.self, forKey: .fraudWarnings)) ?? d.fraudWarnings
-        clearOnQuit = (try? c.decodeIfPresent(Bool.self, forKey: .clearOnQuit)) ?? d.clearOnQuit
-        keepHistory = (try? c.decodeIfPresent(Bool.self, forKey: .keepHistory)) ?? d.keepHistory
-        clearHistoryOnQuit = (try? c.decodeIfPresent(Bool.self, forKey: .clearHistoryOnQuit)) ?? d.clearHistoryOnQuit
-        restoreTabs = (try? c.decodeIfPresent(Bool.self, forKey: .restoreTabs)) ?? d.restoreTabs
-        blockAutoplay = (try? c.decodeIfPresent(Bool.self, forKey: .blockAutoplay)) ?? d.blockAutoplay
-        autoUpdateLists = (try? c.decodeIfPresent(Bool.self, forKey: .autoUpdateLists)) ?? d.autoUpdateLists
-        developerTools = (try? c.decodeIfPresent(Bool.self, forKey: .developerTools)) ?? d.developerTools
-        rememberedSites = (try? c.decodeIfPresent(Set<String>.self, forKey: .rememberedSites)) ?? d.rememberedSites
-        unprotectedSites = (try? c.decodeIfPresent(Set<String>.self, forKey: .unprotectedSites)) ?? d.unprotectedSites
-        noScriptSites = (try? c.decodeIfPresent(Set<String>.self, forKey: .noScriptSites)) ?? d.noScriptSites
+        func v<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T { (try? c.decodeIfPresent(T.self, forKey: key)) ?? fallback }
+        search = v(.search, d.search)
+        enabledLists = v(.enabledLists, d.enabledLists)
+        // До второй версии Ward знал только первые 12 списков.
+        knownLists = v(.knownLists, ["easylist", "easyprivacy", "ubo-filters", "ubo-privacy", "ubo-badware", "urlhaus", "peterlowe",
+                                     "ruadlist", "cookies", "ubo-unbreak", "adguard-url", "annoyances"])
+        for list in FilterList.all where !knownLists.contains(list.id) {
+            knownLists.insert(list.id)
+            if list.enabledByDefault { enabledLists.insert(list.id) }
+        }
+        fingerprint = v(.fingerprint, d.fingerprint)
+        cleanLinks = v(.cleanLinks, d.cleanLinks)
+        httpsOnly = v(.httpsOnly, d.httpsOnly)
+        blockWebRTC = v(.blockWebRTC, d.blockWebRTC)
+        fraudWarnings = v(.fraudWarnings, d.fraudWarnings)
+        clearOnQuit = v(.clearOnQuit, d.clearOnQuit)
+        keepHistory = v(.keepHistory, d.keepHistory)
+        clearHistoryOnQuit = v(.clearHistoryOnQuit, d.clearHistoryOnQuit)
+        restoreTabs = v(.restoreTabs, d.restoreTabs)
+        blockAutoplay = v(.blockAutoplay, d.blockAutoplay)
+        autoUpdateLists = v(.autoUpdateLists, d.autoUpdateLists)
+        developerTools = v(.developerTools, d.developerTools)
+        rememberedSites = v(.rememberedSites, d.rememberedSites)
+        unprotectedSites = v(.unprotectedSites, d.unprotectedSites)
+        noScriptSites = v(.noScriptSites, d.noScriptSites)
         listsChecked = try? c.decodeIfPresent(Date.self, forKey: .listsChecked)
+        consentReject = v(.consentReject, d.consentReject)
+        cleanClosedSites = v(.cleanClosedSites, d.cleanClosedSites)
+        strictMode = v(.strictMode, d.strictMode)
+        strictSites = v(.strictSites, d.strictSites)
+        relaxedSites = v(.relaxedSites, d.relaxedSites)
+        phishingWarnings = v(.phishingWarnings, d.phishingWarnings)
+        trustedLookalikes = v(.trustedLookalikes, d.trustedLookalikes)
+        sponsorBlock = v(.sponsorBlock, d.sponsorBlock)
+        sponsorCategories = v(.sponsorCategories, d.sponsorCategories)
+        proxyMode = v(.proxyMode, d.proxyMode)
+        proxyHost = v(.proxyHost, d.proxyHost)
+        proxyPort = v(.proxyPort, d.proxyPort)
+        cnameDetection = v(.cnameDetection, d.cnameDetection)
+        spoofTimezone = v(.spoofTimezone, d.spoofTimezone)
+        spoofLanguage = v(.spoofLanguage, d.spoofLanguage)
+        protectHistory = v(.protectHistory, d.protectHistory)
+        mediaDecisions = v(.mediaDecisions, d.mediaDecisions)
+        denyMediaByDefault = v(.denyMediaByDefault, d.denyMediaByDefault)
+        siteContainers = v(.siteContainers, d.siteContainers)
+    }
+
+    /// Включён ли строгий режим для сайта. `familiar` — сайт есть в истории или избранном.
+    func strict(site: String, familiar: Bool) -> Bool {
+        if relaxedSites.contains(site) { return false }
+        if strictSites.contains(site) { return true }
+        switch strictMode {
+        case .off: return false
+        case .unfamiliar: return !familiar
+        case .all: return true
+        }
     }
 
     var enabledFilterLists: [FilterList] { FilterList.all.filter { enabledLists.contains($0.id) } }
@@ -74,7 +146,27 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
     var days: [String: Int] = [:]
     var cleanedLinks = 0
     var upgraded = 0
+    var consentsRejected = 0
+    var sponsorSeconds = 0.0
+    var phishingBlocked = 0
     var since = Date()
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        func v<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T { (try? c.decodeIfPresent(T.self, forKey: key)) ?? fallback }
+        total = v(.total, 0)
+        byKind = v(.byKind, [:])
+        byCompany = v(.byCompany, [:])
+        days = v(.days, [:])
+        cleanedLinks = v(.cleanedLinks, 0)
+        upgraded = v(.upgraded, 0)
+        consentsRejected = v(.consentsRejected, 0)
+        sponsorSeconds = v(.sponsorSeconds, 0)
+        phishingBlocked = v(.phishingBlocked, 0)
+        since = v(.since, Date())
+    }
 
     static func dayKey(_ date: Date = Date()) -> String {
         let c = Calendar.current.dateComponents([.year, .month, .day], from: date)
@@ -95,9 +187,40 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
     }
 }
 
+/// Контейнер: отдельное хранилище cookie и данных сайтов. Сайты из разных контейнеров не видят друг друга.
+nonisolated struct Container: Codable, Sendable, Identifiable, Hashable {
+    var id = UUID()
+    var name: String
+    var color: Int
+
+    static let defaults: [Container] = [
+        Container(name: "Личное", color: 0), Container(name: "Работа", color: 1), Container(name: "Покупки", color: 2),
+        Container(name: "Банк", color: 3), Container(name: "Соцсети", color: 4),
+    ]
+}
+
 /// Сохранённое состояние: окна и вкладки прошлого сеанса.
 nonisolated struct SavedSession: Codable, Sendable {
-    var windows: [[URL]]
+    nonisolated struct SavedTab: Codable, Sendable, Equatable {
+        var url: URL
+        var container: UUID?
+    }
+
+    var windows: [[SavedTab]]
+
+    init(windows: [[SavedTab]]) { self.windows = windows }
+
+    enum CodingKeys: String, CodingKey { case windows }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        if let tabs = try? c.decode([[SavedTab]].self, forKey: .windows) {
+            windows = tabs
+        } else {
+            // Первая версия хранила только адреса.
+            windows = try c.decode([[URL]].self, forKey: .windows).map { $0.map { SavedTab(url: $0, container: nil) } }
+        }
+    }
 }
 
 /// Файлы JSON в папке поддержки.
@@ -149,6 +272,8 @@ nonisolated struct History: Sendable {
     }
 
     mutating func clear() { entries.removeAll() }
+
+    mutating func remove(_ url: URL) { entries.removeAll { $0.url == url } }
 
     mutating func forget(site: String) { entries.removeAll { Hosts.site($0.url.siteHost) == site } }
 

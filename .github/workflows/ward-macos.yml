@@ -27,29 +27,40 @@ jobs:
           sudo xcode-select -s "$XCODE"
           echo "Xcode: $XCODE"; sw_vers; swift --version
 
+      - name: Scripts (Node)
+        run: node Tests/js-tests.mjs
+
       # Списки фильтров на сегодня — в бандл (scripts/build.sh скачивает их сам).
       - name: Build Ward.app + DMG
         run: ./scripts/build.sh
 
+      # Копия для самопроверок: свой идентификатор (своя папка песочницы) и право поднять стенд
+      # (HTTP- и SOCKS-сервер на этом Mac). Самому Ward это право не нужно.
+      - name: Test copy
+        run: |
+          T="$RUNNER_TEMP/WardTest.app"; rm -rf "$T"; cp -R dist/Ward.app "$T"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier app.ward.browser.selftest" "$T/Contents/Info.plist"
+          codesign --force --sign - --timestamp=none --options runtime --entitlements scripts/WardTest.entitlements "$T"
+          echo "WARD_TEST=$T/Contents/MacOS/Ward" >> "$GITHUB_ENV"
+          echo "WARD_HOME=$HOME/Library/Containers/app.ward.browser.selftest/Data/ward-home" >> "$GITHUB_ENV"
+
+      # Логика — на самом Ward из образа: заодно видно, что в песочнице он читает списки из бандла.
       - name: Self-test logic (offline)
-        run: dist/Ward.app/Contents/MacOS/Ward --selftest-logic
+        run: env -u WARD_HOME dist/Ward.app/Contents/MacOS/Ward --selftest-logic
 
       # Настоящий WebKit: сборка всех правил, стенд на этом Mac с рекламой и трекерами,
-      # отпечаток браузера, очистка ссылок, опасные адреса, HTTPS.
+      # скриптлеты, отказ от cookie, подделки, строгий режим, контейнеры, прокси, песочница.
       - name: Self-test WebKit (end-to-end)
-        timeout-minutes: 15
-        env:
-          WARD_HOME: ${{ runner.temp }}/ward-home
-        run: dist/Ward.app/Contents/MacOS/Ward --selftest-webkit --live
+        timeout-minutes: 20
+        run: |
+          "$WARD_TEST" --selftest-webkit --live
 
       - name: UI screenshots
         run: |
           OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
-          # Правила один раз собраны самопроверкой — демо берёт их готовыми.
-          for S in start page shield danger private settings settings-lists settings-data settings-search; do
-            HOME_DIR="$RUNNER_TEMP/demo-$S"; mkdir -p "$HOME_DIR"
-            cp -R "$RUNNER_TEMP/ward-home/Rules" "$HOME_DIR/" 2>/dev/null || true
-            WARD_HOME="$HOME_DIR" dist/Ward.app/Contents/MacOS/Ward --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
+          # Правила один раз собраны самопроверкой — демо берёт их готовыми (тот же WARD_HOME).
+          for S in start page shield danger private settings settings-lists settings-data settings-sites settings-network; do
+            "$WARD_TEST" --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
             PID=$!
             case $S in start) sleep 45;; page) sleep 30;; shield) sleep 34;; settings*) sleep 14;; *) sleep 20;; esac
             screencapture -x "$OUT/window-$S.png" || echo "screencapture не сработал"

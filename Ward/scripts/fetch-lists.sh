@@ -26,5 +26,7 @@ fetch urlhaus        "https://malware-filter.gitlab.io/malware-filter/urlhaus-fi
 fetch cookies        "https://secure.fanboy.co.nz/fanboy-cookiemonster.txt"
 fetch annoyances     "https://secure.fanboy.co.nz/fanboy-annoyance.txt"
 fetch adguard-url    "https://filters.adtidy.org/extension/ublock/filters/17.txt"
+fetch ubo-quick-fixes "https://ublockorigin.github.io/uAssets/filters/quick-fixes.txt"
+fetch adguard-cname  "https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_original_trackers.txt"
 date -u +%Y-%m-%dT%H:%M:%SZ > "$OUT/DATE"
 exit 0

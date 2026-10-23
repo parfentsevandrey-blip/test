@@ -12,10 +12,12 @@ nonisolated enum Scripts {
     /// спрашивают видеокарту — у каждого компьютера результат чуть свой, и это «отпечаток».
     /// Ward добавляет в такие ответы незаметный шум: для каждого сайта свой и новый при каждом запуске.
     /// Внутри сайта отпечаток стабилен (сайт не ломается), между сайтами и сеансами — разный (связать нельзя).
-    static func fingerprint(secret: String, blockWebRTC: Bool) -> String {
+    static func fingerprint(secret: String, blockWebRTC: Bool, spoofTimezone: Bool = false, spoofLanguage: Bool = false) -> String {
         fingerprintSource
             .replacingOccurrences(of: "__WARD_SECRET__", with: secret)
             .replacingOccurrences(of: "__WARD_WEBRTC__", with: blockWebRTC ? "true" : "false")
+            .replacingOccurrences(of: "__WARD_TZ__", with: spoofTimezone ? "true" : "false")
+            .replacingOccurrences(of: "__WARD_LANG__", with: spoofLanguage ? "true" : "false")
     }
 
     static let fingerprintSource = #"""
@@ -23,6 +25,8 @@ nonisolated enum Scripts {
       'use strict';
       const SECRET = '__WARD_SECRET__';
       const BLOCK_WEBRTC = __WARD_WEBRTC__;
+      const SPOOF_TZ = __WARD_TZ__;
+      const SPOOF_LANG = __WARD_LANG__;
       let host = '';
       try { host = location.hostname || ''; } catch (e) {}
       const labels = host.split('.');
@@ -187,6 +191,94 @@ nonisolated enum Scripts {
           defineGetter(w.Navigator.prototype, 'globalPrivacyControl', true);
         }
 
+        // Размеры элементов на странице: по ним вычисляют шрифты и особенности отрисовки. Сдвиг — стотысячные доли пикселя.
+        const rectShift = (r) => ((seed ^ Math.imul(Math.round(r.width * 64) | 0, 2654435761) ^ Math.imul(Math.round(r.height * 64) | 0, 40503)) >>> 0) % 997 / 997 * 0.00003;
+        const noisyRect = (r) => {
+          if (!r || !w.DOMRect) return r;
+          const d = rectShift(r);
+          return new w.DOMRect(r.x + d, r.y + d, r.width + d, r.height + d);
+        };
+        const noisyList = (list) => {
+          const items = Array.from(list, noisyRect);
+          const out = Object.create(w.DOMRectList ? w.DOMRectList.prototype : Object.prototype);
+          items.forEach((r, i) => Object.defineProperty(out, i, { value: r, enumerable: true }));
+          Object.defineProperty(out, 'length', { value: items.length });
+          Object.defineProperty(out, 'item', { value: mask(function item(i) { return items[i] || null; }, 'item') });
+          Object.defineProperty(out, Symbol.iterator, { value: function* () { yield* items; } });
+          return out;
+        };
+        for (const ctor of [w.Element, w.Range]) {
+          if (!ctor) continue;
+          replace(ctor.prototype, 'getBoundingClientRect', function (original, args) { return noisyRect(original.apply(this, args)); });
+          replace(ctor.prototype, 'getClientRects', function (original, args) { return noisyList(original.apply(this, args)); });
+        }
+
+        // Экран: доступная область — как весь экран (иначе видны размер Dock и строки меню).
+        if (w.Screen) {
+          replaceGetter(w.Screen.prototype, 'availWidth', function () { return this.width; });
+          replaceGetter(w.Screen.prototype, 'availHeight', function () { return this.height; });
+          replaceGetter(w.Screen.prototype, 'availLeft', function () { return 0; });
+          replaceGetter(w.Screen.prototype, 'availTop', function () { return 0; });
+        }
+
+        // Голоса синтеза речи: набор установленных голосов почти уникален — оставляем стандартные.
+        const BASE_VOICES = /^(Samantha|Alex|Fred|Victoria|Daniel|Karen|Moira|Tessa|Milena|Yuri|Anna|Thomas|Amelie|Alice|Monica|Kyoko|Ting-Ting|Yuna|Luciana|Paulina)\b/;
+        if (w.SpeechSynthesis) replace(w.SpeechSynthesis.prototype, 'getVoices', function (original, args) {
+          const voices = original.apply(this, args);
+          try { return voices.filter((v) => BASE_VOICES.test(v.name)); } catch (e) { return voices; }
+        });
+
+        // Часовой пояс — UTC (по желанию): сайты не узнают, в какой стране вы находитесь.
+        if (SPOOF_TZ && w.Date) {
+          const D = w.Date.prototype;
+          for (const part of ['Date', 'Day', 'FullYear', 'Hours', 'Milliseconds', 'Minutes', 'Month', 'Seconds']) {
+            const utcGet = D['getUTC' + part];
+            if (utcGet) replace(D, 'get' + part, function (original, args) { return utcGet.apply(this, args); });
+            const utcSet = D['setUTC' + part];
+            if (utcSet) replace(D, 'set' + part, function (original, args) { return utcSet.apply(this, args); });
+          }
+          replace(D, 'getTimezoneOffset', function () { return 0; });
+          const pad = (n) => String(n).padStart(2, '0');
+          const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const dateText = (d) => `${DAYS[d.getUTCDay()]} ${MONTHS[d.getUTCMonth()]} ${pad(d.getUTCDate())} ${d.getUTCFullYear()}`;
+          const timeText = (d) => `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} GMT+0000 (Coordinated Universal Time)`;
+          replace(D, 'toString', function (original, args) { return isNaN(this) ? original.apply(this, args) : dateText(this) + ' ' + timeText(this); });
+          replace(D, 'toDateString', function (original, args) { return isNaN(this) ? original.apply(this, args) : dateText(this); });
+          replace(D, 'toTimeString', function (original, args) { return isNaN(this) ? original.apply(this, args) : timeText(this); });
+          for (const name of ['toLocaleString', 'toLocaleDateString', 'toLocaleTimeString']) {
+            replace(D, name, function (original, args) {
+              const options = Object.assign({}, args[1] || {});
+              if (!options.timeZone) options.timeZone = 'UTC';
+              return original.call(this, args[0], options);
+            });
+          }
+          if (w.Intl && w.Intl.DateTimeFormat) {
+            const DTF = w.Intl.DateTimeFormat;
+            const withUTC = (args) => { const a = Array.from(args); const o = Object.assign({}, a[1] || {}); if (!o.timeZone) o.timeZone = 'UTC'; a[1] = o; return a; };
+            w.Intl.DateTimeFormat = new Proxy(DTF, {
+              construct(target, args) { return Reflect.construct(target, withUTC(args)); },
+              apply(target, thisArg, args) { return Reflect.apply(target, thisArg, withUTC(args)); },
+            });
+          }
+          // «2025-01-01T10:00» без пояса — тоже по UTC, как и всё остальное.
+          const NativeDate = w.Date;
+          const localISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
+          w.Date = new Proxy(NativeDate, {
+            construct(target, args) {
+              if (args.length >= 2 && args.every((a) => typeof a === 'number')) return new target(NativeDate.UTC(...args));
+              if (args.length === 1 && typeof args[0] === 'string' && localISO.test(args[0])) return new target(args[0] + 'Z');
+              return Reflect.construct(target, args);
+            },
+          });
+        }
+
+        // Язык (по желанию): английский, как у большинства пользователей в мире.
+        if (SPOOF_LANG && w.Navigator) {
+          replaceGetter(w.Navigator.prototype, 'language', function () { return 'en-US'; });
+          replaceGetter(w.Navigator.prototype, 'languages', function () { return Object.freeze(['en-US', 'en']); });
+        }
+
         // WebRTC может раскрыть настоящий IP-адрес даже через VPN — по желанию отключается.
         if (BLOCK_WEBRTC) {
           for (const name of ['RTCPeerConnection', 'webkitRTCPeerConnection', 'RTCDataChannel', 'RTCSessionDescription', 'RTCIceCandidate']) {
@@ -285,6 +377,16 @@ nonisolated enum Scripts {
         } catch (e) {}
       }, true);
       document.addEventListener('DOMContentLoaded', () => { if (document.documentElement) scanTree(document.documentElement); });
+      // Пароль на странице без шифрования: предупредить, как только поле пароля получит фокус.
+      if (location.protocol === 'http:' && window === window.top) {
+        let warned = false;
+        document.addEventListener('focusin', (e) => {
+          const t = e.target;
+          if (warned || !t || t.tagName !== 'INPUT' || String(t.type).toLowerCase() !== 'password') return;
+          warned = true;
+          try { window.webkit.messageHandlers.wardEvent.postMessage({ type: 'password-http' }); } catch (err) {}
+        }, true);
+      }
     })();
     """#
 

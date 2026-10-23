@@ -100,8 +100,22 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 plutil -lint "$APP/Contents/Info.plist"
 
-step "Подпись (ad-hoc)"
-codesign --force --sign - --timestamp=none "$APP"
+step "Перенос данных прошлой версии в песочницу"
+cat > "$APP/Contents/Resources/container-migration.plist" <<'MIGRATION'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Move</key>
+  <array><string>${ApplicationSupport}/Ward</string></array>
+</dict>
+</plist>
+MIGRATION
+plutil -lint "$APP/Contents/Resources/container-migration.plist"
+
+step "Подпись (ad-hoc, песочница + hardened runtime)"
+codesign --force --sign - --timestamp=none --options runtime --entitlements "$ROOT/scripts/Ward.entitlements" "$APP"
+codesign -d --entitlements - "$APP" 2>/dev/null | grep -q "app-sandbox" && echo "  песочница включена"
 codesign --verify --strict "$APP" && echo "  подпись в порядке"
 
 if [[ "${1:-}" != "--no-dmg" ]]; then

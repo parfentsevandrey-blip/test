@@ -5,6 +5,8 @@ import SwiftUI
 enum Entry {
     static func main() {
         setvbuf(stdout, nil, _IOLBF, 0)
+        // Язык для сайтов нужно выставить до запуска WebKit.
+        AppModel.applyLanguage((Storage.load(Prefs.self, "prefs.json") ?? Prefs()).spoofLanguage)
         SelfTest.runIfRequested()
         WardApp.main()
     }
@@ -31,6 +33,12 @@ struct WardApp: App {
         // Частное окно после перезапуска не должно появляться никогда.
         .restorationBehavior(.disabled)
 
+        Window("История", id: "history") {
+            HistoryView().environment(AppModel.shared)
+        }
+        .defaultSize(width: 760, height: 620)
+        .restorationBehavior(.disabled)
+
         Settings {
             SettingsView().environment(AppModel.shared)
         }
@@ -51,12 +59,18 @@ struct BrowserCommands: Commands {
             .keyboardShortcut("t")
             Button("Новое окно") { openWindow(id: "browser") }.keyboardShortcut("n")
             Button("Новое частное окно") { openWindow(id: "private") }.keyboardShortcut("n", modifiers: [.command, .shift])
+            Button("Одноразовая вкладка") { browser?.newTab(ephemeral: true) }
+                .keyboardShortcut("t", modifiers: [.command, .option])
+                .disabled(browser == nil || browser?.isPrivate == true)
             Divider()
             Button("Открыть адрес…") { tab?.focusRequest += 1 }.keyboardShortcut("l").disabled(browser == nil)
             Button("Вернуть закрытую вкладку") { browser?.reopenClosed() }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
                 .disabled(browser == nil || AppModel.shared.closedTabs.isEmpty)
             Button("Закрыть вкладку") { browser?.closeSelected() }.keyboardShortcut("w").disabled(browser == nil)
+        }
+        CommandGroup(replacing: .printItem) {
+            Button("Напечатать…") { tab?.printPage() }.keyboardShortcut("p").disabled(tab?.url == nil)
         }
         CommandGroup(after: .textEditing) {
             Button("Найти на странице…") { browser?.showFind() }.keyboardShortcut("f").disabled(tab == nil)
@@ -77,6 +91,8 @@ struct BrowserCommands: Commands {
             Button("Назад") { tab?.goBack() }.keyboardShortcut("[").disabled(!(tab?.canGoBack ?? false) && tab?.interstitial == nil)
             Button("Вперёд") { tab?.goForward() }.keyboardShortcut("]").disabled(!(tab?.canGoForward ?? false))
             Divider()
+            Button("Показать всю историю") { openWindow(id: "history") }.keyboardShortcut("y")
+            Divider()
             Button("Добавить в избранное") {
                 if let t = tab, let u = t.url { AppModel.shared.toggleFavorite(u, title: t.title) }
             }
@@ -94,7 +110,22 @@ struct BrowserCommands: Commands {
         }
         CommandGroup(after: .appSettings) {
             Button("Сделать браузером по умолчанию") { AppModel.shared.makeDefaultBrowser() }
+            Button("Стереть всё…") { WipeConfirmation.ask() }.keyboardShortcut(.delete, modifiers: [.command, .shift])
         }
+    }
+}
+
+/// «Стереть всё» из меню: подтверждение, потом закрыть всё и удалить все данные.
+enum WipeConfirmation {
+    static func ask() {
+        let alert = NSAlert()
+        alert.alertStyle = .critical
+        alert.messageText = "Стереть всё?"
+        alert.informativeText = "Закроются все окна, удалятся cookie и данные всех сайтов во всех контейнерах (и запомненных тоже), история и вкладки прошлого сеанса. Настройки и избранное останутся."
+        alert.addButton(withTitle: "Стереть всё")
+        alert.addButton(withTitle: "Отмена")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        Task { await AppModel.shared.wipeEverything() }
     }
 }
 

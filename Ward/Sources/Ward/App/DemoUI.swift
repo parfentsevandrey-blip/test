@@ -19,7 +19,9 @@ enum DemoUI {
         switch screen {
         case "settings-lists": return 1
         case "settings-data": return 2
-        case "settings-search": return 3
+        case "settings-sites": return 3
+        case "settings-network": return 4
+        case "settings-search": return 5
         default: return 0
         }
     }
@@ -62,7 +64,7 @@ enum DemoUI {
         case "private":
             // В этом демо первое окно само частное (см. WardApp).
             browser.newTab(url: URL(string: "https://duckduckgo.com")!, select: false)
-        case "settings", "settings-lists", "settings-data", "settings-search":
+        case "settings", "settings-lists", "settings-data", "settings-sites", "settings-network", "settings-search":
             model.settingsRequest += 1
         default:
             break

@@ -49,10 +49,26 @@ struct StartPage: View {
     }
 
     private var statsRow: some View {
-        HStack(spacing: 14) {
-            StatCard(value: Format.count(model.stats.today), title: "сегодня", caption: "трекеров и рекламы остановлено", tint: .green)
-            StatCard(value: Format.count(model.stats.total), title: "всего", caption: "с \(model.stats.since.formatted(.dateTime.day().month(.wide)))", tint: .teal)
-            StatCard(value: Format.count(model.stats.cleanedLinks), title: "ссылок", caption: "очищено от меток слежки", tint: .indigo)
+        VStack(spacing: 12) {
+            HStack(spacing: 14) {
+                StatCard(value: Format.count(model.stats.today), title: "сегодня", caption: "трекеров и рекламы остановлено", tint: .green)
+                StatCard(value: Format.count(model.stats.total), title: "всего", caption: "с \(model.stats.since.formatted(.dateTime.day().month(.wide)))", tint: .teal)
+                StatCard(value: Format.count(model.stats.cleanedLinks), title: "ссылок", caption: "очищено от меток слежки", tint: .indigo)
+            }
+            if model.stats.consentsRejected > 0 || model.stats.sponsorSeconds > 0 || model.stats.phishingBlocked > 0 {
+                HStack(spacing: 18) {
+                    if model.stats.consentsRejected > 0 {
+                        Label("\(Format.count(model.stats.consentsRejected)) отказов от cookie", systemImage: "hand.raised").foregroundStyle(.secondary)
+                    }
+                    if model.stats.sponsorSeconds > 0 {
+                        Label("\(Int(model.stats.sponsorSeconds / 60)) мин рекламы в роликах пропущено", systemImage: "forward.end").foregroundStyle(.secondary)
+                    }
+                    if model.stats.phishingBlocked > 0 {
+                        Label("\(Format.count(model.stats.phishingBlocked)) подделок остановлено", systemImage: "theatermasks").foregroundStyle(.secondary)
+                    }
+                }
+                .font(.callout)
+            }
         }
         .frame(maxWidth: 640)
     }

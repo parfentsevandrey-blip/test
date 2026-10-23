@@ -6,6 +6,15 @@ struct TabStrip: View {
 
     var body: some View {
         HStack(spacing: 6) {
+            if browser.usesProxy {
+                Label("Через прокси", systemImage: "network.badge.shield.half.filled")
+                    .font(.callout.weight(.medium))
+                    .foregroundStyle(.blue)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Color.blue.opacity(0.14), in: Capsule())
+                    .help("Страницы этого окна идут через \(AppModel.shared.prefs.proxyHost):\(AppModel.shared.prefs.proxyPort)")
+            }
             if browser.isPrivate {
                 Label("Частное окно", systemImage: "eye.slash")
                     .font(.callout.weight(.medium))
@@ -28,11 +37,9 @@ struct TabStrip: View {
                 }
             }
             .frame(height: 36)
-            Button { browser.newTab() } label: {
-                Image(systemName: "plus").frame(width: 26, height: 26)
-            }
-            .buttonStyle(.borderless)
-            .help("Новая вкладка (⌘T)")
+            NewTabMenu(browser: browser)
+                .buttonStyle(.borderless)
+                .frame(width: 30)
         }
         .padding(.horizontal, 10)
         .background(browser.isPrivate ? AnyShapeStyle(Color.purple.opacity(0.06)) : AnyShapeStyle(.background.secondary))
@@ -52,7 +59,11 @@ struct TabChip: View {
 
     var body: some View {
         HStack(spacing: 7) {
-            SiteTile(host: tab.host, size: 16)
+            if tab.ephemeral {
+                Image(systemName: "flame.fill").font(.caption).foregroundStyle(.orange)
+            } else {
+                SiteTile(host: tab.host, size: 16)
+            }
             Text(tab.displayTitle)
                 .lineLimit(1)
                 .font(.callout)
@@ -80,6 +91,12 @@ struct TabChip: View {
                 .fill(selected ? AnyShapeStyle(.background) : AnyShapeStyle(hover ? Color.primary.opacity(0.06) : .clear))
                 .shadow(color: .black.opacity(selected ? 0.12 : 0), radius: 2, y: 1)
         }
+        .overlay(alignment: .bottom) {
+            if let c = tab.container {
+                Capsule().fill(ContainerPalette.color(c.color)).frame(height: 3).padding(.horizontal, 8)
+                    .help("Контейнер «\(c.name)»")
+            }
+        }
         .contentShape(Rectangle())
         .onTapGesture { browser.select(tab) }
         .onHover { hover = $0 }
@@ -87,6 +104,16 @@ struct TabChip: View {
             Button("Обновить") { tab.reload() }
             Button("Закрыть") { browser.close(tab) }
             Button("Закрыть другие вкладки") { browser.closeOthers(tab) }.disabled(browser.tabs.count < 2)
+            if !browser.isPrivate {
+                Divider()
+                Menu("Открыть в контейнере") {
+                    Button("Обычная вкладка") { browser.reopen(tab, container: nil) }
+                    ForEach(AppModel.shared.containers) { c in
+                        Button(c.name) { browser.reopen(tab, container: c) }
+                    }
+                }
+                Button("Открыть в одноразовой вкладке") { browser.reopen(tab, container: nil, ephemeral: true) }
+            }
         }
     }
 }

@@ -1,12 +1,19 @@
 import AppKit
 import WebKit
 
-/// Экран вместо страницы: опасный сайт, сайт без HTTPS, заблокированная страница, ошибка.
+/// Экран вместо страницы: опасный сайт, подделка, сайт без HTTPS, заблокированная страница, ошибка.
 enum Interstitial: Equatable {
     case danger(URL)
+    case lookalike(URL, String)
     case insecure(URL)
     case blocked(URL)
     case failed(URL, String)
+
+    var url: URL {
+        switch self {
+        case .danger(let u), .lookalike(let u, _), .insecure(let u), .blocked(let u), .failed(let u, _): u
+        }
+    }
 }
 
 /// Вкладка: страница WebKit и всё, что Ward о ней знает.
@@ -14,6 +21,10 @@ enum Interstitial: Equatable {
 final class Tab: NSObject, Identifiable {
     let id = UUID()
     @ObservationIgnored weak var browser: BrowserState?
+    /// Контейнер вкладки (nil — общее хранилище окна).
+    let container: Container?
+    /// Одноразовая вкладка: своё хранилище в памяти, исчезает вместе с вкладкой.
+    let ephemeral: Bool
 
     var title = ""
     var url: URL?
@@ -25,12 +36,21 @@ final class Tab: NSObject, Identifiable {
     var interstitial: Interstitial?
     /// Сторонние адреса этой страницы, которые есть в списках: хост → вид.
     var trackers: [String: TrackerKind] = [:]
+    /// Скрытые трекеры (CNAME): поддомен сайта → настоящее имя трекера.
+    var cloaked: [String: String] = [:]
     /// Что убрано из адреса этой страницы.
     var cleanedParams: [String] = []
     var unwrappedRedirect = false
     var upgradedToHTTPS = false
     var protectedHere = true
     var javaScriptOn = true
+    var strictHere = false
+    var scriptletCount = 0
+    /// Окно согласия на cookie, в котором Ward нажал «Отклонить».
+    var consentRejected: String?
+    var sponsorSkipped = 0
+    var passwordWarning = false
+    var certificate: CertificateInfo?
     var zoom = 1.0 { didSet { webViewIfLoaded?.pageZoom = zoom } }
     /// Вкладка из прошлого сеанса: страница загрузится, когда вкладку откроют.
     var pendingURL: URL?
@@ -46,14 +66,18 @@ final class Tab: NSObject, Identifiable {
     @ObservationIgnored private var upgradedFrom: URL?
     @ObservationIgnored private var pendingClean: LinkCleaner.Result?
     @ObservationIgnored private var cleanGuard: (url: URL, time: Date)?
-    @ObservationIgnored private var appliedSite: String?
+    @ObservationIgnored private var appliedHost: String?
     @ObservationIgnored private var appliedProtection: Bool?
     @ObservationIgnored private var allowOnce: URL?
     @ObservationIgnored private var popupConfiguration: WKWebViewConfiguration?
     @ObservationIgnored private var mediaAllowed: Set<String> = []
+    @ObservationIgnored private var ephemeralStore: WKWebsiteDataStore?
+    @ObservationIgnored private var cnameChecks = 0
 
-    init(browser: BrowserState, url: URL? = nil, popup configuration: WKWebViewConfiguration? = nil) {
+    init(browser: BrowserState, url: URL? = nil, popup configuration: WKWebViewConfiguration? = nil, container: Container? = nil, ephemeral: Bool = false) {
         self.browser = browser
+        self.container = browser.isPrivate ? nil : container
+        self.ephemeral = ephemeral && !browser.isPrivate
         popupConfiguration = configuration
         super.init()
         if configuration != nil { _ = webView }
@@ -64,19 +88,33 @@ final class Tab: NSObject, Identifiable {
 
     var displayTitle: String {
         if !title.isEmpty { return title }
-        if let host = (url ?? pendingURL)?.siteHost, !host.isEmpty { return host }
-        return "Новая вкладка"
+        if let host = (url ?? pendingURL)?.siteHost, !host.isEmpty { return Punycode.display(host).text }
+        return ephemeral ? "Одноразовая вкладка" : "Новая вкладка"
     }
 
     var host: String { (url ?? pendingURL)?.host?.lowercased() ?? "" }
     var site: String { Hosts.site(host) }
+    var isPrivate: Bool { browser?.isPrivate ?? false }
 
     var restorableURL: URL? {
-        guard let u = url ?? pendingURL, let scheme = u.scheme, scheme == "http" || scheme == "https" else { return nil }
+        guard !ephemeral, let u = url ?? pendingURL, let scheme = u.scheme, scheme == "http" || scheme == "https" else { return nil }
         return u
     }
 
     var blockedCount: Int { trackers.count }
+
+    /// Хранилище cookie и данных этой вкладки.
+    var dataStore: WKWebsiteDataStore {
+        if ephemeral {
+            if let ephemeralStore { return ephemeralStore }
+            let store = WKWebsiteDataStore.nonPersistent()
+            NetworkPrivacy.apply(to: store, isPrivate: true, prefs: AppModel.shared.prefs)
+            ephemeralStore = store
+            return store
+        }
+        if let container { return AppModel.shared.store(for: container) }
+        return browser?.dataStore ?? .default()
+    }
 
     // MARK: - Страница
 
@@ -95,7 +133,7 @@ final class Tab: NSObject, Identifiable {
     private func makeConfiguration() -> WKWebViewConfiguration {
         let model = AppModel.shared
         let configuration = WKWebViewConfiguration()
-        if let store = browser?.dataStore { configuration.websiteDataStore = store }
+        configuration.websiteDataStore = dataStore
         configuration.applicationNameForUserAgent = AppModel.applicationNameForUserAgent
         configuration.upgradeKnownHostsToHTTPS = true
         configuration.preferences.isFraudulentWebsiteWarningEnabled = model.prefs.fraudWarnings
@@ -116,7 +154,12 @@ final class Tab: NSObject, Identifiable {
         let proxy = ScriptProxy()
         proxy.tab = self
         self.proxy = proxy
-        view.configuration.userContentController.add(proxy, contentWorld: .defaultClient, name: "wardHosts")
+        let controller = view.configuration.userContentController
+        controller.add(proxy, contentWorld: .defaultClient, name: "wardHosts")
+        controller.add(proxy, contentWorld: .defaultClient, name: "wardEvent")
+        let sponsor = SponsorProxy()
+        sponsor.tab = self
+        controller.addScriptMessageHandler(sponsor, contentWorld: .defaultClient, name: "wardSponsor")
         configureProtections(for: url, force: true, in: view)
 
         func watch<V>(_ path: KeyPath<WKWebView, V>) -> NSKeyValueObservation {
@@ -135,7 +178,7 @@ final class Tab: NSObject, Identifiable {
         let newTitle = view.title ?? ""
         if newTitle != title {
             title = newTitle
-            if let u = view.url { AppModel.shared.retitle(u, title: newTitle, isPrivate: browser?.isPrivate ?? false) }
+            if let u = view.url { AppModel.shared.retitle(u, title: newTitle, isPrivate: isPrivate || ephemeral) }
         }
         if let u = view.url, u.absoluteString != "about:blank", interstitial == nil { url = u }
         progress = view.estimatedProgress
@@ -150,14 +193,16 @@ final class Tab: NSObject, Identifiable {
         guard let view = view ?? webViewIfLoaded else { return }
         let model = AppModel.shared
         let host = url?.host?.lowercased() ?? ""
-        let site = Hosts.site(host)
         let on = !model.isUnprotected(host)
-        guard force || site != appliedSite || on != appliedProtection else { return }
+        guard force || host != appliedHost || on != appliedProtection else { return }
         let controller = view.configuration.userContentController
         model.blocker.apply(to: controller, enabled: on)
+        if on, let cname = model.cname.ruleList { controller.add(cname) }
         controller.removeAllUserScripts()
-        for script in model.userScripts(secret: browser?.secret ?? model.sessionSecret, site: host) { controller.addUserScript(script) }
-        appliedSite = site
+        let scripts = model.pageScripts(host: host, protected: on, secret: browser?.secret ?? model.sessionSecret)
+        for script in scripts.list { controller.addUserScript(script) }
+        scriptletCount = scripts.scriptlets
+        appliedHost = host
         appliedProtection = on
         protectedHere = on
     }
@@ -187,9 +232,7 @@ final class Tab: NSObject, Identifiable {
 
     func reload() {
         if let interstitial {
-            switch interstitial {
-            case .failed(let u, _), .blocked(let u), .insecure(let u), .danger(let u): load(u)
-            }
+            load(interstitial.url)
             return
         }
         guard let view = webViewIfLoaded else { if let pendingURL { load(pendingURL) }; return }
@@ -204,6 +247,13 @@ final class Tab: NSObject, Identifiable {
     }
     func goForward() { webViewIfLoaded?.goForward() }
 
+    func printPage() {
+        guard let view = webViewIfLoaded, let window = browser?.window else { return }
+        let operation = view.printOperation(with: NSPrintInfo.shared)
+        operation.view?.frame = view.bounds
+        operation.runModal(for: window, delegate: nil, didRun: nil, contextInfo: nil)
+    }
+
     /// Перед закрытием: остановить страницу и разорвать связи.
     func close() {
         guard let view = webViewIfLoaded else { return }
@@ -214,6 +264,7 @@ final class Tab: NSObject, Identifiable {
         view.uiDelegate = nil
         view.removeFromSuperview()
         webViewIfLoaded = nil
+        ephemeralStore = nil
     }
 
     // MARK: - Решения экранов-предупреждений
@@ -221,6 +272,14 @@ final class Tab: NSObject, Identifiable {
     /// «Всё равно открыть» опасный сайт.
     func proceedDanger(_ target: URL) {
         browser?.dangerAllowed.insert(target.host?.lowercased() ?? "")
+        allowOnce = target
+        interstitial = nil
+        webView.load(URLRequest(url: target))
+    }
+
+    /// «Это не подделка» — сайт больше не проверяется на сходство.
+    func proceedLookalike(_ target: URL) {
+        AppModel.shared.prefs.trustedLookalikes.insert(Hosts.site(target.host?.lowercased() ?? ""))
         allowOnce = target
         interstitial = nil
         webView.load(URLRequest(url: target))
@@ -259,21 +318,60 @@ final class Tab: NSObject, Identifiable {
         }
     }
 
-    // MARK: - Трекеры
+    // MARK: - Сообщения от скриптов Ward
 
     fileprivate func received(_ message: WKScriptMessage) {
-        guard message.name == "wardHosts", let body = message.body as? [String: Any] else { return }
+        guard let body = message.body as? [String: Any] else { return }
+        if message.name == "wardEvent" { event(body); return }
+        guard message.name == "wardHosts" else { return }
         let hosts = (body["hosts"] as? [String]) ?? []
         let failed = Set((body["failed"] as? [String]) ?? [])
         let page = url?.host?.lowercased() ?? ""
         guard !page.isEmpty, protectedHere else { return }
-        let index = AppModel.shared.blocker.index
+        let model = AppModel.shared
+        let index = model.blocker.index
+        let pageSite = Hosts.site(page)
         for host in (hosts + failed).prefix(800) {
             let h = host.lowercased()
+            if Hosts.site(h) == pageSite {
+                // Поддомен самого сайта: проверить, не псевдоним ли это трекера.
+                if h != page, model.prefs.cnameDetection, cnameChecks < 40, !NetworkPrivacy.usesProxy(model.prefs, isPrivate: isPrivate || ephemeral) {
+                    cnameChecks += 1
+                    model.cname.inspect(h, page: page, index: index) { [weak self] target, kind in
+                        guard let self, self.trackers[h] == nil else { return }
+                        self.trackers[h] = kind
+                        self.cloaked[h] = target
+                        if !(self.isPrivate || self.ephemeral) { model.record(kind, host: target) }
+                    }
+                }
+                continue
+            }
             guard trackers[h] == nil, let kind = index.classify(h, page: page, failed: failed.contains(host)) else { continue }
             trackers[h] = kind
-            if !(browser?.isPrivate ?? false) { AppModel.shared.record(kind, host: h) }
+            if !(isPrivate || ephemeral) { model.record(kind, host: h) }
         }
+    }
+
+    private func event(_ body: [String: Any]) {
+        let model = AppModel.shared
+        switch body["type"] as? String {
+        case "consent":
+            consentRejected = (body["cmp"] as? String) ?? "окно согласия"
+            model.recordConsent()
+        case "sponsor":
+            sponsorSkipped += 1
+            model.recordSponsor(seconds: (body["seconds"] as? Double) ?? 0)
+        case "password-http":
+            if url?.scheme == "http", !Hosts.isLocal(host) { passwordWarning = true }
+        default:
+            break
+        }
+    }
+
+    fileprivate func sponsorRequest(_ message: WKScriptMessage) async -> Any? {
+        let model = AppModel.shared
+        guard model.prefs.sponsorBlock, let body = message.body as? [String: Any], let id = body["videoID"] as? String else { return [] }
+        return await SponsorBlockClient.shared.segments(videoID: id, prefs: model.prefs)
     }
 
     // MARK: - Внешние ссылки
@@ -305,18 +403,26 @@ extension Tab: WKNavigationDelegate {
         }
         guard action.targetFrame?.isMainFrame ?? true else { return (.allow, preferences) }
 
-        // ⌘-клик и средняя кнопка — в новую вкладку.
+        // ⌘-клик и средняя кнопка — в новую вкладку (того же контейнера).
         if action.navigationType == .linkActivated, action.modifierFlags.contains(.command) || action.buttonNumber == 2 {
-            browser?.newTab(url: target, select: action.modifierFlags.contains(.shift), after: self)
+            browser?.newTab(url: target, select: action.modifierFlags.contains(.shift), after: self, container: container)
             return (.cancel, preferences)
         }
 
         let model = AppModel.shared
         let host = target.host?.lowercased() ?? ""
+        let site = Hosts.site(host)
         let bypass = allowOnce == target
         if bypass { allowOnce = nil }
         let web = scheme == "http" || scheme == "https"
         let protected = !model.isUnprotected(host)
+
+        // Сайт закреплён за контейнером — открыть его там.
+        if web, !isPrivate, !ephemeral, let wanted = model.container(forSite: site), wanted.id != container?.id {
+            browser?.newTab(url: target, select: true, after: self, container: wanted)
+            if url == nil && !canGoBack { browser?.close(self) }
+            return (.cancel, preferences)
+        }
 
         if web && !bypass && protected {
             let isGET = (action.request.httpMethod ?? "GET").uppercased() == "GET"
@@ -338,7 +444,15 @@ extension Tab: WKNavigationDelegate {
                 interstitial = .danger(target)
                 return (.cancel, preferences)
             }
-            // 3. Только HTTPS: сначала пробуем защищённое соединение.
+            // 3. Подделка под известный сайт.
+            if model.prefs.phishingWarnings, !model.prefs.trustedLookalikes.contains(site), !model.isFamiliar(site),
+               let original = Lookalike.imitated(host: host) {
+                url = target
+                interstitial = .lookalike(target, original)
+                model.recordPhishing()
+                return (.cancel, preferences)
+            }
+            // 4. Только HTTPS: сначала пробуем защищённое соединение.
             if scheme == "http", model.prefs.httpsOnly, isGET, !Hosts.isLocal(host), !(browser?.httpAllowed.contains(host) ?? false) {
                 if let from = upgradedFrom, from.host?.lowercased() == host, from == target {
                     // Сайт сам вернул нас на http — не спорим по кругу, но и не скрываем.
@@ -357,9 +471,13 @@ extension Tab: WKNavigationDelegate {
         }
 
         configureProtections(for: target)
-        let jsOn = !model.prefs.noScriptSites.contains(Hosts.site(host))
+        let jsOn = !model.prefs.noScriptSites.contains(site)
         preferences.allowsContentJavaScript = jsOn
         javaScriptOn = jsOn
+        // Строгий режим: WebKit без JIT, WebGL, сложных шрифтов и других путей для эксплойтов.
+        let strict = web && model.prefs.strict(site: site, familiar: model.isFamiliar(site))
+        preferences.isLockdownModeEnabled = strict
+        strictHere = strict
         return (.allow, preferences)
     }
 
@@ -380,11 +498,11 @@ extension Tab: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {
-        AppModel.shared.downloads.add(download)
+        AppModel.shared.downloads.add(download, window: browser?.window)
     }
 
     func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
-        AppModel.shared.downloads.add(download)
+        AppModel.shared.downloads.add(download, window: browser?.window)
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
@@ -394,6 +512,11 @@ extension Tab: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         trackers = [:]
+        cloaked = [:]
+        consentRejected = nil
+        passwordWarning = false
+        sponsorSkipped = 0
+        cnameChecks = 0
         let current = webView.url
         if let clean = pendingClean, clean.url.host == current?.host {
             cleanedParams = clean.removed
@@ -406,13 +529,16 @@ extension Tab: WKNavigationDelegate {
         upgradedToHTTPS = upgradedFrom != nil && current?.scheme == "https" && current?.host == upgradedFrom?.host
         upgradedFrom = nil
         findMatched = nil
+        certificate = webView.serverTrust.flatMap(CertificateInfo.from)
         sync()
+        AppModel.shared.scheduleSiteCleanup()
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         loadsFinished += 1
         sync()
-        if let u = webView.url { AppModel.shared.visited(u, title: webView.title ?? "", isPrivate: browser?.isPrivate ?? false) }
+        if certificate == nil { certificate = webView.serverTrust.flatMap(CertificateInfo.from) }
+        if let u = webView.url { AppModel.shared.visited(u, title: webView.title ?? "", isPrivate: isPrivate || ephemeral) }
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
@@ -447,16 +573,17 @@ extension Tab: WKNavigationDelegate {
             return
         }
         upgradedFrom = nil
-        interstitial = .failed(failing, Self.explain(ns))
+        interstitial = .failed(failing, Self.explain(ns, proxy: NetworkPrivacy.usesProxy(AppModel.shared.prefs, isPrivate: isPrivate || ephemeral)))
     }
 
-    static func explain(_ error: NSError) -> String {
+    static func explain(_ error: NSError, proxy: Bool = false) -> String {
         guard error.domain == NSURLErrorDomain else { return error.localizedDescription }
         switch error.code {
         case NSURLErrorNotConnectedToInternet: return "Нет подключения к интернету."
         case NSURLErrorCannotFindHost, NSURLErrorDNSLookupFailed: return "Такого сайта нет — или его адрес не находится. Проверьте написание."
-        case NSURLErrorTimedOut: return "Сайт слишком долго не отвечает."
-        case NSURLErrorCannotConnectToHost: return "Сайт не принимает соединения."
+        case NSURLErrorTimedOut: return proxy ? "Сайт не отвечает через прокси. Проверьте, что Veil (или другой прокси) подключён." : "Сайт слишком долго не отвечает."
+        case NSURLErrorCannotConnectToHost:
+            return proxy ? "Прокси не принимает соединения. Окно настроено ходить через прокси — Ward не стал открывать сайт напрямую." : "Сайт не принимает соединения."
         case NSURLErrorServerCertificateUntrusted, NSURLErrorServerCertificateHasBadDate, NSURLErrorServerCertificateHasUnknownRoot,
              NSURLErrorServerCertificateNotYetValid, NSURLErrorSecureConnectionFailed:
             return "Сертификат сайта недействителен: кто-то может подменять страницу. Ward не стал её открывать."
@@ -533,6 +660,10 @@ extension Tab: WKUIDelegate {
 
     /// Камера и микрофон — только с вашего согласия, отдельно для каждого сайта.
     func webView(_ webView: WKWebView, decideMediaCapturePermissionsFor origin: WKSecurityOrigin, initiatedBy frame: WKFrameInfo, type: WKMediaCaptureType) async -> WKPermissionDecision {
+        let model = AppModel.shared
+        let site = Hosts.site(origin.host)
+        if let remembered = model.prefs.mediaDecisions[site] { return remembered ? .grant : .deny }
+        if model.prefs.denyMediaByDefault { return .deny }
         let key = "\(origin.host)|\(type.rawValue)"
         if mediaAllowed.contains(key) { return .grant }
         let what: String
@@ -543,20 +674,34 @@ extension Tab: WKUIDelegate {
         }
         let alert = NSAlert()
         alert.messageText = "\(origin.host) просит доступ к \(what)"
-        alert.informativeText = "Разрешение действует, пока открыта эта вкладка."
+        alert.informativeText = "Без запоминания разрешение действует, пока открыта эта вкладка."
         alert.addButton(withTitle: "Разрешить")
         alert.addButton(withTitle: "Запретить")
-        guard await sheet(alert) == .alertFirstButtonReturn else { return .deny }
+        alert.showsSuppressionButton = true
+        alert.suppressionButton?.title = "Запомнить для \(site)"
+        let allowed = await sheet(alert) == .alertFirstButtonReturn
+        if alert.suppressionButton?.state == .on { model.prefs.mediaDecisions[site] = allowed }
+        guard allowed else { return .deny }
         mediaAllowed.insert(key)
         return .grant
     }
 }
 
-/// Посредник для сообщений из скрипта-наблюдателя: WebKit держит обработчик сильной ссылкой.
+/// Посредник для сообщений из скриптов Ward: WebKit держит обработчики сильной ссылкой.
 private final class ScriptProxy: NSObject, WKScriptMessageHandler {
     weak var tab: Tab?
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         tab?.received(message)
+    }
+}
+
+/// Запросы SponsorBlock из страницы YouTube — с ответом (отрезки ролика).
+private final class SponsorProxy: NSObject, WKScriptMessageHandlerWithReply {
+    weak var tab: Tab?
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) async -> (Any?, String?) {
+        guard let tab else { return ([Any](), nil) }
+        return (await tab.sponsorRequest(message), nil)
     }
 }

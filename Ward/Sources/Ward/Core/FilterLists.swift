@@ -9,6 +9,8 @@ nonisolated struct FilterList: Identifiable, Hashable, Sendable {
     var url: String
     var kind: TrackerKind
     var enabledByDefault: Bool
+    /// Список команды uBlock Origin: ему разрешены «доверенные» скриптлеты.
+    var trusted: Bool { id.hasPrefix("ubo-") }
 
     /// Списки — те же, что качает scripts/fetch-lists.sh при сборке.
     static let all: [FilterList] = [
@@ -34,6 +36,10 @@ nonisolated struct FilterList: Identifiable, Hashable, Sendable {
                    url: "https://ublockorigin.github.io/uAssets/filters/unbreak.txt", kind: .ads, enabledByDefault: true),
         FilterList(id: "adguard-url", title: "Метки в ссылках", summary: "Параметры слежки в адресах (utm, fbclid и сотни других) — AdGuard.",
                    url: "https://filters.adtidy.org/extension/ublock/filters/17.txt", kind: .tracking, enabledByDefault: true),
+        FilterList(id: "ubo-quick-fixes", title: "uBlock Origin — срочные исправления", summary: "Свежие обходы для YouTube и сайтов, которые борются с блокировщиками.",
+                   url: "https://ublockorigin.github.io/uAssets/filters/quick-fixes.txt", kind: .ads, enabledByDefault: true),
+        FilterList(id: "adguard-cname", title: "Скрытые трекеры (CNAME)", summary: "Трекеры, которые прячутся под поддоменом самого сайта — их Ward находит через DNS.",
+                   url: "https://raw.githubusercontent.com/AdguardTeam/cname-trackers/master/data/combined_original_trackers.txt", kind: .tracking, enabledByDefault: true),
         FilterList(id: "annoyances", title: "Помехи", summary: "Виджеты соцсетей, всплывающие подписки, чаты поддержки, «приложение лучше».",
                    url: "https://secure.fanboy.co.nz/fanboy-annoyance.txt", kind: .annoyance, enabledByDefault: false),
     ]
@@ -111,7 +117,7 @@ nonisolated enum FilterEngine {
         let badfilters = FilterParser.badfilters(texts.map(\.1))
         var set = FilterSet()
         for (list, text) in texts {
-            FilterParser.parse(text, kind: list.kind, into: &set, badfilters: badfilters)
+            FilterParser.parse(text, kind: list.kind, trusted: list.trusted, into: &set, badfilters: badfilters)
         }
         return set
     }

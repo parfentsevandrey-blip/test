@@ -108,7 +108,8 @@ struct AddressBar: View {
     private var display: String {
         guard let url = tab.url else { return "" }
         if let q = model.prefs.search.query(in: url) { return q }
-        if url.scheme == "http" || url.scheme == "https" { return url.siteHost }
+        // Международные домены — буквами, если это обычное имя; punycode, если буквы алфавитов смешаны.
+        if url.scheme == "http" || url.scheme == "https" { return Punycode.display(url.siteHost).text }
         return url.absoluteString
     }
 
@@ -134,6 +135,12 @@ struct AddressBar: View {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
         } else if tab.interstitial != nil {
             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+        } else if Punycode.display(tab.host).suspicious {
+            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                .help("В адресе смешаны буквы разных алфавитов — так подделывают имена известных сайтов")
+        } else if tab.strictHere {
+            Image(systemName: "lock.shield.fill").foregroundStyle(.blue)
+                .help("Строгий режим: соединение зашифровано, у страницы урезаны опасные возможности")
         } else if tab.url?.scheme == "https" && tab.hasOnlySecureContent {
             Image(systemName: "lock.fill").foregroundStyle(.secondary)
                 .help("Соединение зашифровано")

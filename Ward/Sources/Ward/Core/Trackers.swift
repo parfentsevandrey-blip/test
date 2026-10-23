@@ -11,6 +11,9 @@ nonisolated struct ProtectionIndex: Codable, Sendable {
     var removeParams: Set<String> = []
     var siteRemoveParams: [String: Set<String>] = [:]
     var redirectors: [String: [RedirectRule]] = [:]
+    var scriptlets: [String: [String]] = [:]
+    var scriptletExceptions: [String: Set<String>] = [:]
+    var procedural: [String: [String]] = [:]
 
     init() {}
 
@@ -23,6 +26,9 @@ nonisolated struct ProtectionIndex: Codable, Sendable {
         removeParams = try c.decode(Set<String>.self, forKey: .removeParams)
         siteRemoveParams = try c.decode([String: Set<String>].self, forKey: .siteRemoveParams)
         redirectors = try c.decode([String: [RedirectRule]].self, forKey: .redirectors)
+        scriptlets = (try? c.decodeIfPresent([String: [String]].self, forKey: .scriptlets)) ?? [:]
+        scriptletExceptions = (try? c.decodeIfPresent([String: Set<String>].self, forKey: .scriptletExceptions)) ?? [:]
+        procedural = (try? c.decodeIfPresent([String: [String]].self, forKey: .procedural)) ?? [:]
     }
 
     init(_ set: FilterSet) {
@@ -33,6 +39,9 @@ nonisolated struct ProtectionIndex: Codable, Sendable {
         removeParams = set.removeParams
         siteRemoveParams = set.siteRemoveParams
         redirectors = set.redirectors
+        scriptlets = set.scriptlets
+        scriptletExceptions = set.scriptletExceptions
+        procedural = set.procedural
     }
 
     var cleaner: LinkCleaner {
