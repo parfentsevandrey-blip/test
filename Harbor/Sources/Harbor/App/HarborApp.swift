@@ -90,4 +90,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Закрытие окна не завершает Harbor: он продолжает следить за обновлениями из строки меню.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    /// В демо-режиме окно должно быть активным, иначе на скриншотах кнопки выглядят погасшими.
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        if DemoUI.isOn { NSApplication.shared.activate() }
+    }
 }

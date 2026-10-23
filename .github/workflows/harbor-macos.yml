@@ -85,11 +85,11 @@ jobs:
             screencapture -x "$OUT/$1.png" || true
             kill $PID 2>/dev/null || true; sleep 2
           }
-          shot onboarding-1 --demo-onboarding 0
-          shot onboarding-3 --demo-onboarding 2
+          shot onboarding-1 --demo-onboarding=0
+          shot onboarding-3 --demo-onboarding=2
           shot shelf
           shot updates --demo-updates
-          shot detail --demo-detail ward
+          shot detail --demo-detail=ward
 
       - uses: actions/upload-artifact@v4
         with:

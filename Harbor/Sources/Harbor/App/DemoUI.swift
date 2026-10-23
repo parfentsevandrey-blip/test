@@ -2,16 +2,15 @@ import AppKit
 import Foundation
 
 /// Демо-режим для скриншотов в CI:
-///   HARBOR_DEMO_CATALOG=<apps.json> HARBOR_DEMO_ICONS=<папка> Harbor --demo-ui [--demo-onboarding N | --demo-detail <id> | --demo-updates]
+///   HARBOR_DEMO_CATALOG=<apps.json> HARBOR_DEMO_ICONS=<папка> Harbor --demo-ui [--demo-onboarding=N | --demo-detail=<id> | --demo-updates]
 /// Каталог берётся из описаний репозитория, состояния приложений выдуманы, сети нет. Пути — в переменных
-/// окружения: файлы в аргументах AppKit принял бы за документы для открытия и не показал бы главное окно.
+/// окружения, значения — через «=»: отдельные аргументы AppKit принял бы за документы для открытия
+/// и не показал бы главное окно.
 enum DemoUI {
     static var isOn: Bool { CommandLine.arguments.contains("--demo-ui") }
 
-    private static func argument(after flag: String) -> String? {
-        let args = CommandLine.arguments
-        guard let i = args.firstIndex(of: flag), i + 1 < args.count else { return nil }
-        return args[i + 1]
+    private static func argument(_ flag: String) -> String? {
+        CommandLine.arguments.first { $0.hasPrefix(flag + "=") }.map { String($0.dropFirst(flag.count + 1)) }
     }
 
     private static var iconDirectory: URL? {
@@ -19,8 +18,8 @@ enum DemoUI {
         return URL(fileURLWithPath: path)
     }
 
-    static var onboardingPage: Int? { argument(after: "--demo-onboarding").flatMap(Int.init) }
-    static var selected: String? { argument(after: "--demo-detail") }
+    static var onboardingPage: Int? { argument("--demo-onboarding").flatMap(Int.init) }
+    static var selected: String? { argument("--demo-detail") }
     static var showsUpdates: Bool { CommandLine.arguments.contains("--demo-updates") }
 
     private static var iconCache: [String: NSImage] = [:]
