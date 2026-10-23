@@ -115,7 +115,7 @@ final class Store {
             MainActor.assumeIsolated { self?.appTerminated(id) }
         })
         observers.append(center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { Task { await self?.check() } }
+            MainActor.assumeIsolated { self?.checkSoon() }
         })
         loopTask = Task { [weak self] in
             while !Task.isCancelled {
@@ -124,6 +124,10 @@ final class Store {
             }
         }
         _ = Task { try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) }
+    }
+
+    func checkSoon() {
+        Task { await check() }
     }
 
     /// Загружает каталог, сверяет с установленным и (если включено) обновляет сам.
