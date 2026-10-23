@@ -95,10 +95,9 @@ struct BrowserWindow: View {
             if let tab = browser.selected {
                 ShieldButton(tab: tab)
             }
-            if !model.downloads.items.isEmpty {
-                DownloadsButton()
-            }
             DashboardButton()
+            // Загрузки — всегда в правом верхнем углу, как в Safari.
+            DownloadsButton()
         }
     }
 }

@@ -51,6 +51,38 @@ enum DemoUI {
         model.addBookmark(URL(string: "https://maps.apple.com")!, title: "Карты", to: .other)
     }
 
+    /// Загрузки для скриншота: настоящие файлы во временной папке, одна идёт, одна оборвалась.
+    static func seedDownloads() {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("WardDemo", isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        func file(_ name: String, _ size: Int, source: String, minutesAgo: Double) -> Downloads.Item {
+            let url = folder.appendingPathComponent(name)
+            if !FileManager.default.fileExists(atPath: url.path) { FileManager.default.createFile(atPath: url.path, contents: Data(count: size)) }
+            let item = Downloads.Item(name: name, source: URL(string: source), started: Date().addingTimeInterval(-minutesAgo * 60))
+            item.file = url
+            item.state = .done
+            item.progress = 1
+            item.total = Int64(size)
+            item.received = Int64(size)
+            item.sha256 = Downloads.sha256(of: url)
+            return item
+        }
+        let running = Downloads.Item(name: "Xcode_27.xip", source: URL(string: "https://download.developer.apple.com/Xcode_27.xip"))
+        running.total = 9_800_000_000
+        running.received = 4_120_000_000
+        running.progress = 0.42
+        running.speed = 38_000_000
+        let broken = Downloads.Item(name: "dataset-2026.zip", source: URL(string: "https://data.example.org/dataset-2026.zip"), started: Date().addingTimeInterval(-40 * 60))
+        broken.state = .failed("Соединение прервано — можно скачать заново")
+        AppModel.shared.downloads.demo([
+            running,
+            file("Swarm-1.4.dmg", 3_400_000, source: "https://github.com/parfentsevandrey-blip/test/releases/download/swarm/Swarm-1.4.dmg", minutesAgo: 6),
+            file("Отчёт за квартал.pdf", 820_000, source: "https://www.rbc.ru/files/report.pdf", minutesAgo: 25),
+            broken,
+            file("photo-2026-10-22.jpg", 2_100_000, source: "https://images.unsplash.com/photo.jpg", minutesAgo: 60 * 26),
+        ])
+    }
+
     /// Новостные сайты с типичным набором рекламы и счётчиков.
     static let sites = ["https://lenta.ru", "https://www.theverge.com", "https://www.rbc.ru"]
 
@@ -109,6 +141,14 @@ enum DemoUI {
             model.openWindow?("bookmarks")
             try? await Task.sleep(for: .seconds(1))
             NSApp.windows.first { $0.title == "Закладки" }?.makeKeyAndOrderFront(nil)
+        case "downloads":
+            browser.selected?.load(URL(string: sites[1])!)
+            seedDownloads()
+            try? await Task.sleep(for: .seconds(6))
+            model.openWindow?("downloads")
+            try? await Task.sleep(for: .seconds(1))
+            NSApp.activate()
+            NSApp.windows.first { $0.title == "Загрузки" }?.makeKeyAndOrderFront(nil)
         case "settings", "settings-lists", "settings-data", "settings-sites", "settings-network", "settings-search":
             model.settingsRequest += 1
         default:

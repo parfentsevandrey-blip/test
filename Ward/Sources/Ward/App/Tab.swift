@@ -619,11 +619,11 @@ extension Tab: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) {
-        AppModel.shared.downloads.add(download, window: browser?.window)
+        AppModel.shared.downloads.add(download, window: browser?.window, webView: webView, isPrivate: browser?.isPrivate ?? false)
     }
 
     func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
-        AppModel.shared.downloads.add(download, window: browser?.window)
+        AppModel.shared.downloads.add(download, window: browser?.window, webView: webView, isPrivate: browser?.isPrivate ?? false)
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {

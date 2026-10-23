@@ -51,6 +51,12 @@ struct WardApp: App {
         .defaultSize(width: 1180, height: 860)
         .restorationBehavior(.disabled)
 
+        Window("Загрузки", id: "downloads") {
+            DownloadsWindow().environment(AppModel.shared)
+        }
+        .defaultSize(width: 720, height: 560)
+        .restorationBehavior(.disabled)
+
         Window("Журнал безопасности", id: "security-log") {
             SecurityLogView().environment(AppModel.shared)
         }
@@ -111,6 +117,7 @@ struct BrowserCommands: Commands {
             Button("Вперёд") { tab?.goForward() }.keyboardShortcut("]").disabled(!(tab?.canGoForward ?? false))
             Divider()
             Button("Показать всю историю") { openWindow(id: "history") }.keyboardShortcut("y")
+            Button("Загрузки") { openWindow(id: "downloads") }.keyboardShortcut("l", modifiers: [.command, .option])
         }
         CommandMenu("Закладки") {
             Button("Добавить в закладки…") {

@@ -9,6 +9,9 @@ import WebKit
 /// - `webkit` — настоящий WebKit: сборка всех правил, стенд на этом Mac (реклама, трекеры, косметика),
 ///              отпечаток браузера, очистка ссылок, опасные адреса, HTTPS, защита выключена на сайте.
 enum SelfTest {
+    /// Идёт самопроверка: настоящие данные пользователя не читаем и не пишем.
+    static var isRunning: Bool { CommandLine.arguments.contains { $0.hasPrefix("--selftest-") } }
+
     static func runIfRequested() {
         guard let mode = CommandLine.arguments.first(where: { $0.hasPrefix("--selftest-") }) else { return }
         switch mode {
@@ -306,6 +309,9 @@ enum SelfTest {
             ok = check(calls > 3000 && proc > 1000, "скриптлеты и процедурная косметика из списков") && ok
             ok = check(fullIndex.scriptletCalls(for: "www.youtube.com").count >= 5, "правила против рекламы YouTube") && ok
             ok = check(full.trackers["omtrdc.net"] != nil || full.trackers["sc.omtrdc.net"] != nil, "настоящие домены CNAME-трекеров в списках") && ok
+            let own = ["auction.unityads.unity3d.com", "an.facebook.com", "adserver.pandora.com", "analytics.twitter.com"]
+            let missed = own.filter { fullIndex.classify($0, page: "example.com") == nil }
+            ok = check(missed.isEmpty, "собственный список Ward: аудио-, мобильная реклама и пиксели соцсетей" + (missed.isEmpty ? "" : " (пропущены: \(missed.joined(separator: ", ")))")) && ok
         }
         return ok
     }

@@ -295,6 +295,7 @@ final class ContentBlocker {
             hasher.update(data: Data(list.id.utf8))
             if let text = FilterStorage.text(list) { hasher.update(data: Data(text.utf8)) }
         }
+        hasher.update(data: Data((WardFilters.ads + WardFilters.tracking).utf8))
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 

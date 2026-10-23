@@ -141,6 +141,7 @@ final class AppModel {
         browsers.removeAll { $0 === browser }
         if activeBrowser === browser { activeBrowser = browsers.last }
         if !browser.isPrivate && !lastNormal { saveSession() }
+        if browser.isPrivate, !browsers.contains(where: \.isPrivate) { downloads.forgetPrivate() }
     }
 
     /// Ссылка из другого приложения или с Dock.

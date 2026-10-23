@@ -119,6 +119,45 @@ nonisolated enum FilterEngine {
         for (list, text) in texts {
             FilterParser.parse(text, kind: list.kind, trusted: list.trusted, into: &set, badfilters: badfilters)
         }
+        if !texts.isEmpty {
+            FilterParser.parse(WardFilters.ads, kind: .ads, into: &set, badfilters: badfilters)
+            FilterParser.parse(WardFilters.tracking, kind: .tracking, into: &set, badfilters: badfilters)
+        }
         return set
+    }
+}
+
+/// Собственный список Ward: рекламные и следящие серверы, которые общие списки пропускают целиком
+/// (они ловят только отдельные адреса на этих серверах). Только сторонние запросы: сам сайт сети
+/// по-прежнему открывается, если зайти на него напрямую.
+nonisolated enum WardFilters {
+    static let ads = rules([
+        // Аудиореклама: подкасты, радио, музыкальные сервисы, игры.
+        "adserver.pandora.com", "adserver.iheart.com", "ads.deezer.com", "ads.audioboom.com",
+        "audiomob.com", "audiomob.io", "odeeo.io", "adtonos.com", "veritonic.com",
+        // Мобильная реклама и встроенные в приложения сети (их же грузят веб-версии игр).
+        "applvn.com", "ironsrc.mobi", "startappservice.com", "mtgglobals.com", "pangle.io", "pangolin-sdk-toutiao.com",
+        "unityads.unity3d.com", "bidmachine.io", "appodeal.com", "ogury.io", "offerwall.yandex.net",
+        "adsfs.oppomobile.com", "ads.oppomobile.com", "bdapi-ads.realmemobile.com", "bdapi-in-ads.realmemobile.com",
+        "iadsdk.apple.com", "api-adservices.apple.com",
+        // Рекламные кабинеты и API соцсетей.
+        "an.facebook.com", "ads-api.twitter.com", "ads-api.tiktok.com", "ads-sg.tiktok.com", "business-api.tiktok.com",
+        "ads.reddit.com", "pixel-config.reddit.com", "ads.yap.yahoo.com", "gemini.yahoo.com", "adtech.yahooinc.com",
+    ])
+
+    static let tracking = rules([
+        // Пиксели соцсетей.
+        "analytics.twitter.com", "q.quora.com", "snap.licdn.com",
+        // Аналитика и сбор событий.
+        "mobileapptracking.com", "appmetrica.yandex.ru", "metrika.yandex.ru", "adfstat.yandex.ru",
+        "analytics.query.yahoo.com", "log.fc.yahoo.com", "udcm.yahoo.com", "log.byteoversea.com",
+        "analytics.s3.amazonaws.com", "analyticsengine.s3.amazonaws.com", "app.getsentry.com",
+        "data.mistat.xiaomi.com", "data.mistat.india.xiaomi.com", "data.mistat.rus.xiaomi.com", "tracking.rus.miui.com",
+        "iot-logser.realme.com", "iot-eu-logser.realme.com", "grs.hicloud.com",
+        "books-analytics-events.apple.com", "notes-analytics-events.apple.com", "weather-analytics-events.apple.com",
+    ])
+
+    private static func rules(_ hosts: [String]) -> String {
+        hosts.map { "||\($0)^$third-party" }.joined(separator: "\n")
     }
 }
