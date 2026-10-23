@@ -15,6 +15,7 @@ final class AppModel {
             if prefs.enabledLists != oldValue.enabledLists { blocker.prepare(lists: prefs.enabledFilterLists) }
             if prefs.proxyMode != oldValue.proxyMode || prefs.proxyHost != oldValue.proxyHost || prefs.proxyPort != oldValue.proxyPort {
                 applyProxyEverywhere()
+                refreshAllTabs()
             }
             if prefs.spoofLanguage != oldValue.spoofLanguage { Self.applyLanguage(prefs.spoofLanguage) }
             if prefs.fingerprint != oldValue.fingerprint || prefs.blockWebRTC != oldValue.blockWebRTC
@@ -157,11 +158,12 @@ final class AppModel {
     // MARK: - Скрипты страниц
 
     /// Скрипты для страницы хоста и сколько в них скриптлетов из списков.
-    func pageScripts(host: String, protected: Bool, secret: String) -> (list: [WKUserScript], scriptlets: Int) {
+    /// `proxied` — окно идёт через прокси: тогда WebRTC выключается сам, иначе он раскрыл бы настоящий IP в обход прокси.
+    func pageScripts(host: String, protected: Bool, secret: String, proxied: Bool = false) -> (list: [WKUserScript], scriptlets: Int) {
         var list: [WKUserScript] = []
         var scriptlets = 0
-        if protected && prefs.fingerprint {
-            list.append(WKUserScript(source: Scripts.fingerprint(secret: secret, blockWebRTC: prefs.blockWebRTC,
+        if protected && (prefs.fingerprint || proxied) {
+            list.append(WKUserScript(source: Scripts.fingerprint(secret: secret, blockWebRTC: prefs.blockWebRTC || proxied,
                                                                  spoofTimezone: prefs.spoofTimezone, spoofLanguage: prefs.spoofLanguage),
                                      injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
         }
@@ -177,10 +179,10 @@ final class AppModel {
         }
         list.append(WKUserScript(source: Scripts.observer, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
         if protected && prefs.consentReject {
-            list.append(WKUserScript(source: Scripts.consent, injectionTime: .atDocumentEnd, forMainFrameOnly: false, in: .defaultClient))
+            list.append(WKUserScript(source: Scripts.consent, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
         }
         if prefs.sponsorBlock {
-            list.append(WKUserScript(source: Scripts.sponsorBlock, injectionTime: .atDocumentEnd, forMainFrameOnly: false, in: .defaultClient))
+            list.append(WKUserScript(source: Scripts.sponsorBlock, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
         }
         return (list, scriptlets)
     }

@@ -344,6 +344,8 @@ extension Scripts {
       const CONTAINER = /cookie|consent|gdpr|cmp|privacy|banner|notice/i;
       let done = false;
       let tries = 0;
+      // Состояние — в мире Ward (страница его не видит): для самопроверки.
+      const state = window.__wardConsent = { started: false, tries: 0, clicked: null };
 
       const visible = (el) => !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
       const post = (cmp) => {
@@ -351,6 +353,7 @@ extension Scripts {
       };
       const click = (el, cmp) => {
         done = true;
+        state.clicked = cmp;
         try { el.click(); } catch (e) { return; }
         post(cmp);
       };
@@ -391,12 +394,14 @@ extension Scripts {
       const attempt = () => {
         if (done || tries > 60) return;
         tries++;
+        state.tries = tries;
         if (known()) return;
         if (tries > 2) generic();
       };
       let timer = null;
       const schedule = () => { if (!done && !timer) timer = setTimeout(() => { timer = null; attempt(); }, 300); };
       const start = () => {
+        state.started = true;
         attempt();
         if (done) return;
         const mo = new MutationObserver(schedule);

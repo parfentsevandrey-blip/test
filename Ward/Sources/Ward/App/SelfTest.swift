@@ -460,6 +460,8 @@ enum SelfTest {
             _ = await open(tab, "http://localhost:\(p)/\(page)")
             try? await Task.sleep(for: .seconds(2.5))
             let r = await evaluate(tab, "return window.results.consent || 'нет'") as? String
+            let state = try? await tab.webViewIfLoaded?.callAsyncJavaScript("return JSON.stringify(window.__wardConsent || null)", arguments: [:], in: nil, contentWorld: .defaultClient)
+            info("состояние автоотказа: \(state.map { "\($0 ?? "nil")" } ?? "ошибка")")
             ok = check(r == "rejected" && tab.consentRejected == expected, "cookie: нажато «Отклонить» (\(page): \(r ?? "-"), \(tab.consentRejected ?? "-"))") && ok
         }
 
@@ -520,6 +522,7 @@ enum SelfTest {
         let inContainer = await cookies(model.store(for: work))
         let inEphemeral = await cookies(eTab.dataStore)
         let inDefault = await cookies(WKWebsiteDataStore.default())
+        info("cookie: контейнер \(inContainer.sorted()), одноразовая \(inEphemeral.sorted()), общее до \(defaultBefore.sorted()) / после \(inDefault.sorted())")
         ok = check(inContainer.contains("ward_test") && inEphemeral.contains("ward_test") && inDefault == defaultBefore,
                    "cookie контейнера и одноразовой вкладки не попали в общее хранилище") && ok
         let otherContainer = await cookies(model.store(for: model.containers[2]))
@@ -532,6 +535,8 @@ enum SelfTest {
         let removed = await model.cleanupClosedSites()
         let afterContainer = await cookies(model.store(for: work))
         let afterDefault = await cookies(WKWebsiteDataStore.default())
+        let recordNames = await AppModel.records(WKWebsiteDataStore.default()).map(\.displayName)
+        info("после уборки: контейнер \(afterContainer.sorted()), общее \(afterDefault.sorted()), записи общего: \(recordNames)")
         ok = check(!afterContainer.contains("ward_test") && afterDefault.contains("ward_test"),
                    "данные закрытого сайта удалены (\(removed) записей), открытого — на месте") && ok
 
@@ -552,6 +557,8 @@ enum SelfTest {
             info("через прокси: \(socks.requests.map { "\($0.name)\($0.isDomain ? " (имя)" : " (IP)")" })")
             ok = check(title == "Чистая ссылка", "страница несуществующего для DNS сайта открылась через прокси") && ok
             ok = check(socks.requests.contains { $0.isDomain && $0.name == "proxy-test.ward.invalid" }, "имя сайта ушло прокси — DNS не утекает") && ok
+            let rtc = await evaluate(tab, "return typeof RTCPeerConnection") as? String
+            ok = check(rtc == "undefined", "в окне через прокси WebRTC выключен сам — IP не утечёт в обход прокси (\(rtc ?? "-"))") && ok
             model.prefs.proxyMode = .off
             socks.stop()
         }

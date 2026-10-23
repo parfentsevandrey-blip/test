@@ -199,7 +199,8 @@ final class Tab: NSObject, Identifiable {
         model.blocker.apply(to: controller, enabled: on)
         if on, let cname = model.cname.ruleList { controller.add(cname) }
         controller.removeAllUserScripts()
-        let scripts = model.pageScripts(host: host, protected: on, secret: browser?.secret ?? model.sessionSecret)
+        let proxied = NetworkPrivacy.usesProxy(model.prefs, isPrivate: isPrivate || ephemeral)
+        let scripts = model.pageScripts(host: host, protected: on, secret: browser?.secret ?? model.sessionSecret, proxied: proxied)
         for script in scripts.list { controller.addUserScript(script) }
         scriptletCount = scripts.scriptlets
         appliedHost = host
