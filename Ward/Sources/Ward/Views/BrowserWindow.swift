@@ -81,7 +81,7 @@ struct BrowserWindow: View {
         ToolbarItem(placement: .principal) {
             if let tab = browser.selected {
                 AddressBar(tab: tab, browser: browser, address: address, go: go)
-                    .frame(minWidth: 380, idealWidth: 680, maxWidth: 860)
+                    .frame(minWidth: 340, idealWidth: 540, maxWidth: 860)
             }
         }
         ToolbarItemGroup(placement: .primaryAction) {
