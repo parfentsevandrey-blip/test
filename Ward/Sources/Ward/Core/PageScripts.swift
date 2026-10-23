@@ -534,7 +534,7 @@ extension Scripts {
     (() => {
       'use strict';
       if (window.top !== window || window.__wardAnnoyances) return;
-      const state = window.__wardAnnoyances = { hidden: 0, unlocked: 0, kinds: [] };
+      const state = window.__wardAnnoyances = { hidden: 0, unlocked: 0, kinds: [], scans: 0, layers: 0, skipped: [] };
       const NAG = /(subscri|sign\s*up|sign\s*in\s+to\s+(continue|read|keep)|log\s*in\s+to\s+(continue|read)|create\s+(a\s+)?(free\s+)?account|register\s+(now|for\s+free)|newsletter|claim\s+(this|your)\s+offer|unlimited\s+access|continue\s+reading|keep\s+reading|already\s+a\s+(subscriber|member)|special\s+offer|limited[-\s]time\s+offer|get\s+the\s+app|open\s+in\s+(the\s+)?app|download\s+(our|the)\s+app|ad\s*-?\s*block|disable\s+your\s+(ad|content)\s*block|whitelist\s+(us|this)|allowlist|support\s+(our\s+)?journalism|подпиш|подписк|оформит|рассылк|зарегистрир|войдите,?\s+чтобы|продолжить\s+чтение|читать\s+дальше|в\s+приложении|скачайте\s+приложение|блокировщик|отключите\s+(adblock|блокир)|abonn|inscri|anmelden|abonnieren|registrieren|werbeblocker|suscr|iscriviti|abbonati)/i;
       const COOKIE = /cookie|consent|gdpr|cmp|privacy-?center/i;
       let lastUser = 0;
@@ -580,7 +580,7 @@ extension Scripts {
         if (!el || seen.has(el) || !covering) return false;
         seen.add(el);
         // Вы только что что-то нажали — значит, окно, скорее всего, открыли сами.
-        if (Date.now() - lastUser < 1200) return false;
+        if (Date.now() - lastUser < 1200) { state.skipped.push('user:' + (el.id || el.tagName)); return false; }
         const s = style(el);
         if (!s) return false;
         const r = el.getBoundingClientRect();
@@ -654,6 +654,7 @@ extension Scripts {
                       [0.88, 0.85], [0.12, 0.85], [0.85, 0.15], [0.15, 0.15], [0.85, 0.5], [0.15, 0.5], [0.85, 0.65], [0.15, 0.65]];
       const scan = () => {
         if (!document.body) return;
+        state.scans++;
         let hid = false;
         const checked = new Set();
         for (const [x, y] of POINTS) {
@@ -663,6 +664,7 @@ extension Scripts {
             const root = fixedRoot(el);
             if (!root || checked.has(root) || !root.contains(stack[0])) continue;
             checked.add(root);
+            state.layers++;
             if (inspect(root, true)) hid = true;
           }
         }

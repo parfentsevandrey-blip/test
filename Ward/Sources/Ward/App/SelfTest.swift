@@ -623,7 +623,8 @@ enum SelfTest {
                  header: getComputedStyle(document.querySelector('header')).display !== 'none',
                  overflow: getComputedStyle(document.body).overflowY };
         """) as? [String: Any] ?? [:]
-        info("плашки: \(annoy), на вкладке убрано \(tab.annoyancesHidden)")
+        let annoyState = try? await tab.webViewIfLoaded?.callAsyncJavaScript("return JSON.stringify(window.__wardAnnoyances || null)", arguments: [:], in: nil, contentWorld: .defaultClient)
+        info("плашки: \(annoy), на вкладке убрано \(tab.annoyancesHidden), состояние скрипта: \(annoyState.map { "\($0 ?? "nil")" } ?? "ошибка"), защита: \(tab.protectedHere)")
         ok = check(annoy["sheet"] as? Bool == false && annoy["adb"] as? Bool == false && annoy["news"] as? Bool == false,
                    "плашки «Подпишитесь», «отключите блокировщик» и рассылка убраны") && ok
         ok = check(annoy["fade"] as? Bool == false && annoy["overflow"] as? String != "hidden", "затемнение снято, прокрутка возвращена") && ok
