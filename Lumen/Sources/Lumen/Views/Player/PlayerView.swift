@@ -130,7 +130,7 @@ struct PlayerView: View {
                 .opacity(engine.phase == .ready ? 1 : 0)
                 .animation(.smooth(duration: 0.3), value: engine.phase == .ready)
             if let bitmap = engine.subtitleImage {
-                BitmapSubtitleOverlay(bitmap: bitmap, video: imageRect(in: size, frame: frame))
+                BitmapSubtitleOverlay(bitmap: bitmap, video: imageRect(in: size, frame: frame), lift: subtitleLift(in: size))
                     .frame(width: size.width, height: size.height)
                     .allowsHitTesting(false)
             }
@@ -316,18 +316,26 @@ enum Island {
 }
 
 /// Субтитры Blu-ray: картинки, нарисованные под кадр 1920×1080, масштабируются вместе с видео.
+/// Если внизу кадра лежит панель управления, субтитры приподнимаются над ней, как текстовые.
 struct BitmapSubtitleOverlay: View {
     let bitmap: SubtitleBitmap
     let video: CGRect
+    /// Сколько места снизу окна занято панелью.
+    let lift: CGFloat
 
     var body: some View {
-        Canvas { context, _ in
+        Canvas { context, size in
             let sx = video.width / bitmap.canvas.width
             let sy = video.height / bitmap.canvas.height
-            for piece in bitmap.pieces {
-                let rect = CGRect(x: video.minX + piece.rect.minX * sx, y: video.minY + piece.rect.minY * sy,
-                                  width: piece.rect.width * sx, height: piece.rect.height * sy)
-                context.draw(Image(decorative: piece.image, scale: 1), in: rect)
+            let rects = bitmap.pieces.map { piece in
+                CGRect(x: video.minX + piece.rect.minX * sx, y: video.minY + piece.rect.minY * sy,
+                       width: piece.rect.width * sx, height: piece.rect.height * sy)
+            }
+            let bottom = rects.map(\.maxY).max() ?? 0
+            let top = rects.map(\.minY).min() ?? 0
+            let shift = min(0, max(size.height - lift - bottom, -top))
+            for (piece, rect) in zip(bitmap.pieces, rects) {
+                context.draw(Image(decorative: piece.image, scale: 1), in: rect.offsetBy(dx: 0, dy: shift))
             }
         }
     }

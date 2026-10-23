@@ -45,7 +45,7 @@ struct EmptyStage: View {
             Text("Перетащите видео в окно")
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
             Button("Открыть…") { model.presentOpenPanel() }
-                .buttonStyle(.glass)
+                .buttonStyle(.glassProminent)
                 .controlSize(.large)
                 .keyboardShortcut("o")
             Text("MKV, MP4, MOV, WebM и звук · ⌘O")
