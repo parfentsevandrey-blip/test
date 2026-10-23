@@ -270,8 +270,9 @@ def outcomes(df, day, days):
     both = df.index.intersection(prev.index)
     ch = pd.DataFrame({"price_was": prev.loc[both, "price"], "price_now": df.loc[both, "price"],
                        "booked_was": prev.loc[both, "booked"], "booked_now": df.loc[both, "booked"]})
-    up = ch[ch["price_now"] > ch["price_was"]].index
-    down = ch[ch["price_now"] < ch["price_was"]].index
+    # изменения меньше 0,5% -- техническая подстройка цен в фидах застройщиков (23.10: ЗИЛАРТ 629 лотов на +0,02%)
+    up = ch[ch["price_now"] > ch["price_was"] * 1.005].index
+    down = ch[ch["price_now"] < ch["price_was"] * 0.995].index
     booked = ch[(ch["booked_now"] == True) & (ch["booked_was"] != True)].index  # noqa: E712
     ev = pd.concat([gone[["seg", "url", "price", "event"]],
                     df.loc[up, ["seg", "url", "price"]].assign(event="подорожал"),
