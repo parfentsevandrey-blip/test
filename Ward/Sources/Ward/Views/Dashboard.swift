@@ -41,6 +41,16 @@ struct SecurityDashboard: View {
                                title: "вымышленных личностей", caption: model.prefs.maskMode ? "«Маска»: каждый сайт видит отдельного человека" : "Включите «Маску» — и каждый сайт увидит своего человека")
                     MetricTile(report: .links, icon: "scissors", tint: .mint, value: stats.cleanedLinks,
                                title: "ссылок очищено", caption: "Метки utm, fbclid, gclid убраны до перехода")
+                    MetricTile(report: .bounce, icon: "arrow.triangle.turn.up.right.diamond.fill", tint: .indigo, value: stats.bounces,
+                               title: "отскоков через трекеры", caption: "Вас перебрасывали через сайт-прокладку — его данные удалены")
+                    MetricTile(report: .lan, icon: "wifi.router.fill", tint: .red, value: stats.lanBlocked,
+                               title: "попыток в домашнюю сеть", caption: "Сайты из интернета стучались к роутеру, принтеру, сервисам на Mac")
+                    MetricTile(report: .traces, icon: "eye.trianglebadge.exclamationmark.fill", tint: .cyan, value: stats.referrersTrimmed + stats.cookiesCapped,
+                               title: "следов урезано", caption: "Адрес, откуда пришли, — без страницы; «вечные» cookie — на неделю")
+                    MetricTile(report: .storage, icon: "hourglass", tint: .brown, value: stats.storagePurged,
+                               title: "просроченных хранилищ", caption: "Сайты, где вы неделю ничего не делали, забыли свои идентификаторы")
+                    MetricTile(report: .hardening, icon: "cpu.fill", tint: .blue, value: stats.noJITPages,
+                               title: "страниц без JIT", caption: Hardening.available ? "Незнакомые сайты и банки — без самого атакуемого места браузера" : "Нужна macOS 26.4 или новее")
                     MetricTile(report: .https, icon: "lock.fill", tint: .green, value: stats.upgraded,
                                title: "переходов на HTTPS", caption: "Ссылка вела на незащищённую версию сайта")
                     MetricTile(report: .cleanup, icon: "trash.fill", tint: .gray, value: stats.sitesCleaned,
@@ -72,6 +82,9 @@ struct SecurityDashboard: View {
                     DashboardCard(title: "Прямо сейчас", icon: "dot.radiowaves.left.and.right") {
                         LiveFeed(events: model.recent)
                     }
+                }
+                DashboardCard(title: "Правдоподобие вымышленного устройства", icon: "checkmark.seal.fill") {
+                    CoherenceCard()
                 }
                 DashboardCard(title: "Изолятор", icon: "cube.transparent.fill") {
                     IsolationBreakdown(stats: stats)
@@ -463,6 +476,22 @@ struct FingerprintBreakdown: View {
                     }
                 }
             }
+            let scripts = Array(stats.fingerprintScripts.sorted { $0.value > $1.value }.prefix(5))
+            if !scripts.isEmpty {
+                Divider()
+                Text("Скрипты-сборщики").font(.subheadline.weight(.semibold))
+                ForEach(scripts.indices, id: \.self) { i in
+                    let script = scripts[i].key, n = scripts[i].value
+                    HStack {
+                        Image(systemName: "chevron.left.forwardslash.chevron.right").foregroundStyle(.pink).frame(width: 16)
+                        Text(script).lineLimit(1).truncationMode(.middle)
+                        Text(Companies.owner(of: script)).foregroundStyle(.secondary).lineLimit(1)
+                        Spacer()
+                        Text("\(n) \(Format.plural(n, "страница", "страницы", "страниц"))").monospacedDigit().foregroundStyle(.secondary)
+                    }
+                    .font(.callout)
+                }
+            }
             let sites = Array(stats.fingerprintSites.sorted { $0.value > $1.value }.prefix(5))
             if !sites.isEmpty {
                 Divider()
@@ -558,6 +587,11 @@ struct ProtectionLevel: View {
             Item(id: "strict", title: "Строгий режим для незнакомых", detail: "Режим блокировки Apple", on: p.strictMode != .off) { model.prefs.strictMode = .unfamiliar },
             Item(id: "webrtc", title: "WebRTC выключен", detail: "Не раскроет IP в обход VPN", on: p.blockWebRTC) { model.prefs.blockWebRTC = true },
             Item(id: "history", title: "История под Touch ID", detail: "Никто не заглянет без вас", on: p.protectHistory) { model.prefs.protectHistory = true },
+            Item(id: "gpc", title: "«Не продавать мои данные»", detail: "Сигнал GPC и урезанный Referer", on: p.gpc && p.trimReferrer) { model.prefs.gpc = true; model.prefs.trimReferrer = true },
+            Item(id: "lan", title: "Домашняя сеть закрыта", detail: "Сайты не достучатся до роутера и Mac", on: p.blockLocalNetwork) { model.prefs.blockLocalNetwork = true },
+            Item(id: "bounce", title: "Защита от «отскоков»", detail: "Данные сайтов-прокладок удаляются", on: p.bounceProtection) { model.prefs.bounceProtection = true },
+            Item(id: "lifetime", title: "Срок жизни данных", detail: "Cookie скриптов и хранилище — неделя", on: p.cookieLifetimeDays > 0 && p.storageLifetimeDays > 0) { model.prefs.cookieLifetimeDays = 7; model.prefs.storageLifetimeDays = 7 },
+            Item(id: "nojit", title: "Без JIT для незнакомых", detail: Hardening.available ? "Защита от эксплойтов (macOS 26.4)" : "Нужна macOS 26.4", on: p.noJIT) { model.prefs.noJIT = true },
         ]
     }
 
@@ -630,5 +664,76 @@ struct DashboardBackground: View {
         }
         .background(.background)
         .ignoresSafeArea()
+    }
+}
+
+// MARK: - Правдоподобие
+
+/// Проверка вымышленного устройства той же батареей, что у детекторов подделки.
+struct CoherenceCard: View {
+    @Environment(AppModel.self) private var model
+    @State private var running = false
+
+    var body: some View {
+        let report = model.coherence
+        HStack(alignment: .top, spacing: 24) {
+            ZStack {
+                let score = report?.score ?? 0
+                let tint: Color = score >= 0.99 ? .green : score >= 0.8 ? .orange : .red
+                Circle().stroke(tint.opacity(0.15), lineWidth: 12)
+                Circle().trim(from: 0, to: score).stroke(tint.gradient, style: StrokeStyle(lineWidth: 12, lineCap: .round)).rotationEffect(.degrees(-90))
+                    .animation(.easeOut(duration: 0.9), value: score)
+                VStack(spacing: 0) {
+                    if running && report == nil {
+                        ProgressView().controlSize(.small)
+                    } else {
+                        Text("\(report?.passed ?? 0)/\(report?.checks.count ?? 0)").font(.system(size: 26, weight: .bold, design: .rounded)).monospacedDigit()
+                        Text("проверок").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .frame(width: 120, height: 120)
+            VStack(alignment: .leading, spacing: 8) {
+                if let report {
+                    Text(report.failed.isEmpty
+                         ? "Детекторы подделки не видят: вымышленное устройство выглядит как обычный Safari на Mac — в окне, во фреймах и в фоновых потоках."
+                         : "Заметно \(report.failed.count) \(Format.plural(report.failed.count, "несоответствие", "несоответствия", "несоответствий")) — так детекторы могут отличить подделку:")
+                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    ForEach(report.failed) { check in
+                        HStack(alignment: .top, spacing: 8) {
+                            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("\(check.title) · \(check.profile)").font(.callout.weight(.medium))
+                                Text(check.explanation).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                                if !check.detail.isEmpty { Text(check.detail).font(.caption2.monospaced()).foregroundStyle(.tertiary).lineLimit(2) }
+                            }
+                        }
+                    }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 8, alignment: .leading)], alignment: .leading, spacing: 4) {
+                        ForEach(Array(Set(report.checks.filter(\.ok).map(\.key))).sorted(), id: \.self) { id in
+                            Label(Coherence.titles[id] ?? id, systemImage: "checkmark.circle.fill")
+                                .font(.caption).foregroundStyle(.green).labelStyle(.titleAndIcon)
+                        }
+                    }
+                } else {
+                    Text("Проверяю, заметна ли подделка: окно, фрейм, фоновый поток, ошибки, тексты функций…")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                HStack {
+                    Button(running ? "Проверяю…" : "Проверить ещё раз") { Task { await run() } }
+                        .disabled(running)
+                    if let report { Text("проверено \(Format.relative(report.date))").font(.caption).foregroundStyle(.tertiary) }
+                }
+            }
+        }
+        .task {
+            if model.coherence.map({ Date().timeIntervalSince($0.date) > 600 }) ?? true { await run() }
+        }
+    }
+
+    private func run() async {
+        running = true
+        model.coherence = await Coherence.run(model: model)
+        running = false
     }
 }

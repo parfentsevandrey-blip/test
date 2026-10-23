@@ -126,6 +126,9 @@ struct TabChip: View {
         .onHover { hover = $0 }
         .contextMenu {
             Button("Обновить") { tab.reload() }
+            if let url = tab.url, url.scheme == "http" || url.scheme == "https" {
+                Button("Скопировать чистую ссылку") { AppModel.shared.copyCleanLink(url) }
+            }
             Button("Закрыть") { browser.close(tab) }
             Button("Закрыть другие вкладки") { browser.closeOthers(tab) }.disabled(browser.tabs.count < 2)
             if !browser.isPrivate {

@@ -10,7 +10,17 @@ nonisolated struct LinkCleaner: Sendable {
         "_hsenc", "_hsmi", "__hssc", "__hstc", "__hsfp", "hsctatracking", "mkt_tok", "oly_anon_id", "oly_enc_id",
         "vero_id", "vero_conv", "rb_clickid", "s_cid", "wickedid", "srsltid",
         "_ga", "_gl", "zanpid", "irclickid", "gad_source", "gad_campaignid",
+        // ClearURLs, Brave и privacytests.org: почтовые рассылки, CRM и рекламные сети.
+        "ml_subscriber", "ml_subscriber_hash", "__s", "_bta_tid", "_bta_c", "trk_contact", "trk_msg", "trk_module", "trk_sid",
+        "gdfms", "gdftrk", "gdffi", "_ke", "redirect_log_mongo_id", "redirect_mongo_id", "sb_referer_host", "mkwid", "pcrid",
+        "ef_id", "s_kwcid", "dm_i", "elqtrackid", "elqtrack", "elq", "ck_subscriber_id", "cjevent", "cjdata", "rdt_cid",
+        "sccid", "sc_cid", "_branch_match_id", "_branch_referrer", "__twitter_impression", "fb_action_ids", "fb_action_types",
+        "fb_ref", "fb_source", "action_object_map", "action_type_map", "action_ref_map", "xtor", "wt_mc", "wt.mc_id",
+        "nr_email_referer", "oborigurl", "dicbo", "vmcid", "irgwc", "unicorn_click_id", "tt_medium", "tt_content",
+        "mc_tc", "oicd", "cvid", "_kx", "hsa_acc",
     ]
+    /// Метки, без которых ломаются ссылки «отписаться от рассылки» (Marketo): там их не трогаем.
+    static let unsubscribeParams: Set<String> = ["mkt_tok"]
     /// Метки отдельных сайтов: на других сайтах параметр с таким именем может быть нужным.
     static let builtinSiteParams: [String: Set<String>] = [
         "youtube.com": ["si", "feature", "pp"], "youtu.be": ["si", "feature"], "music.youtube.com": ["si"],
@@ -26,6 +36,15 @@ nonisolated struct LinkCleaner: Sendable {
     /// Переходники: хост → [(начало пути, параметр с настоящим адресом)].
     static let builtinRedirectors: [String: [RedirectRule]] = [
         "google.com": [RedirectRule(pathPrefix: "/url", parameter: "q"), RedirectRule(pathPrefix: "/url", parameter: "url")],
+        "safelinks.protection.outlook.com": [RedirectRule(pathPrefix: "/", parameter: "url")],
+        "go.redirectingat.com": [RedirectRule(pathPrefix: "/", parameter: "url")],
+        "go.skimresources.com": [RedirectRule(pathPrefix: "/", parameter: "url")],
+        "click.linksynergy.com": [RedirectRule(pathPrefix: "/", parameter: "murl")],
+        "awin1.com": [RedirectRule(pathPrefix: "/cread.php", parameter: "ued")],
+        "l.threads.net": [RedirectRule(pathPrefix: "/", parameter: "u")],
+        "linkedin.com": [RedirectRule(pathPrefix: "/redir/redirect", parameter: "url")],
+        "clickserve.dartsearch.net": [RedirectRule(pathPrefix: "/", parameter: "ds_dest_url")],
+        "app.adjust.com": [RedirectRule(pathPrefix: "/", parameter: "redirect")],
         "l.facebook.com": [RedirectRule(pathPrefix: "/l.php", parameter: "u")],
         "lm.facebook.com": [RedirectRule(pathPrefix: "/l.php", parameter: "u")],
         "l.instagram.com": [RedirectRule(pathPrefix: "/", parameter: "u")],
@@ -84,6 +103,7 @@ nonisolated struct LinkCleaner: Sendable {
     /// Настоящий адрес из ссылки-переходника.
     func unwrap(_ url: URL) -> URL? {
         guard let host = url.host?.lowercased(), let comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return nil }
+        if let canonical = Self.deAMP(url) { return canonical }
         let path = url.path.isEmpty ? "/" : url.path
         for h in Hosts.chain(host) {
             // google.com, google.ru, google.de… — у всех /url?q=
@@ -104,14 +124,37 @@ nonisolated struct LinkCleaner: Sendable {
         return nil
     }
 
+    /// AMP-копия страницы на серверах Google (google.com/amp/s/…, *.cdn.ampproject.org/c/s/…) → сама страница
+    /// на сайте издания: Google не узнаёт, что вы читаете, а издание видит обычный визит.
+    static func deAMP(_ url: URL) -> URL? {
+        guard let host = url.host?.lowercased() else { return nil }
+        let path = url.path
+        var rest: Substring?
+        if Hosts.site(host).hasPrefix("google."), path.hasPrefix("/amp/s/") {
+            rest = path.dropFirst("/amp/s/".count)
+        } else if host.hasSuffix(".cdn.ampproject.org") {
+            for prefix in ["/c/s/", "/v/s/", "/i/s/"] where path.hasPrefix(prefix) { rest = path.dropFirst(prefix.count) }
+        }
+        guard let rest, rest.contains("."), let first = rest.split(separator: "/").first, first.contains(".") else { return nil }
+        var comps = URLComponents()
+        comps.scheme = "https"
+        comps.host = String(first)
+        comps.percentEncodedPath = "/" + rest.split(separator: "/", omittingEmptySubsequences: false).dropFirst().joined(separator: "/")
+        comps.percentEncodedQuery = URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedQuery
+        return comps.url
+    }
+
     /// Адрес без меток слежки; nil — убирать нечего.
     func strip(_ url: URL, removed: inout [String]) -> URL? {
         guard var comps = URLComponents(url: url, resolvingAgainstBaseURL: false), let items = comps.queryItems, !items.isEmpty else { return nil }
         let host = url.host?.lowercased() ?? ""
         var local: Set<String> = []
         for h in Hosts.chain(host) { local.formUnion((siteParams[h] ?? []).map { $0.lowercased() }) }
+        // Ссылка «отписаться»: метка Marketo в ней — ключ к вашей подписке, без неё отписка не сработает.
+        let unsubscribe = url.absoluteString.lowercased().contains("unsubscribe")
         let kept = items.filter { item in
             let name = item.name.lowercased()
+            if unsubscribe && Self.unsubscribeParams.contains(name) { return true }
             let drop = params.contains(name) || local.contains(name) || Self.builtinPrefixes.contains { name.hasPrefix($0) }
             if drop { removed.append(item.name) }
             return !drop

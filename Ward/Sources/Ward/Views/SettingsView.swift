@@ -75,6 +75,18 @@ struct ProtectionSettings: View {
                 SettingToggle(title: "Убирать назойливые плашки",
                               detail: "Окна и полосы поверх статьи — «Подпишитесь», «Отключите блокировщик», рассылки, «Скачайте приложение» — и затемнение страницы под ними. Ward прячет их и возвращает прокрутку. Окна, которые вы открыли сами, и меню сайтов не трогаются.",
                               isOn: $model.prefs.blockAnnoyances)
+                SettingToggle(title: "Останавливать сборщиков отпечатка",
+                              detail: "Если страница снимает отпечаток всерьёз (холст, звук, шрифты, разрешения разом), дальше она ничего не отправит на сторонние адреса — собранное не уйдёт к сборщику. Банковские антифрод-проверки при этом могут не пройти, поэтому выключено по умолчанию.",
+                              isOn: $model.prefs.fingerprintResponse)
+                SettingToggle(title: "Сигнал «Не продавать мои данные» (GPC)",
+                              detail: "Заголовок Sec-GPC и navigator.globalPrivacyControl: по законам Калифорнии и ряда штатов сайт обязан считать его отказом от продажи и передачи ваших данных. Так делают Firefox, Brave и DuckDuckGo.",
+                              isOn: $model.prefs.gpc)
+                SettingToggle(title: "Не рассказывать, откуда вы пришли",
+                              detail: "Другой сайт узнаёт только сайт, с которого вы перешли, — без страницы и её параметров, даже если сайт-источник просит отдавать полный адрес.",
+                              isOn: $model.prefs.trimReferrer)
+                SettingToggle(title: "Защита от «отскоков»",
+                              detail: "Если по пути на сайт вас незаметно перебросили через трекер (он на миг становится «своим» сайтом и ставит cookie), Ward удаляет данные такого сайта-прокладки. Сайты, где вы сами что-то делали за 45 дней, и «Помнить вход» не трогаются.",
+                              isOn: $model.prefs.bounceProtection)
                 SettingToggle(title: "Находить скрытые трекеры",
                               detail: "Некоторые счётчики прячутся под поддоменом самого сайта (metrics.site.ru). Ward узнаёт у DNS настоящее имя такого поддомена и блокирует его, если это трекер.",
                               isOn: $model.prefs.cnameDetection)
@@ -102,6 +114,25 @@ struct ProtectionSettings: View {
                         Text("Строгий режим")
                         Text("Режим блокировки Apple (Lockdown Mode) для страниц: без JIT-компиляции JavaScript, WebGL, сложных шрифтов и ещё десятка возможностей, через которые атакуют браузеры. Сайты работают медленнее, некоторые выглядят проще. На отдельном сайте включается в щите.")
                             .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                SettingToggle(title: "Без JIT на незнакомых сайтах",
+                              detail: Hardening.available
+                                ? "Незнакомые сайты, банки и госсервисы в изоляторе открываются без JIT-компиляции JavaScript и с усиленной проверкой памяти — через JIT идёт большинство атак на браузеры. Сайты работают как обычно, тяжёлые — медленнее; на знакомых сайтах JIT остаётся."
+                                : "Нужна macOS 26.4 или новее: на этой версии режим недоступен, настройка включится сама после обновления.",
+                              isOn: $model.prefs.noJIT)
+                SettingToggle(title: "Закрыть домашнюю сеть от сайтов",
+                              detail: "Сайты из интернета не смогут обращаться к роутеру, принтеру, NAS, камерам и сервисам на этом Mac (localhost): так сканируют сеть и меняют настройки роутера. Страницы самой домашней сети работают как обычно; отдельному сайту доступ можно разрешить в щите.",
+                              isOn: $model.prefs.blockLocalNetwork)
+                if !model.prefs.lanAllowedSites.isEmpty {
+                    ForEach(model.prefs.lanAllowedSites.sorted(), id: \.self) { site in
+                        HStack {
+                            Image(systemName: "wifi.router").foregroundStyle(.secondary)
+                            Text(Punycode.display(site).text)
+                            Spacer()
+                            Button("Закрыть доступ") { model.prefs.lanAllowedSites.remove(site) }.buttonStyle(.borderless)
+                        }
+                        .padding(.leading, 12)
                     }
                 }
                 SettingToggle(title: "Отключить WebRTC",
@@ -249,6 +280,28 @@ struct DataSettings: View {
                 SettingToggle(title: "Удалять данные сайтов при выходе",
                               detail: "Cookie, хранилище и кэш стираются, когда вы закрываете Ward, — следующий запуск начинается с чистого листа. Сайты из «Помнить вход» не трогаются.",
                               isOn: $model.prefs.clearOnQuit)
+                Picker(selection: $model.prefs.cookieLifetimeDays) {
+                    Text("Неделя").tag(7)
+                    Text("Месяц").tag(30)
+                    Text("Без ограничения").tag(0)
+                } label: {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Срок cookie из скриптов")
+                        Text("Скрипты сайтов ставят cookie на годы — это идентификатор надолго. Ward урезает срок, как Safari. Cookie входа ставит сервер — их это не касается.")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                Picker(selection: $model.prefs.storageLifetimeDays) {
+                    Text("Неделя").tag(7)
+                    Text("Месяц").tag(30)
+                    Text("Без ограничения").tag(0)
+                } label: {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Хранилище сайтов без ваших действий")
+                        Text("localStorage, IndexedDB, Service Worker и кэш сайтов, где вы ничего не нажимали и не печатали столько времени, удаляются. Cookie и вход остаются.")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
                 SettingToggle(title: "Вести историю",
                               detail: "Только на этом Mac, в зашифрованном виде (ключ — в Связке ключей). Для подсказок в адресной строке и окна «История». Частные окна и одноразовые вкладки историю не ведут.",
                               isOn: $model.prefs.keepHistory)

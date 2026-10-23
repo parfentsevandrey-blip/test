@@ -4,7 +4,8 @@ import SwiftUI
 /// Отчёт по одной плитке панели безопасности: что произошло, кто это делал, зачем, какими способами
 /// и как Ward это остановил. Открывается поверх панели, как Quick Look, закрывается пробелом, Esc или щелчком мимо.
 enum DashboardReport: String, Identifiable, CaseIterable {
-    case overview, tracking, ads, fingerprint, hidden, danger, cloaked, consent, isolation, corporation, mask, annoyance, links, https, cleanup, sponsor, pages
+    case overview, tracking, ads, fingerprint, hidden, danger, cloaked, consent, isolation, corporation, mask, annoyance, links, https, cleanup, sponsor, pages,
+         bounce, lan, traces, storage, hardening, coherence
 
     var id: String { rawValue }
 
@@ -25,6 +26,9 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .isolation: .isolation
         case .corporation: .corporation
         case .mask: .mask
+        case .bounce: .bounce
+        case .lan: .lan
+        case .storage: .storage
         }
     }
 
@@ -47,6 +51,10 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .https: [.https]
         case .cleanup: [.cleanup]
         case .sponsor: [.sponsor]
+        case .bounce: [.bounce]
+        case .lan: [.lan]
+        case .storage: [.storage]
+        case .traces, .hardening, .coherence: []
         }
     }
 
@@ -69,6 +77,12 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .cleanup: "trash.fill"
         case .sponsor: "forward.end.fill"
         case .pages: "doc.text.magnifyingglass"
+        case .bounce: "arrow.triangle.turn.up.right.diamond.fill"
+        case .lan: "wifi.router.fill"
+        case .traces: "eye.trianglebadge.exclamationmark.fill"
+        case .storage: "hourglass"
+        case .hardening: "cpu.fill"
+        case .coherence: "checkmark.seal.fill"
         }
     }
 
@@ -90,6 +104,12 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .cleanup: .gray
         case .sponsor: .teal
         case .pages: .brown
+        case .bounce: .indigo
+        case .lan: .red
+        case .traces: .cyan
+        case .storage: .brown
+        case .hardening: .blue
+        case .coherence: .green
         }
     }
 
@@ -112,6 +132,23 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .cleanup: "Уборка за закрытыми сайтами"
         case .sponsor: "Вставки в роликах"
         case .pages: "Страницы под защитой"
+        case .bounce: "«Отскоки» через трекеры"
+        case .lan: "Попытки залезть в домашнюю сеть"
+        case .traces: "Урезанные следы"
+        case .storage: "Срок жизни данных сайтов"
+        case .hardening: "Страницы без JIT"
+        case .coherence: "Правдоподобие вымышленного устройства"
+        }
+    }
+
+    /// Заголовок списка «кто».
+    var whoTitle: String {
+        switch self {
+        case .fingerprint, .isolation: "Какие сайты"
+        case .links: "Какие метки"
+        case .bounce: "Сайты-прокладки"
+        case .lan: "С каких сайтов"
+        default: "Кто"
         }
     }
 
@@ -152,6 +189,18 @@ enum DashboardReport: String, Identifiable, CaseIterable {
             "Спонсорские вставки и призывы подписаться внутри роликов YouTube — по данным открытой базы SponsorBlock."
         case .pages:
             "Страницы, открытые с включённой защитой: на каждой работали списки фильтров, защита отпечатка и всё остальное."
+        case .bounce:
+            "Вы щёлкаете ссылку, а по пути вас незаметно перебрасывает через сайт трекера (или рекламной сети) и обратно. На долю секунды трекер становится «первой стороной»: читает и пишет свои cookie, как обычный сайт, и отправляет вас дальше с меткой в адресе. Так обходят запрет сторонних cookie."
+        case .lan:
+            "Страница из интернета пыталась обратиться к устройству в вашей сети: роутеру (192.168.x.x), принтеру, NAS, камере или сервису на самом Mac (localhost)."
+        case .traces:
+            "Мелкие следы, по которым вас узнают помимо обычных cookie: адрес страницы, с которой вы пришли (Referer), «вечные» cookie, которые ставят скрипты, и отсутствие сигнала «не продавать мои данные»."
+        case .storage:
+            "Хранилище скриптов сайтов — localStorage, IndexedDB, Service Worker, кэш — живёт годами и хранит идентификаторы не хуже cookie."
+        case .hardening:
+            "Большинство атак на браузеры идут через JIT-компилятор JavaScript. Без него страница работает на интерпретаторе, а память проверяется строже — такие уязвимости почти не срабатывают."
+        case .coherence:
+            "Подделку отпечатка ищут детекторы (CreepJS, FingerprintJS, защита от ботов YouTube и банков): сравнивают ответы в окне, во фрейме и в фоновом потоке, печатают текст функций, проверяют ошибки. Видимая подделка хуже честного Mac."
         }
     }
 
@@ -175,6 +224,12 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .cleanup: "Чем дольше живут cookie, тем длиннее история ваших визитов у сайта и его партнёров."
         case .sponsor: "Реклама, встроенная прямо в видео, — её не видят обычные блокировщики."
         case .pages: "—"
+        case .bounce: "Узнавать вас на разных сайтах, когда сторонние cookie заблокированы: метка в адресе плюс cookie «первой стороны» на сайте трекера."
+        case .lan: "Сканировать порты и устройства, менять настройки роутера (CSRF), узнавать, какие у вас устройства, — ещё один отпечаток."
+        case .traces: "Referer рассказывает следующему сайту, какую именно страницу вы читали; «вечный» cookie — идентификатор на годы."
+        case .storage: "Идентификатор в хранилище переживает очистку cookie и узнаёт вас через месяцы."
+        case .hardening: "Заразить Mac через уязвимость браузера, просто открыв страницу."
+        case .coherence: "Если подмена заметна, сайт ставит метку «подозрительный браузер» — это и отпечаток, и повод не пускать."
         }
     }
 
@@ -198,6 +253,12 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .cleanup: ["Cookie сайта и его партнёров", "localStorage, IndexedDB, кэш"]
         case .sponsor: ["Спонсорские вставки", "Самореклама и «подпишитесь на канал»"]
         case .pages: ["—"]
+        case .bounce: ["Переадресация сервера (302) через сайт трекера", "Скрипт уводит со страницы-прокладки за доли секунды", "Ссылки-переходники рекламных сетей"]
+        case .lan: ["Запросы fetch и XHR к 192.168.x.x, 10.x.x.x, localhost, *.local", "Картинки и скрипты с адресов домашней сети", "WebSocket к сервисам на Mac"]
+        case .traces: ["Referer с полным адресом страницы (unsafe-url)", "document.cookie с max-age на годы", "Отсутствие Sec-GPC: «можно продавать»"]
+        case .storage: ["localStorage и IndexedDB", "Service Worker и кэш", "Идентификаторы, которые переживают очистку cookie"]
+        case .hardening: ["JIT-компиляция JavaScript", "Ошибки памяти в движке"]
+        case .coherence: Coherence.titles.keys.sorted().compactMap { Coherence.titles[$0] }
         }
     }
 
@@ -221,6 +282,12 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .cleanup: ["Данные удалены через 15 секунд после закрытия последней вкладки сайта", "Сайты «Помнить вход» не трогаются"]
         case .sponsor: ["Отрезок пропущен; Ward спрашивает базу по 4 знакам хеша id ролика — сервер не знает, какой ролик вы смотрите"]
         case .pages: ["На каждой странице работали все включённые защиты"]
+        case .bounce: ["Ward следит за цепочкой перехода: сайты, через которые вас провели без вашего щелчка, — прокладки", "Их cookie и данные удаляются сразу (во всех хранилищах), если вы сами на них ничего не делали 45 дней", "Сайты «Помнить вход» и открытые во вкладках не трогаются"]
+        case .lan: ["Правила WebKit не выпускают запрос из страницы — до устройства он не доходит", "Страницы, открытые из самой домашней сети (роутер, NAS), работают как обычно", "Сайту можно разрешить доступ в щите"]
+        case .traces: ["Другому сайту уходит только адрес сайта, без страницы и параметров", "Cookie из скриптов живут не дольше недели", "Сигнал GPC «не продавать мои данные» — в заголовке и в navigator"]
+        case .storage: ["Хранилище скриптов сайтов, где вы неделю ничего не нажимали, удаляется", "Cookie (и вход) остаются", "Открытые сайты не трогаются"]
+        case .hardening: ["Незнакомые сайты, банки и госсервисы в изоляторе открываются без JIT (macOS 26.4+)", "На знакомых сайтах JIT остаётся — скорость не страдает"]
+        case .coherence: ["Подменённые функции неотличимы от встроенных", "Те же ответы в окне, фреймах и фоновых потоках", "Отказы выглядят как обычный Safari, а не «запрещено всё»"]
         }
     }
 
@@ -243,6 +310,12 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .cleanup: stats.sitesCleaned
         case .sponsor: Int(stats.sponsorSeconds / 60)
         case .pages: stats.pages
+        case .bounce: stats.bounces
+        case .lan: stats.lanBlocked
+        case .traces: stats.referrersTrimmed + stats.cookiesCapped
+        case .storage: stats.storagePurged
+        case .hardening: stats.noJITPages
+        case .coherence: model.coherence.map { Int(($0.score * 100).rounded()) } ?? 0
         }
     }
 
@@ -253,6 +326,9 @@ enum DashboardReport: String, Identifiable, CaseIterable {
         case .fingerprint: Array(stats.fingerprintSites.sorted { $0.value > $1.value }.prefix(10))
         case .isolation: Array(stats.isolation.mapValues { $0.values.reduce(0, +) }.sorted { $0.value > $1.value }.prefix(10))
         case .corporation: Array(stats.corporationBlocks.map { (Jars.corporation(id: $0.key)?.name ?? $0.key, $0.value) }.sorted { $0.1 > $1.1 }.prefix(12))
+        case .links: stats.paramsRemoved.isEmpty ? nil : stats.paramsRemoved.sorted { $0.value > $1.value }.prefix(12).map { ($0.key, $0.value) }
+        case .bounce: Array(stats.bounceSites.sorted { $0.value > $1.value }.prefix(10))
+        case .lan: Array(stats.lanSites.sorted { $0.value > $1.value }.prefix(10))
         default: nil
         }
     }
@@ -361,7 +437,7 @@ struct ReportOverlay: View {
     private func whoSection(_ stats: Stats) -> some View {
         let list = report.who(stats) ?? derivedWho
         if !list.isEmpty {
-            section(report == .fingerprint || report == .isolation ? "Какие сайты" : "Кто", icon: "person.2") {
+            section(report.whoTitle, icon: "person.2") {
                 let top = Double(max(1, list.map(\.1).max() ?? 1))
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(list, id: \.0) { name, n in

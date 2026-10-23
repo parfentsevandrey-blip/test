@@ -32,6 +32,23 @@ nonisolated enum LocalNetwork {
     }
 }
 
+/// Политика безопасности содержимого (CSP) страницы: разрешает ли она фоновые потоки из blob: — через такой
+/// загрузчик Ward передаёт защиту отпечатка в потоки страницы. Если нет — потоки запускаются как есть.
+nonisolated enum CSP {
+    static func allowsBlobWorkers(_ header: String) -> Bool {
+        for policy in header.split(separator: ",") {
+            var directives: [String: [String]] = [:]
+            for part in policy.split(separator: ";") {
+                let tokens = part.split(whereSeparator: \.isWhitespace).map { String($0).lowercased() }
+                if let name = tokens.first, directives[name] == nil { directives[name] = Array(tokens.dropFirst()) }
+            }
+            let list = directives["worker-src"] ?? directives["child-src"] ?? directives["script-src"] ?? directives["default-src"]
+            if let list, !list.contains("blob:") { return false }
+        }
+        return true
+    }
+}
+
 /// Ответ странице, которая всерьёз снимает отпечаток: дальше она ничего не отправляет на сторонние адреса
 /// (запросы скриптов, маяки, пиксели) — собранное не уходит к сборщику. Сама страница работает.
 nonisolated enum FingerprintResponse {

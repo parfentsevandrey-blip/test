@@ -90,7 +90,15 @@ nonisolated enum RuleCompiler {
         [
             // «Аудит ссылок» (атрибут ping): браузер сообщает сайту о каждом переходе — не нужно.
             ["trigger": ["url-filter": ".*", "resource-type": ["ping"]], "action": ["type": "block"]],
-        ]
+        ] + clickIDPixels
+    }
+
+    /// Пиксели и маяки к чужим серверам с меткой клика в адресе (gclid, fbclid…): так рекламная сеть узнаёт,
+    /// что вы пришли по её объявлению. Метку из адреса подзапроса WebKit вырезать не даёт — запрос не уходит.
+    static var clickIDPixels: [[String: Any]] {
+        ["gclid", "fbclid", "msclkid", "yclid", "dclid", "ttclid", "twclid", "li_fat_id", "_hsenc", "mc_eid", "rb_clickid", "irclickid"].map { name -> [String: Any] in
+            ["trigger": ["url-filter": "[?&]\(name)=", "load-type": ["third-party"], "resource-type": ["image", "ping", "raw"]], "action": ["type": "block"]]
+        }
     }
 
     static func hide(_ selector: String, if domains: [String] = [], unless: [String] = []) -> [String: Any] {

@@ -13,8 +13,11 @@ nonisolated enum Scripts {
     /// Ward добавляет в такие ответы незаметный шум: для каждого сайта свой и новый при каждом запуске.
     /// Внутри сайта отпечаток стабилен (сайт не ломается), между сайтами и сеансами — разный (связать нельзя).
     /// `event` — имя сигнала для панели безопасности (см. `fingerprintRelay`); пусто — без сигналов.
-    static func fingerprint(secret: String, blockWebRTC: Bool, spoofTimezone: Bool = false, spoofLanguage: Bool = false, event: String = "") -> String {
+    /// `wrapWorkers` — запускать фоновые потоки страницы через загрузчик с защитой (нельзя, если CSP страницы
+    /// не разрешает потоки из blob:).
+    static func fingerprint(secret: String, blockWebRTC: Bool, spoofTimezone: Bool = false, spoofLanguage: Bool = false, event: String = "", wrapWorkers: Bool = true) -> String {
         fingerprintSource
+            .replacingOccurrences(of: "__WARD_WORKERS__", with: wrapWorkers ? "true" : "false")
             .replacingOccurrences(of: "__WARD_SECRET__", with: secret)
             .replacingOccurrences(of: "__WARD_EVENT__", with: event)
             .replacingOccurrences(of: "__WARD_WEBRTC__", with: blockWebRTC ? "true" : "false")
@@ -32,6 +35,7 @@ nonisolated enum Scripts {
         const BLOCK_WEBRTC = __WARD_WEBRTC__;
         const SPOOF_TZ = __WARD_TZ__;
         const SPOOF_LANG = __WARD_LANG__;
+        const WRAP_WORKERS = __WARD_WORKERS__;
         // Сигнал для панели безопасности: «такой-то скрипт пытался снять отпечаток таким-то способом».
         // Функции для сигнала взяты до скриптов сайта: подменить их он не успеет.
         const EVENT = '__WARD_EVENT__';
@@ -134,9 +138,27 @@ nonisolated enum Scripts {
         // Фоновые потоки страницы (Worker): в них WebKit не вставляет скрипты Ward, поэтому поток запускается
         // через маленький загрузчик — сначала эта же защита, потом настоящий скрипт. Адреса внутри потока
         // считаются от настоящего скрипта, а не от загрузчика. Если загрузчик не разрешён (CSP) — поток как есть.
+        // CSP страницы (из <meta>): разрешены ли потоки из blob:. Заголовок CSP проверяет сам Ward.
+        const cspAllowsBlobWorker = (policy) => {
+          for (const one of String(policy).split(',')) {
+            const dirs = {};
+            for (const part of one.split(';')) { const t = part.trim().split(/\s+/); if (t[0]) dirs[t[0].toLowerCase()] = t.slice(1); }
+            const list = dirs['worker-src'] || dirs['child-src'] || dirs['script-src'] || dirs['default-src'];
+            if (list && !list.some((x) => x.toLowerCase() === 'blob:')) return false;
+          }
+          return true;
+        };
+        const metaAllowsBlob = (g) => {
+          try {
+            for (const m of g.document ? g.document.querySelectorAll('meta[http-equiv]') : []) {
+              if (/^content-security-policy$/i.test(m.httpEquiv) && !cspAllowsBlobWorker(m.content)) return false;
+            }
+          } catch (e) {}
+          return true;
+        };
         const wrapWorkers = (g) => {
           const Native = g.Worker;
-          if (!Native || !g.Blob || !g.URL || !g.URL.createObjectURL) return;
+          if (!WRAP_WORKERS || !Native || !g.Blob || !g.URL || !g.URL.createObjectURL) return;
           const source = nativeToString.call(ward);
           const Worker = function Worker(url, options) {
             if (!new.target) return Native(url);
@@ -145,6 +167,7 @@ nonisolated enum Scripts {
             const fresh = (u) => Reflect.construct(Native, [u, options], new.target === Worker ? Native : new.target);
             if (!abs || !/^(https?|blob):$/.test(abs.protocol)) return fresh(url);
             if (abs.protocol !== 'blob:' && abs.origin !== g.location.origin) return fresh(url);
+            if (!metaAllowsBlob(g)) return fresh(url);
             const module = !!(options && options.type === 'module');
             let boot;
             try {
@@ -186,9 +209,18 @@ nonisolated enum Scripts {
         };
 
         const patched = new WeakSet();
+        // Фрейм, где уже работает своя копия защиты (WebKit вставляет скрипты и во фреймы): второй слой
+        // шума отменил бы первый (шум — это XOR), поэтому такой фрейм не трогаем.
+        const protectedElsewhere = (other) => {
+          try {
+            const probe = other.HTMLCanvasElement && other.HTMLCanvasElement.prototype.toDataURL;
+            return !!probe && !/\[native code\]/.test(nativeToString.call(probe));
+          } catch (e) { return false; }
+        };
         const patch = (w) => {
           if (!w || patched.has(w)) return;
           patched.add(w);
+          if (w !== self && protectedElsewhere(w)) return;
           try { Object.defineProperty(w.Function.prototype, 'toString', { configurable: true, enumerable: false, writable: true, value: toString }); } catch (e) {}
 
           // Холст: снимок (toDataURL, toBlob) делается с копии с шумом, сам холст не меняется.
@@ -374,21 +406,21 @@ nonisolated enum Scripts {
             if (w.Intl && w.Intl.DateTimeFormat) {
               const DTF = w.Intl.DateTimeFormat;
               const withUTC = (args) => { const a = Array.from(args); const o = Object.assign({}, a[1] || {}); if (!o.timeZone) o.timeZone = 'UTC'; a[1] = o; return a; };
-              w.Intl.DateTimeFormat = new Proxy(DTF, {
+              w.Intl.DateTimeFormat = mask(new Proxy(DTF, {
                 construct(target, args) { return Reflect.construct(target, withUTC(args)); },
                 apply(target, thisArg, args) { return Reflect.apply(target, thisArg, withUTC(args)); },
-              });
+              }), 'DateTimeFormat');
             }
             // «2025-01-01T10:00» без пояса — тоже по UTC, как и всё остальное.
             const NativeDate = w.Date;
             const localISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/;
-            w.Date = new Proxy(NativeDate, {
+            w.Date = mask(new Proxy(NativeDate, {
               construct(target, args) {
                 if (args.length >= 2 && args.every((a) => typeof a === 'number')) return new target(NativeDate.UTC(...args));
                 if (args.length === 1 && typeof args[0] === 'string' && localISO.test(args[0])) return new target(args[0] + 'Z');
                 return Reflect.construct(target, args);
               },
-            });
+            }), 'Date');
           }
 
           // Язык (по желанию): английский, как у большинства пользователей в мире.
@@ -431,8 +463,9 @@ nonisolated enum Scripts {
         if (base) workerShims(w);
         patch(w);
       };
+      // Сайт — по настоящему источнику: у пустого фрейма (about:blank) адреса нет, но источник — родителя.
       let host = '';
-      try { host = location.hostname || ''; } catch (e) {}
+      try { host = self.origin && self.origin !== 'null' ? new URL(self.origin).hostname : (location.hostname || ''); } catch (e) {}
       const labels = host.split('.');
       const site = labels.length > 2 && !/^[0-9.]+$/.test(host) ? labels.slice(-2).join('.') : host;
       ward(window, site, '');
@@ -522,7 +555,8 @@ nonisolated enum Scripts {
         return labels.slice(-2).join('.');
       };
       let here = '';
-      try { here = siteOf(location.hostname); } catch (e) {}
+      let originHost = '';
+      try { originHost = self.origin && self.origin !== 'null' ? new NativeURL(self.origin).hostname : location.hostname; here = siteOf(originHost); } catch (e) {}
 
       // «Не продавать мои данные» — Global Privacy Control.
       if (GPC && w.Navigator) defineGetter(w.Navigator.prototype, 'globalPrivacyControl', true);
@@ -569,7 +603,7 @@ nonisolated enum Scripts {
       // Устройства домашней сети: роутер, принтер, NAS, сервисы на этом Mac.
       const LOCAL = /^(localhost|.+\.localhost|.+\.local|127(\.\d+){3}|10(\.\d+){3}|192\.168(\.\d+){2}|169\.254(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2}|0\.0\.0\.0|\[(::1|f[cd][0-9a-f:]*|fe80:[0-9a-f:]*)\])$/i;
       let pageLocal = true;
-      try { pageLocal = LOCAL.test(location.hostname) || !/^https?:$/.test(location.protocol); } catch (e) {}
+      try { pageLocal = !originHost || LOCAL.test(originHost) || !/^https?:/.test(self.origin); } catch (e) {}
       const lanCheck = (u) => {
         if (!LAN || pageLocal) return;
         try {

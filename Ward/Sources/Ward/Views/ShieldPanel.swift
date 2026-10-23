@@ -189,6 +189,27 @@ struct ShieldPanel: View {
                     note("cube.transparent", "Сайт в изоляторе пытался получить: \(tried.map { "\($0.title.lowercased()) — \($0.answer)" }.joined(separator: "; ")).", color: .teal)
                 }
             }
+            if !tab.bouncedThrough.isEmpty {
+                note("arrow.triangle.turn.up.right.diamond", "По пути сюда вас перебросили через \(tab.bouncedThrough.joined(separator: ", ")) — сайт-прокладку, который ставит cookie на лету. Его данные удалены.", color: .indigo)
+            }
+            if !tab.lanAttempts.isEmpty {
+                note("wifi.router", "Страница пыталась обратиться к устройствам вашей сети: \(tab.lanAttempts.sorted().prefix(4).joined(separator: ", ")). Запросы не ушли.", color: .red)
+            }
+            if !tab.fingerprintScripts.isEmpty && tab.protectedHere {
+                let scripts = tab.fingerprintScripts.keys.sorted().prefix(3).joined(separator: ", ")
+                note("chevron.left.forwardslash.chevron.right", tab.fingerprintAlert
+                     ? "Сборщик отпечатка: \(scripts)\(model.prefs.fingerprintResponse ? " — отправка на сторонние адреса остановлена" : "")."
+                     : "Отпечаток снимал сторонний скрипт: \(scripts).", color: .pink)
+            }
+            if tab.referrersTrimmed + tab.cookiesCapped > 0 {
+                var parts: [String] = []
+                if tab.referrersTrimmed > 0 { parts.append("адрес, откуда вы пришли, — без страницы") }
+                if tab.cookiesCapped > 0 { parts.append("\(tab.cookiesCapped) \(Format.plural(tab.cookiesCapped, "cookie", "cookie", "cookie")) «навсегда» — на неделю") }
+                note("eye.trianglebadge.exclamationmark", "Следы урезаны: " + parts.joined(separator: "; ") + ".", color: .cyan)
+            }
+            if tab.noJITHere {
+                note("cpu", "Страница открыта без JIT: самый атакуемый механизм браузера выключен, память проверяется строже.", color: .blue)
+            }
             if tab.unwrappedRedirect {
                 note("arrow.uturn.right", "Ссылка-переходник пропущена: сайт, откуда вы пришли, не узнал, куда вы ушли.")
             }
@@ -255,6 +276,18 @@ struct ShieldPanel: View {
                     model.setJavaScript(on, site: site)
                     tab.reload()
                 }))
+                if !tab.lanAttempts.isEmpty || model.prefs.lanAllowedSites.contains(site) {
+                    Toggle(isOn: Binding(get: { model.prefs.lanAllowedSites.contains(site) }, set: { on in
+                        if on { model.prefs.lanAllowedSites.insert(site) } else { model.prefs.lanAllowedSites.remove(site) }
+                        tab.reload()
+                    })) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Доступ к домашней сети")
+                            Text("Разрешите, только если этот сайт должен управлять вашим устройством (умный дом, принтер, сервис на Mac).")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
                 Toggle(isOn: Binding(get: { tab.strictHere }, set: { on in
                     model.setStrict(on, site: site)
                     tab.reload()

@@ -56,7 +56,8 @@ nonisolated final class MiniHTTP: @unchecked Sendable {
             var head: String
             var body = Data()
             if let route {
-                head = "HTTP/1.1 200 OK\r\nContent-Type: \(route.type)\r\nContent-Length: \(route.body.count)\r\nCache-Control: no-store\r\nConnection: close\r\n"
+                let status = route.headers["Location"] != nil ? "302 Found" : "200 OK"
+                head = "HTTP/1.1 \(status)\r\nContent-Type: \(route.type)\r\nContent-Length: \(route.body.count)\r\nCache-Control: no-store\r\nConnection: close\r\n"
                 for (k, v) in route.headers { head += "\(k): \(v)\r\n" }
                 body = request.hasPrefix("HEAD") ? Data() : route.body
             } else {
@@ -171,6 +172,41 @@ setTimeout(()=>{const n=document.createElement('div');n.id='news';n.style.cssTex
 </script>
 </body></html>
 """#)
+        // Следы: GPC, Referer, cookie «навсегда», «отскоки», домашняя сеть, скрипт-сборщик отпечатка.
+        set("/gpc.html", html: "<!doctype html><title>gpc</title><script>window.results = { gpc: navigator.globalPrivacyControl };</script>")
+        set("/ref-a.html", html: """
+        <!doctype html><html><head><meta name="referrer" content="unsafe-url"></head><body>
+        <a id="go" href="http://localhost:\(p)/ref-b.html?from=a">дальше</a></body></html>
+        """)
+        set("/ref-b.html", html: """
+        <!doctype html><script>
+        document.cookie = 'forever=1; max-age=315360000; path=/';
+        document.cookie = 'session=1; path=/';
+        window.results = { referrer: document.referrer };
+        </script>
+        """)
+        set("/bstart.html", html: """
+        <!doctype html><body><a id="go" href="http://localhost:\(p)/bounce">server</a>
+        <a id="js" href="http://localhost:\(p)/jsb.html">script</a></body>
+        """)
+        set("/bounce", headers: ["Location": "http://127.0.0.1:\(p)/bfinal.html?server", "Set-Cookie": "bounce_id=42; Path=/; Max-Age=31536000"], body: Data())
+        set("/jsb.html", html: """
+        <!doctype html><script>document.cookie = 'bounce_js=1; path=/'; location.replace('http://127.0.0.1:\(p)/bfinal.html?js');</script>
+        """)
+        set("/bfinal.html", html: "<!doctype html><title>final</title><p>Конечная страница</p>")
+        set("/fp-collector.js", type: "application/javascript", body: Data("""
+        (() => {
+          const c = document.createElement('canvas'); c.width = 120; c.height = 40;
+          const x = c.getContext('2d'); x.fillText('Ward 😀', 4, 20); c.toDataURL();
+          const ctx = new OfflineAudioContext(1, 4410, 44100); const o = ctx.createOscillator(); o.connect(ctx.destination); o.start(0); ctx.startRendering();
+          for (const f of ['Arial','Helvetica','Times','Courier','Verdana','Georgia','Palatino','Garamond','Bookman','Tahoma','Trebuchet MS','Arial Black','Impact','Comic Sans MS','Monaco','Menlo','Optima','Futura','Gill Sans','Didot','Avenir']) { x.font = '16px ' + f; x.measureText('mmmmmmmmmmlli'); }
+          window.collected = true;
+        })();
+        """.utf8))
+        set("/fp-ext.html", html: "<!doctype html><title>сборщик</title><script src=\"http://127.0.0.1:\(p)/fp-collector.js\"></script>")
+        set("/lan-pixel.png", type: "image/png", body: Self.pixel)
+        set("/lan-fetch", type: "text/plain", body: Data("ok".utf8))
+
         // Фоновые потоки: относительные адреса внутри потока, модульный поток и страница с CSP без blob:.
         let js = "application/javascript"
         set("/wk/w.js", type: js, body: Data("""

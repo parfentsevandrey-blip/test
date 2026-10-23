@@ -25,7 +25,9 @@ final class AppModel {
                 || prefs.consentReject != oldValue.consentReject || prefs.sponsorBlock != oldValue.sponsorBlock
                 || prefs.blockAnnoyances != oldValue.blockAnnoyances
                 || prefs.maskMode != oldValue.maskMode || prefs.corporateJars != oldValue.corporateJars
-                || prefs.spoofTimezone != oldValue.spoofTimezone || prefs.spoofLanguage != oldValue.spoofLanguage {
+                || prefs.spoofTimezone != oldValue.spoofTimezone || prefs.spoofLanguage != oldValue.spoofLanguage
+                || prefs.gpc != oldValue.gpc || prefs.trimReferrer != oldValue.trimReferrer || prefs.cookieLifetimeDays != oldValue.cookieLifetimeDays
+                || prefs.blockLocalNetwork != oldValue.blockLocalNetwork || prefs.lanAllowedSites != oldValue.lanAllowedSites {
                 refreshAllTabs()
             }
         }
@@ -73,6 +75,14 @@ final class AppModel {
     private var historySites: Set<String> = []
     /// Идёт «Стереть всё»: окна закрываются без сохранения вкладок.
     private(set) var wiping = false
+    /// Когда вы что-то делали на сайтах и через какие сайты вас «отскакивали» (зашифровано, только на этом Mac).
+    private(set) var activity = SiteActivity()
+    /// Собранные правила WebKit по имени: домашняя сеть, ответ сборщику отпечатка.
+    private var namedRules: [String: WKContentRuleList] = [:]
+    private var namedRulesCompiling: Set<String> = []
+    private var maintenanceTimer: Timer?
+    /// Последняя проверка правдоподобия вымышленного устройства (для панели безопасности).
+    var coherence: CoherenceReport?
 
     init() {
         prefs = Storage.load(Prefs.self, "prefs.json") ?? Prefs()
@@ -85,6 +95,7 @@ final class AppModel {
         stats = Storage.load(Stats.self, "stats.json") ?? Stats()
         if prefs.isolationSecret.isEmpty { prefs.isolationSecret = Self.randomSecret() + Self.randomSecret() }
         historySites = Set(history.entries.map { Hosts.site($0.url.host ?? "") })
+        if !SelfTest.isRunning { activity = SecureStore.load(SiteActivity.self, SiteActivity.file) ?? SiteActivity() }
     }
 
     static func randomSecret() -> String {
@@ -95,11 +106,22 @@ final class AppModel {
         blocker.onChange = { [weak self] in self?.refreshAllTabs() }
         cname.onChange = { [weak self] in self?.refreshAllTabs() }
         blocker.prepare(lists: prefs.enabledFilterLists)
+        // Правила домашней сети и ответа сборщику отпечатка — собрать заранее, к первой странице.
+        _ = localNetworkRules
+        _ = fingerprintResponseRules
         SecurityLog.shared.prune(keepingDays: prefs.logRetentionDays)
         rotateMaskIfDue()
         cname.scheduleCompile(store: blocker.store)
         saveTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
             MainActor.assumeIsolated { AppModel.shared.saveState() }
+        }
+        // Раз в полчаса: данные сайтов-прокладок и просроченное хранилище скриптов.
+        maintenanceTimer = Timer.scheduledTimer(withTimeInterval: 1800, repeats: true) { _ in
+            MainActor.assumeIsolated { Task { await AppModel.shared.maintain() } }
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(120))
+            await maintain()
         }
         NotificationCenter.default.addObserver(forName: NSApplication.didResignActiveNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { AppModel.shared.historyUnlocked = false }
@@ -170,7 +192,7 @@ final class AppModel {
 
     /// Скрипты для страницы хоста и сколько в них скриптлетов из списков.
     /// `proxied` — окно идёт через прокси: тогда WebRTC выключается сам, иначе он раскрыл бы настоящий IP в обход прокси.
-    func pageScripts(host: String, protected: Bool, secret: String, proxied: Bool = false, jar: String? = nil) -> (list: [WKUserScript], scriptlets: Int) {
+    func pageScripts(host: String, protected: Bool, secret: String, proxied: Bool = false, jar: String? = nil, wrapWorkers: Bool = true) -> (list: [WKUserScript], scriptlets: Int) {
         var list: [WKUserScript] = []
         var scriptlets = 0
         if let jar {
@@ -181,14 +203,19 @@ final class AppModel {
             // WebRTC прячет настоящий IP только тогда, когда сайты ходят через прокси: без прокси сайт и так видит
             // ваш адрес, а исчезнувший WebRTC выдаёт «подделанный браузер» защите от ботов (YouTube, банки).
             let webRTCOff = prefs.blockWebRTC || proxied
-            list.append(WKUserScript(source: Scripts.fingerprint(secret: legend.noiseSecret, blockWebRTC: webRTCOff, event: signalToken),
+            list.append(WKUserScript(source: Scripts.fingerprint(secret: legend.noiseSecret, blockWebRTC: webRTCOff, event: signalToken, wrapWorkers: wrapWorkers),
                                      injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
-            list.append(WKUserScript(source: Scripts.fingerprintRelay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
             list.append(WKUserScript(source: Isolation.script(legend, event: signalToken, deny: kind == .isolator), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
             list.append(WKUserScript(source: Isolation.relay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
         } else if protected && (prefs.fingerprint || proxied) {
             list.append(WKUserScript(source: Scripts.fingerprint(secret: secret, blockWebRTC: prefs.blockWebRTC || proxied,
-                                                                 spoofTimezone: prefs.spoofTimezone, spoofLanguage: prefs.spoofLanguage, event: signalToken),
+                                                                 spoofTimezone: prefs.spoofTimezone, spoofLanguage: prefs.spoofLanguage, event: signalToken, wrapWorkers: wrapWorkers),
+                                     injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
+        }
+        if protected || jar != nil {
+            // Следы: GPC, адрес, откуда пришли, срок cookie из скриптов, обращения к домашней сети.
+            let lan = prefs.blockLocalNetwork && !prefs.lanAllowedSites.contains(Hosts.site(host))
+            list.append(WKUserScript(source: Scripts.privacy(gpc: prefs.gpc, trimReferrer: prefs.trimReferrer, cookieDays: prefs.cookieLifetimeDays, lan: lan, event: signalToken),
                                      injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
             list.append(WKUserScript(source: Scripts.fingerprintRelay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
         }
@@ -453,6 +480,7 @@ final class AppModel {
 
     func recordCleaned(_ params: [String] = [], host: String = "") {
         stats.cleanedLinks += 1
+        for p in params { Stats.bump(&stats.paramsRemoved, p.lowercased(), limit: 200) }
         feed(.link, "Ссылка очищена", ([host] + params.prefix(4)).filter { !$0.isEmpty }.joined(separator: " · "))
     }
 
@@ -464,6 +492,175 @@ final class AppModel {
     func recordConsent(_ cmp: String = "", site: String = "") {
         stats.consentsRejected += 1
         feed(.consent, "Отказ от cookie", [site, cmp].filter { !$0.isEmpty }.joined(separator: " · "))
+    }
+
+    // MARK: - Следы: отскоки, домашняя сеть, Referer, cookie, отпечаток
+
+    /// Правила WebKit, собранные один раз по имени (ключ включает версию правил).
+    func namedRuleList(_ key: String, _ json: @autoclosure () -> String) -> WKContentRuleList? {
+        if let list = namedRules[key] { return list }
+        guard !namedRulesCompiling.contains(key) else { return nil }
+        namedRulesCompiling.insert(key)
+        let source = json()
+        Task {
+            switch await blocker.compile("ward-\(key)", source) {
+            case .success(let list):
+                namedRules[key] = list
+                refreshAllTabs()
+            case .failure(let error):
+                print("Ward: правила \(key): \(error)")
+            }
+            namedRulesCompiling.remove(key)
+        }
+        return nil
+    }
+
+    var localNetworkRules: WKContentRuleList? { namedRuleList("lan-\(LocalNetwork.rulesVersion)", LocalNetwork.ruleList) }
+    var fingerprintResponseRules: WKContentRuleList? { namedRuleList("fp-response-\(FingerprintResponse.rulesVersion)", FingerprintResponse.ruleList) }
+
+    /// Вы что-то нажали или напечатали на сайте.
+    func recordActivation(_ site: String) {
+        guard !site.isEmpty else { return }
+        activity.activated(site)
+    }
+
+    /// Хранилище сайта впервые замечено — от этой даты считается срок, если вы на сайте ничего не делали.
+    func noteSeen(_ site: String, at date: Date = Date()) {
+        if activity.firstSeen[site] == nil { activity.firstSeen[site] = date }
+    }
+
+    /// Вас перебросили через сайты-прокладки по пути с `origin` на `final`. Известные трекеры (по спискам)
+    /// и сайты, где вы ничего не делали 45 дней, забываются: их данные удаляются сразу — во всех хранилищах
+    /// и в хранилище этой вкладки (`store`).
+    func recordBounce(_ sites: [String], from origin: String, to final: String, store: WKWebsiteDataStore?, noTrace: Bool) {
+        guard prefs.bounceProtection, !sites.isEmpty else { return }
+        let now = Date()
+        for site in sites {
+            stats.bounces += 1
+            if !noTrace { Stats.bump(&stats.bounceSites, site) }
+            activity.bounces[site] = now
+            feed(.bounce, "Отскок через \(noTrace ? "сайт-прокладку" : site)", noTrace ? "" : [origin, final].filter { !$0.isEmpty }.joined(separator: " → "))
+        }
+        Task { await purgeBounceTrackers(only: Set(sites), extra: store) }
+    }
+
+    /// Сайт-прокладку можно забыть: вы на нём ничего не делали 45 дней, он не открыт и не в «Помнить вход».
+    func bouncePurgeable(_ site: String, now: Date = Date()) -> Bool {
+        guard !site.isEmpty, !prefs.rememberedSites.contains(site), !isIsolated(site) else { return false }
+        if activity.interacted(site, within: 45, now: now) { return false }
+        return !allTabs.contains { $0.site == site }
+    }
+
+    /// Удалить данные сайтов-прокладок. `only` — только эти сайты (сразу после отскока), иначе все известные.
+    @discardableResult
+    func purgeBounceTrackers(only: Set<String>? = nil, extra: WKWebsiteDataStore? = nil, now: Date = Date()) async -> Int {
+        guard prefs.bounceProtection else { return 0 }
+        let candidates = (only ?? Set(activity.bounces.keys)).filter { bouncePurgeable($0, now: now) }
+        guard !candidates.isEmpty else { return 0 }
+        var removed = 0
+        var stores = allPersistentStores.map(\.store)
+        if let extra, !stores.contains(where: { $0 === extra }) { stores.append(extra) }
+        for store in stores {
+            let doomed = await Self.records(store).filter { candidates.contains(Hosts.site($0.displayName)) }
+            removed += doomed.count
+            await Self.remove(store, doomed)
+        }
+        for site in candidates { activity.bounces[site] = nil }
+        if removed > 0 {
+            stats.bouncePurged += removed
+            feed(.bounce, "Данные сайтов-прокладок удалены", "\(removed) \(Format.plural(removed, "запись", "записи", "записей"))")
+        }
+        return removed
+    }
+
+    /// Хранилище скриптов (localStorage, IndexedDB, Service Worker, кэш) сайтов, где вы не нажимали и не печатали
+    /// `prefs.storageLifetimeDays` дней, удаляется. Cookie (и вход) не трогаются. Открытые сайты — тоже.
+    @discardableResult
+    func enforceStorageLifetime(now: Date = Date()) async -> Int {
+        let days = prefs.storageLifetimeDays
+        guard days > 0 else { return 0 }
+        let types: Set<String> = [WKWebsiteDataTypeLocalStorage, WKWebsiteDataTypeIndexedDBDatabases, WKWebsiteDataTypeServiceWorkerRegistrations,
+                                  WKWebsiteDataTypeFetchCache, WKWebsiteDataTypeWebSQLDatabases]
+        let open = Set(allTabs.map(\.site))
+        var purged = Set<String>()
+        for (_, store) in allPersistentStores {
+            let records: [WKWebsiteDataRecord] = await withCheckedContinuation { (c: CheckedContinuation<RecordsBox, Never>) in
+                store.fetchDataRecords(ofTypes: types) { list in
+                    let box = RecordsBox()
+                    box.records = list
+                    c.resume(returning: box)
+                }
+            }.records
+            var doomed: [WKWebsiteDataRecord] = []
+            for record in records {
+                let site = Hosts.site(record.displayName)
+                guard !site.isEmpty, !open.contains(site) else { continue }
+                noteSeen(site, at: now)
+                guard let last = activity.lastUse(site), now.timeIntervalSince(last) > Double(days) * 86_400 else { continue }
+                doomed.append(record)
+                purged.insert(site)
+            }
+            if !doomed.isEmpty {
+                await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
+                    store.removeData(ofTypes: types, for: doomed) { c.resume() }
+                }
+            }
+        }
+        if !purged.isEmpty {
+            stats.storagePurged += purged.count
+            feed(.storage, "Просроченное хранилище удалено", "\(purged.count) \(Format.plural(purged.count, "сайт", "сайта", "сайтов")) без ваших действий \(days) \(Format.plural(days, "день", "дня", "дней"))")
+        }
+        return purged.count
+    }
+
+    /// Плановая уборка следов.
+    func maintain() async {
+        await purgeBounceTrackers()
+        await enforceStorageLifetime()
+    }
+
+    /// Хранилища на диске: общее, контейнеры и открытые за этот запуск банки.
+    var allPersistentStores: [(id: UUID?, store: WKWebsiteDataStore)] {
+        var list = persistentStores
+        for (id, store) in stores where jarIDs[id] != nil { list.append((id: id, store: store)) }
+        return list
+    }
+
+    /// Сайт из интернета пытался обратиться к устройству домашней сети.
+    func recordLAN(_ address: String, site: String, noTrace: Bool) {
+        stats.lanBlocked += 1
+        if !noTrace { Stats.bump(&stats.lanSites, site) }
+        feed(.lan, "Домашняя сеть: обращение остановлено", noTrace ? address : "\(site) → \(address)")
+    }
+
+    /// Урезанный след: адрес, откуда пришли, или cookie «навсегда».
+    func recordTrace(_ kind: TraceSignal) {
+        switch kind {
+        case .referrer: stats.referrersTrimmed += 1
+        case .cookie: stats.cookiesCapped += 1
+        case .lan: break
+        }
+    }
+
+    /// Скрипт со стороннего адреса снимал отпечаток (`first` — первый раз на этой странице).
+    func recordFingerprintScript(_ script: String) {
+        Stats.bump(&stats.fingerprintScripts, script, limit: 200)
+    }
+
+    /// Страница всерьёз снимает отпечаток (набрала порог детектора).
+    func recordFingerprintAlert(site: String, scripts: [String], techniques: Int, blocked: Bool) {
+        let who = scripts.isEmpty ? site : scripts.prefix(3).joined(separator: ", ")
+        feed(.fingerprint, "Сборщик отпечатка: \(techniques) \(Format.plural(techniques, "способ", "способа", "способов"))\(blocked ? " — отправка остановлена" : "")", who)
+    }
+
+    func recordNoJIT() { stats.noJITPages += 1 }
+
+    /// «Скопировать чистую ссылку»: без меток слежки и переходников.
+    func copyCleanLink(_ url: URL) {
+        let clean = CleanLink.clean(url, cleaner: blocker.cleaner)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(clean.absoluteString, forType: .string)
+        if clean != url { recordCleaned([], host: "") }
     }
 
     // MARK: - Банки: изолятор, корпорации, маска
@@ -670,6 +867,7 @@ final class AppModel {
         guard !wiping else { return }
         Storage.save(stats, "stats.json")
         if prefs.keepHistory { SecureStore.save(history.entries, "history.json") }
+        if !SelfTest.isRunning { SecureStore.save(activity, SiteActivity.file) }
         saveSession()
     }
 
@@ -800,6 +998,8 @@ final class AppModel {
         for browser in browsers { browser.wipe() }
         closedTabs.removeAll()
         clearHistory()
+        activity = SiteActivity()
+        SecureStore.remove(SiteActivity.file)
         SecureStore.remove("session.json")
         downloads.clearFinished()
         _ = await clearSiteData(keeping: [])
@@ -827,7 +1027,8 @@ final class AppModel {
 /// Событие защиты для живой ленты панели безопасности.
 struct SecurityEvent: Identifiable, Equatable {
     enum Kind: String, CaseIterable {
-        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup, annoyance, isolation, corporation, mask
+        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup, annoyance, isolation, corporation, mask,
+             bounce, lan, storage
 
         /// Название вида для журнала и фильтров.
         var title: String {
@@ -848,6 +1049,9 @@ struct SecurityEvent: Identifiable, Equatable {
             case .isolation: "Изолятор"
             case .corporation: "Корпорации"
             case .mask: "Маска"
+            case .bounce: "Отскоки"
+            case .lan: "Домашняя сеть"
+            case .storage: "Срок данных"
             }
         }
 
@@ -869,6 +1073,9 @@ struct SecurityEvent: Identifiable, Equatable {
             case .isolation: "cube.transparent.fill"
             case .corporation: "building.2.crop.circle"
             case .mask: "theatermasks.circle.fill"
+            case .bounce: "arrow.triangle.turn.up.right.diamond.fill"
+            case .lan: "wifi.router.fill"
+            case .storage: "hourglass"
             }
         }
 
@@ -887,6 +1094,9 @@ struct SecurityEvent: Identifiable, Equatable {
             case .isolation: .teal
             case .corporation: .orange
             case .mask: .purple
+            case .bounce: .indigo
+            case .lan: .red
+            case .storage: .brown
             }
         }
     }

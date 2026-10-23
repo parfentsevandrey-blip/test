@@ -598,7 +598,9 @@ extension Scripts {
       };
 
       // root — самый внешний fixed-слой (его и прячем), chain — все fixed-слои от точки до него.
-      const inspect = (root, chain) => {
+      // byStructure — слой найден по разметке, а не «под точкой»: тогда убираем только уговоры с текстом
+      // (подложки и фоны без текста по разметке не отличить от оформления сайта).
+      const inspect = (root, chain, byStructure) => {
         if (!root || decided.has(root)) return false;
         const n = (looks.get(root) || 0) + 1;
         looks.set(root, n);
@@ -610,6 +612,7 @@ extension Scripts {
         const text = textOf(root);
         const nag = NAG.test(text) || chain.some((el) => NAG.test(signature(el)));
         if (semanticallyProtected(root, nag)) { decided.add(root); return false; }
+        if (byStructure && !nag) return false;
         // Размер берём у самого крупного слоя цепочки: обёртка может быть нулевой высоты.
         let box = null;
         for (const el of chain) {
@@ -715,6 +718,34 @@ extension Scripts {
 
       const POINTS = [[0.5, 0.5], [0.5, 0.94], [0.5, 0.82], [0.2, 0.92], [0.8, 0.92], [0.5, 0.06], [0.5, 0.3], [0.5, 0.7],
                       [0.88, 0.85], [0.12, 0.85], [0.85, 0.15], [0.15, 0.15], [0.85, 0.5], [0.15, 0.5], [0.85, 0.65], [0.15, 0.65]];
+      // Второй путь — по самой разметке: fixed-слои в верхних уровнях страницы. Не зависит от того, как движок
+      // отвечает на «что под точкой» (у запертой страницы с pointer-events: none ответ бывает пустым).
+      let lastStructural = 0;
+      const structural = (checked) => {
+        if (Date.now() - lastStructural < 2000) return false;
+        lastStructural = Date.now();
+        let hid = false, visited = 0;
+        const walk = (el, depth) => {
+          for (const child of el.children) {
+            if (++visited > 1500) return;
+            if (checked.has(child) || decided.has(child)) continue;
+            const s = style(child);
+            if (!s || s.display === 'none') continue;
+            if (s.position === 'fixed') {
+              if (parseInt(s.zIndex, 10) < 0) continue;   // под страницей, а не поверх
+              const inner = Array.from(child.querySelectorAll('*')).slice(0, 300).filter((d) => { const ds = style(d); return ds && ds.position === 'fixed'; });
+              checked.add(child);
+              state.layers++;
+              if (inspect(child, [child, ...inner], true)) hid = true;
+              continue;
+            }
+            if (depth < 4) walk(child, depth + 1);
+          }
+        };
+        walk(document.body, 0);
+        return hid;
+      };
+
       const scan = () => {
         if (!document.body) return;
         state.scans++;
@@ -732,6 +763,7 @@ extension Scripts {
             if (inspect(root, chain)) hid = true;
           }
         }
+        if (structural(checked)) hid = true;
         if (hid) clearFog();
         if (state.hidden > 0) unlock();   // и сразу, и если сайт вернул запрет прокрутки позже
       };

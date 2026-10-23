@@ -96,6 +96,11 @@ struct BrowserCommands: Commands {
         CommandGroup(replacing: .printItem) {
             Button("Напечатать…") { tab?.printPage() }.keyboardShortcut("p").disabled(tab?.url == nil)
         }
+        CommandGroup(after: .pasteboard) {
+            Button("Скопировать чистую ссылку") { if let u = tab?.url { AppModel.shared.copyCleanLink(u) } }
+                .keyboardShortcut("c", modifiers: [.command, .shift])
+                .disabled(tab?.url == nil)
+        }
         CommandGroup(after: .textEditing) {
             Button("Найти на странице…") { browser?.showFind() }.keyboardShortcut("f").disabled(tab == nil)
             Button("Найти далее") { if let b = browser { tab?.find(b.findText) } }.keyboardShortcut("g").disabled(tab == nil)

@@ -72,6 +72,19 @@ final class Tab: NSObject, Identifiable {
     /// Сколько рекламных блоков и баннеров скрыто на странице.
     var hiddenCount = 0
     var passwordWarning = false
+    /// Сайты-прокладки, через которые вас привели на эту страницу («отскоки»).
+    var bouncedThrough: [String] = []
+    /// Устройства домашней сети, к которым пыталась обратиться страница (адрес:порт).
+    var lanAttempts: Set<String> = []
+    /// Сторонние скрипты, которые снимали отпечаток: адрес → способы.
+    var fingerprintScripts: [String: Set<String>] = [:]
+    /// Страница всерьёз снимает отпечаток (набрала порог детектора).
+    var fingerprintAlert = false
+    /// Страница открыта без JIT (macOS 26.4+).
+    var noJITHere = false
+    /// Урезанные следы на странице: адрес, откуда пришли, и cookie «навсегда».
+    var referrersTrimmed = 0
+    var cookiesCapped = 0
     var certificate: CertificateInfo?
     var zoom = 1.0 { didSet { webViewIfLoaded?.pageZoom = zoom } }
     /// Вкладка из прошлого сеанса: страница загрузится, когда вкладку откроют.
@@ -94,6 +107,24 @@ final class Tab: NSObject, Identifiable {
     @ObservationIgnored private var ephemeralStore: WKWebsiteDataStore?
     @ObservationIgnored private var cnameChecks = 0
     @ObservationIgnored private var hiddenTask: Task<Void, Never>?
+    /// Цепочка перехода для защиты от «отскоков» (см. `NavigationChain`).
+    @ObservationIgnored private var chain = NavigationChain()
+    @ObservationIgnored private var reportedBounces: Set<String> = []
+    /// Сайты, запрошенные в текущей загрузке до её начала (с переадресациями сервера).
+    @ObservationIgnored private var pendingHops: [String] = []
+    @ObservationIgnored private var redirected = false
+    @ObservationIgnored private var userInitiated = true
+    @ObservationIgnored private var committedSite = ""
+    @ObservationIgnored private var committedAt = Date.distantPast
+    @ObservationIgnored private var activatedSinceCommit = false
+    /// Адрес, который загружает сам Ward (ввод адреса, очистка ссылки, HTTPS), и по вашему ли действию.
+    @ObservationIgnored private var nativeLoad: (url: URL, user: Bool)?
+    /// Правый щелчок по ссылке — для «Скопировать чистую ссылку».
+    @ObservationIgnored private var contextLink: (url: URL, time: Date)?
+    /// Включены правила «ничего не отправлять наружу» для сборщика отпечатка.
+    @ObservationIgnored private var fingerprintBlocking = false
+    /// CSP страницы разрешает фоновые потоки из blob: — защита отпечатка уходит и в потоки.
+    @ObservationIgnored private var workersWrappable = true
 
     /// Вкладка, которая не оставляет следов: имена сайтов не попадают в ленту панели безопасности.
     var leavesNoTrace: Bool { isPrivate || ephemeral }
@@ -151,7 +182,8 @@ final class Tab: NSObject, Identifiable {
         popupConfiguration = nil
         // У каждой вкладки свои правила и скрипты: защиту можно выключить на одном сайте, не трогая другие.
         configuration.userContentController = WKUserContentController()
-        let view = WKWebView(frame: .zero, configuration: configuration)
+        let view = WardWebView(frame: .zero, configuration: configuration)
+        view.tab = self
         setUp(view)
         webViewIfLoaded = view
         return view
@@ -227,9 +259,12 @@ final class Tab: NSObject, Identifiable {
         if on, let cname = model.cname.ruleList { controller.add(cname) }
         // Корпоративная банка: запросы к другим корпорациям не уходят — даже там, где защита выключена.
         if let jar, Jars.kind(of: jar) == .corporation, let rules = model.corporationRules(Jars.subject(of: jar)) { controller.add(rules) }
+        // Домашняя сеть: сайты из интернета не достучатся до роутера, принтера и сервисов на этом Mac.
+        if model.prefs.blockLocalNetwork, !model.prefs.lanAllowedSites.contains(Hosts.site(host)), let rules = model.localNetworkRules { controller.add(rules) }
+        fingerprintBlocking = false
         controller.removeAllUserScripts()
         let proxied = NetworkPrivacy.usesProxy(model.prefs, isPrivate: isPrivate || ephemeral)
-        let scripts = model.pageScripts(host: host, protected: on, secret: browser?.secret ?? model.sessionSecret, proxied: proxied, jar: jar)
+        let scripts = model.pageScripts(host: host, protected: on, secret: browser?.secret ?? model.sessionSecret, proxied: proxied, jar: jar, wrapWorkers: workersWrappable)
         for script in scripts.list { controller.addUserScript(script) }
         scriptletCount = scripts.scriptlets
         appliedHost = host
@@ -258,8 +293,31 @@ final class Tab: NSObject, Identifiable {
         Task {
             await AppModel.shared.blocker.waitReady(timeout: 30)
             configureProtections(for: target)
-            webView.load(URLRequest(url: target))
+            nativeLoad = (target, true)
+            webView.load(request(for: target))
         }
+    }
+
+    /// Запрос, который загружает сам Ward: с сигналом «не продавать мои данные» и адресом, откуда пришли, —
+    /// не больше, чем отдал бы сам WebKit (другому сайту — только сайт).
+    func request(for target: URL, from source: URL? = nil) -> URLRequest {
+        var request = URLRequest(url: target)
+        if AppModel.shared.prefs.gpc { request.setValue("1", forHTTPHeaderField: "Sec-GPC") }
+        if let source, let referrer = Self.referrer(from: source, to: target) { request.setValue(referrer, forHTTPHeaderField: "Referer") }
+        return request
+    }
+
+    /// Referer по правилу strict-origin-when-cross-origin: тот же сайт и источник — адрес страницы без фрагмента,
+    /// другой — только сайт, с HTTPS на HTTP — ничего.
+    static func referrer(from source: URL, to target: URL) -> String? {
+        guard let scheme = source.scheme?.lowercased(), scheme == "http" || scheme == "https", let host = source.host else { return nil }
+        if scheme == "https" && target.scheme?.lowercased() == "http" { return nil }
+        let sameOrigin = source.scheme == target.scheme && source.host == target.host && source.port == target.port
+        if sameOrigin, var comps = URLComponents(url: source, resolvingAgainstBaseURL: false) {
+            comps.fragment = nil
+            return comps.url?.absoluteString
+        }
+        return "\(scheme)://\(host)\(source.port.map { ":\($0)" } ?? "")/"
     }
 
     /// Открыть вкладку из прошлого сеанса.
@@ -362,7 +420,8 @@ final class Tab: NSObject, Identifiable {
         browser?.dangerAllowed.insert(target.host?.lowercased() ?? "")
         allowOnce = target
         interstitial = nil
-        webView.load(URLRequest(url: target))
+        nativeLoad = (target, true)
+        webView.load(request(for: target))
     }
 
     /// «Это не подделка» — сайт больше не проверяется на сходство.
@@ -370,7 +429,8 @@ final class Tab: NSObject, Identifiable {
         AppModel.shared.prefs.trustedLookalikes.insert(Hosts.site(target.host?.lowercased() ?? ""))
         allowOnce = target
         interstitial = nil
-        webView.load(URLRequest(url: target))
+        nativeLoad = (target, true)
+        webView.load(request(for: target))
     }
 
     /// Сайт не работает по HTTPS — открыть без шифрования (до конца сеанса для этого сайта).
@@ -378,7 +438,8 @@ final class Tab: NSObject, Identifiable {
         browser?.httpAllowed.insert(target.host?.lowercased() ?? "")
         allowOnce = target
         interstitial = nil
-        webView.load(URLRequest(url: target))
+        nativeLoad = (target, true)
+        webView.load(request(for: target))
     }
 
     /// Страница целиком в списках блокировки — открыть один раз без защиты.
@@ -389,7 +450,8 @@ final class Tab: NSObject, Identifiable {
         AppModel.shared.blocker.apply(to: view.configuration.userContentController, enabled: false)
         appliedProtection = false
         protectedHere = false
-        view.load(URLRequest(url: target))
+        nativeLoad = (target, true)
+        view.load(request(for: target))
     }
 
     // MARK: - Поиск на странице
@@ -422,6 +484,8 @@ final class Tab: NSObject, Identifiable {
         let myCorp = jar.flatMap { Jars.kind(of: $0) == .corporation ? Jars.subject(of: $0) : nil }
         for host in (hosts + failed).prefix(800) {
             let h = host.lowercased()
+            // Сайт из интернета стучался к устройству домашней сети — правило не пустило запрос.
+            if failed.contains(host), LocalNetwork.isLocal(h), !LocalNetwork.isLocal(page) { noteLAN(h) }
             // Корпорация из своей банки стучится к другой корпорации — правила банки этот запрос не пустили.
             if let myCorp, failed.contains(host), corporationBlocked[h] == nil,
                let other = Jars.corporation(of: h), other.id != myCorp, !Jars.sharedInfrastructure.contains(where: { $0.hasPrefix(h) }) {
@@ -464,17 +528,62 @@ final class Tab: NSObject, Identifiable {
             sponsorSkipped += 1
             model.recordSponsor(seconds: (body["seconds"] as? Double) ?? 0)
         case "fingerprint":
-            guard let technique = body["technique"] as? String, FingerprintTechnique(rawValue: technique) != nil,
-                  protectedHere, !fingerprinting.contains(technique) else { return }
+            guard let technique = body["technique"] as? String, FingerprintTechnique(rawValue: technique) != nil, protectedHere || jar != nil else { return }
+            // Чей скрипт: сторонний адрес — в список сборщиков отпечатка.
+            let script = ((body["script"] as? String) ?? "").lowercased()
+            if !script.isEmpty, Hosts.site(script) != site {
+                if fingerprintScripts[script] == nil, !leavesNoTrace { model.recordFingerprintScript(script) }
+                fingerprintScripts[script, default: []].insert(technique)
+            }
+            guard !fingerprinting.contains(technique) else { return }
             let first = fingerprinting.isEmpty
             fingerprinting.insert(technique)
             if let jar { recordAttempt(.fingerprint, jar: jar) }
             if !leavesNoTrace { model.recordFingerprint(technique, site: site, first: first) }
+            checkFingerprintScore()
+        case "trace":
+            guard let what = (body["what"] as? String).flatMap(TraceSignal.init(rawValue:)) else { return }
+            switch what {
+            case .referrer: referrersTrimmed += 1
+            case .cookie: cookiesCapped += 1
+            case .lan: noteLAN((body["detail"] as? String) ?? "")
+            }
+            if what != .lan { model.recordTrace(what) }
+        case "activation":
+            activatedSinceCommit = true
+            model.recordActivation(site)
+        case "context-link":
+            contextLink = ((body["href"] as? String).flatMap(URL.init(string:))).map { ($0, Date()) }
         case "password-http":
             if url?.scheme == "http", !Hosts.isLocal(host) { passwordWarning = true }
         default:
             break
         }
+    }
+
+    /// Обращение страницы к устройству домашней сети (один раз на адрес).
+    private func noteLAN(_ address: String) {
+        let a = address.lowercased()
+        guard !a.isEmpty, !lanAttempts.contains(a) else { return }
+        lanAttempts.insert(a)
+        AppModel.shared.recordLAN(a, site: site, noTrace: leavesNoTrace)
+    }
+
+    /// Детектор отпечатка: сумма весов способов на странице. Набрала порог — сборщик; по желанию страница
+    /// дальше ничего не отправляет на сторонние адреса.
+    private func checkFingerprintScore() {
+        guard !fingerprintAlert else { return }
+        let score = fingerprinting.compactMap(FingerprintTechnique.init(rawValue:)).map(\.weight).reduce(0, +)
+        guard score >= FingerprintTechnique.threshold else { return }
+        fingerprintAlert = true
+        let model = AppModel.shared
+        var blocked = false
+        if model.prefs.fingerprintResponse, let rules = model.fingerprintResponseRules, let view = webViewIfLoaded {
+            view.configuration.userContentController.add(rules)
+            fingerprintBlocking = true
+            blocked = true
+        }
+        if !leavesNoTrace { model.recordFingerprintAlert(site: site, scripts: fingerprintScripts.keys.sorted(), techniques: fingerprinting.count, blocked: blocked) }
     }
 
     private func recordAttempt(_ what: Isolation.Attempt, jar: String) {
@@ -549,7 +658,7 @@ extension Tab: WKNavigationDelegate {
                     cleanGuard = (result.url, Date())
                     pendingClean = result
                     model.recordCleaned(result.removed, host: leavesNoTrace ? "" : Hosts.site(result.url.host ?? ""))
-                    navigate(result.url)
+                    navigate(result.url, user: isUser(action, target), from: sourceURL(action))
                     return (.cancel, preferences)
                 }
             }
@@ -579,7 +688,7 @@ extension Tab: WKNavigationDelegate {
                     if let secure = comps.url {
                         upgradedFrom = target
                         model.recordUpgraded(leavesNoTrace ? "" : host)
-                        navigate(secure)
+                        navigate(secure, user: isUser(action, target), from: sourceURL(action))
                         return (.cancel, preferences)
                     }
                 }
@@ -597,7 +706,19 @@ extension Tab: WKNavigationDelegate {
             }
         }
 
-        configureProtections(for: target)
+        // Сигнал «не продавать мои данные»: в macOS 27 WebKit ставит его сам во все запросы страницы;
+        // раньше — Ward запрашивает страницу заново с заголовком Sec-GPC (только GET, не «Назад» и не обновление).
+        let gpcNative = model.prefs.gpc && Hardening.enableGPC(preferences)
+        if web, model.prefs.gpc, !gpcNative, (action.request.httpMethod ?? "GET").uppercased() == "GET",
+           action.request.value(forHTTPHeaderField: "Sec-GPC") == nil, nativeLoad?.url != target,
+           action.navigationType != .backForward, action.navigationType != .reload {
+            // Переадресация сервера посреди загрузки: это всё ещё тот же переход (для цепочки «отскоков»).
+            if !pendingHops.isEmpty, action.navigationType == .other { redirected = true }
+            navigate(target, user: isUser(action, target), from: sourceURL(action))
+            return (.cancel, preferences)
+        }
+
+        if fingerprintBlocking { configureProtections(for: target, force: true) } else { configureProtections(for: target) }
         let jsOn = !model.prefs.noScriptSites.contains(site)
         preferences.allowsContentJavaScript = jsOn
         javaScriptOn = jsOn
@@ -606,18 +727,110 @@ extension Tab: WKNavigationDelegate {
         let strict = web && !inIsolator && model.prefs.strict(site: site, familiar: model.isFamiliar(site))
         preferences.isLockdownModeEnabled = strict
         strictHere = strict
+        // Без JIT: незнакомые сайты, банки и госсервисы в изоляторе, адреса домашней сети. Сайты работают как
+        // обычно, только тяжёлый JavaScript — медленнее; на знакомых сайтах JIT остаётся.
+        let wantsNoJIT = web && !strict && model.prefs.noJIT
+            && ((inIsolator && Isolation.category(of: site) != nil) || !model.isFamiliar(site) || LocalNetwork.isLocal(host))
+        noJITHere = wantsNoJIT && Hardening.apply(preferences)
+        if noJITHere { model.recordNoJIT() }
+        noteRequest(action, target)
         return (.allow, preferences)
     }
 
-    private func navigate(_ target: URL) {
+    /// Ward сам поправил адрес (очистка ссылки, HTTPS, сигнал GPC) — это продолжение того же перехода.
+    private func navigate(_ target: URL, user: Bool, from source: URL? = nil) {
         Task { @MainActor in
             self.url = target
-            self.webView.load(URLRequest(url: target))
+            self.nativeLoad = (target, user)
+            self.webView.load(self.request(for: target, from: source))
         }
+    }
+
+    /// Страница, с которой начался переход (для Referer).
+    private func sourceURL(_ action: WKNavigationAction) -> URL? {
+        let frame: WKFrameInfo? = action.sourceFrame
+        return frame?.request.url ?? url
+    }
+
+    /// Переход по вашему действию: щелчок, отправка формы, «Назад», обновление — или скрипт сразу после
+    /// вашего нажатия на странице.
+    private func initiatedByUser(_ action: WKNavigationAction) -> Bool {
+        switch action.navigationType {
+        case .linkActivated, .formSubmitted, .formResubmitted, .backForward, .reload: return true
+        default: return activatedSinceCommit
+        }
+    }
+
+    /// Ward запрашивает этот адрес сам: по вашему ли действию был исходный переход.
+    private func isUser(_ action: WKNavigationAction, _ target: URL) -> Bool {
+        if let native = nativeLoad, native.url == target { return native.user }
+        return initiatedByUser(action)
+    }
+
+    /// Запрос страницы разрешён: запомнить сайт для цепочки перехода.
+    private func noteRequest(_ action: WKNavigationAction, _ target: URL) {
+        let user = isUser(action, target)
+        if let native = nativeLoad, native.url == target { nativeLoad = nil }
+        if pendingHops.isEmpty { userInitiated = user }
+        pendingHops.append(Hosts.site(target.host ?? ""))
+    }
+
+    /// Страница открылась: дописать цепочку и найти сайты-прокладки.
+    private func commitChain(_ current: URL?) {
+        let site = Hosts.site(current?.host ?? "")
+        defer {
+            committedSite = site
+            committedAt = Date()
+            activatedSinceCommit = false
+            pendingHops = []
+            redirected = false
+        }
+        guard !site.isEmpty, current?.scheme == "http" || current?.scheme == "https" else { return }
+        let hops = redirected ? Array(pendingHops.dropLast()).filter { $0 != site } : []
+        // Скрипт увёл со страницы без вашего участия за несколько секунд — она тоже была прокладкой.
+        let clientBounce = !userInitiated && !committedSite.isEmpty && Date().timeIntervalSince(committedAt) < 10
+        if clientBounce {
+            for h in hops { chain.hop(to: h) }
+            chain.hop(to: site)
+        } else {
+            chain = NavigationChain()
+            reportedBounces = []
+            chain.start(from: committedSite, to: hops.first ?? site)
+            for h in hops.dropFirst() { chain.hop(to: h) }
+            chain.hop(to: site)
+        }
+        bouncedThrough = chain.bounces
+        let fresh = chain.bounces.filter { !reportedBounces.contains($0) }
+        guard !fresh.isEmpty else { return }
+        reportedBounces.formUnion(fresh)
+        AppModel.shared.recordBounce(fresh, from: chain.origin, to: site, store: dataStore, noTrace: leavesNoTrace)
+    }
+
+    /// Для самопроверок: страница из строки с заданным адресом (как будто сайт из интернета).
+    func loadHTML(_ html: String, base: URL) {
+        interstitial = nil
+        url = base
+        configureProtections(for: base)
+        nativeLoad = (base, true)
+        webView.loadHTMLString(html, baseURL: base)
+    }
+
+    /// Для «Скопировать чистую ссылку»: ссылка, по которой только что щёлкнули правой кнопкой.
+    func freshContextLink() -> URL? {
+        guard let link = contextLink, Date().timeIntervalSince(link.time) < 5 else { return nil }
+        return link.url
     }
 
     func webView(_ webView: WKWebView, decidePolicyFor response: WKNavigationResponse) async -> WKNavigationResponsePolicy {
         if !response.canShowMIMEType { return .download }
+        // CSP страницы запрещает потоки из blob: — скрипты для неё собираются заново, до её первого скрипта.
+        if response.isForMainFrame, let http = response.response as? HTTPURLResponse {
+            let allowed = http.value(forHTTPHeaderField: "Content-Security-Policy").map(CSP.allowsBlobWorkers) ?? true
+            if allowed != workersWrappable {
+                workersWrappable = allowed
+                configureProtections(for: response.response.url ?? url, force: true)
+            }
+        }
         if response.isForMainFrame, let http = response.response as? HTTPURLResponse,
            let disposition = http.value(forHTTPHeaderField: "Content-Disposition"), disposition.lowercased().hasPrefix("attachment") {
             return .download
@@ -631,6 +844,10 @@ extension Tab: WKNavigationDelegate {
 
     func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
         AppModel.shared.downloads.add(download, window: browser?.window, webView: webView, isPrivate: browser?.isPrivate ?? false)
+    }
+
+    func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
+        redirected = true
     }
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
@@ -648,6 +865,12 @@ extension Tab: WKNavigationDelegate {
         annoyancesHidden = 0
         cnameChecks = 0
         isolationOffer = nil
+        lanAttempts = []
+        fingerprintScripts = [:]
+        fingerprintAlert = false
+        referrersTrimmed = 0
+        cookiesCapped = 0
+        commitChain(webView.url)
         if !inIsolator, !leavesNoTrace, let host = webView.url?.host?.lowercased() {
             let site = Hosts.site(host)
             let model = AppModel.shared
@@ -710,6 +933,11 @@ extension Tab: WKNavigationDelegate {
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        // Отменили сами, чтобы загрузить тот же адрес заново (с GPC, без меток) — цепочка продолжается.
+        if nativeLoad == nil {
+            pendingHops = []
+            redirected = false
+        }
         failed(error)
     }
 
@@ -877,5 +1105,25 @@ private final class SponsorProxy: NSObject, WKScriptMessageHandlerWithReply {
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) async -> (Any?, String?) {
         guard let tab else { return ([Any](), nil) }
         return (await tab.sponsorRequest(message), nil)
+    }
+}
+
+/// Страница Ward: в меню ссылки — «Скопировать чистую ссылку» (без меток слежки и переходников).
+final class WardWebView: WKWebView {
+    weak var tab: Tab?
+
+    override func willOpenMenu(_ menu: NSMenu, with event: NSEvent) {
+        super.willOpenMenu(menu, with: event)
+        guard let link = tab?.freshContextLink() else { return }
+        let item = NSMenuItem(title: "Скопировать чистую ссылку", action: #selector(copyCleanLink(_:)), keyEquivalent: "")
+        item.target = self
+        item.representedObject = link
+        let after = menu.items.firstIndex { $0.identifier?.rawValue == "WKMenuItemIdentifierCopyLink" }
+        menu.insertItem(item, at: after.map { $0 + 1 } ?? 0)
+    }
+
+    @objc private func copyCleanLink(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? URL else { return }
+        AppModel.shared.copyCleanLink(url)
     }
 }

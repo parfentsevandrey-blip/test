@@ -313,6 +313,44 @@ enum SelfTest {
             let missed = own.filter { fullIndex.classify($0, page: "example.com") == nil }
             ok = check(missed.isEmpty, "собственный список Ward: аудио-, мобильная реклама и пиксели соцсетей" + (missed.isEmpty ? "" : " (пропущены: \(missed.joined(separator: ", ")))")) && ok
         }
+        // Следы: чистые ссылки, AMP, CSP потоков, цепочка «отскоков», домашняя сеть, Referer.
+        let cleaner = LinkCleaner()
+        let amp = LinkCleaner.deAMP(URL(string: "https://www.google.com/amp/s/www.theverge.com/2026/10/23/story.amp?x=1")!)
+        ok = check(amp?.absoluteString == "https://www.theverge.com/2026/10/23/story.amp?x=1", "AMP Google → страница издания (\(amp?.absoluteString ?? "-"))") && ok
+        let amp2 = LinkCleaner.deAMP(URL(string: "https://www-bbc-com.cdn.ampproject.org/c/s/www.bbc.com/news/x")!)
+        ok = check(amp2?.absoluteString == "https://www.bbc.com/news/x", "AMP-кэш → страница издания") && ok
+        let mail = cleaner.clean(URL(string: "https://shop.example/p?id=1&ml_subscriber=5&_kx=a&elqTrackId=9&oly_enc_id=3")!)?.url.absoluteString
+        ok = check(mail == "https://shop.example/p?id=1", "метки рассылок и CRM убраны (\(mail ?? "-"))") && ok
+        let unsubscribe = cleaner.clean(URL(string: "https://news.example/unsubscribe?mkt_tok=abc&utm_source=x")!)?.url.absoluteString
+        ok = check(unsubscribe == "https://news.example/unsubscribe?mkt_tok=abc", "ссылка «отписаться» сохраняет свой ключ (\(unsubscribe ?? "-"))") && ok
+        let copied = CleanLink.clean(URL(string: "https://example.com/a?utm_source=x&id=2#:~:text=Ward")!, cleaner: cleaner).absoluteString
+        ok = check(copied == "https://example.com/a?id=2", "«Скопировать чистую ссылку»: без меток и «перейти к тексту» (\(copied))") && ok
+        let safelink = cleaner.clean(URL(string: "https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.org%2Fx&data=1")!)?.url.absoluteString
+        ok = check(safelink == "https://example.org/x", "переходник Outlook пропущен (\(safelink ?? "-"))") && ok
+        ok = check(CSP.allowsBlobWorkers("default-src 'self'; worker-src 'self' blob:") && CSP.allowsBlobWorkers("img-src *")
+                   && !CSP.allowsBlobWorkers("worker-src 'self'") && !CSP.allowsBlobWorkers("script-src 'self'")
+                   && !CSP.allowsBlobWorkers("img-src *, default-src 'self'"), "CSP: потоки из blob: разрешены или нет") && ok
+        var chain = NavigationChain()
+        chain.start(from: "news.ru", to: "tracker.com")
+        chain.hop(to: "ads.net")
+        chain.hop(to: "shop.ru")
+        ok = check(chain.bounces == ["tracker.com", "ads.net"], "цепочка: прокладки между щелчком и конечным сайтом (\(chain.bounces))") && ok
+        var direct = NavigationChain()
+        direct.start(from: "news.ru", to: "shop.ru")
+        ok = check(direct.bounces.isEmpty, "прямой переход — без прокладок") && ok
+        ok = check(LocalNetwork.isLocal("192.168.1.1") && LocalNetwork.isLocal("router.local") && LocalNetwork.isLocal("[::1]") && LocalNetwork.isLocal("172.20.0.5")
+                   && !LocalNetwork.isLocal("172.40.0.5") && !LocalNetwork.isLocal("example.com"), "адреса домашней сети") && ok
+        ok = check(Tab.referrer(from: URL(string: "https://news.ru/a/b?x=1#c")!, to: URL(string: "https://shop.ru/")!) == "https://news.ru/"
+                   && Tab.referrer(from: URL(string: "https://news.ru/a?x=1#c")!, to: URL(string: "https://news.ru/b")!) == "https://news.ru/a?x=1"
+                   && Tab.referrer(from: URL(string: "https://news.ru/a")!, to: URL(string: "http://old.ru/")!) == nil, "Referer: другому сайту — только сайт") && ok
+        var activity = SiteActivity()
+        activity.firstSeen["old.ru"] = Date().addingTimeInterval(-10 * 86_400)
+        activity.activated("fresh.ru")
+        ok = check(activity.interacted("fresh.ru", within: 45) && !activity.interacted("old.ru", within: 45)
+                   && (activity.lastUse("old.ru").map { Date().timeIntervalSince($0) > 7 * 86_400 } ?? false), "срок данных: действия и первая встреча") && ok
+        let fpScore = [FingerprintTechnique.canvas, .audio].map(\.weight).reduce(0, +)
+        ok = check(fpScore >= FingerprintTechnique.threshold && FingerprintTechnique.voices.weight < FingerprintTechnique.threshold, "детектор отпечатка: холст + звук — сборщик, одни голоса — нет") && ok
+
         return ok
     }
 
@@ -515,7 +553,8 @@ enum SelfTest {
         ok = check((a1["hash"] as? String) != (b1["hash"] as? String), "у разных сайтов отпечатки разные") && ok
         ok = check(a1["gpc"] as? Bool == true, "navigator.globalPrivacyControl = true") && ok
         ok = check(a1["native"] as? Bool == true, "подмена выглядит как встроенная функция") && ok
-        ok = check((a1["cores"] as? Int) == 8, "число ядер — как у большинства Mac") && ok
+        ok = check((a1["cores"] as? Int).map { $0 <= 8 && $0 == min(ProcessInfo.processInfo.activeProcessorCount, 8) } == true,
+                   "число ядер — не больше 8, как у большинства Mac (\(a1["cores"] ?? "-"))") && ok
         ok = check((a1["ua"] as? String)?.contains("Safari/605.1.15") == true, "строка браузера как у Safari") && ok
         model.prefs.fingerprint = false
         let n1 = await fingerprint("http://localhost:\(p)/fp.html?plain")
@@ -665,10 +704,78 @@ enum SelfTest {
         return { wall: shown('wall'), nav: shown('open'), body: [b.overflowY, b.position, b.pointerEvents].join(','),
                  fog: nav.display !== 'none' && nav.content !== 'none', classes: document.documentElement.className + '|' + document.body.className };
         """) as? [String: Any] ?? [:]
-        info("плашка Bloomberg: \(wall)")
+        let wallState = try? await tab.webViewIfLoaded?.callAsyncJavaScript("return JSON.stringify(window.__wardAnnoyances || null)", arguments: [:], in: nil, contentWorld: .defaultClient)
+        info("плашка Bloomberg: \(wall), состояние: \(String(describing: wallState ?? nil))")
         ok = check(wall["wall"] as? Bool == false && wall["nav"] as? Bool == true, "Bloomberg: «Subscribe now… Claim This Offer» убрана, статья на месте") && ok
         ok = check((wall["body"] as? String)?.hasPrefix("hidden") == false && (wall["body"] as? String)?.contains("none") == false && wall["fog"] as? Bool == false,
                    "Bloomberg: прокрутка и щелчки вернулись, серый «туман» над статьёй снят") && ok
+
+        // 12д. Следы: GPC в заголовке и в странице, Referer, cookie «навсегда».
+        _ = await open(tab, "http://localhost:\(p)/gpc.html")
+        let gpcHead = server.requestHead("/gpc.html") ?? ""
+        let gpcJS = await evaluate(tab, "return window.results.gpc === true") as? Bool
+        ok = check(gpcHead.lowercased().contains("sec-gpc: 1") && gpcJS == true, "GPC: заголовок Sec-GPC и navigator.globalPrivacyControl") && ok
+        _ = await open(tab, "http://127.0.0.1:\(p)/ref-a.html")
+        let navigated = tab.loadsFinished
+        _ = await evaluate(tab, "document.getElementById('go').click(); return true")
+        for _ in 0..<40 where !(tab.loadsFinished > navigated && tab.url?.path == "/ref-b.html" && !(tab.webViewIfLoaded?.isLoading ?? true)) {
+            try? await Task.sleep(for: .milliseconds(200))
+        }
+        let refJS = await evaluate(tab, "return window.results && window.results.referrer") as? String ?? "-"
+        let refHead = (server.requestHead("/ref-b.html") ?? "").split(separator: "\r\n").first { $0.lowercased().hasPrefix("referer:") }.map(String.init) ?? "Referer: -"
+        info("Referer: в странице \(refJS), в запросе \(refHead)")
+        ok = check(refJS == "http://127.0.0.1:\(p)/" && !refHead.contains("ref-a"), "Referer: другой сайт узнал только сайт, хоть источник и просил unsafe-url") && ok
+        try? await Task.sleep(for: .milliseconds(500))
+        let longest: Date? = await withCheckedContinuation { (c: CheckedContinuation<Date?, Never>) in
+            tab.dataStore.httpCookieStore.getAllCookies { list in c.resume(returning: list.first { $0.name == "forever" }?.expiresDate) }
+        }
+        ok = check(longest.map { $0.timeIntervalSinceNow < 7.1 * 86_400 } == true && tab.cookiesCapped >= 1,
+                   "cookie из скрипта «на 10 лет» живёт не дольше недели (\(longest.map { "\(Int($0.timeIntervalSinceNow / 86_400)) дн." } ?? "нет"))") && ok
+
+        // 12е. «Отскоки»: переадресация сервера и скрипт без вашего участия.
+        let bouncesBefore = model.stats.bounces
+        for (link, label) in [("go", "переадресация сервера"), ("js", "скрипт")] {
+            _ = await open(tab, "http://127.0.0.1:\(p)/bstart.html")
+            let mark = tab.loadsFinished
+            _ = await evaluate(tab, "document.getElementById('\(link)').click(); return true")
+            for _ in 0..<50 where !(tab.loadsFinished > mark && tab.url?.path == "/bfinal.html" && !(tab.webViewIfLoaded?.isLoading ?? true)) {
+                try? await Task.sleep(for: .milliseconds(200))
+            }
+            try? await Task.sleep(for: .milliseconds(400))
+            info("отскок (\(label)): \(tab.url?.absoluteString ?? "-"), прокладки \(tab.bouncedThrough)")
+            ok = check(tab.bouncedThrough == ["localhost"], "отскок (\(label)): сайт-прокладка распознан") && ok
+        }
+        ok = check(model.stats.bounces >= bouncesBefore + 2, "отскоки посчитаны в панели (\(model.stats.bounces - bouncesBefore))") && ok
+        ok = check(model.bouncePurgeable("tracker.example") && !model.bouncePurgeable(""), "данные прокладки, где вы ничего не делали, можно удалять") && ok
+
+        // 12ж. Домашняя сеть: страница «из интернета» стучится к 127.0.0.1 — запросы не уходят.
+        for _ in 0..<50 where model.localNetworkRules == nil { try? await Task.sleep(for: .milliseconds(200)) }
+        ok = check(model.localNetworkRules != nil, "правила домашней сети собраны WebKit") && ok
+        let lanPage = """
+        <!doctype html><body><img src="http://127.0.0.1:\(p)/lan-pixel.png">
+        <script>fetch('http://127.0.0.1:\(p)/lan-fetch').then(() => window.lan = 'ok', () => window.lan = 'blocked');</script></body>
+        """
+        tab.loadHTML(lanPage, base: URL(string: "https://lan-test.ward.invalid/")!)
+        try? await Task.sleep(for: .seconds(3))
+        let lanRequested = server.requested.filter { $0.hasPrefix("/lan-") }
+        info("домашняя сеть: до сервера дошло \(lanRequested), щит: \(tab.lanAttempts)")
+        ok = check(lanRequested.isEmpty, "домашняя сеть: ни картинка, ни fetch до 127.0.0.1 не дошли") && ok
+        ok = check(!tab.lanAttempts.isEmpty, "щит знает о попытке залезть в домашнюю сеть") && ok
+
+        // 12з. Сторонний скрипт-сборщик отпечатка: детектор называет его.
+        _ = await open(tab, "http://localhost:\(p)/fp-ext.html")
+        try? await Task.sleep(for: .seconds(2))
+        info("сборщики: \(tab.fingerprintScripts), порог: \(tab.fingerprintAlert), способы: \(tab.fingerprinting.sorted())")
+        ok = check(tab.fingerprintScripts.keys.contains { $0.hasPrefix("127.0.0.1") } && tab.fingerprintAlert, "детектор отпечатка назвал сторонний скрипт-сборщик") && ok
+        info("без JIT: \(Hardening.available ? (tab.noJITHere ? "включён" : "не включён на этой странице") : "недоступен в этой macOS")")
+
+        // 12и. Правдоподобие вымышленного устройства — та же батарея, что у детекторов подделки.
+        let coherence = await Coherence.run(model: model)
+        for c in coherence.checks { info("правдоподобие [\(c.profile)] \(c.ok ? "✓" : "✗") \(c.title)\(c.detail.isEmpty ? "" : ": " + c.detail)") }
+        let strict: Set<String> = ["native", "own-props", "illegal", "instance", "construct", "iframe", "worker", "canvas", "foreign", "gpc", "webrtc"]
+        let broken = coherence.checks.filter { strict.contains($0.key) && !$0.ok }
+        ok = check(coherence.checks.count >= 20 && broken.isEmpty,
+                   "подделка незаметна для детекторов: \(coherence.passed) из \(coherence.checks.count)\(broken.isEmpty ? "" : " — " + broken.map { "\($0.title) (\($0.profile))" }.joined(separator: ", "))") && ok
 
         // 13. Подделка под известный сайт — предупреждение без единого запроса.
         tab.load(URL(string: "https://sberbamk.ru/login")!)
