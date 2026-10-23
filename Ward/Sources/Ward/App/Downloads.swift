@@ -94,9 +94,9 @@ final class Downloads: NSObject, WKDownloadDelegate {
     // MARK: - WKDownloadDelegate
 
     func download(_ download: WKDownload, decideDestinationUsing response: URLResponse, suggestedFilename: String) async -> URL? {
-        let ext = (suggestedFilename as NSString).pathExtension.lowercased()
+        let kind = (suggestedFilename as NSString).pathExtension.lowercased()
         let source = response.url ?? download.originalRequest?.url
-        if Self.executableExtensions.contains(ext), source?.scheme == "http", let item = item(download) {
+        if Self.executableExtensions.contains(kind), source?.scheme == "http", let item = item(download) {
             let alert = NSAlert()
             alert.alertStyle = .warning
             alert.messageText = "Программа скачивается без шифрования"
