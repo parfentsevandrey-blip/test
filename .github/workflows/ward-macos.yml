@@ -53,7 +53,7 @@ jobs:
       - name: Self-test WebKit (end-to-end)
         timeout-minutes: 20
         run: |
-          "$WARD_TEST" --selftest-webkit --live
+          "$WARD_TEST" --selftest-webkit
 
       - name: UI screenshots
         run: |
