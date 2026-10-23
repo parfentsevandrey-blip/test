@@ -1,9 +1,9 @@
 import Foundation
 
 /// Самопроверки для CI: запускают настоящий движок без окна.
-///   --selftest-core                      — bencode, magnet, создание торрента
-///   --selftest-loopback <папка>          — раздача между тремя движками на одной машине (TCP + ut_metadata)
-///   --selftest-internet <.torrent> <папка> — реальный рой: куски с проверкой SHA-1 и поиск пиров через DHT
+///   --selftest-core                      — bencode, magnet, создание торрента, векторы протоколов (MSE, uTP, DHT, v2, BEP 6)
+///   --selftest-loopback <папка>          — движки на одной машине: TCP и uTP, шифрование, magnet, v2, DHT, LSD, веб-сид
+///   --selftest-internet <.torrent> <папка> — реальный рой: куски с проверкой SHA-1, uTP и шифрование, DHT, проброс порта
 enum SelfTest {
     static func runIfRequested() {
         let args = CommandLine.arguments
@@ -13,8 +13,14 @@ enum SelfTest {
         Task {
             var ok = false
             switch mode {
-            case "--selftest-core": ok = core()
-            case "--selftest-loopback": ok = await loopback(URL(fileURLWithPath: rest.first ?? NSTemporaryDirectory()))
+            case "--selftest-core":
+                ok = core()
+                ok = await ProtocolSelfTest.run() && ok
+            case "--selftest-loopback":
+                ok = await LoopbackSelfTest.run(URL(fileURLWithPath: rest.first ?? NSTemporaryDirectory()), webSeed: { folder in
+                    let server = try await RangeServer.start(root: folder)
+                    return (URL(string: "http://127.0.0.1:\(server.port)/")!, { server.stop() })
+                })
             case "--selftest-render": ok = RenderSelfTest.run(URL(fileURLWithPath: rest.first ?? NSTemporaryDirectory()))
             case "--selftest-internet":
                 ok = rest.count >= 2 ? await internet(URL(fileURLWithPath: rest[0]), URL(fileURLWithPath: rest[1])) : false
@@ -72,91 +78,9 @@ enum SelfTest {
         return ok
     }
 
-    // MARK: - Петля
-
-    static func loopback(_ base: URL) async -> Bool {
-        let fm = FileManager.default
-        let root = base.appendingPathComponent("loopback-\(UUID().uuidString.prefix(6))")
-        let payload = root.appendingPathComponent("seed/Payload")
-        try? fm.createDirectory(at: payload.appendingPathComponent("sub"), withIntermediateDirectories: true)
-        func random(_ n: Int) -> Data { Data((0..<n).map { _ in UInt8.random(in: 0...255) }) }
-        try? random(3_000_000).write(to: payload.appendingPathComponent("movie.bin"))
-        try? random(1_234_567).write(to: payload.appendingPathComponent("sub/extra.bin"))
-        try? Data("hello swarm".utf8).write(to: payload.appendingPathComponent("readme.txt"))
-
-        guard let meta = try? TorrentCreator.create(from: payload, options: .init(pieceLength: 65536)) else {
-            return check(false, "не удалось создать торрент")
-        }
-        var settings = EngineSettings()
-        settings.dhtEnabled = false
-        settings.trackersEnabled = false
-
-        let seeder = Engine(supportDirectory: root.appendingPathComponent("A"), port: UInt16.random(in: 30000...39999), settings: settings)
-        await seeder.start(restore: false)
-        await seeder.add(meta: meta, savePath: root.appendingPathComponent("seed"))
-        let seedPort = await seeder.port
-        guard let seeded = await waitFor(seeder, meta.infoHash.hex, timeout: 30, { $0.status == .seeding }) else {
-            return check(false, "сидер не проверил свои файлы")
-        }
-        var ok = check(seeded.progress == 1, "сидер: проверка существующих файлов, \(meta.pieceCount) кусков")
-
-        // 1. Обычный торрент: подключаемся к сидеру напрямую.
-        let leecher = Engine(supportDirectory: root.appendingPathComponent("B"), port: UInt16.random(in: 40000...49999), settings: settings)
-        await leecher.start(restore: false)
-        let start = Date()
-        await leecher.add(meta: meta, savePath: root.appendingPathComponent("B-data"))
-        await leecher.addPeers(meta.infoHash.hex, [PeerAddress(host: "127.0.0.1", port: seedPort)])
-        let done = await waitFor(leecher, meta.infoHash.hex, timeout: 60, { $0.status == .seeding })
-        ok = check(done != nil, "торрент скачан по TCP за \(String(format: "%.1f", Date().timeIntervalSince(start))) с") && ok
-        ok = check(same(payload, root.appendingPathComponent("B-data/Payload")), "файлы совпадают побайтно") && ok
-
-        // 2. Magnet: метаданные приходят от сидера по ut_metadata.
-        let magnetEngine = Engine(supportDirectory: root.appendingPathComponent("C"), port: UInt16.random(in: 50000...59999), settings: settings)
-        await magnetEngine.start(restore: false)
-        let link = "magnet:?xt=urn:btih:\(meta.infoHash.hex)&x.pe=127.0.0.1:\(seedPort)"
-        guard let magnet = MagnetLink(link) else { return check(false, "magnet не разобран") }
-        await magnetEngine.add(magnet: magnet, savePath: root.appendingPathComponent("C-data"))
-        let viaMagnet = await waitFor(magnetEngine, meta.infoHash.hex, timeout: 60, { $0.status == .seeding })
-        ok = check(viaMagnet != nil, "magnet: метаданные (ut_metadata) и данные получены") && ok
-        ok = check(same(payload, root.appendingPathComponent("C-data/Payload")), "magnet: файлы совпадают") && ok
-
-        // 3. Отдача: сидер видел исходящий трафик.
-        let seederAfter = await seeder.snapshots(detailed: nil).first
-        ok = check((seederAfter?.uploadedTotal ?? 0) >= meta.totalLength, "сидер отдал \(seederAfter?.uploadedTotal ?? 0) байт") && ok
-        try? fm.removeItem(at: root)
-        return ok
-    }
-
-    static func same(_ a: URL, _ b: URL) -> Bool {
-        let fm = FileManager.default
-        let files = (fm.enumerator(at: a, includingPropertiesForKeys: nil)?.allObjects as? [URL]) ?? []
-        let base = a.resolvingSymlinksInPath().pathComponents.count
-        var compared = 0
-        for f in files where !f.hasDirectoryPath {
-            let rel = f.resolvingSymlinksInPath().pathComponents.dropFirst(base).joined(separator: "/")
-            guard let x = try? Data(contentsOf: f), let y = try? Data(contentsOf: b.appendingPathComponent(rel)), x == y else {
-                print("   различается: \(rel)")
-                return false
-            }
-            compared += 1
-        }
-        return compared > 0
-    }
-
     static func waitFor(_ engine: Engine, _ id: String, timeout: TimeInterval,
                         _ condition: (TorrentSnapshot) -> Bool) async -> TorrentSnapshot? {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if let s = await engine.snapshots(detailed: id).first(where: { $0.id == id }) {
-                if condition(s) { return s }
-                if s.status == .error { print("   ошибка: \(s.error ?? "?")"); return nil }
-            }
-            try? await Task.sleep(for: .milliseconds(200))
-        }
-        if let s = await engine.snapshots(detailed: id).first(where: { $0.id == id }) {
-            print("   по таймауту: \(s.status.rawValue), \(Int(s.progress * 100))%, пиров \(s.peersConnected)/\(s.peersKnown)")
-        }
-        return nil
+        await LoopbackSelfTest.waitFor(engine, id, timeout: timeout, condition)
     }
 
     // MARK: - Интернет
@@ -182,8 +106,31 @@ enum SelfTest {
             if !meta.trackers.isEmpty {
                 ok = check(s.trackers.contains { $0.status == "Работает" }, "HTTP-трекер ответил") && ok
             }
+            let c = s.connections
+            print("  соединений \(c.total): TCP \(c.tcp), uTP \(c.utp), входящих \(c.incoming); клиенты: \(c.clients.suffix(6).joined(separator: ", "))")
+            ok = check(c.encrypted > 0, "шифрование MSE с настоящими клиентами: \(c.encrypted) из \(c.total) соединений") && ok
+            ok = check(c.fast > 0, "Fast extension с настоящими клиентами: \(c.fast) соединений") && ok
         }
+        let net = await engine.networkStatus()
+        print("  порт \(net.port), проброс: \(net.mapping.method ?? "—") \(net.mapping.message)\(net.mapping.externalIP.map { ", внешний адрес \($0)" } ?? "")")
+        print("  DHT: узлов \(net.dhtNodes), ответили на \(net.dhtQueries) чужих запросов, хранится пиров \(net.dhtStoredPeers)")
         await engine.pauseAll()
+
+        // Только uTP: те же куски с настоящих пиров поверх UDP.
+        var utpOptions = EngineOptions()
+        utpOptions.utpOnly = true
+        let utpEngine = Engine(supportDirectory: dir.appendingPathComponent("support-utp"), port: UInt16.random(in: 50000...60000),
+                               settings: EngineSettings(), options: utpOptions)
+        await utpEngine.start(restore: false)
+        await utpEngine.add(meta: meta, savePath: dir.appendingPathComponent("data-utp"))
+        let utpStart = Date()
+        let viaUTP = await waitFor(utpEngine, meta.infoHash.hex, timeout: 120) { s in
+            Bitfield(count: s.pieceCount, data: s.havePieces).setCount >= 4
+        }
+        let uc = await utpEngine.snapshots(detailed: nil).first?.connections
+        ok = check(viaUTP != nil && (uc?.utp ?? 0) > 0,
+                   "uTP с настоящими клиентами: 4 куска за \(Int(Date().timeIntervalSince(utpStart))) с, uTP-соединений \(uc?.utp ?? 0), шифрованных \(uc?.encrypted ?? 0)") && ok
+        await utpEngine.pauseAll()
 
         // Только DHT: magnet без трекеров, метаданные от найденных пиров.
         var dhtOnly = EngineSettings()

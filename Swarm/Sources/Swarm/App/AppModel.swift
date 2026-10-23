@@ -413,5 +413,13 @@ final class AppModel {
 
     func saveBeforeQuit() async {
         await engine.saveAll()
+        // Убираем правила проброса с роутера, но не держим выход дольше трёх секунд.
+        let engine = self.engine
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask { await engine.shutdown() }
+            group.addTask { try? await Task.sleep(for: .seconds(3)) }
+            await group.next()
+            group.cancelAll()
+        }
     }
 }

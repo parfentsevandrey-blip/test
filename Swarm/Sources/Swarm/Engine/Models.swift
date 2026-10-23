@@ -32,7 +32,7 @@ nonisolated enum FilePriority: Int, Sendable, Codable, CaseIterable {
 }
 
 nonisolated enum PeerSource: String, Sendable, Codable {
-    case tracker, dht, pex, incoming, manual
+    case tracker, dht, pex, incoming, manual, lsd
 
     var title: String {
         switch self {
@@ -41,6 +41,7 @@ nonisolated enum PeerSource: String, Sendable, Codable {
         case .pex: "PEX"
         case .incoming: "Входящий"
         case .manual: "Вручную"
+        case .lsd: "Локальная сеть"
         }
     }
 }
@@ -59,6 +60,9 @@ nonisolated struct PeerSnapshot: Sendable, Identifiable, Hashable {
     var isInterestedInUs: Bool
     /// Устойчивый угол для визуализации роя.
     var angle: Double
+    var transport: TransportKind = .tcp
+    var isEncrypted = false
+    var supportsFast = false
 }
 
 nonisolated struct TrackerSnapshot: Sendable, Identifiable, Hashable {
@@ -113,12 +117,28 @@ nonisolated struct TorrentSnapshot: Sendable, Identifiable {
     var completedAt: Date?
     var magnet: String
     var isPrivate: Bool
+    var version: MetaVersion? = nil
+    var webSeeds: [TrackerSnapshot] = []
+    var connections = ConnectionStats()
 
     var ratio: Double { downloadedTotal > 0 ? Double(uploadedTotal) / Double(downloadedTotal) : 0 }
     var eta: TimeInterval? {
         guard status == .downloading, downRate > 1024 else { return nil }
         return Double(max(0, wantedSize - doneSize)) / downRate
     }
+}
+
+/// Сколько соединений с пирами было установлено с начала работы раздачи и какими.
+nonisolated struct ConnectionStats: Sendable, Equatable {
+    var tcp = 0
+    var utp = 0
+    var encrypted = 0
+    var fast = 0
+    var incoming = 0
+    /// Последние программы пиров (без повторов).
+    var clients: [String] = []
+
+    var total: Int { tcp + utp }
 }
 
 /// То, что сохраняется между запусками.
@@ -144,6 +164,66 @@ nonisolated struct EngineSettings: Codable, Sendable, Equatable {
     var seedRatioLimit = 0.0   // 0 — раздавать всегда
     var dhtEnabled = true
     var trackersEnabled = true
+    var utpEnabled = true
+    var lsdEnabled = true
+    var portMapping = true
+    var encryption = EncryptionMode.prefer
+    var anonymous = false
+    var blocklistEnabled = false
+    var blocklistSource = ""
+    var webSeedsEnabled = true
+
+    init() {}
+
+    /// Старые сохранённые настройки без новых полей читаются с значениями по умолчанию.
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = EngineSettings()
+        func v<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T { (try? c.decodeIfPresent(T.self, forKey: key)) ?? fallback }
+        maxPeersPerTorrent = v(.maxPeersPerTorrent, d.maxPeersPerTorrent)
+        downloadLimit = v(.downloadLimit, d.downloadLimit)
+        uploadLimit = v(.uploadLimit, d.uploadLimit)
+        seedRatioLimit = v(.seedRatioLimit, d.seedRatioLimit)
+        dhtEnabled = v(.dhtEnabled, d.dhtEnabled)
+        trackersEnabled = v(.trackersEnabled, d.trackersEnabled)
+        utpEnabled = v(.utpEnabled, d.utpEnabled)
+        lsdEnabled = v(.lsdEnabled, d.lsdEnabled)
+        portMapping = v(.portMapping, d.portMapping)
+        encryption = v(.encryption, d.encryption)
+        anonymous = v(.anonymous, d.anonymous)
+        blocklistEnabled = v(.blocklistEnabled, d.blocklistEnabled)
+        blocklistSource = v(.blocklistSource, d.blocklistSource)
+        webSeedsEnabled = v(.webSeedsEnabled, d.webSeedsEnabled)
+    }
+}
+
+/// Тонкие настройки для самопроверок (не сохраняются).
+nonisolated struct EngineOptions: Sendable {
+    /// Узлы начальной загрузки DHT (по умолчанию — публичные роутеры).
+    var dhtBootstrap: [PeerAddress]?
+    /// Исходящие сначала по uTP.
+    var utpFirst = false
+    /// Исходящие только по uTP (проверка транспорта).
+    var utpOnly = false
+    /// Мультикаст LSD через петлевой интерфейс и анонсы каждые несколько секунд.
+    var lsdLoopback = false
+    var lsdInterval: TimeInterval = 300
+}
+
+/// Состояние сети для настроек и строки статуса.
+nonisolated struct NetworkStatus: Sendable, Equatable {
+    var port: UInt16 = 0
+    var udpOpen = false
+    var mapping = PortMappingStatus.off
+    var dhtNodes = 0
+    var dhtQueries = 0
+    var dhtStoredPeers = 0
+    var utpConnections = 0
+    var lsdActive = false
+    var lsdHeard = 0
+    var blocklistRanges = 0
+    var blocklistBlocked = 0
+    var blocklistMessage: String?
 }
 
 /// Глобальные ограничения скорости: корзина жетонов, пополняется каждые 250 мс.

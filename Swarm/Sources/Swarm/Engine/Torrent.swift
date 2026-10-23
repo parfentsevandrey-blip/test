@@ -2,15 +2,22 @@ import Foundation
 
 /// Окружение, которое движок передаёт каждой раздаче.
 nonisolated struct TorrentEnvironment: Sendable {
-    let peerID: Data
-    let port: UInt16
-    let dht: DHTClient
+    /// Текущий peer id (в анонимном режиме — без названия программы).
+    let peerID: @Sendable () -> Data
+    /// Все наши peer id: соединение с ними — соединение с самим собой.
+    let ownIDs: Set<Data>
+    /// Порт, который сообщаем трекерам и DHT (внешний, если роутер пробросил другой).
+    let advertisedPort: @Sendable () -> UInt16
+    let dht: DHTNode?
+    let utp: UTPManager?
+    let blocklist: Blocklist
     let limiter: RateLimiter
+    let options: EngineOptions
     let settings: @Sendable () -> EngineSettings
     /// Состояние изменилось — пора сохранить продолжение.
     let changed: @Sendable (InfoHash) -> Void
     /// Метаданные получены по magnet — сохранить .torrent.
-    let gotMetadata: @Sendable (Metainfo) -> Void
+    let gotMetadata: @Sendable (InfoHash, Metainfo) -> Void
     let finished: @Sendable (String) -> Void
 }
 
@@ -25,6 +32,8 @@ nonisolated struct PieceProgress {
     var requesters: [UInt8]
     var received = 0
     var written = 0
+    /// Кусок целиком скачивает веб-сид — пиры его не трогают.
+    var webSeed = false
 
     init(blocks: Int) {
         state = [UInt8](repeating: 0, count: blocks)
@@ -43,6 +52,7 @@ nonisolated final class PeerSession {
     var bitfield: Bitfield?
     var rawBitfield: Data?
     var pendingHaves: [Int] = []
+    var pendingHaveAll = false
     var amChoking = true
     var amInterested = false
     var peerChoking = true
@@ -57,6 +67,10 @@ nonisolated final class PeerSession {
     var snubbed = false
     var uploadQueue: [(Int, Int, Int)] = []
     var uploading = false
+    /// Обе стороны поддерживают Fast extension (BEP 6).
+    var fast = false
+    var allowedFastIn: Set<Int> = []
+    var allowedFastOut: Set<Int> = []
 
     init(conn: PeerConnection, source: PeerSource) {
         self.conn = conn
@@ -76,6 +90,12 @@ nonisolated struct AddressInfo {
     var source: PeerSource
     var failures = 0
     var nextAttempt = Date.distantPast
+    /// Пир сообщил (через PEX), что умеет uTP.
+    var utp = false
+    /// Шифрованное рукопожатие не удалось — пир понимает только открытое.
+    var plainOnly = false
+    /// Хеш роя, в котором нашёлся пир (у гибрида их два).
+    var hash: InfoHash?
 }
 
 nonisolated struct TrackerState {
@@ -89,6 +109,21 @@ nonisolated struct TrackerState {
     var failures = 0
 }
 
+nonisolated struct WebSeedState {
+    var url: URL
+    var status = "Ожидание"
+    var active = 0
+    var pieces = 0
+    var failures = 0
+    var nextAttempt = Date.distantPast
+}
+
+private nonisolated enum DialFailure: Error {
+    case transport
+    case encryption
+    case handshake(String)
+}
+
 /// Одна раздача: подключения к пирам, выбор кусков, проверка хешей, отдача.
 actor Torrent {
     nonisolated let infoHash: InfoHash
@@ -96,8 +131,12 @@ actor Torrent {
     nonisolated let addedAt: Date
 
     private(set) var meta: Metainfo?
+    /// v2-метаданные по magnet, для которых ещё собираются слои хешей.
+    private var pendingMeta: Metainfo?
+    private var magnetV2: Data?
     private var name: String
     private var trackers: [URL]
+    private var webSeeds: [WebSeedState] = []
     private(set) var savePath: URL
     private(set) var status: TorrentStatus = .paused
     private var errorMessage: String?
@@ -116,6 +155,9 @@ actor Torrent {
     private var metadataSize: Int?
     private var metadataPieces: [Int: Data] = [:]
     private var metadataRequested: [Int: Date] = [:]
+    private var layerChunks: [Data: [Int: [Data]]] = [:]
+    private var layerRequested: [String: Date] = [:]
+    private var layerTrees: [Data: [[Data]]] = [:]
     private var uploadedTotal: Int64 = 0
     private var downloadedTotal: Int64 = 0
     private var rateDown = RateMeter()
@@ -133,18 +175,24 @@ actor Torrent {
     private var resumeHave: Data?
     private var sequentialCursor = 0
     private var lastTick = Date()
+    private var connectionStats = ConnectionStats()
 
     init(meta: Metainfo?, magnet: MagnetLink?, savePath: URL, env: TorrentEnvironment, resume: ResumeData?) {
-        let hash = meta?.infoHash ?? magnet!.infoHash
+        let hash = resume.flatMap { InfoHash(hex: $0.infoHash) } ?? meta?.infoHash ?? magnet!.infoHash
         infoHash = hash
         self.env = env
         self.meta = meta
         self.savePath = savePath
+        magnetV2 = meta?.infoHashV2 ?? magnet?.infoHashV2
         name = meta?.name ?? magnet?.name ?? resume?.name ?? hash.hex
         var trackerList = meta.map { $0.trackers.flatMap { $0 } } ?? magnet?.trackers ?? []
         if let extra = magnet?.trackers { trackerList += extra }
         var seen = Set<String>()
         trackers = trackerList.filter { seen.insert($0.absoluteString).inserted }
+        var seedSeen = Set<String>()
+        webSeeds = ((meta?.webSeeds ?? []) + (magnet?.webSeeds ?? []))
+            .filter { seedSeen.insert($0.absoluteString).inserted }
+            .map { WebSeedState(url: $0) }
         addedAt = resume?.addedAt ?? Date()
         for p in magnet?.peers ?? [] { addresses[p] = AddressInfo(source: .manual) }
         if let resume {
@@ -163,6 +211,17 @@ actor Torrent {
             }
         }
     }
+
+    /// Хеши, под которыми раздачу знают другие (у гибрида — оба).
+    var swarmHashes: [InfoHash] {
+        if let meta { return meta.swarmHashes }
+        var out = [infoHash]
+        if let v2 = magnetV2, let alt = InfoHash(v2.prefix(20)), alt != infoHash { out.append(alt) }
+        return out
+    }
+
+    var isPrivate: Bool { meta?.isPrivate ?? false }
+    var isActive: Bool { status.isActive }
 
     // MARK: - Жизненный цикл
 
@@ -186,6 +245,7 @@ actor Torrent {
         peers.removeAll()
         connecting.removeAll()
         progress.removeAll()
+        for i in webSeeds.indices { webSeeds[i].active = 0 }
         let announce = currentAnnounce(.stopped)
         if env.settings().trackersEnabled {
             for url in trackers.prefix(5) { Task.detached { _ = try? await TrackerClient.announce(url, announce) } }
@@ -225,7 +285,7 @@ actor Torrent {
     private func filesPresent(_ meta: Metainfo) -> Bool {
         let fm = FileManager.default
         return meta.files.allSatisfy { f in
-            f.path.contains(".pad") || f.length == 0 || fm.fileExists(atPath: f.path.reduce(savePath) { $0.appendingPathComponent($1) }.path)
+            f.isPadding || f.length == 0 || fm.fileExists(atPath: f.path.reduce(savePath) { $0.appendingPathComponent($1) }.path)
         }
     }
 
@@ -247,9 +307,17 @@ actor Torrent {
 
     // MARK: - Пиры
 
-    func addPeers(_ list: [PeerAddress], source: PeerSource) {
-        for address in list where address.port > 0 && addresses[address] == nil {
-            addresses[address] = AddressInfo(source: source)
+    func addPeers(_ list: [PeerAddress], source: PeerSource, flags: [UInt8]? = nil, hash: InfoHash? = nil) {
+        for (i, address) in list.enumerated() where address.port > 0 {
+            if env.blocklist.blocks(address.host) { continue }
+            if var known = addresses[address] {
+                if let f = flags, i < f.count, f[i] & 0x04 != 0 { known.utp = true; addresses[address] = known }
+                continue
+            }
+            var info = AddressInfo(source: source)
+            if let f = flags, i < f.count { info.utp = f[i] & 0x04 != 0 }
+            info.hash = hash
+            addresses[address] = info
         }
     }
 
@@ -273,35 +341,100 @@ actor Torrent {
         }
     }
 
+    /// Порядок попыток: транспорт (TCP/uTP) × шифрование, с откатом на открытое соединение,
+    /// если пир не понимает MSE (в режиме «предпочитать»).
     private func connect(_ address: PeerAddress, source: PeerSource) async {
-        let conn = PeerConnection(address: address)
-        do {
-            try await conn.open()
-            conn.sendRaw(Handshake.make(infoHash: infoHash.bytes, peerID: env.peerID))
-            let raw = try await conn.read(68)
-            guard let hs = Handshake(raw), hs.infoHash == infoHash.bytes else {
-                throw PeerError("Чужая раздача")
+        let settings = env.settings()
+        let info = addresses[address]
+        guard !env.blocklist.blocks(address.host) else {
+            connecting.remove(address)
+            addresses[address] = nil
+            return
+        }
+        var kinds: [TransportKind] = [.tcp]
+        if settings.utpEnabled, env.utp != nil, UDPAddress(address) != nil {
+            if env.options.utpOnly { kinds = [.utp] }
+            else if info?.utp == true || env.options.utpFirst { kinds = [.utp, .tcp] }
+            else { kinds = [.tcp, .utp] }
+        }
+        let encrypt = settings.encryption == .require || (settings.encryption == .prefer && info?.plainOnly != true)
+        let hash = info?.hash ?? infoHash
+        var result: (PeerConnection, Handshake)?
+        attempts: for kind in kinds {
+            do {
+                result = try await dial(address, kind, hash: hash, encrypted: encrypt, settings: settings)
+                break
+            } catch DialFailure.transport {
+                continue
+            } catch DialFailure.encryption {
+                guard settings.encryption == .prefer else { break attempts }
+                if let r = try? await dial(address, kind, hash: hash, encrypted: false, settings: settings) {
+                    addresses[address]?.plainOnly = true
+                    result = r
+                }
+                break attempts
+            } catch {
+                break attempts
             }
-            guard hs.peerID != env.peerID else { throw PeerError("Соединение с самим собой") }
-            connecting.remove(address)
-            addresses[address]?.failures = 0
-            attach(conn, handshake: hs, source: source)
-        } catch {
-            conn.close()
-            connecting.remove(address)
+        }
+        connecting.remove(address)
+        guard let (conn, hs) = result else {
             if var info = addresses[address] {
                 info.failures += 1
                 info.nextAttempt = Date().addingTimeInterval(min(1800, 20 * pow(2, Double(info.failures))))
                 addresses[address] = info
                 if info.failures > 6 && addresses.count > 400 { addresses[address] = nil }
             }
+            return
+        }
+        if conn.kind == .utp { addresses[address]?.utp = true }
+        addresses[address]?.failures = 0
+        guard status.isActive, peers.count < settings.maxPeersPerTorrent + 10 else { conn.close(); return }
+        attach(conn, handshake: hs, source: source)
+    }
+
+    private func dial(_ address: PeerAddress, _ kind: TransportKind, hash: InfoHash, encrypted: Bool,
+                      settings: EngineSettings) async throws -> (PeerConnection, Handshake) {
+        let transport: any PeerTransport
+        if kind == .utp, let utp = env.utp, let udp = UDPAddress(address) {
+            transport = utp.connect(to: udp)
+        } else {
+            transport = TCPTransport(address: address)
+        }
+        let conn = PeerConnection(address: address, transport: transport, incoming: false)
+        do {
+            try await conn.open(timeout: 9)
+        } catch {
+            conn.close()
+            throw DialFailure.transport
+        }
+        if encrypted {
+            do {
+                try await MSE.initiate(conn, infoHash: hash.bytes, allowPlaintext: settings.encryption != .require)
+            } catch {
+                conn.close()
+                throw DialFailure.encryption
+            }
+        }
+        conn.sendRaw(Handshake.make(infoHash: hash.bytes, peerID: env.peerID(), dht: settings.dhtEnabled && env.dht != nil))
+        do {
+            let raw = try await conn.read(68)
+            guard let hs = Handshake(raw), swarmHashes.contains(where: { $0.bytes == hs.infoHash }) else {
+                throw DialFailure.handshake("Чужая раздача")
+            }
+            guard !env.ownIDs.contains(hs.peerID) else { throw DialFailure.handshake("Соединение с самим собой") }
+            return (conn, hs)
+        } catch {
+            conn.close()
+            throw error
         }
     }
 
     /// Входящее соединение: движок уже прочитал рукопожатие пира.
     func acceptIncoming(_ conn: PeerConnection, handshake: Handshake) -> Bool {
-        guard status.isActive, status != .checking, peers.count < env.settings().maxPeersPerTorrent + 10 else { return false }
-        conn.sendRaw(Handshake.make(infoHash: infoHash.bytes, peerID: env.peerID))
+        guard status.isActive, status != .checking, peers.count < env.settings().maxPeersPerTorrent + 10,
+              !env.ownIDs.contains(handshake.peerID) else { return false }
+        conn.sendRaw(Handshake.make(infoHash: handshake.infoHash, peerID: env.peerID(), dht: env.settings().dhtEnabled && env.dht != nil))
         attach(conn, handshake: handshake, source: .incoming)
         return true
     }
@@ -310,10 +443,38 @@ actor Torrent {
         let s = PeerSession(conn: conn, source: source)
         s.remoteID = handshake.peerID
         s.client = PeerIdentity.clientName(for: handshake.peerID)
+        s.fast = handshake.supportsFast
         peers[s.key] = s
+        if conn.kind == .utp { connectionStats.utp += 1 } else { connectionStats.tcp += 1 }
+        if conn.isEncrypted { connectionStats.encrypted += 1 }
+        if s.fast { connectionStats.fast += 1 }
+        if conn.isIncoming { connectionStats.incoming += 1 }
+        connectionStats.clients.removeAll { $0 == s.client }
+        connectionStats.clients.append(s.client)
+        if connectionStats.clients.count > 12 { connectionStats.clients.removeFirst() }
         if handshake.supportsExtensions { sendExtendedHandshake(s) }
-        if meta != nil, have.setCount > 0 { s.send(.bitfield(have.data)) }
+        // BEP 5: сообщаем свой порт DHT, чтобы пир добавил нас в таблицу маршрутизации.
+        if handshake.supportsDHT, env.settings().dhtEnabled, env.dht != nil { s.send(.port(env.advertisedPort())) }
+        sendHaveState(s)
         Task { await self.run(s) }
+    }
+
+    /// Сразу после рукопожатия: bitfield, а с Fast extension — have all / have none и набор allowed fast.
+    private func sendHaveState(_ s: PeerSession) {
+        guard let meta else {
+            if s.fast { s.send(.haveNone) }
+            return
+        }
+        if s.fast {
+            if have.isComplete { s.send(.haveAll) } else if have.setCount == 0 { s.send(.haveNone) } else { s.send(.bitfield(have.data)) }
+            if have.setCount > 0, let ip = UDPAddress(host: s.conn.address.host, port: 0)?.v4 {
+                let set = FastExtension.allowedSet(ip: ip, infoHash: infoHash.bytes, pieceCount: meta.pieceCount)
+                s.allowedFastOut = Set(set)
+                for i in set where have[i] { s.send(.allowedFast(i)) }
+            }
+        } else if have.setCount > 0 {
+            s.send(.bitfield(have.data))
+        }
     }
 
     private func run(_ s: PeerSession) async {
@@ -345,7 +506,8 @@ actor Torrent {
             break
         case .choke:
             s.peerChoking = true
-            releaseRequests(s)
+            // С Fast extension запросы не сбрасываются: на каждый придёт кусок или отказ.
+            if !s.fast { releaseRequests(s) }
         case .unchoke:
             s.peerChoking = false
             fillRequests(s)
@@ -366,16 +528,38 @@ actor Torrent {
             fillRequests(s)
         case .bitfield(let data):
             if meta == nil { s.rawBitfield = data } else { applyBitfield(s, data) }
+        case .haveAll:
+            if let meta { applyBitfield(s, Bitfield.full(meta.pieceCount).data) } else { s.pendingHaveAll = true }
+        case .haveNone:
+            if meta != nil { applyBitfield(s, Data()) }
         case .request(let index, let begin, let length):
             serve(s, index: index, begin: begin, length: length)
         case .piece(let index, let begin, let block):
             await receive(s, index: index, begin: begin, block: block)
         case .cancel(let index, let begin, let length):
+            let before = s.uploadQueue.count
             s.uploadQueue.removeAll { $0 == (index, begin, length) }
-        case .port:
+            if s.fast, s.uploadQueue.count < before { s.send(.reject(index: index, begin: begin, length: length)) }
+        case .reject(let index, let begin, _):
+            let key = BlockKey(piece: index, begin: begin)
+            if s.requests.removeValue(forKey: key) != nil { releaseBlock(key) }
+        case .allowedFast(let index):
+            if s.allowedFastIn.count < 64 { s.allowedFastIn.insert(index) }
+            if s.peerChoking { fillRequests(s) }
+        case .suggest:
             break
+        case .port(let port):
+            if env.settings().dhtEnabled, let dht = env.dht, let node = UDPAddress(host: s.conn.address.host, port: port) {
+                await dht.addNode(node)
+            }
         case .extended(let id, let payload):
             await handleExtended(s, id: id, payload: payload)
+        case .hashRequest(let r):
+            serveHashes(s, r)
+        case .hashes(let r, let data):
+            await receiveHashes(r, data)
+        case .hashReject(let r):
+            layerRequested[layerKey(r)] = nil
         case .unknown:
             break
         }
@@ -426,11 +610,17 @@ actor Torrent {
     }
 
     private func fillRequests(_ s: PeerSession) {
-        guard let meta, status == .downloading, !s.peerChoking, s.amInterested, let bf = s.bitfield else { return }
-        let depth = pipelineDepth(s)
+        guard let meta, status == .downloading, s.amInterested, let bf = s.bitfield else { return }
+        // Пока нас «душат», с Fast extension можно просить только куски из набора allowed fast.
+        var only: Set<Int>?
+        if s.peerChoking {
+            guard s.fast, !s.allowedFastIn.isEmpty else { return }
+            only = s.allowedFastIn
+        }
+        let depth = only == nil ? pipelineDepth(s) : 4
         while s.requests.count < depth {
             guard env.limiter.takeDown(PeerMessage.maxBlock) else { break }
-            guard let block = pickBlock(for: s, bitfield: bf, meta: meta) else {
+            guard let block = pickBlock(for: s, bitfield: bf, meta: meta, only: only) else {
                 env.limiter.refundDown(PeerMessage.maxBlock)
                 break
             }
@@ -443,37 +633,38 @@ actor Torrent {
         (meta.pieceSize(piece) + PeerMessage.maxBlock - 1) / PeerMessage.maxBlock
     }
 
-    private func pickBlock(for s: PeerSession, bitfield bf: Bitfield, meta: Metainfo) -> (key: BlockKey, length: Int)? {
-        func take(_ piece: Int, _ b: Int, duplicate: Bool) -> (key: BlockKey, length: Int) {
+    private func pickBlock(for s: PeerSession, bitfield bf: Bitfield, meta: Metainfo, only: Set<Int>?) -> (key: BlockKey, length: Int)? {
+        func take(_ piece: Int, _ b: Int) -> (key: BlockKey, length: Int) {
             progress[piece]?.state[b] = 1
             progress[piece]?.requesters[b] += 1
             let begin = b * PeerMessage.maxBlock
             return (BlockKey(piece: piece, begin: begin), min(PeerMessage.maxBlock, meta.pieceSize(piece) - begin))
         }
+        func allowed(_ piece: Int) -> Bool { bf[piece] && (only?.contains(piece) ?? true) && progress[piece]?.webSeed != true }
 
         // 1. Докачиваем начатые куски, которые есть у пира.
         let started = progress.keys.sorted()
         let ordered = sequential ? started : started.sorted {
             (progress[$0]!.received, -$0) > (progress[$1]!.received, -$1)
         }
-        for piece in ordered where bf[piece] {
-            if let b = progress[piece]?.state.firstIndex(of: 0) { return take(piece, b, duplicate: false) }
+        for piece in ordered where allowed(piece) {
+            if let b = progress[piece]?.state.firstIndex(of: 0) { return take(piece, b) }
         }
 
         // 2. Новый кусок: приоритет файла, затем редкость (или порядок при последовательной загрузке).
         let unchokedBy = max(1, peers.values.filter { !$0.peerChoking }.count)
-        if progress.count < max(8, unchokedBy * 3), let piece = choosePiece(bf, meta: meta) {
+        if progress.count < max(8, unchokedBy * 3), let piece = choosePiece(bf, meta: meta, only: only) {
             progress[piece] = PieceProgress(blocks: blockCount(meta, piece))
-            return take(piece, 0, duplicate: false)
+            return take(piece, 0)
         }
 
         // 3. Эндшпиль: всё уже запрошено — дублируем запросы у других пиров.
-        if wantedRemaining(meta) <= progress.count {
-            for piece in started where bf[piece] {
+        if only == nil, wantedRemaining(meta) <= progress.count {
+            for piece in started where allowed(piece) {
                 guard let p = progress[piece] else { continue }
                 for b in p.state.indices where p.state[b] == 1 && p.requesters[b] < 3 {
                     let key = BlockKey(piece: piece, begin: b * PeerMessage.maxBlock)
-                    if s.requests[key] == nil { return take(piece, b, duplicate: true) }
+                    if s.requests[key] == nil { return take(piece, b) }
                 }
             }
         }
@@ -486,8 +677,11 @@ actor Torrent {
         return n
     }
 
-    private func choosePiece(_ bf: Bitfield, meta: Metainfo) -> Int? {
+    private func choosePiece(_ bf: Bitfield, meta: Metainfo, only: Set<Int>?) -> Int? {
         let count = meta.pieceCount
+        if let only {
+            return only.sorted().first { $0 < count && wanted[$0] && !have[$0] && progress[$0] == nil && bf[$0] }
+        }
         if sequential {
             while sequentialCursor < count && (have[sequentialCursor] || !wanted[sequentialCursor]) { sequentialCursor += 1 }
             var i = sequentialCursor
@@ -531,7 +725,7 @@ actor Torrent {
         rateDown.add(block.count)
         downloadedTotal += Int64(block.count)
         s.snubbed = false
-        guard let meta, let storage, !have[index], var p = progress[index] else { fillRequests(s); return }
+        guard let meta, let storage, !have[index], var p = progress[index], !p.webSeed else { fillRequests(s); return }
         let b = begin / PeerMessage.maxBlock
         guard begin % PeerMessage.maxBlock == 0, b < p.state.count, p.state[b] != 2,
               block.count == min(PeerMessage.maxBlock, meta.pieceSize(index) - begin) else { fillRequests(s); return }
@@ -555,7 +749,11 @@ actor Torrent {
         guard let done = progress[index], done.written == done.state.count else { return }
         let ok = await storage.verify(piece: index)
         progress[index] = nil
-        if ok {
+        pieceFinished(index, ok: ok)
+    }
+
+    private func pieceFinished(_ index: Int, ok: Bool) {
+        if ok, !have[index] {
             have[index] = true
             recentPieces[index] = Date()
             for other in peers.values where other.bitfield?[index] != true { other.send(.have(index)) }
@@ -597,6 +795,91 @@ actor Torrent {
         peers.removeAll()
     }
 
+    // MARK: - Веб-сиды (BEP 19)
+
+    private func runWebSeeds(_ now: Date) {
+        guard let meta, status == .downloading, env.settings().webSeedsEnabled, !webSeeds.isEmpty else { return }
+        for i in webSeeds.indices where webSeeds[i].active < 3 && webSeeds[i].nextAttempt <= now {
+            guard let piece = pieceForWebSeed(meta) else { return }
+            var p = PieceProgress(blocks: blockCount(meta, piece))
+            p.webSeed = true
+            p.state = [UInt8](repeating: 1, count: p.state.count)
+            progress[piece] = p
+            webSeeds[i].active += 1
+            webSeeds[i].status = "Загрузка"
+            let url = webSeeds[i].url
+            let anonymous = env.settings().anonymous
+            let limiter = env.limiter
+            let size = meta.pieceSize(piece)
+            Task {
+                // Ограничение скорости: жетоны берём заранее блоками по 16 КБ.
+                var taken = 0
+                while taken < size {
+                    if limiter.takeDown(PeerMessage.maxBlock) { taken += PeerMessage.maxBlock } else { try? await Task.sleep(for: .milliseconds(100)) }
+                }
+                do {
+                    let data = try await WebSeed.fetch(base: url, meta: meta, piece: piece, anonymous: anonymous)
+                    await self.webPiece(i, piece, data)
+                } catch {
+                    await self.webFailed(i, piece, error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private func pieceForWebSeed(_ meta: Metainfo) -> Int? {
+        var best: Int?
+        var bestKey = (-1, Int.max)
+        for i in 0..<meta.pieceCount where wanted[i] && !have[i] && progress[i] == nil {
+            // Сначала то, что пиры не раздают; при последовательной загрузке — по порядку.
+            let key = (Int(piecePriority[i]), sequential ? i : availability[i])
+            if key.0 > bestKey.0 || (key.0 == bestKey.0 && key.1 < bestKey.1) {
+                bestKey = key
+                best = i
+                if sequential { break }
+            }
+        }
+        return best
+    }
+
+    private func webPiece(_ seed: Int, _ piece: Int, _ data: Data) async {
+        guard seed < webSeeds.count else { return }
+        webSeeds[seed].active = max(0, webSeeds[seed].active - 1)
+        rateDown.add(data.count)
+        downloadedTotal += Int64(data.count)
+        guard let storage, progress[piece]?.webSeed == true else { return }
+        do {
+            try await storage.write(piece: piece, begin: 0, data: data)
+        } catch {
+            progress[piece] = nil
+            fail(error.localizedDescription)
+            return
+        }
+        let ok = await storage.verify(piece: piece)
+        progress[piece] = nil
+        if ok {
+            webSeeds[seed].pieces += 1
+            webSeeds[seed].failures = 0
+            webSeeds[seed].status = "Работает"
+        } else {
+            webSeedBackoff(seed, "Неверные данные")
+        }
+        pieceFinished(piece, ok: ok)
+    }
+
+    private func webFailed(_ seed: Int, _ piece: Int, _ message: String) {
+        if progress[piece]?.webSeed == true { progress[piece] = nil }
+        guard seed < webSeeds.count else { return }
+        webSeeds[seed].active = max(0, webSeeds[seed].active - 1)
+        webSeedBackoff(seed, message)
+    }
+
+    private func webSeedBackoff(_ seed: Int, _ message: String) {
+        webSeeds[seed].failures += 1
+        webSeeds[seed].status = message
+        webSeeds[seed].nextAttempt = Date().addingTimeInterval(min(1800, 15 * pow(2, Double(min(webSeeds[seed].failures, 7)))))
+    }
+
     // MARK: - Отдача
 
     private func unchoke(_ s: PeerSession) {
@@ -608,13 +891,27 @@ actor Torrent {
     private func choke(_ s: PeerSession) {
         guard !s.amChoking else { return }
         s.amChoking = true
-        s.uploadQueue.removeAll()
         s.send(.choke)
+        if s.fast {
+            // Отказываем во всех ожидающих запросах, кроме allowed fast.
+            let keep = s.uploadQueue.filter { s.allowedFastOut.contains($0.0) }
+            for r in s.uploadQueue where !s.allowedFastOut.contains(r.0) { s.send(.reject(index: r.0, begin: r.1, length: r.2)) }
+            s.uploadQueue = keep
+        } else {
+            s.uploadQueue.removeAll()
+        }
     }
 
     private func serve(_ s: PeerSession, index: Int, begin: Int, length: Int) {
-        guard let meta, !s.amChoking, index >= 0, index < meta.pieceCount, have[index],
-              length > 0, length <= 128 * 1024, begin >= 0, begin + length <= meta.pieceSize(index) else { return }
+        let valid: Bool = {
+            guard let meta, index >= 0, index < meta.pieceCount, have[index],
+                  length > 0, length <= 128 * 1024, begin >= 0, begin + length <= meta.pieceSize(index) else { return false }
+            return !s.amChoking || (s.fast && s.allowedFastOut.contains(index))
+        }()
+        guard valid, s.uploadQueue.count < 500 else {
+            if s.fast { s.send(.reject(index: index, begin: begin, length: length)) }
+            return
+        }
         s.uploadQueue.append((index, begin, length))
         Task { await self.processUploads(s) }
     }
@@ -623,11 +920,14 @@ actor Torrent {
         guard !s.uploading, let storage else { return }
         s.uploading = true
         defer { s.uploading = false }
-        while let (index, begin, length) = s.uploadQueue.first, peers[s.key] != nil, !s.amChoking {
+        while let (index, begin, length) = s.uploadQueue.first, peers[s.key] != nil, !s.amChoking || s.allowedFastOut.contains(index) {
             guard env.limiter.takeUp(length) else { break }
             s.uploadQueue.removeFirst()
-            guard let data = try? await storage.read(piece: index, begin: begin, length: length) else { continue }
-            guard peers[s.key] != nil, !s.amChoking else { break }
+            guard let data = try? await storage.read(piece: index, begin: begin, length: length) else {
+                if s.fast { s.send(.reject(index: index, begin: begin, length: length)) }
+                continue
+            }
+            guard peers[s.key] != nil else { break }
             s.send(.piece(index: index, begin: begin, block: data))
             s.up.add(length)
             rateUp.add(length)
@@ -661,10 +961,11 @@ actor Torrent {
     private func sendExtendedHandshake(_ s: PeerSession) {
         var dict: [String: BValue] = [
             "m": .dict(["ut_metadata": .int(Int64(Self.utMetadataID)), "ut_pex": .int(Int64(Self.utPexID))]),
-            "p": .int(Int64(env.port)),
-            "v": .str(PeerIdentity.clientName),
+            "p": .int(Int64(env.advertisedPort())),
             "reqq": .int(250),
         ]
+        // В анонимном режиме не называем программу.
+        if !env.settings().anonymous { dict["v"] = .str(PeerIdentity.clientName) }
         if let meta { dict["metadata_size"] = .int(Int64(meta.infoDictionary.count)) }
         s.send(.extended(id: 0, payload: BValue.dict(dict).encoded))
     }
@@ -677,7 +978,7 @@ actor Torrent {
             }
             if let v = hs["v"]?.string, !v.isEmpty { s.client = v }
             if let p = hs["p"]?.int, let port = UInt16(exactly: p) { s.listenPort = port }
-            if meta == nil, let size = hs["metadata_size"]?.int, size > 0, size < 16 << 20 {
+            if meta == nil, pendingMeta == nil, let size = hs["metadata_size"]?.int, size > 0, size < 16 << 20 {
                 if metadataSize == nil { metadataSize = Int(size) }
                 requestMetadata()
             }
@@ -699,7 +1000,7 @@ actor Torrent {
                     s.send(.extended(id: their, payload: BValue.dict(["msg_type": .int(2), "piece": .int(Int64(piece))]).encoded))
                 }
             case 1:
-                guard meta == nil, let size = metadataSize else { return }
+                guard meta == nil, pendingMeta == nil, let size = metadataSize else { return }
                 metadataPieces[piece] = Data(payload.dropFirst(consumed))
                 let total = (size + 16383) / 16384
                 if metadataPieces.count == total {
@@ -716,15 +1017,17 @@ actor Torrent {
         }
         if id == Self.utPexID {
             guard let dict = try? Bencode.decode(payload) else { return }
-            var list: [PeerAddress] = []
-            if let added = dict["added"]?.data { list += PeerAddress.compact(added) }
-            if let added6 = dict["added6"]?.data { list += PeerAddress.compact(added6, ipv6: true) }
-            addPeers(list, source: .pex)
+            if let added = dict["added"]?.data {
+                addPeers(PeerAddress.compact(added), source: .pex, flags: dict["added.f"]?.data.map { [UInt8]($0) })
+            }
+            if let added6 = dict["added6"]?.data {
+                addPeers(PeerAddress.compact(added6, ipv6: true), source: .pex, flags: dict["added6.f"]?.data.map { [UInt8]($0) })
+            }
         }
     }
 
     private func requestMetadata() {
-        guard meta == nil, let size = metadataSize else { return }
+        guard meta == nil, pendingMeta == nil, let size = metadataSize else { return }
         let total = (size + 16383) / 16384
         let capable = peers.values.filter { $0.extensions["ut_metadata"] != nil }
         guard !capable.isEmpty else { return }
@@ -739,32 +1042,124 @@ actor Torrent {
     }
 
     private func metadataAssembled(_ data: Data) async {
-        guard meta == nil else { return }
-        guard let m = try? Metainfo(infoDictionary: Data(data), trackers: trackers.map { [$0] }), m.infoHash == infoHash else {
+        guard meta == nil, pendingMeta == nil else { return }
+        let trackerTiers = trackers.map { [$0] }
+        let seedURLs = webSeeds.map(\.url)
+        guard var m = try? Metainfo(infoDictionary: Data(data), trackers: trackerTiers, webSeeds: seedURLs),
+              m.swarmHashes.contains(infoHash) || (m.infoHashV2.map { InfoHash($0.prefix(20)) == infoHash } ?? false) else {
             // Испорченные метаданные: начинаем заново.
             metadataPieces.removeAll()
             metadataRequested.removeAll()
             return
         }
+        m.webSeeds = seedURLs
+        name = m.name
+        if !m.missingLayers.isEmpty {
+            // v2: слоёв кусков в метаданных нет — запросим их у пиров (BEP 52, hash request).
+            pendingMeta = m
+            requestLayers()
+            return
+        }
+        await metadataReady(m)
+    }
+
+    private func metadataReady(_ m: Metainfo) async {
         meta = m
         name = m.name
-        env.gotMetadata(m)
+        magnetV2 = m.infoHashV2
+        env.gotMetadata(infoHash, m)
         await prepareStorage(m)
         for s in peers.values {
-            if let raw = s.rawBitfield { applyBitfield(s, raw) } else if !s.pendingHaves.isEmpty { applyBitfield(s, Data()) }
+            if s.pendingHaveAll { applyBitfield(s, Bitfield.full(m.pieceCount).data) }
+            else if let raw = s.rawBitfield { applyBitfield(s, raw) }
+            else if !s.pendingHaves.isEmpty { applyBitfield(s, Data()) }
             s.rawBitfield = nil
-            if have.setCount > 0 { s.send(.bitfield(have.data)) }
+            s.pendingHaveAll = false
+            if have.setCount > 0 {
+                // Bitfield можно слать только сразу после рукопожатия; с Fast — по одному have.
+                if s.fast { for i in 0..<m.pieceCount where have[i] { s.send(.have(i)) } } else { s.send(.bitfield(have.data)) }
+            }
             sendExtendedHandshake(s)
+        }
+    }
+
+    // MARK: - Хеши v2 (BEP 52)
+
+    private func layerKey(_ r: HashRequest) -> String { "\(r.root.base16):\(r.index)" }
+
+    /// Запрашивает недостающие слои кусков частями до 512 хешей с доказательством до корня файла.
+    private func requestLayers() {
+        guard let pm = pendingMeta else { return }
+        let capable = peers.values.filter { $0.isSeed || $0.pendingHaveAll || $0.rawBitfield != nil || $0.bitfield != nil }
+        let pool = capable.isEmpty ? Array(peers.values) : capable
+        guard !pool.isEmpty else { return }
+        var turn = Int.random(in: 0..<pool.count)
+        for f in pm.missingLayers {
+            let width = Merkle.nextPowerOfTwo(f.pieceCount)
+            let length = min(512, width)
+            for index in stride(from: 0, to: width, by: length) where layerChunks[f.root]?[index] == nil {
+                let r = HashRequest(root: f.root, baseLayer: pm.pieceLayerIndex, index: index, length: length,
+                                    proofLayers: Merkle.log2(width) - 1)
+                if let at = layerRequested[layerKey(r)], Date().timeIntervalSince(at) < 10 { continue }
+                layerRequested[layerKey(r)] = Date()
+                pool[turn % pool.count].send(.hashRequest(r))
+                turn += 1
+            }
+        }
+    }
+
+    private func receiveHashes(_ r: HashRequest, _ data: Data) async {
+        guard let pm = pendingMeta, r.baseLayer == pm.pieceLayerIndex,
+              let f = pm.v2Files.first(where: { $0.root == r.root }), pm.pieceLayers[f.root] == nil,
+              r.length >= 2, data.count >= r.length * 32, data.count % 32 == 0 else { return }
+        let all = stride(from: 0, to: data.count, by: 32).map { data.subdata(in: $0..<($0 + 32)) }
+        let hashes = Array(all.prefix(r.length))
+        let uncles = Array(all.dropFirst(r.length))
+        guard Merkle.verify(hashes: hashes, uncles: uncles, index: r.index, root: f.root) else { return }
+        layerChunks[f.root, default: [:]][r.index] = hashes
+        let width = Merkle.nextPowerOfTwo(f.pieceCount)
+        let chunks = layerChunks[f.root] ?? [:]
+        guard stride(from: 0, to: width, by: r.length).allSatisfy({ chunks[$0] != nil }) else { return }
+        var layer = Data()
+        for index in chunks.keys.sorted() { for h in chunks[index]! { layer.append(h) } }
+        var updated = pm
+        updated.pieceLayers[f.root] = layer.prefix(f.pieceCount * 32)
+        layerChunks[f.root] = nil
+        if updated.missingLayers.isEmpty {
+            pendingMeta = nil
+            await metadataReady(updated)
+        } else {
+            pendingMeta = updated
+        }
+    }
+
+    private func serveHashes(_ s: PeerSession, _ r: HashRequest) {
+        guard let meta, r.baseLayer == meta.pieceLayerIndex, let layer = meta.pieceLayers[r.root] else {
+            s.send(.hashReject(r))
+            return
+        }
+        let tree = layerTrees[r.root] ?? {
+            let hashes = stride(from: 0, to: layer.count, by: 32).map { layer.subdata(in: $0..<($0 + 32)) }
+            let t = Merkle.layers(hashes, pad: Merkle.padHash(levels: meta.pieceLayerIndex))
+            layerTrees[r.root] = t
+            return t
+        }()
+        if let proof = Merkle.proof(layers: tree, index: r.index, length: r.length, proofLayers: r.proofLayers) {
+            s.send(.hashes(r, proof))
+        } else {
+            s.send(.hashReject(r))
         }
     }
 
     // MARK: - Трекеры и DHT
 
     private func currentAnnounce(_ event: AnnounceEvent) -> AnnounceRequest {
-        AnnounceRequest(infoHash: infoHash, peerID: env.peerID, port: env.port,
-                        uploaded: uploadedTotal, downloaded: downloadedTotal,
-                        left: meta.map { max(0, $0.totalLength - doneBytes($0)) } ?? 1 << 30,
-                        event: event, key: UInt32(truncatingIfNeeded: env.peerID.hashValue))
+        let settings = env.settings()
+        return AnnounceRequest(infoHash: infoHash, peerID: env.peerID(), port: env.advertisedPort(),
+                               uploaded: uploadedTotal, downloaded: downloadedTotal,
+                               left: meta.map { max(0, $0.totalLength - doneBytes($0)) } ?? 1 << 30,
+                               event: event, key: UInt32(truncatingIfNeeded: env.peerID().hashValue),
+                               anonymous: settings.anonymous)
     }
 
     private func announceDue() {
@@ -818,17 +1213,24 @@ actor Torrent {
         trackerStates[id] = st
     }
 
+    /// Поиск пиров в DHT и анонс себя: при скачивании — часто, при раздаче — раз в полчаса.
     private func lookupDHTIfNeeded() {
-        guard env.settings().dhtEnabled, meta?.isPrivate != true, !dhtRunning, status != .seeding else { return }
-        let interval: TimeInterval = peers.count < 15 ? 90 : 600
+        guard env.settings().dhtEnabled, let dht = env.dht, meta?.isPrivate != true, !dhtRunning else { return }
+        let interval: TimeInterval = status == .seeding ? 1800 : (peers.count < 15 ? 90 : 600)
         guard Date().timeIntervalSince(lastDHT) > interval else { return }
         dhtRunning = true
         lastDHT = Date()
-        let hash = infoHash
-        let dht = env.dht
+        let hashes = swarmHashes
+        let port = env.advertisedPort()
         Task {
-            await dht.findPeers(infoHash: hash) { [weak self] found in
-                await self?.addPeers(found, source: .dht)
+            await withTaskGroup(of: Void.self) { group in
+                for hash in hashes {
+                    group.addTask {
+                        await dht.findPeers(infoHash: hash, announcePort: port) { [weak self] found in
+                            await self?.addPeers(found, source: .dht, hash: hash)
+                        }
+                    }
+                }
             }
             self.dhtFinished()
         }
@@ -852,7 +1254,10 @@ actor Torrent {
 
         connectMore()
         lookupDHTIfNeeded()
-        if meta == nil { requestMetadata() }
+        if meta == nil {
+            if pendingMeta != nil { requestLayers() } else { requestMetadata() }
+        }
+        runWebSeeds(now)
 
         // Таймауты запросов и молчащие пиры.
         for s in peers.values {
@@ -909,7 +1314,7 @@ actor Torrent {
         var wanted = Bitfield(count: meta.pieceCount)
         var piecePriority = [UInt8](repeating: 0, count: meta.pieceCount)
         let pl = Int64(meta.pieceLength)
-        for (i, file) in meta.files.enumerated() where file.length > 0 {
+        for (i, file) in meta.files.enumerated() where file.length > 0 && !file.isPadding {
             let priority = i < priorities.count ? priorities[i] : .normal
             guard priority != .skip else { continue }
             let first = Int(file.offset / pl)
@@ -923,14 +1328,23 @@ actor Torrent {
     }
 
     private func doneBytes(_ meta: Metainfo) -> Int64 {
+        if meta.version == .v2 {
+            var bytes: Int64 = 0
+            for i in 0..<meta.pieceCount where have[i] { bytes += Int64(meta.pieceSize(i)) }
+            return bytes
+        }
         var bytes = Int64(have.setCount) * Int64(meta.pieceLength)
         if have[meta.pieceCount - 1] { bytes -= Int64(meta.pieceLength - meta.pieceSize(meta.pieceCount - 1)) }
         return bytes
     }
 
+    private var magnetLink: String {
+        MagnetLink.make(hash: infoHash, v2: magnetV2, v2Only: meta?.version == .v2, name: name, trackers: Array(trackers.prefix(8)))
+    }
+
     func resumeData() -> ResumeData {
         ResumeData(infoHash: infoHash.hex, name: name,
-                   magnet: meta == nil ? MagnetLink.make(hash: infoHash, name: name, trackers: trackers) : nil,
+                   magnet: meta == nil ? magnetLink : nil,
                    savePath: savePath.path, have: meta == nil ? nil : have.data,
                    priorities: priorities.map(\.rawValue), sequential: sequential,
                    paused: status == .paused, uploaded: uploadedTotal, downloaded: downloadedTotal,
@@ -946,7 +1360,7 @@ actor Torrent {
         var doneSize: Int64 = 0
         if let meta {
             let pl = Int64(meta.pieceLength)
-            for (i, f) in meta.files.enumerated() where !f.path.contains(".pad") {
+            for (i, f) in meta.files.enumerated() where !f.isPadding {
                 let priority = i < priorities.count ? priorities[i] : .normal
                 var fileDone: Int64 = 0
                 if f.length > 0 {
@@ -974,22 +1388,28 @@ actor Torrent {
             let angle = Double(UInt(bitPattern: addr.utf8.reduce(5381) { ($0 << 5) &+ $0 &+ Int($1) }) % 3600) / 3600 * 2 * .pi
             return PeerSnapshot(address: addr, client: s.client, progress: prog, downRate: s.down.rate, upRate: s.up.rate,
                                 isSeed: s.isSeed, source: s.source, isIncoming: s.conn.isIncoming,
-                                isChokingUs: s.peerChoking, isInterestedInUs: s.peerInterested, angle: angle)
+                                isChokingUs: s.peerChoking, isInterestedInUs: s.peerInterested, angle: angle,
+                                transport: s.conn.kind, isEncrypted: s.conn.isEncrypted, supportsFast: s.fast)
         }.sorted { $0.downRate + $0.upRate > $1.downRate + $1.upRate } : []
         let trackerList: [TrackerSnapshot] = detailed ? trackers.map { url in
             let st = trackerStates[url.absoluteString]
             return TrackerSnapshot(url: url.absoluteString, status: st?.status ?? (env.settings().trackersEnabled ? "Ожидание" : "Отключены"),
                                    seeders: st?.seeders, leechers: st?.leechers, lastPeers: st?.lastPeers ?? 0, nextAnnounce: st?.nextAnnounce)
         } : []
-        let metaProgress: Double? = meta == nil ? metadataSize.map { size in
+        let seedList: [TrackerSnapshot] = webSeeds.map {
+            TrackerSnapshot(url: $0.url.absoluteString, status: $0.pieces > 0 ? "\($0.status), кусков: \($0.pieces)" : $0.status,
+                            seeders: nil, leechers: nil, lastPeers: 0, nextAnnounce: nil)
+        }
+        let metaProgress: Double? = meta == nil ? (pendingMeta != nil ? 0.99 : metadataSize.map { size in
             Double(metadataPieces.count) / Double(max(1, (size + 16383) / 16384))
-        } ?? 0 : nil
+        } ?? 0) : nil
         let contentURL = meta.map { m in m.isMultiFile ? savePath.appendingPathComponent(m.name) : m.files[0].path.reduce(savePath) { $0.appendingPathComponent($1) } }
         return TorrentSnapshot(
             id: infoHash.hex, name: name, status: status, error: errorMessage,
             progress: wantedSize > 0 ? Double(doneSize) / Double(wantedSize) : (meta == nil ? 0 : 1),
             checkProgress: checkProgress, metadataProgress: metaProgress,
-            totalSize: meta?.totalLength ?? 0, wantedSize: wantedSize, doneSize: doneSize,
+            totalSize: meta.map { m in m.files.filter { !$0.isPadding }.reduce(0) { $0 + $1.length } } ?? 0,
+            wantedSize: wantedSize, doneSize: doneSize,
             downRate: rateDown.rate, upRate: rateUp.rate,
             downloadedTotal: downloadedTotal, uploadedTotal: uploadedTotal,
             peersConnected: peers.count, seedsConnected: peers.values.filter(\.isSeed).count,
@@ -999,7 +1419,8 @@ actor Torrent {
             files: files, peers: peerList, trackers: trackerList,
             savePath: savePath, contentURL: contentURL, isSequential: sequential,
             addedAt: addedAt, completedAt: completedAt,
-            magnet: MagnetLink.make(hash: infoHash, name: name, trackers: Array(trackers.prefix(8))),
-            isPrivate: meta?.isPrivate ?? false)
+            magnet: magnetLink,
+            isPrivate: meta?.isPrivate ?? false,
+            version: meta?.version, webSeeds: seedList, connections: connectionStats)
     }
 }

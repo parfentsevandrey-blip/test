@@ -32,9 +32,31 @@ nonisolated struct TorrentFile: Sendable, Hashable {
 
     var name: String { path.last ?? "" }
     var relativePath: String { path.joined(separator: "/") }
+    var isPadding: Bool { path.contains(".pad") }
 }
 
-/// Разобранный .torrent (BEP 3). Гибридные торренты v1+v2 читаются по v1-части.
+/// Файл в формате v2: корень его дерева Меркла и куски, которые он занимает.
+nonisolated struct V2File: Sendable, Hashable {
+    let fileIndex: Int
+    let root: Data
+    let length: Int64
+    let firstPiece: Int
+    let pieceCount: Int
+}
+
+nonisolated enum MetaVersion: String, Sendable {
+    case v1, v2, hybrid
+
+    var title: String {
+        switch self {
+        case .v1: "BitTorrent v1"
+        case .v2: "BitTorrent v2"
+        case .hybrid: "Гибрид v1 + v2"
+        }
+    }
+}
+
+/// Разобранный .torrent: v1 (BEP 3), v2 (BEP 52) или гибрид, где обе части описывают одни и те же файлы.
 nonisolated struct Metainfo: Sendable {
     let infoHash: InfoHash
     let name: String
@@ -48,20 +70,73 @@ nonisolated struct Metainfo: Sendable {
     let comment: String?
     let createdBy: String?
     let creationDate: Date?
+    let version: MetaVersion
+    /// Полный (32 байта) v2 info-хеш.
+    let infoHashV2: Data?
+    let v2Files: [V2File]
+    /// Слои кусков: корень файла → хеши кусков подряд (для файлов больше куска).
+    var pieceLayers: [Data: Data]
+    /// Веб-сиды (BEP 19, url-list).
+    var webSeeds: [URL]
+    let pieceCount: Int
 
-    var pieceCount: Int { pieceHashes.count / 20 }
     var isMultiFile: Bool { files.count > 1 || files.first?.path.count ?? 0 > 1 }
+
+    /// Все идентификаторы роя: у гибрида их два (SHA-1 и усечённый SHA-256).
+    var swarmHashes: [InfoHash] {
+        var out = [infoHash]
+        if version == .hybrid, let v2 = infoHashV2, let alt = InfoHash(v2.prefix(20)) { out.append(alt) }
+        return out
+    }
+
+    /// Номер слоя кусков в дереве (0 — листья по 16 КБ).
+    var pieceLayerIndex: Int { Merkle.log2(pieceLength / Merkle.blockSize) }
+
+    /// Файлы v2, для которых ещё нет слоя кусков (бывает после magnet-ссылки).
+    var missingLayers: [V2File] {
+        v2Files.filter { Int64(pieceLength) < $0.length && pieceLayers[$0.root] == nil }
+    }
 
     func pieceHash(_ index: Int) -> Data {
         pieceHashes.subdata(in: (index * 20)..<(index * 20 + 20))
     }
 
+    /// Файл v2, которому принадлежит кусок.
+    func v2File(forPiece index: Int) -> V2File? {
+        var lo = 0, hi = v2Files.count - 1, found: V2File?
+        while lo <= hi {
+            let mid = (lo + hi) / 2
+            if v2Files[mid].firstPiece <= index { found = v2Files[mid]; lo = mid + 1 } else { hi = mid - 1 }
+        }
+        guard let found, index < found.firstPiece + found.pieceCount else { return nil }
+        return found
+    }
+
     func pieceSize(_ index: Int) -> Int {
+        if version == .v2, let f = v2File(forPiece: index) {
+            // В v2 последний кусок каждого файла короче: файлы выровнены по границам кусков.
+            return Int(min(Int64(pieceLength), f.length - Int64(index - f.firstPiece) * Int64(pieceLength)))
+        }
         if index == pieceCount - 1 {
-            let rest = Int(totalLength - Int64(index) * Int64(pieceLength))
-            return rest
+            return Int(totalLength - Int64(index) * Int64(pieceLength))
         }
         return pieceLength
+    }
+
+    /// Проверка куска: SHA-1 для v1, дерево Меркла для v2, у гибрида — оба, если слои известны.
+    func verify(piece index: Int, data: Data) -> Bool {
+        if version != .v2, Hashing.sha1(data) != pieceHash(index) { return false }
+        if version == .v1 { return true }
+        guard let f = v2File(forPiece: index) else { return version == .hybrid }
+        let inFile = index - f.firstPiece
+        let fileBytes = Int(min(Int64(pieceLength), f.length - Int64(inFile) * Int64(pieceLength)))
+        let leaves = Merkle.blockHashes(data.prefix(fileBytes))
+        if f.length <= Int64(pieceLength) {
+            return Merkle.root(leaves, width: Merkle.nextPowerOfTwo(leaves.count)) == f.root
+        }
+        guard let layer = pieceLayers[f.root], layer.count >= (inFile + 1) * 32 else { return version == .hybrid }
+        let expected = layer.subdata(in: (inFile * 32)..<(inFile * 32 + 32))
+        return Merkle.root(leaves, width: pieceLength / Merkle.blockSize) == expected
     }
 
     init(torrentData: Data) throws {
@@ -75,46 +150,140 @@ nonisolated struct Metainfo: Sendable {
             }
         }
         if tiers.isEmpty, let a = root["announce"]?.string, let url = URL(string: a) { tiers = [[url]] }
+        var layers: [Data: Data] = [:]
+        for (key, value) in root["piece layers"]?.dict ?? [:] {
+            if let v = value.data { layers[Data(Bencode.keyBytes(key))] = v }
+        }
+        var seeds: [URL] = []
+        if let one = root["url-list"]?.string { seeds = [one].compactMap(URL.init(string:)) }
+        if let many = root["url-list"]?.list { seeds = many.compactMap { $0.string.flatMap(URL.init(string:)) } }
         try self.init(infoDictionary: info, trackers: tiers,
                       comment: root["comment"]?.string,
                       createdBy: root["created by"]?.string,
-                      creationDate: root["creation date"]?.int.map { Date(timeIntervalSince1970: TimeInterval($0)) })
+                      creationDate: root["creation date"]?.int.map { Date(timeIntervalSince1970: TimeInterval($0)) },
+                      pieceLayers: layers, webSeeds: seeds.filter { ["http", "https"].contains($0.scheme?.lowercased() ?? "") })
+        for f in v2Files where Int64(pieceLength) < f.length {
+            guard let layer = pieceLayers[f.root], layer.count == f.pieceCount * 32,
+                  Merkle.verifyLayer(stride(from: 0, to: layer.count, by: 32).map { layer.subdata(in: $0..<($0 + 32)) },
+                                     root: f.root, blocksPerPiece: pieceLength / Merkle.blockSize) else {
+                if version == .v2 { throw BencodeError("Слои кусков v2 не сходятся с корнями файлов") }
+                pieceLayers[f.root] = nil
+                continue
+            }
+        }
     }
 
-    init(infoDictionary: Data, trackers: [[URL]], comment: String? = nil, createdBy: String? = nil, creationDate: Date? = nil) throws {
+    init(infoDictionary: Data, trackers: [[URL]], comment: String? = nil, createdBy: String? = nil, creationDate: Date? = nil,
+         pieceLayers: [Data: Data] = [:], webSeeds: [URL] = []) throws {
         let info = try Bencode.decode(infoDictionary)
-        guard let hash = InfoHash(Data(Insecure.SHA1.hash(data: infoDictionary))) else { throw BencodeError("info-хеш") }
-        guard let pieceLength = info["piece length"]?.int, pieceLength > 0,
-              let pieces = info["pieces"]?.data, pieces.count % 20 == 0, !pieces.isEmpty else {
-            if info["meta version"]?.int == 2 { throw BencodeError("Торренты только версии 2 пока не поддерживаются") }
+        let metaVersion = info["meta version"]?.int
+        if let metaVersion, metaVersion > 2 { throw BencodeError("Торрент новой версии (\(metaVersion)) пока не поддерживается") }
+        guard let pieceLength = info["piece length"]?.int, pieceLength > 0, pieceLength < 1 << 30 else {
             throw BencodeError("Повреждённый словарь info")
         }
-        let name = Metainfo.sanitize(info["name.utf-8"]?.string ?? info["name"]?.string ?? hash.hex)
+        let pieces = info["pieces"]?.data
+        let hasV1 = pieces != nil
+        let isV2 = metaVersion == 2 && info["file tree"]?.dict != nil
+        guard hasV1 || isV2 else { throw BencodeError("Повреждённый словарь info") }
+        let sha1 = InfoHash(Hashing.sha1(infoDictionary))!
+        let sha256 = isV2 ? Hashing.sha256(infoDictionary) : nil
+        let name = Metainfo.sanitize(info["name.utf-8"]?.string ?? info["name"]?.string ?? sha1.hex)
+
         var files: [TorrentFile] = []
         var offset: Int64 = 0
-        if let list = info["files"]?.list {
-            for entry in list {
-                guard let length = entry["length"]?.int, length >= 0 else { continue }
-                // Файлы-заполнители BEP 47 выравнивают куски; на диск их не пишем по имени, но смещения учитываем.
-                let attr = entry["attr"]?.string ?? ""
-                let rawPath = (entry["path.utf-8"]?.list ?? entry["path"]?.list ?? []).compactMap(\.string)
-                var path = [name] + rawPath.map(Metainfo.sanitize)
-                if attr.contains("p") { path = [name, ".pad", "\(offset)"] }
-                files.append(TorrentFile(path: path, length: length, offset: offset))
-                offset += length
+        if hasV1 {
+            guard let pieces, pieces.count % 20 == 0, !pieces.isEmpty else { throw BencodeError("Повреждённый словарь info") }
+            if let list = info["files"]?.list {
+                for entry in list {
+                    guard let length = entry["length"]?.int, length >= 0 else { continue }
+                    // Файлы-заполнители BEP 47 выравнивают куски; на диск их не пишем по имени, но смещения учитываем.
+                    let attr = entry["attr"]?.string ?? ""
+                    let rawPath = (entry["path.utf-8"]?.list ?? entry["path"]?.list ?? []).compactMap(\.string)
+                    var path = [name] + rawPath.map(Metainfo.sanitize)
+                    if attr.contains("p") || rawPath.first == ".pad" { path = [name, ".pad", "\(offset)"] }
+                    files.append(TorrentFile(path: path, length: length, offset: offset))
+                    offset += length
+                }
+            } else if let length = info["length"]?.int {
+                files = [TorrentFile(path: [name], length: length, offset: 0)]
+                offset = length
             }
-        } else if let length = info["length"]?.int {
-            files = [TorrentFile(path: [name], length: length, offset: 0)]
-            offset = length
         }
-        guard !files.isEmpty, offset > 0 else { throw BencodeError("В торренте нет файлов") }
-        let expected = (offset + pieceLength - 1) / pieceLength
-        guard expected == pieces.count / 20 else { throw BencodeError("Число кусков не совпадает с размером") }
 
-        self.infoHash = hash
+        // Дерево файлов v2.
+        var treeFiles: [(path: [String], length: Int64, root: Data?)] = []
+        if isV2, let tree = info["file tree"]?.dict {
+            func walk(_ node: [String: BValue], _ path: [String], depth: Int) throws {
+                guard depth < 64 else { throw BencodeError("Слишком глубокое дерево файлов") }
+                let keys = node.keys.sorted { Bencode.keyBytes($0).lexicographicallyPrecedes(Bencode.keyBytes($1)) }
+                for key in keys {
+                    guard let child = node[key]?.dict else { continue }
+                    if let leaf = child[""]?.dict, let length = leaf["length"]?.int {
+                        guard length >= 0 else { throw BencodeError("Неверная длина файла") }
+                        let root = leaf["pieces root"]?.data
+                        if length > 0, root?.count != 32 { throw BencodeError("У файла нет корня дерева Меркла") }
+                        treeFiles.append((path + [key], length, root))
+                    } else {
+                        try walk(child, path + [key], depth: depth + 1)
+                    }
+                }
+            }
+            try walk(tree, [], depth: 0)
+            guard !treeFiles.isEmpty else { throw BencodeError("В торренте нет файлов") }
+        }
+
+        var v2: [V2File] = []
+        var version: MetaVersion = .v1
+        if isV2 {
+            let pl = Int64(pieceLength)
+            guard pieceLength >= Merkle.blockSize, pieceLength & (pieceLength - 1) == 0 else {
+                throw BencodeError("Размер куска v2 должен быть степенью двойки")
+            }
+            if hasV1 {
+                // Гибрид: v1-часть уже задаёт раскладку; сверяем, что обе части описывают одно и то же.
+                let real = files.enumerated().filter { !$0.element.isPadding }
+                var consistent = real.count == treeFiles.count
+                if consistent {
+                    for ((index, file), tf) in zip(real, treeFiles) {
+                        guard file.length == tf.length else { consistent = false; break }
+                        guard tf.length > 0 else { continue }
+                        guard file.offset % pl == 0, let root = tf.root else { consistent = false; break }
+                        v2.append(V2File(fileIndex: index, root: root, length: tf.length, firstPiece: Int(file.offset / pl),
+                                         pieceCount: Int((tf.length + pl - 1) / pl)))
+                    }
+                }
+                if consistent { version = .hybrid } else { v2 = [] }
+            } else {
+                // Только v2: раскладка с выравниванием каждого файла по куску (как с файлами-заполнителями).
+                version = .v2
+                let single = treeFiles.count == 1 && treeFiles[0].path.count == 1
+                for tf in treeFiles {
+                    if tf.length > 0, offset % pl != 0 {
+                        let pad = pl - offset % pl
+                        files.append(TorrentFile(path: [name, ".pad", "\(offset)"], length: pad, offset: offset))
+                        offset += pad
+                    }
+                    let path = single ? [name] : [name] + tf.path.map(Metainfo.sanitize)
+                    if tf.length > 0, let root = tf.root {
+                        v2.append(V2File(fileIndex: files.count, root: root, length: tf.length, firstPiece: Int(offset / pl),
+                                         pieceCount: Int((tf.length + pl - 1) / pl)))
+                    }
+                    files.append(TorrentFile(path: path, length: tf.length, offset: offset))
+                    offset += tf.length
+                }
+            }
+        }
+
+        guard !files.isEmpty, offset > 0 else { throw BencodeError("В торренте нет файлов") }
+        let expected = Int((offset + pieceLength - 1) / pieceLength)
+        if hasV1 {
+            guard expected == pieces!.count / 20 else { throw BencodeError("Число кусков не совпадает с размером") }
+        }
+
+        self.infoHash = version == .v2 ? InfoHash(sha256!.prefix(20))! : sha1
         self.name = name
         self.pieceLength = Int(pieceLength)
-        self.pieceHashes = pieces
+        self.pieceHashes = pieces ?? Data()
         self.files = files
         self.totalLength = offset
         self.trackers = trackers
@@ -123,6 +292,12 @@ nonisolated struct Metainfo: Sendable {
         self.comment = comment
         self.createdBy = createdBy
         self.creationDate = creationDate
+        self.version = version
+        self.infoHashV2 = version == .v1 ? nil : sha256
+        self.v2Files = v2
+        self.pieceLayers = pieceLayers
+        self.webSeeds = webSeeds
+        self.pieceCount = expected
     }
 
     /// Полноценный .torrent для сохранения (в том числе полученного по magnet).
@@ -136,6 +311,17 @@ nonisolated struct Metainfo: Sendable {
         }
         out.append(BValue.str("info").encoded)
         out.append(infoDictionary)
+        let layers = v2Files.compactMap { f in pieceLayers[f.root].map { (f.root, $0) } }
+        if !layers.isEmpty {
+            out.append(BValue.str("piece layers").encoded)
+            var dict: [String: BValue] = [:]
+            for (root, layer) in layers { dict[Bencode.key(ArraySlice([UInt8](root)))] = .bytes(layer) }
+            out.append(BValue.dict(dict).encoded)
+        }
+        if !webSeeds.isEmpty {
+            out.append(BValue.str("url-list").encoded)
+            out.append(BValue.list(webSeeds.map { .str($0.absoluteString) }).encoded)
+        }
         out.append(Data("e".utf8))
         return out
     }
@@ -149,35 +335,49 @@ nonisolated struct Metainfo: Sendable {
     }
 }
 
-/// magnet:?xt=urn:btih:…&dn=…&tr=…&x.pe=… (BEP 9).
+/// magnet:?xt=urn:btih:…&xt=urn:btmh:1220…&dn=…&tr=…&ws=…&x.pe=… (BEP 9, BEP 52).
 nonisolated struct MagnetLink: Sendable {
     let infoHash: InfoHash
+    /// Полный v2-хеш из urn:btmh (если есть).
+    let infoHashV2: Data?
     let name: String?
     let trackers: [URL]
     let peers: [PeerAddress]
+    let webSeeds: [URL]
 
     init?(_ string: String) {
         guard let comps = URLComponents(string: string.trimmingCharacters(in: .whitespacesAndNewlines)),
               comps.scheme?.lowercased() == "magnet" else { return nil }
         let items = comps.queryItems ?? []
         var hash: InfoHash?
+        var v2: Data?
         for item in items where item.name == "xt" {
-            guard let value = item.value, value.lowercased().hasPrefix("urn:btih:") else { continue }
-            let code = String(value.dropFirst(9))
-            if code.count == 40 { hash = InfoHash(hex: code) }
-            else if code.count == 32, let raw = MagnetLink.base32(code) { hash = InfoHash(raw) }
+            guard let value = item.value?.lowercased() else { continue }
+            if value.hasPrefix("urn:btih:") {
+                let code = String(value.dropFirst(9))
+                if code.count == 40 { hash = InfoHash(hex: code) }
+                else if code.count == 32, let raw = MagnetLink.base32(code) { hash = InfoHash(raw) }
+            } else if value.hasPrefix("urn:btmh:1220") {
+                let bytes = DiffieHellman.hexBytes(String(value.dropFirst(13)))
+                if bytes.count == 32 { v2 = Data(bytes) }
+            }
         }
-        guard let hash else { return nil }
-        infoHash = hash
+        guard let resolved = hash ?? v2.flatMap({ InfoHash($0.prefix(20)) }) else { return nil }
+        infoHash = resolved
+        infoHashV2 = v2
         name = items.first { $0.name == "dn" }?.value
         trackers = items.filter { $0.name == "tr" }.compactMap { $0.value.flatMap(URL.init(string:)) }
         peers = items.filter { $0.name == "x.pe" }.compactMap { $0.value.flatMap(PeerAddress.init(hostPort:)) }
+        webSeeds = items.filter { $0.name == "ws" }.compactMap { $0.value.flatMap(URL.init(string:)) }
     }
 
-    static func make(hash: InfoHash, name: String?, trackers: [URL]) -> String {
+    /// `v2` — полный v2-хеш; `v2Only` — у раздачи нет v1-части (тогда btih не пишем).
+    static func make(hash: InfoHash, v2: Data? = nil, v2Only: Bool = false, name: String?, trackers: [URL]) -> String {
         var comps = URLComponents()
         comps.scheme = "magnet"
-        var items = [URLQueryItem(name: "xt", value: "urn:btih:\(hash.hex)")]
+        var items: [URLQueryItem] = []
+        if !(v2Only && v2 != nil) { items.append(URLQueryItem(name: "xt", value: "urn:btih:\(hash.hex)")) }
+        if let v2 { items.append(URLQueryItem(name: "xt", value: "urn:btmh:1220\(v2.base16)")) }
         if let name { items.append(URLQueryItem(name: "dn", value: name)) }
         items += trackers.map { URLQueryItem(name: "tr", value: $0.absoluteString) }
         comps.queryItems = items

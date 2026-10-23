@@ -48,6 +48,15 @@ jobs:
             kill $PID 2>/dev/null || true
             sleep 2
           done
+          # Вкладки настроек «Сеть» и «Приватность».
+          for T in 1 2; do
+            dist/Swarm.app/Contents/MacOS/Swarm --demo-ui 1280 --demo-settings $T &
+            PID=$!
+            sleep 9
+            screencapture -x "$RUNNER_TEMP/render/settings-$T.png" || true
+            kill $PID 2>/dev/null || true
+            sleep 2
+          done
 
       - uses: actions/upload-artifact@v4
         with:
@@ -55,11 +64,13 @@ jobs:
           path: ${{ runner.temp }}/render
           compression-level: 0
 
-      # Три движка на одной машине: обычная раздача по TCP и magnet через ut_metadata.
+      # Движки на одной машине: TCP и uTP с шифрованием, magnet, v2 и гибрид, запросы хешей v2,
+      # DHT-узел (анонс и поиск), LSD, веб-сид, чёрный список, анонимный режим.
       - name: Self-test loopback swarm
         run: dist/Swarm.app/Contents/MacOS/Swarm --selftest-loopback "$RUNNER_TEMP"
 
-      # Настоящий рой: свежий торрент netinst Debian, куски с проверкой SHA-1, затем поиск через DHT без трекеров.
+      # Настоящий рой: свежий торрент netinst Debian — куски с проверкой SHA-1, шифрование и Fast extension
+      # с настоящими клиентами, загрузка только по uTP, поиск через DHT без трекеров, проброс порта.
       - name: Self-test real swarm
         run: |
           BASE=https://cdimage.debian.org/debian-cd/current/amd64/bt-cd/

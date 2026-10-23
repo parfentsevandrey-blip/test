@@ -24,6 +24,14 @@ enum Format {
     static func percent(_ p: Double) -> String {
         p >= 1 ? "100%" : String(format: p < 0.1 ? "%.1f%%" : "%.0f%%", p * 100)
     }
+
+    /// Русское множественное число: 1 узел, 2 узла, 5 узлов.
+    static func plural(_ n: Int, _ one: String, _ few: String, _ many: String) -> String {
+        let n10 = abs(n) % 10, n100 = abs(n) % 100
+        if n10 == 1 && n100 != 11 { return one }
+        if (2...4).contains(n10) && !(12...14).contains(n100) { return few }
+        return many
+    }
 }
 
 /// Тип содержимого раздачи — для иконки и цвета карточки.

@@ -23,6 +23,8 @@ nonisolated struct AnnounceRequest: Sendable {
     var event: AnnounceEvent
     var numWant = 80
     var key: UInt32
+    /// Анонимный режим: не называем программу трекеру.
+    var anonymous = false
 }
 
 nonisolated struct AnnounceResponse: Sendable {
@@ -65,7 +67,7 @@ nonisolated enum TrackerClient {
             throw PeerError("Неверный адрес трекера")
         }
         var request = URLRequest(url: full, timeoutInterval: 20)
-        request.setValue(PeerIdentity.clientName, forHTTPHeaderField: "User-Agent")
+        request.setValue(r.anonymous ? "Mozilla/5.0" : PeerIdentity.clientName, forHTTPHeaderField: "User-Agent")
         let (data, response) = try await URLSession.shared.data(for: request)
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
             throw PeerError("Трекер ответил \(http.statusCode)")

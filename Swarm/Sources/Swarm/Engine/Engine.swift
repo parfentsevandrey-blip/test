@@ -1,5 +1,4 @@
 import Foundation
-import Network
 import os
 
 nonisolated final class SettingsBox: Sendable {
@@ -11,64 +10,53 @@ nonisolated final class SettingsBox: Sendable {
     }
 }
 
-/// Приём входящих TCP-соединений. Колбэки — в nonisolated-классе.
-nonisolated final class PeerListener: @unchecked Sendable {
-    private let listener: NWListener
-    let port: UInt16
-
-    init(port: UInt16, onConnection: @escaping @Sendable (PeerConnection) -> Void) throws {
-        let params = NWParameters.tcp
-        params.allowLocalEndpointReuse = true
-        guard let nwPort = NWEndpoint.Port(rawValue: port) else { throw PeerError("Неверный порт") }
-        listener = try NWListener(using: params, on: nwPort)
-        self.port = port
-        listener.newConnectionHandler = { connection in
-            onConnection(PeerConnection(incoming: connection))
-        }
+/// Значение, которое читают из любых потоков (внешний порт после проброса).
+nonisolated final class PortBox: Sendable {
+    private let state: OSAllocatedUnfairLock<UInt16>
+    init(_ v: UInt16) { state = OSAllocatedUnfairLock(initialState: v) }
+    var value: UInt16 {
+        get { state.withLock { $0 } }
+        set { state.withLock { $0 = newValue } }
     }
-
-    func start() async throws {
-        let once = Once()
-        let queue = DispatchQueue(label: "swarm.listener")
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, any Error>) in
-            listener.stateUpdateHandler = { state in
-                switch state {
-                case .ready: once.run { cont.resume() }
-                case .failed(let e), .waiting(let e): once.run { cont.resume(throwing: e) }
-                case .cancelled: once.run { cont.resume(throwing: PeerError("Порт закрыт")) }
-                default: break
-                }
-            }
-            listener.start(queue: queue)
-            queue.asyncAfter(deadline: .now() + 5) { once.run { cont.resume(throwing: PeerError("Порт не открылся")) } }
-        }
-    }
-
-    func cancel() { listener.cancel() }
 }
 
-/// Движок: все раздачи, входящие соединения, DHT, сохранение состояния.
+/// Движок: все раздачи, входящие соединения (TCP и uTP), DHT, LSD, проброс порта, сохранение состояния.
 actor Engine {
     nonisolated let peerID = PeerIdentity.makePeerID()
-    nonisolated let dht = DHTClient()
+    nonisolated let anonymousPeerID = PeerIdentity.makeAnonymousPeerID()
     nonisolated let limiter = RateLimiter()
+    nonisolated let blocklist = Blocklist()
     nonisolated let settings: SettingsBox
+    nonisolated let options: EngineOptions
     nonisolated let supportDirectory: URL
     nonisolated let finishedNames: AsyncStream<String>
     private nonisolated let finishedContinuation: AsyncStream<String>.Continuation
+    private nonisolated let advertised = PortBox(0)
 
     private(set) var port: UInt16
+    private(set) var dht: DHTNode?
+    private var udp: UDPSocket?
+    private var utp: UTPManager?
+    private var lsd: LocalDiscovery?
+    private var mapper: PortMapper?
     private var torrents: [InfoHash: Torrent] = [:]
+    /// Все хеши роёв (у гибридов два) → раздача.
+    private var bySwarmHash: [InfoHash: Torrent] = [:]
     private var order: [InfoHash] = []
     private var listener: PeerListener?
     private var dirty: Set<InfoHash> = []
     private var saveScheduled = false
     private var refillTask: Task<Void, Never>?
+    private var serviceTask: Task<Void, Never>?
+    private var blocklistMessage: String?
+    private var loadedBlocklist: String?
+    private var lastLSD = Date.distantPast
 
-    init(supportDirectory: URL, port: UInt16, settings: EngineSettings) {
+    init(supportDirectory: URL, port: UInt16, settings: EngineSettings, options: EngineOptions = EngineOptions()) {
         self.supportDirectory = supportDirectory
         self.port = port
         self.settings = SettingsBox(settings)
+        self.options = options
         let stream = AsyncStream<String>.makeStream()
         finishedNames = stream.stream
         finishedContinuation = stream.continuation
@@ -76,10 +64,11 @@ actor Engine {
     }
 
     private var torrentsDirectory: URL { supportDirectory.appendingPathComponent("torrents", isDirectory: true) }
+    private var dhtFile: URL { supportDirectory.appendingPathComponent("dht.json") }
 
     func start(restore: Bool = true) async {
         try? FileManager.default.createDirectory(at: torrentsDirectory, withIntermediateDirectories: true)
-        await openListener()
+        await openPorts()
         let limiter = self.limiter
         refillTask = Task.detached {
             while !Task.isCancelled {
@@ -87,18 +76,32 @@ actor Engine {
                 try? await Task.sleep(for: .milliseconds(250))
             }
         }
+        await applyServices()
+        serviceTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(self?.options.lsdLoopback == true ? 2 : 30))
+                await self?.periodic()
+            }
+        }
         if restore { await restoreSaved() }
     }
 
-    private func openListener() async {
+    /// TCP-слушатель и UDP-сокет (DHT + uTP) на одном номере порта.
+    private func openPorts() async {
         for candidate in [port] + (1...20).map({ _ in UInt16.random(in: 49152...65000) }) {
             do {
                 let listener = try PeerListener(port: candidate) { [weak self] conn in
                     Task { await self?.accept(conn) }
                 }
                 try await listener.start()
+                guard let socket = try? UDPSocket(port: candidate) else {
+                    listener.cancel()
+                    continue
+                }
                 self.listener = listener
                 port = candidate
+                advertised.value = candidate
+                setUpUDP(socket)
                 return
             } catch {
                 continue
@@ -106,11 +109,151 @@ actor Engine {
         }
     }
 
+    private func setUpUDP(_ socket: UDPSocket) {
+        udp = socket
+        let utp = UTPManager(queue: socket.queue) { [weak socket] bytes, to in socket?.send(bytes, to: to) }
+        let box = settings
+        let blocklist = self.blocklist
+        utp.acceptFilter = { address in box.value.utpEnabled && !blocklist.blocks(address.host) }
+        utp.onAccept = { [weak self] transport in
+            let conn = PeerConnection(address: transport.remote.peerAddress, transport: transport, incoming: true)
+            Task { await self?.accept(conn) }
+        }
+        utp.startTimer()
+        self.utp = utp
+
+        let saved = (try? Data(contentsOf: dhtFile)).flatMap { try? JSONDecoder().decode(SavedDHT.self, from: $0) }
+        let node = DHTNode(id: saved.flatMap { InfoHash(hex: $0.id)?.bytes }, saved: (saved?.nodes ?? []).compactMap {
+            PeerAddress(hostPort: $0).flatMap(UDPAddress.init)
+        }, bootstrap: options.dhtBootstrap ?? DHTNode.defaultBootstrap) { [weak socket] bytes, to in socket?.send(bytes, to: to) }
+        dht = node
+        socket.onPacket = { [weak utp] bytes, from in
+            if bytes.first == UInt8(ascii: "d") {
+                guard box.value.dhtEnabled else { return }
+                Task { await node.receive(bytes, from: from) }
+            } else {
+                utp?.receive(bytes, from: from)
+            }
+        }
+        socket.onBatchEnd = { [weak utp] in utp?.endBatch() }
+        socket.start()
+    }
+
+    private struct SavedDHT: Codable {
+        var id: String
+        var nodes: [String]
+    }
+
+    /// Включает и выключает службы по настройкам: DHT, LSD, проброс порта, чёрный список.
+    private func applyServices() async {
+        let s = settings.value
+        if s.dhtEnabled { await dht?.start() } else { await dht?.stop() }
+
+        let lsdWanted = s.lsdEnabled && !s.anonymous
+        if lsdWanted, lsd == nil {
+            if let discovery = try? LocalDiscovery(interface: options.lsdLoopback ? [127, 0, 0, 1] : nil) {
+                discovery.onPeer = { [weak self] hex, address in Task { await self?.lsdPeer(hex, address) } }
+                discovery.start()
+                lsd = discovery
+                lastLSD = .distantPast
+            }
+        } else if !lsdWanted, let discovery = lsd {
+            discovery.stop()
+            lsd = nil
+        }
+
+        if s.portMapping, mapper == nil {
+            let m = PortMapper(port: port)
+            mapper = m
+            await m.start()
+        } else if !s.portMapping, let m = mapper {
+            mapper = nil
+            await m.stop()
+            advertised.value = port
+        }
+
+        blocklist.setEnabled(s.blocklistEnabled)
+        let source = s.blocklistSource.trimmingCharacters(in: .whitespacesAndNewlines)
+        if s.blocklistEnabled, !source.isEmpty, source != loadedBlocklist {
+            loadedBlocklist = source
+            blocklistMessage = "Загрузка списка…"
+            let list = blocklist
+            Task {
+                do {
+                    let ranges = try await Blocklist.load(source)
+                    list.replace(ranges)
+                    await self.setBlocklistMessage(nil)
+                } catch {
+                    await self.setBlocklistMessage(error.localizedDescription)
+                }
+            }
+        }
+        if source.isEmpty { loadedBlocklist = nil; blocklist.replace([]); blocklistMessage = nil }
+    }
+
+    private func setBlocklistMessage(_ m: String?) { blocklistMessage = m }
+
+    /// Скачать или перечитать чёрный список заново.
+    func reloadBlocklist() async {
+        loadedBlocklist = nil
+        await applyServices()
+    }
+
+    /// Раз в полминуты: внешний порт после проброса, анонсы LSD, сохранение узлов DHT.
+    private func periodic() async {
+        if let mapper {
+            let status = await mapper.status
+            advertised.value = status.externalPort ?? port
+        }
+        if let lsd, Date().timeIntervalSince(lastLSD) >= options.lsdInterval {
+            lastLSD = Date()
+            var hashes: [String] = []
+            for hash in order {
+                guard let t = torrents[hash], await t.isActive, await !t.isPrivate else { continue }
+                hashes.append(hash.hex)
+            }
+            if !hashes.isEmpty { lsd.announce(hashes, port: advertised.value) }
+        }
+        await saveDHT()
+    }
+
+    private func lsdPeer(_ hex: String, _ address: PeerAddress) async {
+        guard let hash = InfoHash(hex: hex), let t = bySwarmHash[hash], await !t.isPrivate else { return }
+        await t.addPeers([address], source: .lsd)
+    }
+
+    private func saveDHT() async {
+        guard let dht else { return }
+        let nodes = await dht.nodesToSave.map(\.description)
+        guard !nodes.isEmpty else { return }
+        let saved = SavedDHT(id: dht.id.base16, nodes: nodes)
+        if let data = try? JSONEncoder().encode(saved) { try? data.write(to: dhtFile, options: .atomic) }
+    }
+
+    /// При выходе: убрать правила на роутере, сохранить узлы DHT.
+    func shutdown() async {
+        await saveDHT()
+        if let mapper { await mapper.stop() }
+        lsd?.stop()
+    }
+
+    // MARK: - Входящие
+
     private func accept(_ conn: PeerConnection) async {
+        let s = settings.value
+        guard !blocklist.blocks(conn.address.host) else { conn.close(); return }
         do {
             try await conn.open(timeout: 5)
+            let first = try await conn.peek(20, timeout: 10)
+            if first == Handshake.prefix {
+                guard s.encryption != .require else { conn.close(); return }
+            } else {
+                // Не «BitTorrent protocol» — значит, шифрованное рукопожатие MSE.
+                let hashes = Array(bySwarmHash.keys).map(\.bytes)
+                _ = try await MSE.respond(conn, hashes: hashes, requireRC4: s.encryption == .require)
+            }
             let raw = try await conn.read(68, timeout: 10)
-            guard let hs = Handshake(raw), let hash = InfoHash(hs.infoHash), let torrent = torrents[hash],
+            guard let hs = Handshake(raw), let hash = InfoHash(hs.infoHash), let torrent = bySwarmHash[hash],
                   await torrent.acceptIncoming(conn, handshake: hs) else {
                 conn.close()
                 return
@@ -123,11 +266,16 @@ actor Engine {
     private func environment() -> TorrentEnvironment {
         let box = settings
         let continuation = finishedContinuation
+        let normal = peerID, anonymous = anonymousPeerID
+        let advertised = self.advertised
         return TorrentEnvironment(
-            peerID: peerID, port: port, dht: dht, limiter: limiter,
+            peerID: { box.value.anonymous ? anonymous : normal },
+            ownIDs: [normal, anonymous],
+            advertisedPort: { advertised.value },
+            dht: dht, utp: utp, blocklist: blocklist, limiter: limiter, options: options,
             settings: { box.value },
             changed: { [weak self] hash in Task { await self?.markDirty(hash) } },
-            gotMetadata: { [weak self] meta in Task { await self?.saveMetainfo(meta) } },
+            gotMetadata: { [weak self] hash, meta in Task { await self?.saveMetainfo(meta, id: hash) } },
             finished: { name in continuation.yield(name) })
     }
 
@@ -146,10 +294,11 @@ actor Engine {
         }
         let torrent = Torrent(meta: meta, magnet: nil, savePath: savePath, env: environment(), resume: resume)
         if sequential { await torrent.setSequential(true) }
-        insert(torrent)
-        saveMetainfo(meta)
+        await insert(torrent)
+        saveMetainfo(meta, id: meta.infoHash)
         if !paused { await torrent.start() }
         markDirty(meta.infoHash)
+        lastLSD = .distantPast
         return meta.infoHash
     }
 
@@ -161,15 +310,17 @@ actor Engine {
             return magnet.infoHash
         }
         let torrent = Torrent(meta: nil, magnet: magnet, savePath: savePath, env: environment(), resume: nil)
-        insert(torrent)
+        await insert(torrent)
         await torrent.start()
         markDirty(magnet.infoHash)
+        lastLSD = .distantPast
         return magnet.infoHash
     }
 
-    private func insert(_ t: Torrent) {
+    private func insert(_ t: Torrent) async {
         torrents[t.infoHash] = t
         order.insert(t.infoHash, at: 0)
+        for h in await t.swarmHashes { bySwarmHash[h] = t }
     }
 
     // MARK: - Управление
@@ -185,6 +336,7 @@ actor Engine {
         guard let hash = InfoHash(hex: id), let t = torrents[hash] else { return }
         await t.remove(deleteFiles: deleteFiles)
         torrents[hash] = nil
+        for (h, other) in bySwarmHash where other === t { bySwarmHash[h] = nil }
         order.removeAll { $0 == hash }
         let fm = FileManager.default
         try? fm.removeItem(at: torrentsDirectory.appendingPathComponent("\(id).torrent"))
@@ -202,9 +354,10 @@ actor Engine {
     func pauseAll() async { for t in torrents.values { await t.pause() } }
     func resumeAll() async { for t in torrents.values { await t.start() } }
 
-    func update(settings new: EngineSettings) {
+    func update(settings new: EngineSettings) async {
         settings.value = new
         limiter.configure(down: new.downloadLimit, up: new.uploadLimit)
+        await applyServices()
     }
 
     func snapshots(detailed id: String?) async -> [TorrentSnapshot] {
@@ -221,7 +374,27 @@ actor Engine {
         return result
     }
 
-    var dhtNodes: Int { get async { await dht.knownNodes } }
+    var dhtNodes: Int { get async { await dht?.knownNodes ?? 0 } }
+
+    func networkStatus() async -> NetworkStatus {
+        var n = NetworkStatus()
+        n.port = port
+        n.udpOpen = udp != nil
+        if let mapper { n.mapping = await mapper.status }
+        if let dht, settings.value.dhtEnabled {
+            let st = await dht.stats
+            n.dhtNodes = st.nodes
+            n.dhtQueries = st.queriesAnswered
+            n.dhtStoredPeers = st.peersStored
+        }
+        n.utpConnections = utp?.connectionCount ?? 0
+        n.lsdActive = lsd != nil
+        n.lsdHeard = lsd?.received ?? 0
+        n.blocklistRanges = blocklist.rangeCount
+        n.blocklistBlocked = blocklist.blockedCount
+        n.blocklistMessage = blocklistMessage
+        return n
+    }
 
     // MARK: - Сохранение
 
@@ -253,10 +426,13 @@ actor Engine {
         await flush()
     }
 
-    private func saveMetainfo(_ meta: Metainfo) {
-        let url = torrentsDirectory.appendingPathComponent("\(meta.infoHash.hex).torrent")
+    private func saveMetainfo(_ meta: Metainfo, id: InfoHash) {
+        let url = torrentsDirectory.appendingPathComponent("\(id.hex).torrent")
         try? meta.torrentFileData().write(to: url, options: .atomic)
-        markDirty(meta.infoHash)
+        if let t = torrents[id] {
+            for h in meta.swarmHashes { bySwarmHash[h] = t }
+        }
+        markDirty(id)
     }
 
     private func restoreSaved() async {
@@ -275,7 +451,7 @@ actor Engine {
             restored.append((resume.addedAt, t, resume.paused))
         }
         for (_, t, paused) in restored.sorted(by: { $0.0 < $1.0 }) {
-            insert(t)
+            await insert(t)
             if !paused { await t.start() }
         }
     }

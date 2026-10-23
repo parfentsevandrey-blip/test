@@ -27,6 +27,7 @@ struct SwarmApp: App {
                                                width: width, height: height), display: true)
                     }
                 })
+                .background(DemoSettingsOpener())
                 .onAppear {
                     model.start()
                     delegate.attach(model)

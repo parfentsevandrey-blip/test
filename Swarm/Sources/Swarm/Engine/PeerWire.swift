@@ -1,6 +1,7 @@
 import Foundation
 
-/// Сообщения протокола обмена с пирами (BEP 3) и расширений (BEP 10).
+/// Сообщения протокола обмена с пирами (BEP 3), Fast extension (BEP 6), расширений (BEP 10)
+/// и запросов хешей BitTorrent v2 (BEP 52).
 nonisolated enum PeerMessage: Sendable {
     case keepAlive
     case choke
@@ -13,7 +14,15 @@ nonisolated enum PeerMessage: Sendable {
     case piece(index: Int, begin: Int, block: Data)
     case cancel(index: Int, begin: Int, length: Int)
     case port(UInt16)
+    case suggest(Int)
+    case haveAll
+    case haveNone
+    case reject(index: Int, begin: Int, length: Int)
+    case allowedFast(Int)
     case extended(id: UInt8, payload: Data)
+    case hashRequest(HashRequest)
+    case hashes(HashRequest, Data)
+    case hashReject(HashRequest)
     case unknown(UInt8)
 
     static let maxBlock = 16 * 1024
@@ -36,7 +45,15 @@ nonisolated enum PeerMessage: Sendable {
         case .piece(let i, let b, let block): header(9 + block.count, 7); out.appendBE(UInt32(i)); out.appendBE(UInt32(b)); out.append(block)
         case .cancel(let i, let b, let l): header(13, 8); out.appendBE(UInt32(i)); out.appendBE(UInt32(b)); out.appendBE(UInt32(l))
         case .port(let p): header(3, 9); out.appendBE(p)
+        case .suggest(let i): header(5, 0x0D); out.appendBE(UInt32(i))
+        case .haveAll: header(1, 0x0E)
+        case .haveNone: header(1, 0x0F)
+        case .reject(let i, let b, let l): header(13, 0x10); out.appendBE(UInt32(i)); out.appendBE(UInt32(b)); out.appendBE(UInt32(l))
+        case .allowedFast(let i): header(5, 0x11); out.appendBE(UInt32(i))
         case .extended(let id, let payload): header(2 + payload.count, 20); out.append(id); out.append(payload)
+        case .hashRequest(let r): header(1 + 48, 21); out.append(r.encoded)
+        case .hashes(let r, let hashes): header(1 + 48 + hashes.count, 22); out.append(r.encoded); out.append(hashes)
+        case .hashReject(let r): header(1 + 48, 23); out.append(r.encoded)
         case .unknown: break
         }
         return out
@@ -68,12 +85,57 @@ nonisolated enum PeerMessage: Sendable {
         case 9:
             guard body.count >= 3 else { return nil }
             return .port(UInt16(body[1]) << 8 | UInt16(body[2]))
+        case 0x0D: return u32(1).map { .suggest($0) }
+        case 0x0E: return .haveAll
+        case 0x0F: return .haveNone
+        case 0x10:
+            guard let i = u32(1), let b = u32(5), let l = u32(9) else { return nil }
+            return .reject(index: i, begin: b, length: l)
+        case 0x11: return u32(1).map { .allowedFast($0) }
         case 20:
             guard body.count >= 2 else { return nil }
             return .extended(id: body[1], payload: Data(body[2...]))
+        case 21, 22, 23:
+            guard let r = HashRequest(Array(body.dropFirst())) else { return nil }
+            if id == 21 { return .hashRequest(r) }
+            if id == 23 { return .hashReject(r) }
+            return .hashes(r, Data(body[(1 + 48)...]))
         default:
             return .unknown(id)
         }
+    }
+}
+
+/// Запрос хешей дерева Меркла v2: корень файла, слой, первый индекс, число хешей, слои доказательства.
+nonisolated struct HashRequest: Sendable, Hashable {
+    var root: Data
+    var baseLayer: Int
+    var index: Int
+    var length: Int
+    var proofLayers: Int
+
+    init(root: Data, baseLayer: Int, index: Int, length: Int, proofLayers: Int) {
+        self.root = root
+        self.baseLayer = baseLayer
+        self.index = index
+        self.length = length
+        self.proofLayers = proofLayers
+    }
+
+    init?(_ b: [UInt8]) {
+        guard b.count >= 48 else { return nil }
+        func u32(_ at: Int) -> Int { Int(UInt32(b[at]) << 24 | UInt32(b[at + 1]) << 16 | UInt32(b[at + 2]) << 8 | UInt32(b[at + 3])) }
+        root = Data(b[0..<32])
+        baseLayer = u32(32)
+        index = u32(36)
+        length = u32(40)
+        proofLayers = u32(44)
+    }
+
+    var encoded: Data {
+        var out = root
+        for v in [baseLayer, index, length, proofLayers] { out.appendBE(UInt32(truncatingIfNeeded: v)) }
+        return out
     }
 }
 
@@ -82,14 +144,18 @@ nonisolated struct Handshake: Sendable {
     let peerID: Data
     let reserved: Data
 
-    var supportsExtensions: Bool { reserved.count == 8 && reserved[reserved.startIndex + 5] & 0x10 != 0 }
+    private func bit(_ byte: Int, _ mask: UInt8) -> Bool { reserved.count == 8 && reserved[reserved.startIndex + byte] & mask != 0 }
+    var supportsExtensions: Bool { bit(5, 0x10) }
+    var supportsFast: Bool { bit(7, 0x04) }
+    var supportsDHT: Bool { bit(7, 0x01) }
 
     static let protocolName = Data("BitTorrent protocol".utf8)
+    static let prefix = Data([19]) + protocolName
 
-    static func make(infoHash: Data, peerID: Data) -> Data {
-        var out = Data([19])
-        out.append(protocolName)
-        out.append(Data([0, 0, 0, 0, 0, 0x10, 0, 0])) // расширения BEP 10
+    /// Зарезервированные биты: расширения BEP 10, Fast extension (BEP 6), DHT (BEP 5).
+    static func make(infoHash: Data, peerID: Data, dht: Bool = true) -> Data {
+        var out = prefix
+        out.append(Data([0, 0, 0, 0, 0, 0x10, 0, dht ? 0x05 : 0x04]))
         out.append(infoHash)
         out.append(peerID)
         return out
@@ -112,6 +178,12 @@ nonisolated enum PeerIdentity {
         var id = Data("-SW1000-".utf8)
         for _ in 0..<12 { id.append(UInt8.random(in: 0...255)) }
         return id
+    }
+
+    /// Анонимный режим: 20 случайных букв и цифр, по которым не узнать программу.
+    static func makeAnonymousPeerID() -> Data {
+        let alphabet = Array("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".utf8)
+        return Data((0..<20).map { _ in alphabet.randomElement()! })
     }
 
     /// Название клиента по peer id (для списка пиров).
@@ -151,5 +223,23 @@ nonisolated extension Data {
 
     func readBE64(_ at: Int) -> UInt64 {
         (UInt64(readBE32(at)) << 32) | UInt64(readBE32(at + 4))
+    }
+}
+
+/// Fast extension (BEP 6): канонический набор кусков, которые можно запрашивать, даже когда тебя «душат».
+nonisolated enum FastExtension {
+    static func allowedSet(ip: [UInt8], infoHash: Data, pieceCount: Int, k: Int = 10) -> [Int] {
+        guard ip.count == 4, pieceCount > 0 else { return [] }
+        let want = min(k, pieceCount)
+        var x = Data([ip[0], ip[1], ip[2], 0]) + infoHash
+        var out: [Int] = []
+        while out.count < want {
+            x = Hashing.sha1(x)
+            for i in 0..<5 where out.count < want {
+                let index = Int(x.readBE32(i * 4) % UInt32(pieceCount))
+                if !out.contains(index) { out.append(index) }
+            }
+        }
+        return out
     }
 }

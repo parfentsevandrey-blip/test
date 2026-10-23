@@ -145,6 +145,11 @@ struct InspectorPanel: View {
                     row("Скачано", Format.bytes(torrent.downloadedTotal))
                     row("Отдано", "\(Format.bytes(torrent.uploadedTotal)) · рейтинг \(String(format: "%.2f", torrent.ratio))")
                     row("Пиры", "\(torrent.peersConnected) подключено, из них сидов \(torrent.seedsConnected) · известно \(torrent.peersKnown)")
+                    if torrent.connections.total > 0 {
+                        let c = torrent.connections
+                        row("Соединения", "TCP \(c.tcp) · uTP \(c.utp) · зашифровано \(c.encrypted) из \(c.total)")
+                    }
+                    if let version = torrent.version { row("Формат", version.title) }
                     if let eta = Format.eta(torrent.eta) { row("Осталось", eta) }
                     row("Папка", torrent.savePath.path)
                     row("Добавлен", torrent.addedAt.formatted(date: .abbreviated, time: .shortened))
@@ -303,11 +308,12 @@ struct PeersList: View {
                             HStack {
                                 Text(peer.address).font(.system(size: 11.5, weight: .medium, design: .monospaced)).lineLimit(1)
                                 Spacer()
-                                Text(peer.source.title)
-                                    .font(.system(size: 9.5, weight: .bold))
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 1)
-                                    .background(Capsule().fill(.primary.opacity(0.08)))
+                                if peer.isEncrypted {
+                                    Image(systemName: "lock.fill").font(.system(size: 9)).foregroundStyle(.secondary)
+                                        .help("Соединение зашифровано (MSE/RC4)")
+                                }
+                                if peer.transport == .utp { badge("uTP") }
+                                badge(peer.source.title)
                             }
                             Text(peer.client).font(.system(size: 10.5)).foregroundStyle(.secondary).lineLimit(1)
                             HStack(spacing: 10) {
@@ -325,6 +331,14 @@ struct PeersList: View {
             }
         }
     }
+
+    private func badge(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 9.5, weight: .bold))
+            .padding(.horizontal, 5)
+            .padding(.vertical, 1)
+            .background(Capsule().fill(.primary.opacity(0.08)))
+    }
 }
 
 // MARK: - Трекеры
@@ -333,12 +347,26 @@ struct TrackersList: View {
     let torrent: TorrentSnapshot
 
     var body: some View {
-        if torrent.trackers.isEmpty {
+        if torrent.trackers.isEmpty && torrent.webSeeds.isEmpty {
             ContentUnavailableView("Трекеров нет", systemImage: "antenna.radiowaves.left.and.right.slash",
-                                   description: Text("Раздача работает через DHT и обмен пирами"))
+                                   description: Text("Раздача работает через DHT, обмен пирами и локальную сеть"))
                 .frame(height: 220)
         } else {
             LazyVStack(spacing: 4) {
+                ForEach(torrent.webSeeds) { seed in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "globe").font(.system(size: 10)).foregroundStyle(.secondary)
+                            Text(seed.url).font(.system(size: 11.5, weight: .medium)).lineLimit(1).truncationMode(.middle)
+                        }
+                        Text("Веб-сид · \(seed.status)")
+                            .font(.system(size: 10.5))
+                            .foregroundStyle(seed.status.hasPrefix("Работает") ? Color.green : .secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(10)
+                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(.primary.opacity(0.03)))
+                }
                 ForEach(torrent.trackers) { tracker in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(tracker.url).font(.system(size: 11.5, weight: .medium)).lineLimit(1).truncationMode(.middle)

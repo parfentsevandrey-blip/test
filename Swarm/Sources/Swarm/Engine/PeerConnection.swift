@@ -1,5 +1,4 @@
 import Foundation
-import Network
 import os
 
 /// Счётчик переданных байт, общий для потока сети и актора раздачи.
@@ -16,119 +15,197 @@ nonisolated struct PeerError: LocalizedError, Sendable {
     var errorDescription: String? { message }
 }
 
-/// TCP-соединение с пиром на Network.framework.
+nonisolated enum TransportKind: String, Sendable, Codable {
+    case tcp, utp
+
+    var title: String { self == .tcp ? "TCP" : "uTP" }
+}
+
+/// Поток байт до пира: TCP (Network.framework) или uTP поверх общего UDP-порта.
+/// Колбэки могут приходить с любой очереди.
+nonisolated protocol PeerTransport: AnyObject, Sendable {
+    var kind: TransportKind { get }
+    func start(onReady: @escaping @Sendable ((any Error)?) -> Void,
+               onData: @escaping @Sendable (Data) -> Void,
+               onClosed: @escaping @Sendable ((any Error)?) -> Void)
+    func send(_ data: Data)
+    func close()
+}
+
+/// Соединение с пиром поверх любого транспорта.
 ///
-/// Все колбэки NWConnection создаются внутри этого nonisolated-класса: они вызываются
-/// на очереди соединения, и привязка к главному актору уронила бы процесс.
-/// Входящие сообщения отдаются упорядоченным AsyncStream.
+/// Всё состояние трогается только на собственной последовательной очереди: и приём байт от транспорта,
+/// и чтения рукопожатия, и отправка (шифрование RC4 должно идти строго в порядке отправки).
+/// После рукопожатия сообщения отдаются упорядоченным AsyncStream.
 nonisolated final class PeerConnection: @unchecked Sendable {
     let address: PeerAddress
     let isIncoming: Bool
+    let transport: any PeerTransport
     let counter = TransferCounter()
 
-    private let connection: NWConnection
     private let queue: DispatchQueue
-    // Состояние ниже трогается только на `queue`.
+    private let info = OSAllocatedUnfairLock(initialState: false)
+    // Состояние ниже — только на `queue`.
     private var buffer: [UInt8] = []
     private var head = 0
+    private var encryptor: RC4?
+    private var decryptor: RC4?
+    private var waiter: Waiter?
+    private var waiterSerial = 0
     private var continuation: AsyncThrowingStream<PeerMessage, any Error>.Continuation?
+    private var streaming = false
+    private var started = false
     private var closed = false
+    private var closeError: (any Error)?
 
-    init(address: PeerAddress) {
+    private enum Need {
+        case exact(Int, consume: Bool)
+        case scan([UInt8], within: Int)
+    }
+
+    private struct Waiter {
+        let id: Int
+        let need: Need
+        let cont: CheckedContinuation<Data, any Error>
+    }
+
+    init(address: PeerAddress, transport: any PeerTransport, incoming: Bool) {
         self.address = address
-        isIncoming = false
-        queue = DispatchQueue(label: "swarm.peer")
-        let tcp = NWProtocolTCP.Options()
-        tcp.noDelay = true
-        tcp.connectionTimeout = 8
-        tcp.enableKeepalive = true
-        let params = NWParameters(tls: nil, tcp: tcp)
-        let port = NWEndpoint.Port(rawValue: address.port) ?? .any
-        connection = NWConnection(host: NWEndpoint.Host(address.host), port: port, using: params)
+        self.transport = transport
+        self.isIncoming = incoming
+        queue = DispatchQueue(label: incoming ? "swarm.peer.in" : "swarm.peer")
     }
 
-    init(incoming: NWConnection) {
-        isIncoming = true
-        queue = DispatchQueue(label: "swarm.peer.in")
-        connection = incoming
-        if case .hostPort(let host, let port) = incoming.endpoint {
-            var text = "\(host)"
-            if let pct = text.firstIndex(of: "%") { text = String(text[..<pct]) }
-            address = PeerAddress(host: text, port: port.rawValue)
-        } else {
-            address = PeerAddress(host: "?", port: 0)
-        }
+    var kind: TransportKind { transport.kind }
+
+    /// Договорились ли о шифровании RC4 (MSE).
+    var isEncrypted: Bool {
+        get { info.withLock { $0 } }
+        set { info.withLock { $0 = newValue } }
     }
 
-    /// Ждёт установления соединения.
+    /// Запускает транспорт и ждёт установления соединения.
     func open(timeout: TimeInterval = 10) async throws {
         let once = Once()
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, any Error>) in
-            connection.stateUpdateHandler = { [weak self] state in
-                switch state {
-                case .ready:
-                    once.run { cont.resume() }
-                case .failed(let error), .waiting(let error):
-                    once.run { cont.resume(throwing: error) }
-                    self?.close()
-                case .cancelled:
-                    once.run { cont.resume(throwing: PeerError("Соединение закрыто")) }
-                default:
-                    break
-                }
+            queue.async {
+                guard !self.started else { once.run { cont.resume() }; return }
+                self.started = true
+                self.transport.start(
+                    onReady: { error in
+                        if let error {
+                            if once.run({ cont.resume(throwing: error) }) { self.close() }
+                        } else {
+                            once.run { cont.resume() }
+                        }
+                    },
+                    onData: { [weak self] data in
+                        guard let self else { return }
+                        self.queue.async { self.received(data) }
+                    },
+                    onClosed: { [weak self] error in
+                        once.run { cont.resume(throwing: error ?? PeerError("Соединение закрыто")) }
+                        guard let self else { return }
+                        self.queue.async { self.finish(error) }
+                    })
             }
-            connection.start(queue: queue)
             queue.asyncAfter(deadline: .now() + timeout) { [weak self] in
                 if once.run({ cont.resume(throwing: PeerError("Таймаут соединения")) }) { self?.close() }
             }
         }
-        connection.stateUpdateHandler = { [weak self] state in
-            switch state {
-            case .failed, .cancelled: self?.close()
-            default: break
+    }
+
+    // MARK: - Чтение рукопожатий
+
+    /// Читает ровно `count` байт.
+    func read(_ count: Int, timeout: TimeInterval = 15) async throws -> Data {
+        try await wait(.exact(count, consume: true), timeout: timeout)
+    }
+
+    /// Смотрит первые `count` байт, не забирая их из буфера.
+    func peek(_ count: Int, timeout: TimeInterval = 15) async throws -> Data {
+        try await wait(.exact(count, consume: false), timeout: timeout)
+    }
+
+    /// Ищет `pattern` среди ближайших `within + pattern.count` байт и забирает всё до него включительно.
+    /// Возвращает пропущенные перед образцом байты.
+    func scan(for pattern: [UInt8], within: Int, timeout: TimeInterval = 15) async throws -> Data {
+        try await wait(.scan(pattern, within: within), timeout: timeout)
+    }
+
+    /// Возвращает байты в начало буфера (MSE: расшифрованная начальная нагрузка IA).
+    func unread(_ data: Data) {
+        queue.async {
+            self.buffer = [UInt8](data) + self.buffer[self.head...]
+            self.head = 0
+            self.process()
+        }
+    }
+
+    /// Включает RC4. Уже принятые, но ещё не прочитанные байты расшифровываются на месте.
+    func setCiphers(encrypt: RC4?, decrypt: RC4?) {
+        queue.async {
+            self.encryptor = encrypt
+            if let decrypt {
+                if self.head < self.buffer.count {
+                    var rest = Array(self.buffer[self.head...])
+                    decrypt.process(&rest)
+                    self.buffer = rest
+                    self.head = 0
+                }
+                self.decryptor = decrypt
+            }
+        }
+        isEncrypted = encrypt != nil
+    }
+
+    private func wait(_ need: Need, timeout: TimeInterval) async throws -> Data {
+        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Data, any Error>) in
+            queue.async {
+                if self.closed {
+                    cont.resume(throwing: self.closeError ?? PeerError("Пир закрыл соединение"))
+                    return
+                }
+                self.waiterSerial += 1
+                let id = self.waiterSerial
+                self.waiter = Waiter(id: id, need: need, cont: cont)
+                self.process()
+                self.queue.asyncAfter(deadline: .now() + timeout) {
+                    guard let w = self.waiter, w.id == id else { return }
+                    self.waiter = nil
+                    w.cont.resume(throwing: PeerError("Пир не ответил на рукопожатие"))
+                }
             }
         }
     }
 
-    /// Читает ровно `count` байт (используется только для рукопожатия).
-    func read(_ count: Int, timeout: TimeInterval = 15) async throws -> Data {
-        let once = Once()
-        return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Data, any Error>) in
-            connection.receive(minimumIncompleteLength: count, maximumLength: count) { [weak self] data, _, isComplete, error in
-                if let data, data.count == count {
-                    self?.counter.addDown(data.count)
-                    once.run { cont.resume(returning: data) }
-                } else {
-                    once.run { cont.resume(throwing: error ?? PeerError(isComplete ? "Пир закрыл соединение" : "Обрыв рукопожатия")) }
-                }
-            }
-            queue.asyncAfter(deadline: .now() + timeout) {
-                once.run { cont.resume(throwing: PeerError("Пир не ответил на рукопожатие")) }
-            }
-        }
-    }
+    // MARK: - Отправка
 
     func sendRaw(_ data: Data) {
         counter.addUp(data.count)
-        connection.send(content: data, completion: .contentProcessed { [weak self] error in
-            if error != nil { self?.close() }
-        })
+        queue.async {
+            guard !self.closed else { return }
+            self.transport.send(self.encryptor.map { $0.apply(data) } ?? data)
+        }
     }
 
     func send(_ message: PeerMessage) {
         sendRaw(message.encoded)
     }
 
+    // MARK: - Поток сообщений
+
     /// Поток сообщений пира. Вызывать один раз, после рукопожатия.
     func messages() -> AsyncThrowingStream<PeerMessage, any Error> {
         AsyncThrowingStream { continuation in
             queue.async {
                 self.continuation = continuation
+                self.streaming = true
                 if self.closed {
-                    continuation.finish()
+                    continuation.finish(throwing: self.closeError)
                     return
                 }
-                self.receiveNext()
+                self.process()
             }
             continuation.onTermination = { [weak self] _ in self?.close() }
         }
@@ -137,42 +214,99 @@ nonisolated final class PeerConnection: @unchecked Sendable {
     func close() {
         queue.async {
             guard !self.closed else { return }
-            self.closed = true
-            self.connection.cancel()
-            self.continuation?.finish()
-            self.continuation = nil
+            self.transport.close()
+            self.finish(nil)
         }
     }
 
-    private func receiveNext() {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 256 * 1024) { [weak self] data, _, isComplete, error in
-            guard let self else { return }
-            if let data, !data.isEmpty {
-                self.counter.addDown(data.count)
-                self.buffer.append(contentsOf: data)
-                if !self.drain() { return }
+    // MARK: - На очереди
+
+    private func received(_ data: Data) {
+        guard !closed else { return }
+        counter.addDown(data.count)
+        if let decryptor {
+            var bytes = [UInt8](data)
+            decryptor.process(&bytes)
+            buffer.append(contentsOf: bytes)
+        } else {
+            buffer.append(contentsOf: data)
+        }
+        process()
+    }
+
+    private func finish(_ error: (any Error)?) {
+        guard !closed else { return }
+        closed = true
+        closeError = error
+        if let w = waiter {
+            waiter = nil
+            w.cont.resume(throwing: error ?? PeerError("Пир закрыл соединение"))
+        }
+        if let error { continuation?.finish(throwing: error) } else { continuation?.finish() }
+        continuation = nil
+        transport.close()
+    }
+
+    private func process() {
+        if let w = waiter {
+            switch w.need {
+            case .exact(let n, let consume):
+                if buffer.count - head >= n {
+                    waiter = nil
+                    let out = Data(buffer[head..<(head + n)])
+                    if consume { head += n }
+                    w.cont.resume(returning: out)
+                }
+            case .scan(let pattern, let within):
+                let available = buffer.count - head
+                if let at = find(pattern, limit: within) {
+                    waiter = nil
+                    let skipped = Data(buffer[head..<(head + at)])
+                    head += at + pattern.count
+                    w.cont.resume(returning: skipped)
+                } else if available >= within + pattern.count {
+                    waiter = nil
+                    w.cont.resume(throwing: PeerError("Шифрование: нет метки синхронизации"))
+                    close()
+                }
             }
-            if let error {
-                self.continuation?.finish(throwing: error)
-                self.close()
-                return
+        }
+        if streaming, waiter == nil { drain() }
+        compact()
+    }
+
+    private func find(_ pattern: [UInt8], limit: Int) -> Int? {
+        let available = buffer.count - head
+        guard available >= pattern.count else { return nil }
+        let last = min(limit, available - pattern.count)
+        var i = 0
+        while i <= last {
+            var match = true
+            for k in 0..<pattern.count where buffer[head + i + k] != pattern[k] {
+                match = false
+                break
             }
-            if isComplete {
-                self.close()
-                return
-            }
-            self.receiveNext()
+            if match { return i }
+            i += 1
+        }
+        return nil
+    }
+
+    private func compact() {
+        if head > 1 << 20 || head == buffer.count {
+            buffer.removeFirst(head)
+            head = 0
         }
     }
 
-    /// Вынимает из буфера все целые сообщения. false — протокол нарушен.
-    private func drain() -> Bool {
+    /// Вынимает из буфера все целые сообщения.
+    private func drain() {
         while buffer.count - head >= 4 {
             let length = Int(UInt32(buffer[head]) << 24 | UInt32(buffer[head + 1]) << 16 | UInt32(buffer[head + 2]) << 8 | UInt32(buffer[head + 3]))
             guard length <= 4 * 1024 * 1024 else {
                 continuation?.finish(throwing: PeerError("Слишком большое сообщение"))
                 close()
-                return false
+                return
             }
             guard buffer.count - head >= 4 + length else { break }
             let body = Array(buffer[(head + 4)..<(head + 4 + length)])
@@ -181,11 +315,6 @@ nonisolated final class PeerConnection: @unchecked Sendable {
                 continuation?.yield(message)
             }
         }
-        if head > 1 << 20 || head == buffer.count {
-            buffer.removeFirst(head)
-            head = 0
-        }
-        return true
     }
 }
 
@@ -204,59 +333,4 @@ nonisolated final class Once: Sendable {
         if first { body() }
         return first
     }
-}
-
-/// UDP-обмен «запрос → ответ» для трекеров (BEP 15) и DHT (BEP 5).
-nonisolated final class UDPSession: @unchecked Sendable {
-    private let connection: NWConnection
-    private let queue = DispatchQueue(label: "swarm.udp")
-
-    init(host: String, port: UInt16) {
-        connection = NWConnection(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: port) ?? .any, using: .udp)
-    }
-
-    func start(timeout: TimeInterval) async throws {
-        let once = Once()
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, any Error>) in
-            connection.stateUpdateHandler = { state in
-                switch state {
-                case .ready: once.run { cont.resume() }
-                case .failed(let e), .waiting(let e): once.run { cont.resume(throwing: e) }
-                case .cancelled: once.run { cont.resume(throwing: PeerError("UDP закрыт")) }
-                default: break
-                }
-            }
-            connection.start(queue: queue)
-            queue.asyncAfter(deadline: .now() + timeout) {
-                once.run { cont.resume(throwing: PeerError("UDP таймаут")) }
-            }
-        }
-    }
-
-    func exchange(_ payload: Data, timeout: TimeInterval, accept: @escaping @Sendable (Data) -> Bool) async throws -> Data {
-        let once = Once()
-        return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Data, any Error>) in
-            connection.send(content: payload, completion: .contentProcessed { error in
-                if let error { once.run { cont.resume(throwing: error) } }
-            })
-            receive(once: once, accept: accept, cont: cont)
-            queue.asyncAfter(deadline: .now() + timeout) {
-                once.run { cont.resume(throwing: PeerError("Нет ответа")) }
-            }
-        }
-    }
-
-    private func receive(once: Once, accept: @escaping @Sendable (Data) -> Bool, cont: CheckedContinuation<Data, any Error>) {
-        connection.receiveMessage { [weak self] data, _, _, error in
-            if let data, accept(data) {
-                once.run { cont.resume(returning: data) }
-            } else if let error {
-                once.run { cont.resume(throwing: error) }
-            } else {
-                self?.receive(once: once, accept: accept, cont: cont)
-            }
-        }
-    }
-
-    func close() { connection.cancel() }
 }

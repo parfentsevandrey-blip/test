@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 
 /// Файлы раздачи на диске. Куски отображаются на файлы по смещениям;
@@ -17,7 +16,7 @@ actor Storage {
         file.path.reduce(root) { $0.appendingPathComponent($1) }
     }
 
-    nonisolated func isPadding(_ file: TorrentFile) -> Bool { file.path.contains(".pad") }
+    nonisolated func isPadding(_ file: TorrentFile) -> Bool { file.isPadding }
 
     func write(piece: Int, begin: Int, data: Data) throws {
         var offset = Int64(piece) * Int64(meta.pieceLength) + Int64(begin)
@@ -55,7 +54,7 @@ actor Storage {
 
     func verify(piece: Int) -> Bool {
         guard let data = try? read(piece: piece, begin: 0, length: meta.pieceSize(piece)) else { return false }
-        return Data(Insecure.SHA1.hash(data: data)) == meta.pieceHash(piece)
+        return meta.verify(piece: piece, data: data)
     }
 
     /// Проверка уже скачанного: хешируются только куски, для которых файлы на месте.
