@@ -26,7 +26,10 @@ nonisolated final class MiniHTTP: @unchecked Sendable {
     var requested: [String] { lock.withLock { log } }
 
     func start() throws {
-        let l = try NWListener(using: .tcp, on: .any)
+        // Только loopback: стенд не виден в локальной сети, и macOS не спрашивает разрешения на неё.
+        let parameters = NWParameters.tcp
+        parameters.requiredInterfaceType = .loopback
+        let l = try NWListener(using: parameters, on: .any)
         let ready = DispatchSemaphore(value: 0)
         l.stateUpdateHandler = { if case .ready = $0 { ready.signal() } }
         l.newConnectionHandler = { [weak self] c in self?.serve(c) }
@@ -175,7 +178,10 @@ nonisolated final class MiniSOCKS: @unchecked Sendable {
     var requests: [(name: String, isDomain: Bool)] { lock.withLock { _requests } }
 
     func start() throws {
-        let l = try NWListener(using: .tcp, on: .any)
+        // Только loopback: стенд не виден в локальной сети, и macOS не спрашивает разрешения на неё.
+        let parameters = NWParameters.tcp
+        parameters.requiredInterfaceType = .loopback
+        let l = try NWListener(using: parameters, on: .any)
         let ready = DispatchSemaphore(value: 0)
         l.stateUpdateHandler = { if case .ready = $0 { ready.signal() } }
         l.newConnectionHandler = { [weak self] c in self?.serve(c) }

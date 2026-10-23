@@ -58,13 +58,13 @@ struct StartPage: View {
             if model.stats.consentsRejected > 0 || model.stats.sponsorSeconds > 0 || model.stats.phishingBlocked > 0 {
                 HStack(spacing: 18) {
                     if model.stats.consentsRejected > 0 {
-                        Label("\(Format.count(model.stats.consentsRejected)) отказов от cookie", systemImage: "hand.raised").foregroundStyle(.secondary)
+                        Label("\(Format.count(model.stats.consentsRejected)) \(Format.plural(model.stats.consentsRejected, "отказ", "отказа", "отказов")) от cookie", systemImage: "hand.raised").foregroundStyle(.secondary)
                     }
                     if model.stats.sponsorSeconds > 0 {
                         Label("\(Int(model.stats.sponsorSeconds / 60)) мин рекламы в роликах пропущено", systemImage: "forward.end").foregroundStyle(.secondary)
                     }
                     if model.stats.phishingBlocked > 0 {
-                        Label("\(Format.count(model.stats.phishingBlocked)) подделок остановлено", systemImage: "theatermasks").foregroundStyle(.secondary)
+                        Label("\(Format.count(model.stats.phishingBlocked)) \(Format.plural(model.stats.phishingBlocked, "подделка остановлена", "подделки остановлено", "подделок остановлено"))", systemImage: "theatermasks").foregroundStyle(.secondary)
                     }
                 }
                 .font(.callout)
