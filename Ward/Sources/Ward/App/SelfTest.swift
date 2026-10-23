@@ -730,11 +730,15 @@ enum SelfTest {
         let iso = await evaluate(iTab, "return window.results") as? [String: Any] ?? [:]
         let legend = Isolation.legend(site: jar, secret: model.prefs.isolationSecret)
         info("изолятор: \(iso), попытки \(iTab.isolationAttempts), устройство \(legend.tag)")
-        ok = check(iso["geo"] as? Int == 1 && iso["perm"] as? String == "denied", "изолятор: геопозиция — «запрещено», и опрос разрешений отвечает так же") && ok
-        ok = check((iso["gum"] as? String).map { $0 == "NotAllowedError" || $0 == "none" } == true && (iso["devices"] as? Int ?? -1) == 0,
-                   "изолятор: камера и микрофон — отказ, список устройств пуст") && ok
-        ok = check((iso["clip"] as? String).map { $0 != "read" } == true && (iso["notif"] as? String).map { $0 == "denied" || $0 == "none" } == true,
-                   "изолятор: буфер обмена не читается, уведомления запрещены") && ok
+        ok = check(iso["geo"] as? Int == 1 && (iso["perm"] as? String).map { $0 != "granted" } == true,
+                   "изолятор: геопозиция — отказ, а опрос разрешений отвечает как чистый Safari (\(iso["perm"] ?? "-"))") && ok
+        ok = check((iso["gum"] as? String).map { $0 == "NotAllowedError" || $0 == "none" } == true && (iso["labels"] as? Int ?? -1) == 0,
+                   "изолятор: камера и микрофон — отказ, устройства без названий и номеров") && ok
+        ok = check((iso["clip"] as? String).map { $0 != "read" } == true && (iso["notif"] as? String).map { $0 != "granted" } == true
+                   && (iso["notifReq"] as? String).map { $0 != "granted" } ?? true,
+                   "изолятор: буфер обмена не читается, уведомления не разрешены") && ok
+        ok = check(iso["webrtc"] as? String == "function" || model.prefs.blockWebRTC,
+                   "изолятор без прокси не прячет WebRTC — иначе защита от ботов (YouTube) видит подделку") && ok
         ok = check(iso["native"] as? Bool == true, "изолятор: подменённые функции выглядят встроенными") && ok
         ok = check(iTab.isolationAttempts.keys.count >= 3, "изолятор записал попытки (\(iTab.isolationAttempts))") && ok
         let jarCookies = await cookies(iTab.dataStore)

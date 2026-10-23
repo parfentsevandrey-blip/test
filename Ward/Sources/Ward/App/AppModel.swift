@@ -178,7 +178,9 @@ final class AppModel {
             // разрешениях — даже если на этом сайте защита выключена.
             let kind = Jars.kind(of: jar)
             let legend = jarLegend(jar)
-            let webRTCOff = kind != .corporation || prefs.blockWebRTC || proxied
+            // WebRTC прячет настоящий IP только тогда, когда сайты ходят через прокси: без прокси сайт и так видит
+            // ваш адрес, а исчезнувший WebRTC выдаёт «подделанный браузер» защите от ботов (YouTube, банки).
+            let webRTCOff = prefs.blockWebRTC || proxied
             list.append(WKUserScript(source: Scripts.fingerprint(secret: legend.noiseSecret, blockWebRTC: webRTCOff, event: signalToken),
                                      injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
             list.append(WKUserScript(source: Scripts.fingerprintRelay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))

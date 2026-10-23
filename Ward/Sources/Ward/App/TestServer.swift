@@ -217,8 +217,9 @@ setTimeout(() => {
         if (typeof Notification !== 'undefined') { r.notif = Notification.permission; Notification.requestPermission().then((x) => r.notifReq = x); } else { r.notif = 'none'; }
         if (navigator.mediaDevices) {
           navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(() => r.gum = 'granted', (e) => r.gum = e.name);
-          navigator.mediaDevices.enumerateDevices().then((d) => r.devices = d.length);
-        } else { r.gum = 'none'; r.devices = 0; }
+          navigator.mediaDevices.enumerateDevices().then((d) => { r.devices = d.length; r.labels = d.filter((x) => x.label || x.deviceId).length; });
+        } else { r.gum = 'none'; r.devices = 0; r.labels = 0; }
+        r.webrtc = typeof RTCPeerConnection;
         if (navigator.permissions) navigator.permissions.query({ name: 'geolocation' }).then((s) => r.perm = s.state, () => r.perm = 'error'); else r.perm = 'none';
         window.addEventListener('devicemotion', () => {});
         </script></head><body>изолятор</body></html>

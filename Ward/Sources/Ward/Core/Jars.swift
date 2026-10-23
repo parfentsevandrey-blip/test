@@ -126,6 +126,16 @@ nonisolated enum Jars {
         return nil
     }
 
+    /// Страницы входа («Войти через Google», Яндекс ID, VK ID, Apple, Microsoft, Госуслуги). Если на них
+    /// уходят из изолятора, они остаются в его банке: у изолированного сайта своя, отдельная учётная запись
+    /// входа, которую не видят ни корпорация в своей банке, ни другие сайты.
+    static let identityHosts: Set<String> = [
+        "accounts.google.com", "accounts.youtube.com", "id.yandex.ru", "passport.yandex.ru", "oauth.yandex.ru",
+        "id.vk.com", "id.vk.ru", "oauth.vk.com", "login.vk.com", "appleid.apple.com", "idmsa.apple.com",
+        "login.microsoftonline.com", "login.live.com", "account.live.com", "esia.gosuslugi.ru", "id.sber.ru",
+        "login.yahoo.com", "auth.mail.ru", "account.mail.ru",
+    ]
+
     /// Чужие корпорации, к которым можно обращаться из корпоративной банки: шрифты и капча — без них
     /// не открываются формы входа на сайтах всех корпораций, а данных о вас в них нет.
     static let sharedInfrastructure = [

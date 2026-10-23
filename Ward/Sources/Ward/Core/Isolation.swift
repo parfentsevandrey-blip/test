@@ -81,7 +81,7 @@ nonisolated enum Isolation {
         var answer: String {
             switch self {
             case .location, .camera, .microphone, .screen, .notifications, .clipboard, .storage: "отказано"
-            case .devices: "пустой список"
+            case .devices: "без названий и номеров"
             case .sensors: "датчиков нет"
             case .fingerprint: "вымышленное устройство"
             case .trackers: "заблокированы"
@@ -176,7 +176,11 @@ nonisolated enum Isolation {
 
       if (!__WARD_DENY__) return;
 
-      // Геопозиция: «доступ запрещён», как если бы вы нажали «Не разрешать».
+      // Отказы выглядят так, будто вы закрыли запрос, не ответив: у сайта обычное состояние «спросить»
+      // (как в чистом Safari), а не «запрещено всё подряд» — такой набор сам по себе выдаёт подделку,
+      // и защита от ботов (YouTube, банки) перестаёт пускать.
+
+      // Геопозиция: ошибка «доступ не дан», как при закрытом запросе.
       if (typeof Geolocation !== 'undefined') {
         const fail = (error) => {
           signal('location');
@@ -186,21 +190,27 @@ nonisolated enum Isolation {
         method(Geolocation.prototype, 'watchPosition', function (ok, error) { fail(error); return 1; });
       }
 
-      // Камера, микрофон, экран, список устройств.
+      // Камера, микрофон, экран: отказ. Список устройств — настоящий «без разрешения»: WebKit и так отдаёт
+      // его без названий и идентификаторов, а пустой список выглядел бы странно.
       if (typeof MediaDevices !== 'undefined') {
         method(MediaDevices.prototype, 'getUserMedia', function (c) {
           signal(c && c.video ? 'camera' : 'microphone');
           if (c && c.video && c.audio) signal('microphone');
-          return Promise.reject(denied());
+          return new Promise((resolve, reject) => setTimeout(() => reject(denied()), 40));
         });
         method(MediaDevices.prototype, 'getDisplayMedia', function () { signal('screen'); return Promise.reject(denied()); });
-        method(MediaDevices.prototype, 'enumerateDevices', function () { signal('devices'); return Promise.resolve([]); });
+        const enumerate = MediaDevices.prototype.enumerateDevices;
+        if (enumerate) method(MediaDevices.prototype, 'enumerateDevices', function () { signal('devices'); return enumerate.call(this); });
       }
 
-      // Уведомления.
-      if (typeof Notification !== 'undefined') {
-        try { Object.defineProperty(Notification, 'permission', { get: mask(function () { return 'denied'; }, 'get permission'), configurable: true }); } catch (e) {}
-        const request = function () { signal('notifications'); return Promise.resolve('denied'); };
+      // Уведомления: запрос закрыт без ответа — «default», подписка на push не выдаётся.
+      if (typeof Notification !== 'undefined' && typeof Notification.requestPermission === 'function') {
+        const request = function (callback) {
+          signal('notifications');
+          const answer = Notification.permission === 'granted' ? 'default' : Notification.permission;
+          if (typeof callback === 'function') setTimeout(() => callback(answer), 0);
+          return Promise.resolve(answer);
+        };
         try { Object.defineProperty(Notification, 'requestPermission', { value: mask(request, 'requestPermission'), configurable: true, writable: true }); } catch (e) {}
       }
       if (typeof PushManager !== 'undefined') {
@@ -213,15 +223,7 @@ nonisolated enum Isolation {
         method(Clipboard.prototype, 'read', function () { signal('clipboard'); return Promise.reject(denied()); });
       }
 
-      // Датчики движения: у «легенды» их нет.
-      const sensorEvents = new Set(['devicemotion', 'deviceorientation', 'deviceorientationabsolute']);
-      method(EventTarget.prototype, 'addEventListener', (() => {
-        const original = EventTarget.prototype.addEventListener;
-        return function (type, ...rest) {
-          if (this === window && sensorEvents.has(String(type).toLowerCase())) { signal('sensors'); return; }
-          return original.call(this, type, ...rest);
-        };
-      })());
+      // Датчики движения: на Mac их нет и так; если сайт всё же спросит — отказ.
       for (const name of ['DeviceMotionEvent', 'DeviceOrientationEvent']) {
         const C = window[name];
         if (C && typeof C.requestPermission === 'function') {
@@ -229,31 +231,13 @@ nonisolated enum Isolation {
         }
       }
 
-      // Хранилище из чужих фреймов и «вечное» хранилище.
-      if (typeof Document !== 'undefined') {
+      // Хранилище из чужих фреймов: встроенный во фрейм сайт не получает доступа к своим cookie. Сама страница
+      // работает со своим хранилищем как обычно.
+      if (typeof Document !== 'undefined' && window !== window.top) {
         method(Document.prototype, 'requestStorageAccess', function () { signal('storage'); return Promise.reject(denied()); });
-        method(Document.prototype, 'hasStorageAccess', function () { return Promise.resolve(false); });
       }
       if (typeof StorageManager !== 'undefined') {
         method(StorageManager.prototype, 'persist', function () { signal('storage'); return Promise.resolve(false); });
-      }
-
-      // Опрос разрешений отвечает так же, как отвечают сами функции.
-      if (typeof Permissions !== 'undefined') {
-        const states = { geolocation: 'denied', notifications: 'denied', push: 'denied', camera: 'denied', microphone: 'denied',
-                         'clipboard-read': 'denied', 'persistent-storage': 'denied', 'storage-access': 'denied',
-                         accelerometer: 'denied', gyroscope: 'denied', magnetometer: 'denied', 'display-capture': 'denied' };
-        const original = Permissions.prototype.query;
-        method(Permissions.prototype, 'query', function (descriptor) {
-          const name = descriptor && descriptor.name;
-          if (name && states[name]) {
-            const status = Object.create(typeof PermissionStatus !== 'undefined' ? PermissionStatus.prototype : Object.prototype, {
-              state: { value: states[name], enumerable: true }, name: { value: name, enumerable: true }, onchange: { value: null, writable: true },
-            });
-            return Promise.resolve(status);
-          }
-          return original.call(this, descriptor);
-        });
       }
     })();
     """#

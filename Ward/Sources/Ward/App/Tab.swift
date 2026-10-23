@@ -247,7 +247,7 @@ final class Tab: NSObject, Identifiable {
     func load(_ target: URL) {
         // Адрес из другой банки: до первой страницы просто выбрать банку, потом — переезд.
         if let scheme = target.scheme?.lowercased(), scheme == "http" || scheme == "https", !isPopup {
-            let wanted = AppModel.shared.jar(forHost: target.host?.lowercased() ?? "", privateWindow: isPrivate, ephemeral: ephemeral)
+            let wanted = wantedJar(for: target.host?.lowercased() ?? "")
             if wanted != jar {
                 if webViewIfLoaded == nil { jar = wanted } else { rehome(to: wanted, url: target); return }
             }
@@ -319,6 +319,13 @@ final class Tab: NSObject, Identifiable {
         view.uiDelegate = nil
         view.removeFromSuperview()
         webViewIfLoaded = nil
+    }
+
+    /// В какой банке открывать адрес из этой вкладки. Вход из изолятора (accounts.google.com и подобные)
+    /// остаётся в банке изолятора — у изолированного сайта своя учётная запись, отдельная от остальных.
+    private func wantedJar(for host: String) -> String? {
+        if let jar, Jars.kind(of: jar) == .isolator, Jars.identityHosts.contains(host) { return jar }
+        return AppModel.shared.jar(forHost: host, privateWindow: isPrivate, ephemeral: ephemeral)
     }
 
     /// Банка изолятора (а не корпорации или маски).
@@ -583,7 +590,7 @@ extension Tab: WKNavigationDelegate {
         // Сайт из другой банки (изолятор, корпорация, маска) — страница переезжает в неё, в той же вкладке.
         // Отправка формы на другой сайт (POST) остаётся на месте: её данные нельзя перенести в другое хранилище.
         if web, !isPopup, (action.request.httpMethod ?? "GET").uppercased() == "GET" {
-            let wanted = model.jar(forHost: host, privateWindow: isPrivate, ephemeral: ephemeral)
+            let wanted = wantedJar(for: host)
             if wanted != jar {
                 Task { @MainActor in self.rehome(to: wanted, url: target) }
                 return (.cancel, preferences)
