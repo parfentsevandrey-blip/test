@@ -42,6 +42,8 @@ final class ContentBlocker {
     /// Очиститель ссылок с метками из списков (собирается один раз, а не на каждый переход).
     private(set) var cleaner = LinkCleaner()
     private(set) var report: Report?
+    /// Правила скрытия по сайтам — для счётчика скрытых элементов.
+    private(set) var cosmetic = CosmeticIndex()
     /// Правила загружены (или собраны) — можно открывать страницы.
     var isReady: Bool { phase == .ready }
     /// Вызывается, когда правила поменялись: окна переприменяют их к вкладкам.
@@ -95,6 +97,10 @@ final class ContentBlocker {
         if !force, let manifest = loadManifest(), manifest.key == key,
            let index = loadIndex(), let loaded = await lookUp(manifest.identifiers) {
             finish(loaded, index: index, report: manifest.report)
+            let url = cosmeticURL
+            cosmetic = await Task.detached {
+                (try? Data(contentsOf: url)).flatMap { try? JSONDecoder().decode(CosmeticIndex.self, from: $0) } ?? CosmeticIndex()
+            }.value
             return
         }
         if Task.isCancelled { return }
@@ -109,6 +115,13 @@ final class ContentBlocker {
         let invalid = await Self.invalidSelectors(selectors)
         let valid = Set(selectors).subtracting(invalid)
         if Task.isCancelled { return }
+        let cosmeticURL = self.cosmeticURL
+        let cosmetic = await Task.detached {
+            let c = CosmeticIndex(set, valid: valid)
+            if let data = try? JSONEncoder().encode(c) { try? data.write(to: cosmeticURL, options: .atomic) }
+            return c
+        }.value
+        self.cosmetic = cosmetic
 
         phase = .preparing("Готовлю правила…")
         let built = await Task.detached { FilterEngine.build(lists: lists, validSelectors: valid, parsed: set) }.value
@@ -254,6 +267,7 @@ final class ContentBlocker {
 
     private var manifestURL: URL { folder.appendingPathComponent("manifest.json") }
     private var indexURL: URL { folder.appendingPathComponent("index.json") }
+    private var cosmeticURL: URL { folder.appendingPathComponent("cosmetic.json") }
 
     private func loadManifest() -> Manifest? {
         guard let data = try? Data(contentsOf: manifestURL) else { return nil }

@@ -12,9 +12,11 @@ nonisolated enum Scripts {
     /// спрашивают видеокарту — у каждого компьютера результат чуть свой, и это «отпечаток».
     /// Ward добавляет в такие ответы незаметный шум: для каждого сайта свой и новый при каждом запуске.
     /// Внутри сайта отпечаток стабилен (сайт не ломается), между сайтами и сеансами — разный (связать нельзя).
-    static func fingerprint(secret: String, blockWebRTC: Bool, spoofTimezone: Bool = false, spoofLanguage: Bool = false) -> String {
+    /// `event` — имя сигнала для панели безопасности (см. `fingerprintRelay`); пусто — без сигналов.
+    static func fingerprint(secret: String, blockWebRTC: Bool, spoofTimezone: Bool = false, spoofLanguage: Bool = false, event: String = "") -> String {
         fingerprintSource
             .replacingOccurrences(of: "__WARD_SECRET__", with: secret)
+            .replacingOccurrences(of: "__WARD_EVENT__", with: event)
             .replacingOccurrences(of: "__WARD_WEBRTC__", with: blockWebRTC ? "true" : "false")
             .replacingOccurrences(of: "__WARD_TZ__", with: spoofTimezone ? "true" : "false")
             .replacingOccurrences(of: "__WARD_LANG__", with: spoofLanguage ? "true" : "false")
@@ -27,6 +29,18 @@ nonisolated enum Scripts {
       const BLOCK_WEBRTC = __WARD_WEBRTC__;
       const SPOOF_TZ = __WARD_TZ__;
       const SPOOF_LANG = __WARD_LANG__;
+      // Сигнал для панели безопасности: «сайт пытался снять отпечаток таким-то способом».
+      // Функции для сигнала взяты до скриптов сайта: подменить их он не успеет.
+      const EVENT = '__WARD_EVENT__';
+      const signalDoc = document;
+      const dispatch = EventTarget.prototype.dispatchEvent;
+      const NativeEvent = Event;
+      const signalled = new Set();
+      const signal = (kind) => {
+        if (!EVENT || signalled.has(kind)) return;
+        signalled.add(kind);
+        try { dispatch.call(signalDoc, new NativeEvent(EVENT + '-' + kind)); } catch (e) {}
+      };
       let host = '';
       try { host = location.hostname || ''; } catch (e) {}
       const labels = host.split('.');
@@ -120,10 +134,12 @@ nonisolated enum Scripts {
           } catch (e) { return null; }
         };
         if (w.HTMLCanvasElement) {
-          replace(w.HTMLCanvasElement.prototype, 'toDataURL', function (original, args) { return original.apply(noisyCopy(this) || this, args); });
-          replace(w.HTMLCanvasElement.prototype, 'toBlob', function (original, args) { return original.apply(noisyCopy(this) || this, args); });
+          replace(w.HTMLCanvasElement.prototype, 'toDataURL', function (original, args) { signal('canvas'); return original.apply(noisyCopy(this) || this, args); });
+          replace(w.HTMLCanvasElement.prototype, 'toBlob', function (original, args) { signal('canvas'); return original.apply(noisyCopy(this) || this, args); });
         }
         const imageDataNoise = function (original, args) {
+          // Снимок небольшого холста целиком — типичный отпечаток; большие холсты читают редакторы и игры.
+          try { if (this.canvas && this.canvas.width * this.canvas.height <= 90000) signal('canvas'); } catch (e) {}
           const image = original.apply(this, args);
           try { noisePixels(image.data, image.width, image.height); } catch (e) {}
           return image;
@@ -132,7 +148,10 @@ nonisolated enum Scripts {
         if (w.OffscreenCanvasRenderingContext2D) replace(w.OffscreenCanvasRenderingContext2D.prototype, 'getImageData', imageDataNoise);
 
         // Ширина текста: по ней узнают установленные шрифты. Сдвиг в стотысячные доли пикселя.
+        // Двадцать разных шрифтов на одной странице — это уже перебор, а не вёрстка.
+        const fontsSeen = new Set();
         if (w.CanvasRenderingContext2D) replace(w.CanvasRenderingContext2D.prototype, 'measureText', function (original, args) {
+          try { if (fontsSeen.size < 20) { fontsSeen.add(String(this.font)); if (fontsSeen.size === 20) signal('fonts'); } } catch (e) {}
           const metrics = original.apply(this, args);
           try {
             const width = metrics.width;
@@ -146,8 +165,8 @@ nonisolated enum Scripts {
         for (const ctor of [w.WebGLRenderingContext, w.WebGL2RenderingContext]) {
           if (!ctor) continue;
           replace(ctor.prototype, 'getParameter', function (original, args) {
-            if (args[0] === 0x9245) return 'Apple Inc.';
-            if (args[0] === 0x9246) return 'Apple GPU';
+            if (args[0] === 0x9245) { signal('webgl'); return 'Apple Inc.'; }
+            if (args[0] === 0x9246) { signal('webgl'); return 'Apple GPU'; }
             return original.apply(this, args);
           });
           replace(ctor.prototype, 'readPixels', function (original, args) {
@@ -161,6 +180,10 @@ nonisolated enum Scripts {
         }
 
         // Звук: неслышимый шум (десятимиллионные доли) в обработанном сигнале.
+        // Обработка звука «в уме» (OfflineAudioContext) почти всегда означает отпечаток.
+        for (const ctor of [w.OfflineAudioContext, w.webkitOfflineAudioContext]) {
+          if (ctor) replace(ctor.prototype, 'startRendering', function (original, args) { signal('audio'); return original.apply(this, args); });
+        }
         const touched = new WeakSet();
         if (w.AudioBuffer) replace(w.AudioBuffer.prototype, 'getChannelData', function (original, args) {
           const data = original.apply(this, args);
@@ -224,6 +247,7 @@ nonisolated enum Scripts {
         // Голоса синтеза речи: набор установленных голосов почти уникален — оставляем стандартные.
         const BASE_VOICES = /^(Samantha|Alex|Fred|Victoria|Daniel|Karen|Moira|Tessa|Milena|Yuri|Anna|Thomas|Amelie|Alice|Monica|Kyoko|Ting-Ting|Yuna|Luciana|Paulina)\b/;
         if (w.SpeechSynthesis) replace(w.SpeechSynthesis.prototype, 'getVoices', function (original, args) {
+          signal('voices');
           const voices = original.apply(this, args);
           try { return voices.filter((v) => BASE_VOICES.test(v.name)); } catch (e) { return voices; }
         });

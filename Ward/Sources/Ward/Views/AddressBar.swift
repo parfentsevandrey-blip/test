@@ -28,8 +28,9 @@ final class AddressState {
             list.append(Suggestion(kind: .search, title: q, subtitle: "Искать в \(model.prefs.search.title)", input: q))
         }
         let lower = q.lowercased()
-        for f in model.favorites where f.title.lowercased().contains(lower) || f.url.absoluteString.lowercased().contains(lower) {
-            list.append(Suggestion(kind: .favorite, title: f.title, subtitle: f.url.siteHost, input: f.url.absoluteString))
+        for b in model.bookmarks.search(q, limit: 4) {
+            guard let url = b.url, !list.contains(where: { $0.input == url.absoluteString }) else { continue }
+            list.append(Suggestion(kind: .favorite, title: b.title, subtitle: url.siteHost, input: url.absoluteString))
         }
         for e in model.history.suggestions(q) where !list.contains(where: { $0.input == e.url.absoluteString }) {
             list.append(Suggestion(kind: .history, title: e.title.isEmpty ? e.url.siteHost : e.title, subtitle: e.url.absoluteString, input: e.url.absoluteString))
@@ -61,12 +62,7 @@ struct AddressBar: View {
                     return .handled
                 }
             if let url = tab.url, !focused {
-                Button { model.toggleFavorite(url, title: tab.title) } label: {
-                    Image(systemName: model.isFavorite(url) ? "star.fill" : "star")
-                        .foregroundStyle(model.isFavorite(url) ? Color.yellow : Color.secondary)
-                }
-                .buttonStyle(.borderless)
-                .help(model.isFavorite(url) ? "Убрать из избранного" : "В избранное (⌘D)")
+                BookmarkStar(url: url, title: tab.title)
             }
             Button { tab.isLoading ? tab.stop() : tab.reload() } label: {
                 Image(systemName: tab.isLoading ? "xmark" : "arrow.clockwise")
@@ -153,6 +149,40 @@ struct AddressBar: View {
     }
 }
 
+/// Звезда в адресной строке: добавить страницу в закладки и сразу поправить название и папку.
+struct BookmarkStar: View {
+    @Environment(AppModel.self) private var model
+    let url: URL
+    let title: String
+    @State private var editing: BookmarkTarget?
+
+    var body: some View {
+        let saved = model.bookmark(for: url)
+        Button {
+            model.bookmarkPage(url, title: title)
+        } label: {
+            Image(systemName: saved != nil ? "star.fill" : "star")
+                .foregroundStyle(saved != nil ? Color.yellow : Color.secondary)
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .buttonStyle(.borderless)
+        .help(saved != nil ? "Изменить закладку (⌘D)" : "Добавить в закладки (⌘D)")
+        .onChange(of: model.bookmarkEditRequest?.count) {
+            // Редактор открывается у той звезды, чья страница только что попала в закладки.
+            if let id = model.bookmarkEditRequest?.id, model.bookmark(for: url)?.id == id { editing = BookmarkTarget(id: id) }
+        }
+        .popover(item: $editing, arrowEdge: .bottom) { target in
+            BookmarkEditor(id: target.id) { editing = nil }
+                .environment(model)
+        }
+    }
+}
+
+/// Какую закладку редактировать (для `popover(item:)`).
+struct BookmarkTarget: Identifiable {
+    let id: UUID
+}
+
 /// Подсказки под адресной строкой.
 struct SuggestionList: View {
     @Bindable var address: AddressState
@@ -191,7 +221,7 @@ struct SuggestionList: View {
         case .search: "magnifyingglass"
         case .address: "globe"
         case .history: "clock"
-        case .favorite: "star"
+        case .favorite: "bookmark"
         }
     }
 }

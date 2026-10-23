@@ -195,8 +195,14 @@ struct ShieldPanel: View {
             if tab.strictHere {
                 note("lock.shield", "Строгий режим: без JIT, WebGL и сложных шрифтов — через них чаще всего атакуют браузеры.", color: .blue)
             }
-            if model.prefs.fingerprint && tab.protectedHere && tab.url != nil {
+            if !tab.fingerprinting.isEmpty && tab.protectedHere {
+                let ways = FingerprintTechnique.allCases.filter { tab.fingerprinting.contains($0.rawValue) }.map { $0.title.lowercased() }
+                note("touchid", "Страница пыталась узнать вас без cookie (\(ways.joined(separator: ", "))) — и получила подделку.", color: .pink)
+            } else if model.prefs.fingerprint && tab.protectedHere && tab.url != nil {
                 note("touchid", "Отпечаток браузера подменён: для этого сайта он свой и меняется при каждом запуске.")
+            }
+            if tab.hiddenCount > 0 && tab.protectedHere {
+                note("eye.slash", "Скрыто \(tab.hiddenCount) \(Format.plural(tab.hiddenCount, "рекламный блок", "рекламных блока", "рекламных блоков")), баннеров и кнопок.", color: .blue)
             }
             if tab.browser?.usesProxy == true {
                 note("network.badge.shield.half.filled", "Окно идёт через прокси \(model.prefs.proxyHost):\(model.prefs.proxyPort) — сайт видит его адрес, а не ваш.", color: .blue)
@@ -262,7 +268,9 @@ struct ShieldPanel: View {
 
     private var footer: some View {
         HStack {
-            Text("Всего остановлено: \(Format.count(model.stats.total))").font(.caption).foregroundStyle(.secondary)
+            Button("Всего остановлено: \(Format.count(model.stats.total)) →") { model.openWindow?("dashboard") }
+                .buttonStyle(.link).font(.caption)
+                .help("Панель безопасности")
             Spacer()
             SettingsLink { Text("Настройки защиты") }.font(.caption)
         }

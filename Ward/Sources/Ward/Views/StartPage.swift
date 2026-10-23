@@ -3,6 +3,7 @@ import SwiftUI
 /// Новая вкладка: избранное и что защита сделала для вас.
 struct StartPage: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
     let browser: BrowserState
 
     private let columns = [GridItem(.adaptive(minimum: 104, maximum: 120), spacing: 18)]
@@ -31,10 +32,10 @@ struct StartPage: View {
 
                 if !model.favorites.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Избранное").font(.headline).foregroundStyle(.secondary)
+                        Text("Панель закладок").font(.headline).foregroundStyle(.secondary)
                         LazyVGrid(columns: columns, spacing: 18) {
                             ForEach(model.favorites) { fav in
-                                FavoriteTile(favorite: fav) { browser.selected?.load(fav.url) }
+                                FavoriteTile(favorite: fav) { if let url = fav.url { browser.selected?.load(url) } }
                             }
                         }
                     }
@@ -69,6 +70,11 @@ struct StartPage: View {
                 }
                 .font(.callout)
             }
+            Button { openWindow(id: "dashboard") } label: {
+                Label("Вся статистика защиты", systemImage: "chart.line.uptrend.xyaxis")
+            }
+            .buttonStyle(.glass)
+            .padding(.top, 4)
         }
         .frame(maxWidth: 640)
     }
@@ -117,14 +123,14 @@ struct StatCard: View {
 
 struct FavoriteTile: View {
     @Environment(AppModel.self) private var model
-    let favorite: Favorite
+    let favorite: Bookmark
     let open: () -> Void
     @State private var hover = false
 
     var body: some View {
         Button(action: open) {
             VStack(spacing: 8) {
-                SiteTile(host: favorite.url.host ?? "", size: 54)
+                SiteTile(host: favorite.url?.host ?? "", size: 54)
                     .shadow(color: .black.opacity(hover ? 0.2 : 0.08), radius: hover ? 8 : 3, y: 2)
                 Text(favorite.title).font(.callout).lineLimit(1).foregroundStyle(.primary)
             }
@@ -135,8 +141,8 @@ struct FavoriteTile: View {
         .buttonStyle(.plain)
         .onHover { hover = $0 }
         .contextMenu {
-            Button("Удалить из избранного") { model.removeFavorite(favorite) }
+            Button("Удалить из закладок") { model.removeBookmark(favorite.id) }
         }
-        .help(favorite.url.absoluteString)
+        .help(favorite.url?.absoluteString ?? "")
     }
 }

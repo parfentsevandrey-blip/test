@@ -204,11 +204,39 @@ enum SelfTest {
         ok = check(strictPrefs.strict(site: "new.com", familiar: false) && !strictPrefs.strict(site: "old.com", familiar: true) && !strictPrefs.strict(site: "bank.ru", familiar: false),
                    "строгий режим для незнакомых сайтов") && ok
         ok = check(SponsorBlockClient.prefix("dQw4w9WgXcQ") == "5f6b", "SponsorBlock: в запросе только 4 знака хеша id ролика") && ok
+        ok = bookmarks() && ok
+
+        // Счётчики панели безопасности
+        ok = check(st?.fingerprintPages == 0 && st?.hiddenElements == 0 && Prefs().showBookmarksBar, "новые счётчики и панель закладок у старых данных") && ok
+        var fpStats = Stats()
+        fpStats.recordFingerprint(site: "a.com", technique: "canvas", first: true)
+        fpStats.recordFingerprint(site: "a.com", technique: "webgl", first: false)
+        fpStats.recordFingerprint(site: "b.com", technique: "canvas", first: true)
+        ok = check(fpStats.fingerprintPages == 2 && fpStats.fingerprintSites["a.com"] == 1 && fpStats.fingerprintTechniques["canvas"] == 2,
+                   "отпечаток: страница считается один раз, способы — каждый") && ok
+        fpStats.record(.ads, company: "X")
+        let days = fpStats.lastDays(30)
+        ok = check(days.count == 30 && days.last?.count == 1 && Calendar.current.isDateInToday(days.last!.date), "график за 30 дней кончается сегодняшним днём") && ok
+
+        // Учёт скрытого: те же правила, что получает WebKit
+        var cosmeticSet = FilterSet()
+        for line in ["##.ad-box", "###banner", "##.sponsor", "example.com#@#.sponsor", "news.ru##.promo", "~safe.org##.sticky",
+                     "shop.example.com##.deal", "@@||nogeneric.net^$generichide", "nogeneric.net##.local"] {
+            FilterParser.parse(line, kind: .ads, into: &cosmeticSet, badfilters: [])
+        }
+        let cosmeticIndex = CosmeticIndex(cosmeticSet, valid: Set(RuleCompiler.selectors(cosmeticSet)).subtracting(["#banner"]))
+        let onNews = Set(cosmeticIndex.selectors(for: "www.news.ru"))
+        let onExample = Set(cosmeticIndex.selectors(for: "example.com"))
+        ok = check(onNews.isSuperset(of: [".ad-box", ".sponsor", ".promo", ".sticky"]) && !onNews.contains("#banner"), "селекторы сайта: общие, свои, «везде, кроме»; неверные отброшены") && ok
+        ok = check(!onExample.contains(".sponsor") && !onExample.contains(".deal") && cosmeticIndex.selectors(for: "shop.example.com").contains(".deal"), "исключения и поддомены") && ok
+        ok = check(!cosmeticIndex.selectors(for: "nogeneric.net").contains(".ad-box") && cosmeticIndex.selectors(for: "nogeneric.net").contains(".local"), "$generichide") && ok
+        ok = check(!cosmeticIndex.selectors(for: "safe.org").contains(".sticky"), "«везде, кроме» не действует на исключённом сайте") && ok
 
         // Скрипты: синтаксис в JavaScriptCore
         let js = JSContext()!
         let scriptlets = Scripts.scriptlets([#"0["set-constant","a","false"]"#, #"1["replace-fetch-response","x","y",""]"#]) ?? ""
-        for (name, source) in [("отпечаток", Scripts.fingerprint(secret: "test", blockWebRTC: true, spoofTimezone: true, spoofLanguage: true)),
+        for (name, source) in [("отпечаток", Scripts.fingerprint(secret: "test", blockWebRTC: true, spoofTimezone: true, spoofLanguage: true, event: "wtest")),
+                               ("сигналы отпечатка", Scripts.fingerprintRelay(token: "wtest")), ("учёт скрытого", Scripts.countHidden),
                                ("наблюдатель", Scripts.observer), ("проверка селекторов", Scripts.validateSelectors), ("отпечаток холста", MiniHTTP.canvasProbe),
                                ("скриптлеты", scriptlets), ("процедурная косметика", Scripts.procedural([".a:has-text(x)"]) ?? ""),
                                ("отказ от cookie", Scripts.consent), ("SponsorBlock", Scripts.sponsorBlock)] {
@@ -247,6 +275,77 @@ enum SelfTest {
             ok = check(fullIndex.scriptletCalls(for: "www.youtube.com").count >= 5, "правила против рекламы YouTube") && ok
             ok = check(full.trackers["omtrdc.net"] != nil || full.trackers["sc.omtrdc.net"] != nil, "настоящие домены CNAME-трекеров в списках") && ok
         }
+        return ok
+    }
+
+    // MARK: - Закладки
+
+    static func bookmarks() -> Bool {
+        var ok = true
+        let a = URL(string: "https://a.com")!, b = URL(string: "https://b.com/x")!, c = URL(string: "https://c.org")!
+        var tree = BookmarkTree(favorites: [Favorite(url: a, title: "A"), Favorite(url: b, title: "B")])
+        ok = check(tree.bar.map(\.title) == ["A", "B"] && tree.contains(URL(string: "https://a.com/")!), "избранное прошлой версии — на панели закладок") && ok
+        let folder = Bookmark.folder("Папка")
+        tree.insert(folder, into: .bar, at: 1)
+        let inner = Bookmark.folder("Внутри")
+        tree.insert(inner, into: .folder(folder.id))
+        let cb = Bookmark.link(c, title: "C")
+        tree.insert(cb, into: .folder(inner.id))
+        ok = check(tree.bar.map(\.title) == ["A", "Папка", "B"] && tree.find(cb.id)?.url == c && tree.location(of: cb.id)?.place == .folder(inner.id), "папки и вложенные папки") && ok
+        ok = check(tree.folders.map { $0.title } == ["Панель закладок", "Папка", "Внутри", "Другие закладки"] && tree.folders[2].depth == 2, "список папок для выбора") && ok
+        ok = check(!tree.canMove(folder.id, into: .folder(inner.id)) && !tree.canMove(folder.id, into: .folder(folder.id)) && tree.canMove(cb.id, into: .bar),
+                   "папку нельзя положить в саму себя") && ok
+        let bID = tree.bar[2].id
+        tree.move(bID, to: .bar, at: 0)
+        ok = check(tree.bar.map(\.title) == ["B", "A", "Папка"], "перестановка на панели") && ok
+        tree.move(tree.bar[0].id, to: .bar, at: 3)
+        ok = check(tree.bar.map(\.title) == ["A", "Папка", "B"], "перестановка в конец (индекс до перемещения)") && ok
+        tree.move(cb.id, to: .other, at: 0)
+        ok = check(tree.other.first?.id == cb.id && tree.find(inner.id)?.children?.isEmpty == true, "перенос в «Другие закладки»") && ok
+        tree.update(cb.id) { $0.title = "Си" }
+        _ = tree.remove(folder.id)
+        ok = check(tree.find(cb.id)?.title == "Си" && tree.find(inner.id) == nil && tree.bar.count == 2, "переименование и удаление папки с содержимым") && ok
+        ok = check(tree.search("си").count == 1 && tree.search("b.com").first?.url == b, "поиск по названию и адресу") && ok
+
+        let html = """
+        <!DOCTYPE NETSCAPE-Bookmark-file-1>
+        <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+        <TITLE>Bookmarks</TITLE><H1>Bookmarks</H1>
+        <DL><p>
+            <DT><H3 ADD_DATE="1" PERSONAL_TOOLBAR_FOLDER="true">Панель закладок</H3>
+            <DL><p>
+                <DT><A HREF="https://news.example/?a=1&amp;b=2" ADD_DATE="1">Новости &amp; погода</A>
+                <DT><H3>Работа</H3>
+                <DL><p>
+                    <DT><A HREF="https://git.example/">Git &#8212; код</A>
+                    <DT><A HREF="javascript:alert(1)">Букмарклет</A>
+                </DL><p>
+            </DL><p>
+            <DT><H3>Рецепты</H3>
+            <DL><p>
+                <DT><A HREF='https://food.example/'>Еда</A>
+            </DL><p>
+            <DT><A HREF="https://a.com/">A ещё раз</A>
+        </DL><p>
+        """
+        let imported = BookmarkImport.html(html)
+        ok = check(imported.bar.count == 2 && imported.bar[0].url?.absoluteString == "https://news.example/?a=1&b=2" && imported.bar[0].title == "Новости & погода",
+                   "HTML: панель закладок и сущности &amp;") && ok
+        ok = check(imported.bar[1].isFolder && imported.bar[1].children?.count == 1 && imported.bar[1].children?.first?.title == "Git — код",
+                   "HTML: вложенная папка, &#8212;, букмарклеты пропущены") && ok
+        ok = check(imported.other.count == 2 && imported.other[0].title == "Рецепты" && imported.other[0].children?.first?.url?.host == "food.example", "HTML: папки вне панели") && ok
+        let json = #"{"roots":{"bookmark_bar":{"children":[{"type":"url","name":"Хабр","url":"https://habr.com/"},{"type":"folder","name":"Dev","children":[{"type":"url","name":"Swift","url":"https://swift.org/"}]}]},"other":{"children":[{"type":"url","name":"Карты","url":"https://maps.example/"}]},"synced":{"children":[]}}}"#
+        let chrome = BookmarkImport.parse(Data(json.utf8))
+        ok = check(chrome?.bar.count == 2 && chrome?.bar[1].children?.first?.title == "Swift" && chrome?.other.first?.title == "Карты", "JSON Chrome / Яндекса / Brave") && ok
+        var target = BookmarkTree(bar: [.link(a, title: "A")])
+        let added = target.merge(imported, source: "Safari")
+        ok = check(added == 3 && target.bar.count == 3 && target.other.first?.title == "Импорт: Safari" && target.other.first?.links.count == 1,
+                   "импорт без повторов: \(added) новых") && ok
+        let again = BookmarkImport.html(BookmarkImport.export(target))
+        ok = check(again.bar.flatMap(\.links).count == target.bar.flatMap(\.links).count && again.other.flatMap(\.links).count == target.other.flatMap(\.links).count
+                   && again.bar[1].title == "Новости & погода", "экспорт в HTML читается обратно") && ok
+        let saved = try? JSONDecoder().decode(BookmarkTree.self, from: JSONEncoder().encode(target))
+        ok = check(saved == target, "закладки сохраняются и читаются") && ok
         return ok
     }
 
@@ -348,6 +447,10 @@ enum SelfTest {
         info("щит: \(seen.joined(separator: ", "))")
         ok = check(seen.contains { $0.contains("googletagmanager") } && seen.contains { $0.contains("yandex") }, "щит показывает остановленные трекеры (\(seen.count))") && ok
         ok = check(seen.contains { $0.contains("facebook") }, "щит показывает и заблокированное по пути (пиксель Facebook)") && ok
+        let hiddenBefore = model.stats.hiddenElements
+        await tab.countHidden(host: "localhost")
+        info("скрыто на стенде: \(tab.hiddenCount), селекторов для сайта: \(model.blocker.cosmetic.selectors(for: "localhost").count)")
+        ok = check(tab.hiddenCount >= 1 && model.stats.hiddenElements >= hiddenBefore, "панель безопасности знает, сколько скрыто (\(tab.hiddenCount))") && ok
 
         // 4. Защита выключена на сайте — всё грузится.
         model.setProtection(false, site: "localhost")
@@ -380,6 +483,20 @@ enum SelfTest {
         let n2 = await fingerprint("http://127.0.0.1:\(p)/fp.html?plain")
         ok = check(n1["hash"] != nil && (n1["hash"] as? String) == (n2["hash"] as? String), "без защиты отпечаток одинаков на всех сайтах (значит, разницу даёт защита)") && ok
         model.prefs.fingerprint = true
+
+        // 5б. Попытки снять отпечаток видны в щите и в панели безопасности.
+        let fpBefore = model.stats.fingerprintPages
+        _ = await open(tab, "http://localhost:\(p)/fp-all.html")
+        try? await Task.sleep(for: .seconds(2))
+        info("способы отпечатка на странице: \(tab.fingerprinting.sorted())")
+        ok = check(tab.fingerprinting.isSuperset(of: ["canvas", "audio", "fonts"]), "замечены холст, звук и перебор шрифтов") && ok
+        for (way, what) in [("webgl", "модель видеокарты"), ("voices", "голоса синтеза речи")] {
+            if tab.fingerprinting.contains(way) { check(true, "замечен запрос: \(what)") } else { info("\(what): на раннере недоступно — пропускаю") }
+        }
+        ok = check(model.stats.fingerprintPages == fpBefore + 1, "страница посчитана в панели один раз") && ok
+        _ = await open(tab, "http://localhost:\(p)/target.html?fp")
+        try? await Task.sleep(for: .seconds(1))
+        ok = check(tab.fingerprinting.isEmpty, "обычная страница не считается слежкой") && ok
 
         // 6. Очистка ссылок.
         _ = await open(tab, "http://localhost:\(p)/clean.html?utm_source=newsletter&id=5&fbclid=IwAR0abc")

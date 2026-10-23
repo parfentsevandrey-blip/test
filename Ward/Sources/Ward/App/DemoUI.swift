@@ -29,6 +29,23 @@ enum DemoUI {
     /// Открыть щит сразу (для скриншота).
     static var showsShield: Bool { isOn && screen == "shield" }
 
+    /// Закладки для скриншотов: папки на панели, как у живого человека.
+    static func seedBookmarks() {
+        let model = AppModel.shared
+        guard model.bookmarks.allLinks.count <= 4, model.bookmarks.bar.allSatisfy({ !$0.isFolder }) else { return }
+        let news = model.addFolder("Новости")
+        for (url, title) in [("https://lenta.ru", "Лента.ру"), ("https://www.rbc.ru", "РБК"), ("https://www.theverge.com", "The Verge"), ("https://meduza.io", "Медуза")] {
+            model.addBookmark(URL(string: url)!, title: title, to: .folder(news.id))
+        }
+        let work = model.addFolder("Работа")
+        for (url, title) in [("https://gitlab.com", "GitLab"), ("https://developer.apple.com", "Apple Developer"), ("https://swift.org", "Swift")] {
+            model.addBookmark(URL(string: url)!, title: title, to: .folder(work.id))
+        }
+        model.addBookmark(URL(string: "https://habr.com")!, title: "Хабр")
+        model.addBookmark(URL(string: "https://music.yandex.ru")!, title: "Музыка")
+        model.addBookmark(URL(string: "https://maps.apple.com")!, title: "Карты", to: .other)
+    }
+
     /// Новостные сайты с типичным набором рекламы и счётчиков.
     static let sites = ["https://lenta.ru", "https://www.theverge.com", "https://www.rbc.ru"]
 
@@ -45,6 +62,7 @@ enum DemoUI {
             }
         }
         await model.blocker.waitReady(timeout: 90)
+        seedBookmarks()
 
         switch screen {
         case "start":
@@ -64,6 +82,21 @@ enum DemoUI {
         case "private":
             // В этом демо первое окно само частное (см. WardApp).
             browser.newTab(url: URL(string: "https://duckduckgo.com")!, select: false)
+        case "dashboard":
+            // Настоящие счётчики: сначала открыть сайты, потом показать панель.
+            for site in sites { browser.newTab(url: URL(string: site)!, select: false) }
+            browser.selected?.load(URL(string: "https://www.theverge.com")!)
+            try? await Task.sleep(for: .seconds(22))
+            model.openWindow?("dashboard")
+            try? await Task.sleep(for: .seconds(1))
+            NSApp.activate()
+            NSApp.windows.first { $0.title == "Безопасность" }?.makeKeyAndOrderFront(nil)
+        case "bookmarks":
+            browser.selected?.load(URL(string: sites[0])!)
+            try? await Task.sleep(for: .seconds(6))
+            model.openWindow?("bookmarks")
+            try? await Task.sleep(for: .seconds(1))
+            NSApp.windows.first { $0.title == "Закладки" }?.makeKeyAndOrderFront(nil)
         case "settings", "settings-lists", "settings-data", "settings-sites", "settings-network", "settings-search":
             model.settingsRequest += 1
         default:

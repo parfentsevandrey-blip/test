@@ -99,6 +99,25 @@ nonisolated final class MiniHTTP: @unchecked Sendable {
         set("/fp.html", html: """
         <!doctype html><html><head><meta charset="utf-8"><title>Отпечаток</title></head><body><canvas id="c" width="240" height="60"></canvas></body></html>
         """)
+        // Страница, которая снимает отпечаток всеми способами сразу — как FingerprintJS.
+        set("/fp-all.html", html: """
+        <!doctype html><html><head><meta charset="utf-8"><title>Отпечаток всеми способами</title></head><body>
+        <canvas id="c" width="200" height="50"></canvas>
+        <script>
+        const c = document.getElementById('c'), ctx = c.getContext('2d');
+        ctx.fillText('Ward', 4, 20); c.toDataURL();
+        try {
+          const gl = document.createElement('canvas').getContext('webgl');
+          const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+          if (gl && ext) gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+        } catch (e) {}
+        try { const a = new OfflineAudioContext(1, 5000, 44100); const o = a.createOscillator(); o.connect(a.destination); o.start(0); a.startRendering(); } catch (e) {}
+        const fonts = ['Arial','Courier','Georgia','Helvetica','Times','Verdana','Monaco','Menlo','Futura','Optima','Palatino','Didot',
+                       'Avenir','Baskerville','Copperplate','Papyrus','Herculanum','Chalkboard','Skia','Zapfino','Impact','Tahoma'];
+        for (const f of fonts) { ctx.font = '16px ' + f + ', monospace'; ctx.measureText('mmmmmmmmmmlli'); }
+        try { speechSynthesis.getVoices(); } catch (e) {}
+        </script></body></html>
+        """)
         set("/clean.html", html: "<!doctype html><title>Чистая ссылка</title><p>ok</p>")
         // Скриптлеты и процедурная косметика (правила для localhost подставляет самопроверка).
         set("/scriptlets.html", html: """

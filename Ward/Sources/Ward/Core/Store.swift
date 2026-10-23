@@ -57,6 +57,7 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
     var denyMediaByDefault = false
     /// Сайт → контейнер, в котором он всегда открывается.
     var siteContainers: [String: UUID] = [:]
+    var showBookmarksBar = true
 
     init() {}
 
@@ -108,6 +109,7 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
         mediaDecisions = v(.mediaDecisions, d.mediaDecisions)
         denyMediaByDefault = v(.denyMediaByDefault, d.denyMediaByDefault)
         siteContainers = v(.siteContainers, d.siteContainers)
+        showBookmarksBar = v(.showBookmarksBar, d.showBookmarksBar)
     }
 
     /// Включён ли строгий режим для сайта. `familiar` — сайт есть в истории или избранном.
@@ -150,6 +152,21 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
     var sponsorSeconds = 0.0
     var phishingBlocked = 0
     var since = Date()
+    // Новое в третьей версии — для панели безопасности.
+    /// Страницы, которые пытались снять отпечаток браузера, сайты-рекордсмены и способы.
+    var fingerprintPages = 0
+    var fingerprintSites: [String: Int] = [:]
+    var fingerprintTechniques: [String: Int] = [:]
+    /// Скрытые рекламные блоки, баннеры и кнопки «поделиться».
+    var hiddenElements = 0
+    /// Трекеры под видом поддомена сайта (CNAME).
+    var cloaked = 0
+    /// Опасные сайты из списков вредоносного, остановленные до первого запроса.
+    var dangerBlocked = 0
+    /// Сайты, чьи cookie и данные убраны после закрытия вкладки.
+    var sitesCleaned = 0
+    /// Страницы, открытые под защитой.
+    var pages = 0
 
     init() {}
 
@@ -166,6 +183,14 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
         sponsorSeconds = v(.sponsorSeconds, 0)
         phishingBlocked = v(.phishingBlocked, 0)
         since = v(.since, Date())
+        fingerprintPages = v(.fingerprintPages, 0)
+        fingerprintSites = v(.fingerprintSites, [:])
+        fingerprintTechniques = v(.fingerprintTechniques, [:])
+        hiddenElements = v(.hiddenElements, 0)
+        cloaked = v(.cloaked, 0)
+        dangerBlocked = v(.dangerBlocked, 0)
+        sitesCleaned = v(.sitesCleaned, 0)
+        pages = v(.pages, 0)
     }
 
     static func dayKey(_ date: Date = Date()) -> String {
@@ -174,6 +199,33 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
     }
 
     var today: Int { days[Self.dayKey()] ?? 0 }
+
+    nonisolated struct Day: Sendable, Identifiable {
+        var date: Date
+        var count: Int
+        var id: Date { date }
+    }
+
+    /// Последние `count` дней по порядку, включая сегодняшний (дни без трекеров — нули).
+    func lastDays(_ count: Int, now: Date = Date()) -> [Day] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: now)
+        return (0..<count).reversed().compactMap { back in
+            guard let day = calendar.date(byAdding: .day, value: -back, to: today) else { return nil }
+            return Day(date: day, count: days[Self.dayKey(day)] ?? 0)
+        }
+    }
+
+    /// Попытка снять отпечаток: `first` — первая на этой странице (тогда считается страница и сайт).
+    mutating func recordFingerprint(site: String, technique: String, first: Bool) {
+        fingerprintTechniques[technique, default: 0] += 1
+        guard first else { return }
+        fingerprintPages += 1
+        fingerprintSites[site, default: 0] += 1
+        if fingerprintSites.count > 300 {
+            for (key, _) in fingerprintSites.sorted(by: { $0.value < $1.value }).prefix(fingerprintSites.count - 200) { fingerprintSites[key] = nil }
+        }
+    }
 
     mutating func record(_ kind: TrackerKind, company: String) {
         total += 1

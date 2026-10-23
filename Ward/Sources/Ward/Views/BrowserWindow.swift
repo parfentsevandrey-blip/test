@@ -20,6 +20,10 @@ struct BrowserWindow: View {
                 TabStrip(browser: browser)
                 Divider()
             }
+            if model.prefs.showBookmarksBar {
+                BookmarksBar(browser: browser)
+                Divider()
+            }
             ZStack(alignment: .top) {
                 if let tab = browser.selected {
                     PageArea(tab: tab, browser: browser)
@@ -81,6 +85,10 @@ struct BrowserWindow: View {
             }
         }
         ToolbarItemGroup(placement: .primaryAction) {
+            SettingsLink {
+                Image(systemName: "gearshape")
+            }
+            .help("Настройки Ward (⌘,)")
             if let tab = browser.selected {
                 ShieldButton(tab: tab)
             }
@@ -88,7 +96,22 @@ struct BrowserWindow: View {
                 DownloadsButton()
             }
             NewTabMenu(browser: browser)
+            DashboardButton()
         }
+    }
+}
+
+/// Панель безопасности: вся статистика защиты. Значок вздрагивает, когда Ward что-то останавливает.
+struct DashboardButton: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Button { openWindow(id: "dashboard") } label: {
+            Image(systemName: "chart.line.uptrend.xyaxis")
+                .symbolEffect(.bounce, value: model.stats.total / 10)
+        }
+        .help("Панель безопасности: что Ward остановил (⇧⌘S)")
     }
 }
 

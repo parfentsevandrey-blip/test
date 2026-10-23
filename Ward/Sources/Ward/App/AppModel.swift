@@ -30,15 +30,21 @@ final class AppModel {
     let blocker = ContentBlocker()
     let cname = CNAMEGuard()
     private(set) var history = History()
-    private(set) var favorites: [Favorite] = []
+    private(set) var bookmarks = BookmarkTree()
     private(set) var containers: [Container] = []
     private(set) var stats = Stats()
+    /// Последние события защиты — живая лента панели безопасности (только в памяти).
+    private(set) var recent: [SecurityEvent] = []
+    /// Закладку только что добавили (⌘D, звезда) — показать её редактор в адресной строке.
+    var bookmarkEditRequest: (id: UUID, count: Int)?
     let downloads = Downloads()
     private(set) var listsUpdating = false
     private(set) var listsMessage: String?
 
     /// Секрет защиты от отпечатка: новый при каждом запуске, свой у частных окон.
     let sessionSecret = AppModel.randomSecret()
+    /// Имя сигнала «сайт снимает отпечаток» (см. `Scripts.fingerprintRelay`): новое при каждом запуске.
+    let signalToken = "w" + AppModel.randomSecret()
 
     /// Открытые окна и последнее активное.
     private(set) var browsers: [BrowserState] = []
@@ -64,19 +70,13 @@ final class AppModel {
     init() {
         prefs = Storage.load(Prefs.self, "prefs.json") ?? Prefs()
         history = History(SecureStore.load([HistoryEntry].self, "history.json") ?? [])
-        favorites = Storage.load([Favorite].self, "favorites.json") ?? Self.defaultFavorites
+        // Избранное прошлых версий становится панелью закладок.
+        bookmarks = Storage.load(BookmarkTree.self, "bookmarks.json")
+            ?? Storage.load([Favorite].self, "favorites.json").map(BookmarkTree.init(favorites:))
+            ?? .defaults
         containers = Storage.load([Container].self, "containers.json") ?? Container.defaults
         stats = Storage.load(Stats.self, "stats.json") ?? Stats()
         historySites = Set(history.entries.map { Hosts.site($0.url.host ?? "") })
-    }
-
-    static var defaultFavorites: [Favorite] {
-        [
-            Favorite(url: URL(string: "https://duckduckgo.com")!, title: "DuckDuckGo"),
-            Favorite(url: URL(string: "https://ru.wikipedia.org")!, title: "Википедия"),
-            Favorite(url: URL(string: "https://github.com")!, title: "GitHub"),
-            Favorite(url: URL(string: "https://www.youtube.com")!, title: "YouTube"),
-        ]
     }
 
     static func randomSecret() -> String {
@@ -164,8 +164,9 @@ final class AppModel {
         var scriptlets = 0
         if protected && (prefs.fingerprint || proxied) {
             list.append(WKUserScript(source: Scripts.fingerprint(secret: secret, blockWebRTC: prefs.blockWebRTC || proxied,
-                                                                 spoofTimezone: prefs.spoofTimezone, spoofLanguage: prefs.spoofLanguage),
+                                                                 spoofTimezone: prefs.spoofTimezone, spoofLanguage: prefs.spoofLanguage, event: signalToken),
                                      injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
+            list.append(WKUserScript(source: Scripts.fingerprintRelay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
         }
         if protected, !host.isEmpty {
             let calls = blocker.index.scriptletCalls(for: host)
@@ -193,7 +194,7 @@ final class AppModel {
 
     /// Сайт знаком: вы на нём бывали, он в избранном или вы помните на нём вход.
     func isFamiliar(_ site: String) -> Bool {
-        historySites.contains(site) || prefs.rememberedSites.contains(site) || favorites.contains { Hosts.site($0.url.host ?? "") == site }
+        historySites.contains(site) || prefs.rememberedSites.contains(site) || bookmarks.allLinks.contains { Hosts.site($0.url?.host ?? "") == site }
     }
 
     func setProtection(_ on: Bool, site: String) {
@@ -331,34 +332,140 @@ final class AppModel {
         return ok
     }
 
-    func isFavorite(_ url: URL?) -> Bool {
+    // MARK: Закладки
+
+    /// Закладки на панели (без папок) — плитки новой вкладки.
+    var favorites: [Bookmark] { bookmarks.bar.filter { !$0.isFolder } }
+
+    func isBookmarked(_ url: URL?) -> Bool {
         guard let url else { return false }
-        return favorites.contains { $0.url == url }
+        return bookmarks.contains(url)
     }
 
-    func toggleFavorite(_ url: URL, title: String) {
-        if let i = favorites.firstIndex(where: { $0.url == url }) { favorites.remove(at: i) }
-        else { favorites.append(Favorite(url: url, title: title.isEmpty ? (url.host ?? url.absoluteString) : title)) }
-        Storage.save(favorites, "favorites.json")
+    func bookmark(for url: URL?) -> Bookmark? { url.flatMap { bookmarks.bookmark(for: $0) } }
+
+    private func changeBookmarks(_ change: (inout BookmarkTree) -> Void) {
+        change(&bookmarks)
+        Storage.save(bookmarks, "bookmarks.json")
     }
 
-    func removeFavorite(_ favorite: Favorite) {
-        favorites.removeAll { $0.id == favorite.id }
-        Storage.save(favorites, "favorites.json")
+    /// ⌘D и звезда: страница уже в закладках — открыть её редактор, нет — добавить на панель и открыть редактор.
+    func bookmarkPage(_ url: URL, title: String) {
+        let id: UUID
+        if let existing = bookmarks.bookmark(for: url) {
+            id = existing.id
+        } else {
+            let b = Bookmark.link(url, title: title)
+            changeBookmarks { $0.insert(b, into: .bar) }
+            id = b.id
+        }
+        bookmarkEditRequest = (id, (bookmarkEditRequest?.count ?? 0) + 1)
     }
 
-    func record(_ kind: TrackerKind, host: String) {
-        stats.record(kind, company: Companies.owner(of: host))
+    @discardableResult
+    func addBookmark(_ url: URL, title: String, to place: BookmarkPlace = .bar, at index: Int? = nil) -> Bookmark {
+        let b = Bookmark.link(url, title: title)
+        changeBookmarks { $0.insert(b, into: place, at: index) }
+        return b
     }
 
-    func recordCleaned() { stats.cleanedLinks += 1 }
-    func recordUpgraded() { stats.upgraded += 1 }
-    func recordConsent() { stats.consentsRejected += 1 }
-    func recordSponsor(seconds: Double) { stats.sponsorSeconds += seconds }
-    func recordPhishing() { stats.phishingBlocked += 1 }
+    @discardableResult
+    func addFolder(_ title: String, to place: BookmarkPlace = .bar, at index: Int? = nil) -> Bookmark {
+        let f = Bookmark.folder(title.isEmpty ? "Новая папка" : title)
+        changeBookmarks { $0.insert(f, into: place, at: index) }
+        return f
+    }
+
+    func updateBookmark(_ id: UUID, title: String, url: URL?) {
+        changeBookmarks { tree in
+            tree.update(id) { b in
+                b.title = title
+                if !b.isFolder, let url { b.url = url }
+            }
+        }
+    }
+
+    func moveBookmark(_ id: UUID, to place: BookmarkPlace, at index: Int? = nil) {
+        changeBookmarks { tree in tree.move(id, to: place, at: index ?? tree.items(in: place).count) }
+    }
+
+    func removeBookmark(_ id: UUID) {
+        changeBookmarks { _ = $0.remove(id) }
+    }
+
+    func importBookmarks(_ result: BookmarkImport.Result, source: String) -> Int {
+        var added = 0
+        changeBookmarks { added = $0.merge(result, source: source) }
+        return added
+    }
+
+    // MARK: Счётчики и лента событий
+
+    private func feed(_ kind: SecurityEvent.Kind, _ title: String, _ detail: String = "") {
+        recent.insert(SecurityEvent(kind: kind, title: title, detail: detail), at: 0)
+        if recent.count > 60 { recent.removeLast(recent.count - 60) }
+    }
+
+    func record(_ kind: TrackerKind, host: String, page: String = "") {
+        let company = Companies.owner(of: host)
+        stats.record(kind, company: company)
+        let what: SecurityEvent.Kind = kind == .malware ? .danger : kind == .tracking ? .tracker : .ad
+        feed(what, "\(kind.title): \(company)", page.isEmpty ? host : "\(host) на \(page)")
+    }
+
+    func recordCloaked(_ host: String, target: String, page: String) {
+        stats.cloaked += 1
+        stats.record(.tracking, company: Companies.owner(of: target))
+        feed(.cloaked, "Скрытый трекер \(Companies.owner(of: target))", "\(host) → \(target)")
+    }
+
+    func recordCleaned(_ params: [String] = [], host: String = "") {
+        stats.cleanedLinks += 1
+        feed(.link, "Ссылка очищена", ([host] + params.prefix(4)).filter { !$0.isEmpty }.joined(separator: " · "))
+    }
+
+    func recordUpgraded(_ host: String = "") {
+        stats.upgraded += 1
+        feed(.https, "Защищённое соединение", host)
+    }
+
+    func recordConsent(_ cmp: String = "", site: String = "") {
+        stats.consentsRejected += 1
+        feed(.consent, "Отказ от cookie", [site, cmp].filter { !$0.isEmpty }.joined(separator: " · "))
+    }
+
+    func recordSponsor(seconds: Double, category: String = "") {
+        stats.sponsorSeconds += seconds
+        feed(.sponsor, "Вставка в ролике пропущена", "\(Int(seconds.rounded())) с")
+    }
+
+    func recordPhishing(_ host: String = "") {
+        stats.phishingBlocked += 1
+        feed(.phishing, "Подделка под известный сайт", host)
+    }
+
+    func recordDanger(_ host: String) {
+        stats.dangerBlocked += 1
+        feed(.danger, "Опасный сайт остановлен", host)
+    }
+
+    func recordFingerprint(_ technique: String, site: String, first: Bool) {
+        stats.recordFingerprint(site: site, technique: technique, first: first)
+        let title = FingerprintTechnique(rawValue: technique)?.title ?? technique
+        feed(.fingerprint, "Попытка узнать вас: \(title.lowercased())", site)
+    }
+
+    func recordHidden(_ count: Int, site: String) {
+        guard count > 0 else { return }
+        stats.hiddenElements += count
+        feed(.hidden, "Скрыто \(count) \(Format.plural(count, "элемент", "элемента", "элементов"))", site)
+    }
+
+    func recordPage() { stats.pages += 1 }
 
     func resetStats() {
         stats = Stats()
+        recent = []
         Storage.save(stats, "stats.json")
     }
 
@@ -455,6 +562,10 @@ final class AppModel {
             removed += doomed.count
             await Self.remove(store, doomed)
         }
+        if removed > 0 {
+            stats.sitesCleaned += removed
+            feed(.cleanup, "Данные закрытых сайтов убраны", "\(removed) \(Format.plural(removed, "сайт", "сайта", "сайтов"))")
+        }
         return removed
     }
 
@@ -512,4 +623,48 @@ final class AppModel {
         NSWorkspace.shared.setDefaultApplication(at: app, toOpenURLsWithScheme: "http") { _ in }
         NSWorkspace.shared.setDefaultApplication(at: app, toOpenURLsWithScheme: "https") { _ in }
     }
+}
+
+/// Событие защиты для живой ленты панели безопасности.
+struct SecurityEvent: Identifiable, Equatable {
+    enum Kind {
+        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup
+
+        var icon: String {
+            switch self {
+            case .tracker: "eye.slash.fill"
+            case .ad: "rectangle.slash.fill"
+            case .danger: "exclamationmark.octagon.fill"
+            case .cloaked: "theatermasks.fill"
+            case .fingerprint: "touchid"
+            case .hidden: "eye.trianglebadge.exclamationmark"
+            case .link: "scissors"
+            case .https: "lock.fill"
+            case .consent: "hand.raised.fill"
+            case .sponsor: "forward.end.fill"
+            case .phishing: "exclamationmark.shield.fill"
+            case .cleanup: "trash.fill"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .tracker, .cloaked: .purple
+            case .ad, .hidden: .blue
+            case .danger, .phishing: .red
+            case .fingerprint: .pink
+            case .link: .indigo
+            case .https: .green
+            case .consent: .orange
+            case .sponsor: .teal
+            case .cleanup: .gray
+            }
+        }
+    }
+
+    let id = UUID()
+    let date = Date()
+    let kind: Kind
+    let title: String
+    let detail: String
 }

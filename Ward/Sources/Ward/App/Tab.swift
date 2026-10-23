@@ -49,6 +49,10 @@ final class Tab: NSObject, Identifiable {
     /// Окно согласия на cookie, в котором Ward нажал «Отклонить».
     var consentRejected: String?
     var sponsorSkipped = 0
+    /// Способы снять отпечаток, которые пробовала эта страница.
+    var fingerprinting: Set<String> = []
+    /// Сколько рекламных блоков и баннеров скрыто на странице.
+    var hiddenCount = 0
     var passwordWarning = false
     var certificate: CertificateInfo?
     var zoom = 1.0 { didSet { webViewIfLoaded?.pageZoom = zoom } }
@@ -73,6 +77,10 @@ final class Tab: NSObject, Identifiable {
     @ObservationIgnored private var mediaAllowed: Set<String> = []
     @ObservationIgnored private var ephemeralStore: WKWebsiteDataStore?
     @ObservationIgnored private var cnameChecks = 0
+    @ObservationIgnored private var hiddenTask: Task<Void, Never>?
+
+    /// Вкладка, которая не оставляет следов: имена сайтов не попадают в ленту панели безопасности.
+    var leavesNoTrace: Bool { isPrivate || ephemeral }
 
     init(browser: BrowserState, url: URL? = nil, popup configuration: WKWebViewConfiguration? = nil, container: Container? = nil, ephemeral: Bool = false) {
         self.browser = browser
@@ -342,14 +350,14 @@ final class Tab: NSObject, Identifiable {
                         guard let self, self.trackers[h] == nil else { return }
                         self.trackers[h] = kind
                         self.cloaked[h] = target
-                        if !(self.isPrivate || self.ephemeral) { model.record(kind, host: target) }
+                        if !self.leavesNoTrace { model.recordCloaked(h, target: target, page: pageSite) }
                     }
                 }
                 continue
             }
             guard trackers[h] == nil, let kind = index.classify(h, page: page, failed: failed.contains(host)) else { continue }
             trackers[h] = kind
-            if !(isPrivate || ephemeral) { model.record(kind, host: h) }
+            if !leavesNoTrace { model.record(kind, host: h, page: pageSite) }
         }
     }
 
@@ -358,10 +366,16 @@ final class Tab: NSObject, Identifiable {
         switch body["type"] as? String {
         case "consent":
             consentRejected = (body["cmp"] as? String) ?? "окно согласия"
-            model.recordConsent()
+            model.recordConsent(leavesNoTrace ? "" : consentRejected ?? "", site: leavesNoTrace ? "" : site)
         case "sponsor":
             sponsorSkipped += 1
             model.recordSponsor(seconds: (body["seconds"] as? Double) ?? 0)
+        case "fingerprint":
+            guard let technique = body["technique"] as? String, FingerprintTechnique(rawValue: technique) != nil,
+                  protectedHere, !fingerprinting.contains(technique) else { return }
+            let first = fingerprinting.isEmpty
+            fingerprinting.insert(technique)
+            if !leavesNoTrace { model.recordFingerprint(technique, site: site, first: first) }
         case "password-http":
             if url?.scheme == "http", !Hosts.isLocal(host) { passwordWarning = true }
         default:
@@ -434,7 +448,7 @@ extension Tab: WKNavigationDelegate {
                 if !looping {
                     cleanGuard = (result.url, Date())
                     pendingClean = result
-                    model.recordCleaned()
+                    model.recordCleaned(result.removed, host: leavesNoTrace ? "" : Hosts.site(result.url.host ?? ""))
                     navigate(result.url)
                     return (.cancel, preferences)
                 }
@@ -443,6 +457,7 @@ extension Tab: WKNavigationDelegate {
             if model.blocker.index.isDangerous(target), !(browser?.dangerAllowed.contains(host) ?? false) {
                 url = target
                 interstitial = .danger(target)
+                model.recordDanger(leavesNoTrace ? "" : host)
                 return (.cancel, preferences)
             }
             // 3. Подделка под известный сайт.
@@ -450,7 +465,7 @@ extension Tab: WKNavigationDelegate {
                let original = Lookalike.imitated(host: host) {
                 url = target
                 interstitial = .lookalike(target, original)
-                model.recordPhishing()
+                model.recordPhishing(leavesNoTrace ? "" : host)
                 return (.cancel, preferences)
             }
             // 4. Только HTTPS: сначала пробуем защищённое соединение.
@@ -463,7 +478,7 @@ extension Tab: WKNavigationDelegate {
                     if comps.port == 80 { comps.port = nil }
                     if let secure = comps.url {
                         upgradedFrom = target
-                        model.recordUpgraded()
+                        model.recordUpgraded(leavesNoTrace ? "" : host)
                         navigate(secure)
                         return (.cancel, preferences)
                     }
@@ -518,6 +533,10 @@ extension Tab: WKNavigationDelegate {
         passwordWarning = false
         sponsorSkipped = 0
         cnameChecks = 0
+        fingerprinting = []
+        hiddenCount = 0
+        hiddenTask?.cancel()
+        if protectedHere, let scheme = webView.url?.scheme, scheme == "http" || scheme == "https" { AppModel.shared.recordPage() }
         let current = webView.url
         if let clean = pendingClean, clean.url.host == current?.host {
             cleanedParams = clean.removed
@@ -540,6 +559,32 @@ extension Tab: WKNavigationDelegate {
         sync()
         if certificate == nil { certificate = webView.serverTrust.flatMap(CertificateInfo.from) }
         if let u = webView.url { AppModel.shared.visited(u, title: webView.title ?? "", isPrivate: isPrivate || ephemeral) }
+        scheduleHiddenCount()
+    }
+
+    /// Посчитать скрытое: через 2,5 и 10 секунд после загрузки (реклама часто подгружается позже).
+    private func scheduleHiddenCount() {
+        guard protectedHere, let host = webViewIfLoaded?.url?.host?.lowercased(), !host.isEmpty else { return }
+        hiddenTask?.cancel()
+        hiddenTask = Task { [weak self] in
+            for delay in [2.5, 7.5] {
+                try? await Task.sleep(for: .seconds(delay))
+                guard let self, !Task.isCancelled else { return }
+                await self.countHidden(host: host)
+            }
+        }
+    }
+
+    func countHidden(host: String) async {
+        let model = AppModel.shared
+        guard let view = webViewIfLoaded, view.url?.host?.lowercased() == host else { return }
+        let selectors = model.blocker.cosmetic.selectors(for: host)
+        guard !selectors.isEmpty else { return }
+        let found = (try? await view.callAsyncJavaScript(Scripts.countHidden, arguments: ["list": selectors], in: nil, contentWorld: .defaultClient)) as? Int ?? 0
+        guard !Task.isCancelled, view.url?.host?.lowercased() == host, found > hiddenCount else { return }
+        let added = found - hiddenCount
+        hiddenCount = found
+        if !leavesNoTrace { model.recordHidden(added, site: site) }
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {

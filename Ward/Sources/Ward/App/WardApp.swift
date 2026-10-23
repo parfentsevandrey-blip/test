@@ -39,6 +39,18 @@ struct WardApp: App {
         .defaultSize(width: 760, height: 620)
         .restorationBehavior(.disabled)
 
+        Window("Закладки", id: "bookmarks") {
+            BookmarkManager().environment(AppModel.shared)
+        }
+        .defaultSize(width: 900, height: 620)
+        .restorationBehavior(.disabled)
+
+        Window("Безопасность", id: "dashboard") {
+            SecurityDashboard().environment(AppModel.shared)
+        }
+        .defaultSize(width: 1180, height: 860)
+        .restorationBehavior(.disabled)
+
         Settings {
             SettingsView().environment(AppModel.shared)
         }
@@ -92,12 +104,34 @@ struct BrowserCommands: Commands {
             Button("Вперёд") { tab?.goForward() }.keyboardShortcut("]").disabled(!(tab?.canGoForward ?? false))
             Divider()
             Button("Показать всю историю") { openWindow(id: "history") }.keyboardShortcut("y")
-            Divider()
-            Button("Добавить в избранное") {
-                if let t = tab, let u = t.url { AppModel.shared.toggleFavorite(u, title: t.title) }
+        }
+        CommandMenu("Закладки") {
+            Button("Добавить в закладки…") {
+                if let t = tab, let u = t.url { AppModel.shared.bookmarkPage(u, title: t.title) }
             }
             .keyboardShortcut("d")
             .disabled(tab?.url == nil)
+            Button("Добавить все вкладки в папку") {
+                guard let browser else { return }
+                let folder = AppModel.shared.addFolder("Вкладки \(Date().formatted(date: .abbreviated, time: .shortened))")
+                for t in browser.tabs { if let u = t.url { AppModel.shared.addBookmark(u, title: t.title, to: .folder(folder.id)) } }
+            }
+            .keyboardShortcut("d", modifiers: [.command, .shift])
+            .disabled(browser == nil)
+            Divider()
+            Button(AppModel.shared.prefs.showBookmarksBar ? "Скрыть панель закладок" : "Показать панель закладок") {
+                AppModel.shared.prefs.showBookmarksBar.toggle()
+            }
+            .keyboardShortcut("b", modifiers: [.command, .shift])
+            Button("Управление закладками") { openWindow(id: "bookmarks") }
+                .keyboardShortcut("b", modifiers: [.command, .option])
+            Divider()
+            BookmarkMenuContent(items: AppModel.shared.bookmarks.bar, browser: browser)
+            if !AppModel.shared.bookmarks.other.isEmpty {
+                Menu("Другие закладки") {
+                    BookmarkMenuContent(items: AppModel.shared.bookmarks.other, browser: browser)
+                }
+            }
         }
         CommandMenu("Вкладки") {
             Button("Следующая вкладка") { browser?.selectNeighbour(1) }.keyboardShortcut("]", modifiers: [.command, .shift])
@@ -109,6 +143,8 @@ struct BrowserCommands: Commands {
             Button("Последняя вкладка") { browser?.selectLast() }.keyboardShortcut("9")
         }
         CommandGroup(after: .appSettings) {
+            Button("Панель безопасности") { openWindow(id: "dashboard") }
+                .keyboardShortcut("s", modifiers: [.command, .shift])
             Button("Сделать браузером по умолчанию") { AppModel.shared.makeDefaultBrowser() }
             Button("Стереть всё…") { WipeConfirmation.ask() }.keyboardShortcut(.delete, modifiers: [.command, .shift])
         }
