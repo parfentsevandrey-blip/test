@@ -111,16 +111,16 @@ enum SelfTest {
             ok = check(c.encrypted > 0, "шифрование MSE с настоящими клиентами: \(c.encrypted) из \(c.total) соединений") && ok
             ok = check(c.fast > 0, "Fast extension с настоящими клиентами: \(c.fast) соединений") && ok
         }
-        let net = await engine.networkStatus()
-        print("  порт \(net.port), проброс: \(net.mapping.method ?? "—") \(net.mapping.message)\(net.mapping.externalIP.map { ", внешний адрес \($0)" } ?? "")")
-        print("  DHT: узлов \(net.dhtNodes), ответили на \(net.dhtQueries) чужих запросов, хранится пиров \(net.dhtStoredPeers)")
         await engine.pauseAll()
 
         // Только uTP: те же куски с настоящих пиров поверх UDP.
         var utpOptions = EngineOptions()
         utpOptions.utpOnly = true
+        // Без веб-сидов: у торрентов Debian есть url-list, и куски пришли бы по HTTP.
+        var utpSettings = EngineSettings()
+        utpSettings.webSeedsEnabled = false
         let utpEngine = Engine(supportDirectory: dir.appendingPathComponent("support-utp"), port: UInt16.random(in: 50000...60000),
-                               settings: EngineSettings(), options: utpOptions)
+                               settings: utpSettings, options: utpOptions)
         await utpEngine.start(restore: false)
         await utpEngine.add(meta: meta, savePath: dir.appendingPathComponent("data-utp"))
         let utpStart = Date()
@@ -143,6 +143,10 @@ enum SelfTest {
         let resolved = await waitFor(dhtEngine, meta.infoHash.hex, timeout: 150) { $0.status != .metadata }
         let nodes = await dhtEngine.dhtNodes
         ok = check(resolved != nil, "DHT без трекеров: метаданные получены за \(Int(Date().timeIntervalSince(dhtStart))) с, узлов \(nodes)") && ok
+        // Первый движок работал всё это время: роутер и DHT-узел успели проявить себя.
+        let net = await engine.networkStatus()
+        print("  порт \(net.port), проброс: \(net.mapping.method ?? "—") \(net.mapping.message)\(net.mapping.externalIP.map { ", внешний адрес \($0)" } ?? "")")
+        print("  DHT-узел: знает \(net.dhtNodes), ответил на \(net.dhtQueries) чужих запросов, хранит \(net.dhtStoredPeers) анонсов")
         return ok
     }
 }
