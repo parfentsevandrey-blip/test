@@ -347,7 +347,9 @@ extension Scripts {
       // Состояние — в мире Ward (страница его не видит): для самопроверки.
       const state = window.__wardConsent = { started: false, tries: 0, clicked: null };
 
-      const visible = (el) => !!(el && (el.offsetWidth || el.offsetHeight || el.getClientRects().length));
+      // Видимость не проверяется: окно согласия часто уже спрятано списком EasyList Cookie,
+      // а отказ всё равно нужно отправить — иначе сайт считает, что вы «не возражали».
+      const usable = (el) => !!el && !el.disabled;
       const post = (cmp) => {
         try { window.webkit.messageHandlers.wardEvent.postMessage({ type: 'consent', cmp, top: window === window.top }); } catch (e) {}
       };
@@ -371,7 +373,7 @@ extension Scripts {
             for (const sel of cmp.reject) {
               let el = null;
               try { el = root.querySelector(sel); } catch (e) {}
-              if (el && visible(el)) { click(el, cmp.name); return true; }
+              if (usable(el)) { click(el, cmp.name); return true; }
             }
           }
         }
@@ -382,7 +384,8 @@ extension Scripts {
         const buttons = document.querySelectorAll('button, a[role="button"], [role="button"], input[type="button"], input[type="submit"]');
         for (const b of buttons) {
           const text = (b.innerText || b.value || '').replace(/\s+/g, ' ').trim();
-          if (!text || text.length > 40 || !TEXT.test(text) || !visible(b)) continue;
+          const text2 = text || (b.textContent || '').replace(/\s+/g, ' ').trim();
+          if (!text2 || text2.length > 40 || !TEXT.test(text2) || !usable(b)) continue;
           let inside = false;
           for (let a = b, k = 0; a && k < 8; a = a.parentElement, k++) {
             if (CONTAINER.test((a.id || '') + ' ' + (typeof a.className === 'string' ? a.className : '') + ' ' + (a.getAttribute && (a.getAttribute('aria-label') || '')))) { inside = true; break; }
@@ -396,7 +399,7 @@ extension Scripts {
         tries++;
         state.tries = tries;
         if (known()) return;
-        if (tries > 2) generic();
+        if (tries > 1) generic();
       };
       let timer = null;
       const schedule = () => { if (!done && !timer) timer = setTimeout(() => { timer = null; attempt(); }, 300); };
@@ -406,6 +409,8 @@ extension Scripts {
         if (done) return;
         const mo = new MutationObserver(schedule);
         mo.observe(document.documentElement, { childList: true, subtree: true });
+        // Окна согласия часто появляются по таймеру, а не при изменении страницы.
+        for (const delay of [400, 1200, 2500, 5000, 9000]) setTimeout(attempt, delay);
         setTimeout(() => mo.disconnect(), 20000);
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true }); else start();

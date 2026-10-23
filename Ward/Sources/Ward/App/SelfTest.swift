@@ -408,14 +408,14 @@ enum SelfTest {
         else { info("страница трекера: \(tab.interstitial.map { "\($0)" } ?? "открылась") \(tab.url?.absoluteString ?? "")") }
 
         // 10. Частное окно: cookie только в памяти окна, отпечаток со своим секретом.
-        server.set("/cookie.html", html: "<!doctype html><title>cookie</title><script>document.cookie = 'ward_private=1; max-age=3600; path=/';</script>")
+        server.set("/cookie-private.html", html: "<!doctype html><title>cookie</title><script>document.cookie = 'ward_private=1; max-age=3600; path=/';</script>")
         let priv = BrowserState(isPrivate: true)
         model.register(priv)
         if let ptab = priv.selected {
             let pweb = ptab.webView
             pweb.frame = host.bounds
             host.addSubview(pweb)
-            _ = await open(ptab, "http://localhost:\(p)/cookie.html")
+            _ = await open(ptab, "http://localhost:\(p)/cookie-private.html")
             let pa = await fingerprintIn(ptab, "http://localhost:\(p)/fp.html?private")
             let normal = await fingerprintIn(tab, "http://localhost:\(p)/fp.html?normal")
             ok = check(pa["hash"] != nil && (pa["hash"] as? String) != (normal["hash"] as? String), "у частного окна свой отпечаток на том же сайте") && ok
