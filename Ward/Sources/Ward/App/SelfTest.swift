@@ -314,18 +314,18 @@ enum SelfTest {
             ok = check(missed.isEmpty, "собственный список Ward: аудио-, мобильная реклама и пиксели соцсетей" + (missed.isEmpty ? "" : " (пропущены: \(missed.joined(separator: ", ")))")) && ok
         }
         // Следы: чистые ссылки, AMP, CSP потоков, цепочка «отскоков», домашняя сеть, Referer.
-        let cleaner = LinkCleaner()
+        let plainCleaner = LinkCleaner()
         let amp = LinkCleaner.deAMP(URL(string: "https://www.google.com/amp/s/www.theverge.com/2026/10/23/story.amp?x=1")!)
         ok = check(amp?.absoluteString == "https://www.theverge.com/2026/10/23/story.amp?x=1", "AMP Google → страница издания (\(amp?.absoluteString ?? "-"))") && ok
         let amp2 = LinkCleaner.deAMP(URL(string: "https://www-bbc-com.cdn.ampproject.org/c/s/www.bbc.com/news/x")!)
         ok = check(amp2?.absoluteString == "https://www.bbc.com/news/x", "AMP-кэш → страница издания") && ok
-        let mail = cleaner.clean(URL(string: "https://shop.example/p?id=1&ml_subscriber=5&_kx=a&elqTrackId=9&oly_enc_id=3")!)?.url.absoluteString
+        let mail = plainCleaner.clean(URL(string: "https://shop.example/p?id=1&ml_subscriber=5&_kx=a&elqTrackId=9&oly_enc_id=3")!)?.url.absoluteString
         ok = check(mail == "https://shop.example/p?id=1", "метки рассылок и CRM убраны (\(mail ?? "-"))") && ok
-        let unsubscribe = cleaner.clean(URL(string: "https://news.example/unsubscribe?mkt_tok=abc&utm_source=x")!)?.url.absoluteString
+        let unsubscribe = plainCleaner.clean(URL(string: "https://news.example/unsubscribe?mkt_tok=abc&utm_source=x")!)?.url.absoluteString
         ok = check(unsubscribe == "https://news.example/unsubscribe?mkt_tok=abc", "ссылка «отписаться» сохраняет свой ключ (\(unsubscribe ?? "-"))") && ok
-        let copied = CleanLink.clean(URL(string: "https://example.com/a?utm_source=x&id=2#:~:text=Ward")!, cleaner: cleaner).absoluteString
+        let copied = CleanLink.clean(URL(string: "https://example.com/a?utm_source=x&id=2#:~:text=Ward")!, cleaner: plainCleaner).absoluteString
         ok = check(copied == "https://example.com/a?id=2", "«Скопировать чистую ссылку»: без меток и «перейти к тексту» (\(copied))") && ok
-        let safelink = cleaner.clean(URL(string: "https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.org%2Fx&data=1")!)?.url.absoluteString
+        let safelink = plainCleaner.clean(URL(string: "https://eur01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fexample.org%2Fx&data=1")!)?.url.absoluteString
         ok = check(safelink == "https://example.org/x", "переходник Outlook пропущен (\(safelink ?? "-"))") && ok
         ok = check(CSP.allowsBlobWorkers("default-src 'self'; worker-src 'self' blob:") && CSP.allowsBlobWorkers("img-src *")
                    && !CSP.allowsBlobWorkers("worker-src 'self'") && !CSP.allowsBlobWorkers("script-src 'self'")
@@ -772,8 +772,8 @@ enum SelfTest {
         // 12и. Правдоподобие вымышленного устройства — та же батарея, что у детекторов подделки.
         let coherence = await Coherence.run(model: model)
         for c in coherence.checks { info("правдоподобие [\(c.profile)] \(c.ok ? "✓" : "✗") \(c.title)\(c.detail.isEmpty ? "" : ": " + c.detail)") }
-        let strict: Set<String> = ["native", "own-props", "illegal", "instance", "construct", "iframe", "worker", "canvas", "foreign", "gpc", "webrtc"]
-        let broken = coherence.checks.filter { strict.contains($0.key) && !$0.ok }
+        let strictChecks: Set<String> = ["native", "own-props", "illegal", "instance", "construct", "iframe", "worker", "canvas", "foreign", "gpc", "webrtc"]
+        let broken = coherence.checks.filter { strictChecks.contains($0.key) && !$0.ok }
         ok = check(coherence.checks.count >= 20 && broken.isEmpty,
                    "подделка незаметна для детекторов: \(coherence.passed) из \(coherence.checks.count)\(broken.isEmpty ? "" : " — " + broken.map { "\($0.title) (\($0.profile))" }.joined(separator: ", "))") && ok
 

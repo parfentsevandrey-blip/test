@@ -202,10 +202,7 @@ struct ShieldPanel: View {
                      : "Отпечаток снимал сторонний скрипт: \(scripts).", color: .pink)
             }
             if tab.referrersTrimmed + tab.cookiesCapped > 0 {
-                var parts: [String] = []
-                if tab.referrersTrimmed > 0 { parts.append("адрес, откуда вы пришли, — без страницы") }
-                if tab.cookiesCapped > 0 { parts.append("\(tab.cookiesCapped) \(Format.plural(tab.cookiesCapped, "cookie", "cookie", "cookie")) «навсегда» — на неделю") }
-                note("eye.trianglebadge.exclamationmark", "Следы урезаны: " + parts.joined(separator: "; ") + ".", color: .cyan)
+                note("eye.trianglebadge.exclamationmark", tracesSummary, color: .cyan)
             }
             if tab.noJITHere {
                 note("cpu", "Страница открыта без JIT: самый атакуемый механизм браузера выключен, память проверяется строже.", color: .blue)
@@ -259,6 +256,13 @@ struct ShieldPanel: View {
                 note("network.badge.shield.half.filled", "Окно идёт через прокси \(model.prefs.proxyHost):\(model.prefs.proxyPort) — сайт видит его адрес, а не ваш.", color: .blue)
             }
         }
+    }
+
+    private var tracesSummary: String {
+        var parts: [String] = []
+        if tab.referrersTrimmed > 0 { parts.append("адрес, откуда вы пришли, — без страницы") }
+        if tab.cookiesCapped > 0 { parts.append("\(tab.cookiesCapped) cookie «навсегда» — на неделю") }
+        return "Следы урезаны: " + parts.joined(separator: "; ") + "."
     }
 
     private func note(_ icon: String, _ text: String, color: Color = .green) -> some View {

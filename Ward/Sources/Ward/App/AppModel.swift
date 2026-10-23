@@ -117,7 +117,7 @@ final class AppModel {
         }
         // Раз в полчаса: данные сайтов-прокладок и просроченное хранилище скриптов.
         maintenanceTimer = Timer.scheduledTimer(withTimeInterval: 1800, repeats: true) { _ in
-            MainActor.assumeIsolated { Task { await AppModel.shared.maintain() } }
+            Task { @MainActor in await AppModel.shared.maintain() }
         }
         Task {
             try? await Task.sleep(for: .seconds(120))
