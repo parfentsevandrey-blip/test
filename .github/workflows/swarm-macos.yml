@@ -11,6 +11,9 @@ concurrency:
   group: swarm-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -18,6 +21,9 @@ jobs:
     defaults:
       run:
         working-directory: Swarm
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
 
@@ -26,6 +32,13 @@ jobs:
           XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
           sudo xcode-select -s "$XCODE"
           echo "Xcode: $XCODE"; sw_vers; swift --version
+
+      # Постоянный сертификат подписи из секретов (без них — ad-hoc), см. Harbor/README.md.
+      - name: Signing identity
+        env:
+          HARBOR_SIGNING_P12: ${{ secrets.HARBOR_SIGNING_P12 }}
+          HARBOR_SIGNING_PASSWORD: ${{ secrets.HARBOR_SIGNING_PASSWORD }}
+        run: ../Harbor/release/sign-setup.sh
 
       - name: Build Swarm.app + DMG
         run: ./scripts/build.sh
@@ -92,3 +105,15 @@ jobs:
           path: Swarm/dist/Swarm.dmg
           if-no-files-found: error
           compression-level: 0
+
+      # Зелёная сборка сразу попадает в каталог Harbor (см. Harbor/README.md).
+      - name: Publish to Harbor catalog
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: ../Harbor/release/publish.sh swarm dist/Swarm.app "$RUNNER_TEMP/render/window-1280.png" "$RUNNER_TEMP/render/settings-1.png"
+
+  catalog:
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/harbor-catalog.yml

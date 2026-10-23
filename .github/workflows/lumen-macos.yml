@@ -11,6 +11,9 @@ concurrency:
   group: lumen-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -18,6 +21,9 @@ jobs:
     defaults:
       run:
         working-directory: Lumen
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +35,13 @@ jobs:
           sw_vers
           swift --version
           sysctl -n machdep.cpu.brand_string
+
+      # Постоянный сертификат подписи из секретов (без них — ad-hoc), см. Harbor/README.md.
+      - name: Signing identity
+        env:
+          HARBOR_SIGNING_P12: ${{ secrets.HARBOR_SIGNING_P12 }}
+          HARBOR_SIGNING_PASSWORD: ${{ secrets.HARBOR_SIGNING_PASSWORD }}
+        run: ../Harbor/release/sign-setup.sh
 
       - name: Build Lumen.app + DMG
         run: ./scripts/build.sh
@@ -65,3 +78,15 @@ jobs:
           name: selftest-report
           path: ${{ runner.temp }}/selftest/*.json
           if-no-files-found: ignore
+
+      # Зелёная сборка сразу попадает в каталог Harbor (см. Harbor/README.md).
+      - name: Publish to Harbor catalog
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: ../Harbor/release/publish.sh lumen dist/Lumen.app 
+
+  catalog:
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/harbor-catalog.yml

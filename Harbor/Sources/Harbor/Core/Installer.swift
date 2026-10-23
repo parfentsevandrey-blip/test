@@ -421,7 +421,9 @@ nonisolated enum AppControl {
     static func quit(bundleID: String, at url: URL, timeout: TimeInterval) async -> Bool {
         let apps = running(bundleID: bundleID, at: url)
         guard !apps.isEmpty else { return false }
-        for app in apps { app.terminate() }
+        for app in apps where !app.terminate() {
+            print("Harbor: \(bundleID) не принял просьбу закрыться")
+        }
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline, apps.contains(where: { !$0.isTerminated }) {
             try? await Task.sleep(for: .milliseconds(200))

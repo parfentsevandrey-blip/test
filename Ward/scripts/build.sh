@@ -114,7 +114,7 @@ MIGRATION
 plutil -lint "$APP/Contents/Resources/container-migration.plist"
 
 step "Подпись (ad-hoc, песочница + hardened runtime)"
-codesign --force --sign - --timestamp=none --options runtime --entitlements "$ROOT/scripts/Ward.entitlements" "$APP"
+codesign --force --sign "${CODESIGN_IDENTITY:--}" --timestamp=none --options runtime --entitlements "$ROOT/scripts/Ward.entitlements" "$APP"
 codesign -d --entitlements - "$APP" 2>/dev/null | grep -q "app-sandbox" && echo "  песочница включена"
 codesign --verify --strict "$APP" && echo "  подпись в порядке"
 

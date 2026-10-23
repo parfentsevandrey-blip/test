@@ -11,6 +11,9 @@ concurrency:
   group: utter-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: macos-latest
@@ -18,6 +21,9 @@ jobs:
     defaults:
       run:
         working-directory: Utter
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
 
@@ -35,6 +41,13 @@ jobs:
         with:
           path: Utter/Vendor/llama
           key: utter-llama-${{ hashFiles('Utter/ENGINE_VERSION', 'Utter/scripts/build-engine.sh') }}-${{ runner.os }}-xcode26
+
+      # Постоянный сертификат подписи из секретов (без них — ad-hoc), см. Harbor/README.md.
+      - name: Signing identity
+        env:
+          HARBOR_SIGNING_P12: ${{ secrets.HARBOR_SIGNING_P12 }}
+          HARBOR_SIGNING_PASSWORD: ${{ secrets.HARBOR_SIGNING_PASSWORD }}
+        run: ../Harbor/release/sign-setup.sh
 
       - name: Build llama.cpp engine from source
         run: ./scripts/build-engine.sh
@@ -125,3 +138,15 @@ jobs:
           path: Utter/dist/Utter.dmg
           if-no-files-found: error
           compression-level: 0
+
+      # Зелёная сборка сразу попадает в каталог Harbor (см. Harbor/README.md).
+      - name: Publish to Harbor catalog
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: ../Harbor/release/publish.sh utter dist/Utter.app "$RUNNER_TEMP/render/window-menu.png" "$RUNNER_TEMP/render/window-hud.png" "$RUNNER_TEMP/render/window-settings.png"
+
+  catalog:
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/harbor-catalog.yml

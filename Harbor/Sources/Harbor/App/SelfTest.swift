@@ -18,14 +18,27 @@ enum Dummy {
         let version = AppVersion(bundle: Bundle.main.bundleURL)?.description ?? "?"
         let data = home.appendingPathComponent("data.txt")
         if !fm.fileExists(atPath: data.path) { try? Data("создано версией \(version)".utf8).write(to: data) }
-        let log = home.appendingPathComponent("launches.log")
-        let line = Data("\(version) \(ProcessInfo.processInfo.processIdentifier)\n".utf8)
-        if let h = try? FileHandle(forWritingTo: log) { h.seekToEndOfFile(); h.write(line); try? h.close() } else { try? line.write(to: log) }
+        record("\(version) \(ProcessInfo.processInfo.processIdentifier)")
         let app = NSApplication.shared
+        let delegate = DummyDelegate(version: version)
+        app.delegate = delegate
         app.setActivationPolicy(.accessory)
         app.run()
         exit(0)
     }
+
+    static func record(_ text: String) {
+        let log = home.appendingPathComponent("launches.log")
+        let line = Data((text + "\n").utf8)
+        if let h = try? FileHandle(forWritingTo: log) { h.seekToEndOfFile(); h.write(line); try? h.close() } else { try? line.write(to: log) }
+    }
+}
+
+/// Отмечает штатное завершение: так тест отличает «закрыли вежливо» от «убили принудительно».
+final class DummyDelegate: NSObject, NSApplicationDelegate {
+    let version: String
+    init(version: String) { self.version = version }
+    func applicationWillTerminate(_ notification: Notification) { Dummy.record("quit \(version)") }
 }
 
 /// Самопроверки для CI:
@@ -107,6 +120,9 @@ enum SelfTest {
         let apps = root.appendingPathComponent("Applications")
         let www = root.appendingPathComponent("www")
         for dir in [apps, www, root.appendingPathComponent("support")] { try? fm.createDirectory(at: dir, withIntermediateDirectories: true) }
+        // Процесс самопроверки — полноценное приложение для Launch Services (нужно, чтобы просить другие закрыться).
+        NSApplication.shared.setActivationPolicy(.prohibited)
+        NSApplication.shared.finishLaunching()
         setenv("HARBOR_INSTALL_DIR", apps.path, 1)
         setenv("HARBOR_SUPPORT_DIR", root.appendingPathComponent("support").path, 1)
         defer { for app in AppControl.running(bundleID: Dummy.bundleID) { app.forceTerminate() } }
@@ -164,11 +180,12 @@ enum SelfTest {
         do {
             let staged = try await installer.stage(entry(2)) { _ in }
             let result = try await installer.install(staged, quitTimeout: 10)
-            let launches = await waitForLaunches(2)
+            let launches = await waitForLaunches(3)
             ok = check(result.previous == AppVersion("1.0.0", build: 1) && AppVersion(bundle: target) == AppVersion("1.0.0", build: 2),
                        "обновление 1 → 2 поверх установленной версии") && ok
+            ok = check(launches.contains("quit 1.0.0 (1)"), "запущенная версия закрыта штатно (успела сохраниться), а не принудительно") && ok
             ok = check(result.relaunched && launches.last?.hasPrefix("1.0.0 (2)") == true,
-                       "запущенное приложение закрыто штатно и открыто снова уже новой версией") && ok
+                       "после замены приложение открыто снова — уже новой версией") && ok
             ok = check(before != nil && (try? String(contentsOf: data, encoding: .utf8)) == before,
                        "данные приложения не тронуты: «\(before ?? "?")»") && ok
             let backup = await installer.backup(for: Dummy.bundleID)

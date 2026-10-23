@@ -93,11 +93,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 plutil -lint "$APP/Contents/Info.plist"
 
-step "Подпись (ad-hoc)"
+step "Подпись"
 # Вложенные программы — первыми, затем сам бандл.
-codesign --force --sign - --timestamp=none "$APP/Contents/MacOS/xray"
-codesign --force --sign - --timestamp=none --identifier app.veil.helper "$APP/Contents/MacOS/VeilHelper"
-codesign --force --sign - --timestamp=none "$APP"
+codesign --force --sign "${CODESIGN_IDENTITY:--}" --timestamp=none "$APP/Contents/MacOS/xray"
+codesign --force --sign "${CODESIGN_IDENTITY:--}" --timestamp=none --identifier app.veil.helper "$APP/Contents/MacOS/VeilHelper"
+codesign --force --sign "${CODESIGN_IDENTITY:--}" --timestamp=none "$APP"
 codesign --verify --strict "$APP" && echo "  подпись в порядке"
 
 if [[ "${1:-}" != "--no-dmg" ]]; then

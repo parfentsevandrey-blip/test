@@ -82,8 +82,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 plutil -lint "$APP/Contents/Info.plist"
 
-step "Подпись (ad-hoc)"
-codesign --force --sign - --timestamp=none "$APP"
+step "Подпись"
+codesign --force --sign "${CODESIGN_IDENTITY:--}" --timestamp=none "$APP"
 codesign --verify --strict "$APP" && echo "  подпись в порядке"
 
 if [[ "${1:-}" != "--no-dmg" ]]; then
