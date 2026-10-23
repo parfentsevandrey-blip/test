@@ -2,8 +2,9 @@ import AppKit
 import Foundation
 
 /// Демо-режим для скриншотов в CI:
-///   --demo-ui <apps.json> <папка иконок> [--demo-onboarding N | --demo-detail <id> | --demo-updates]
-/// Каталог берётся из описаний репозитория, состояния приложений выдуманы, сети нет.
+///   HARBOR_DEMO_CATALOG=<apps.json> HARBOR_DEMO_ICONS=<папка> Harbor --demo-ui [--demo-onboarding N | --demo-detail <id> | --demo-updates]
+/// Каталог берётся из описаний репозитория, состояния приложений выдуманы, сети нет. Пути — в переменных
+/// окружения: файлы в аргументах AppKit принял бы за документы для открытия и не показал бы главное окно.
 enum DemoUI {
     static var isOn: Bool { CommandLine.arguments.contains("--demo-ui") }
 
@@ -14,8 +15,8 @@ enum DemoUI {
     }
 
     private static var iconDirectory: URL? {
-        guard isOn, let i = CommandLine.arguments.firstIndex(of: "--demo-ui"), i + 2 < CommandLine.arguments.count else { return nil }
-        return URL(fileURLWithPath: CommandLine.arguments[i + 2])
+        guard isOn, let path = ProcessInfo.processInfo.environment["HARBOR_DEMO_ICONS"] else { return nil }
+        return URL(fileURLWithPath: path)
     }
 
     static var onboardingPage: Int? { argument(after: "--demo-onboarding").flatMap(Int.init) }
@@ -33,7 +34,7 @@ enum DemoUI {
     }
 
     static func catalog() -> Catalog? {
-        guard let path = argument(after: "--demo-ui"), let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
+        guard let path = ProcessInfo.processInfo.environment["HARBOR_DEMO_CATALOG"], let data = try? Data(contentsOf: URL(fileURLWithPath: path)),
               let raw = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else { return nil }
         var apps: [CatalogApp] = []
         for (i, item) in raw.enumerated() {

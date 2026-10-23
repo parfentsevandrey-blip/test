@@ -80,7 +80,7 @@ jobs:
             swift "../$d/scripts/make-icon.swift" "$ICONS/$d" >/dev/null && cp "$ICONS/$d/AppIcon.iconset/icon_512x512.png" "$ICONS/$d.png" || true
           done
           shot() {
-            dist/Harbor.app/Contents/MacOS/Harbor --demo-ui Catalog/apps.json "$ICONS" "${@:2}" &
+            HARBOR_DEMO_CATALOG="$PWD/Catalog/apps.json" HARBOR_DEMO_ICONS="$ICONS" dist/Harbor.app/Contents/MacOS/Harbor --demo-ui "${@:2}" &
             PID=$!; sleep 8
             screencapture -x "$OUT/$1.png" || true
             kill $PID 2>/dev/null || true; sleep 2
