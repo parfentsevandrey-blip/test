@@ -794,27 +794,31 @@ enum SelfTest {
         info("домашняя сеть: до сервера дошло \(lanRequested), щит: \(tab.lanAttempts)")
         ok = check(lanRequested.isEmpty, "домашняя сеть: ни картинка, ни fetch до 127.0.0.1 не дошли") && ok
         ok = check(!tab.lanAttempts.isEmpty, "щит знает о попытке залезть в домашнюю сеть") && ok
-        // WebRTC без звонка: только через ретранслятор — ни адресов домашней сети, ни объявлений mDNS.
+        // WebRTC без звонка: соединение не создаётся вовсе (иначе WebKit опрашивает сеть и macOS спрашивает
+        // про «локальную сеть»), но конструктор и объект выглядят обычными.
+        let lanBefore = tab.lanAttempts
         let rtcPage = """
         <!doctype html><body><script>
         window.rtc = { type: typeof RTCPeerConnection, candidates: [] };
         try {
           const pc = new RTCPeerConnection({ iceServers: [] });
-          window.rtc.policy = pc.getConfiguration().iceTransportPolicy;
           window.rtc.same = pc.constructor === RTCPeerConnection && pc instanceof RTCPeerConnection;
-          pc.onicecandidate = (e) => { if (e.candidate) window.rtc.candidates.push(e.candidate.candidate); };
-          pc.createDataChannel('x');
-          pc.createOffer().then((o) => pc.setLocalDescription(o)).catch((e) => window.rtc.error = String(e));
-        } catch (e) { window.rtc.error = String(e); }
+          window.rtc.native = Function.prototype.toString.call(RTCPeerConnection).includes('[native code]');
+          try {
+            pc.onicecandidate = (e) => { if (e.candidate) window.rtc.candidates.push(e.candidate.candidate); };
+            pc.createDataChannel('x');
+            pc.createOffer().then((o) => pc.setLocalDescription(o)).catch((e) => window.rtc.error = String(e));
+          } catch (e) { window.rtc.error = String(e); }
+        } catch (e) { window.rtc.ctor = String(e); }
         </script></body>
         """
         tab.loadHTML(rtcPage, base: URL(string: "https://rtc-test.ward.invalid/")!)
         try? await Task.sleep(for: .seconds(3))
         let rtc = await evaluate(tab, "return window.rtc") as? [String: Any] ?? [:]
-        info("WebRTC без звонка: \(rtc)")
-        ok = check(rtc["type"] as? String == "function" && rtc["same"] as? Bool == true, "WebRTC на месте и выглядит обычным") && ok
-        ok = check(model.prefs.blockWebRTC || rtc["policy"] as? String == "relay" && (rtc["candidates"] as? [Any])?.isEmpty == true,
-                   "WebRTC без звонка не перебирает адреса домашней сети (только ретранслятор)") && ok
+        info("WebRTC без звонка: \(rtc), щит: \(tab.lanAttempts.subtracting(lanBefore))")
+        ok = check(rtc["type"] as? String == "function" && rtc["same"] as? Bool == true && rtc["native"] as? Bool == true, "WebRTC на месте и выглядит обычным") && ok
+        ok = check(model.prefs.blockWebRTC || (rtc["candidates"] as? [Any])?.isEmpty == true && tab.lanAttempts.contains("webrtc"),
+                   "WebRTC без звонка не трогает сеть, попытка — в щите") && ok
 
         // 12з. Сторонний скрипт-сборщик отпечатка: детектор называет его.
         _ = await open(tab, "http://localhost:\(p)/fp-ext.html")

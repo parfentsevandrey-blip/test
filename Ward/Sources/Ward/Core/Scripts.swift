@@ -640,9 +640,10 @@ nonisolated enum Scripts {
       if (LAN && w.XMLHttpRequest) replace(w.XMLHttpRequest.prototype, 'open', function (original, args) { lanCheck(args[1]); return original.apply(this, args); });
       if (LAN && w.navigator && w.Navigator) replace(w.Navigator.prototype, 'sendBeacon', function (original, args) { lanCheck(args[0]); return original.apply(this, args); });
 
-      // WebRTC без звонка — только через ретранслятор (TURN). Иначе сбор «кандидатов» перебирает адреса домашней
-      // сети и рассылает по ней объявления (mDNS): это и способ заглянуть в сеть, и системный запрос macOS
-      // «найти устройства в локальной сети» от имени Ward. Начался звонок (камера, микрофон, экран) — как обычно.
+      // WebRTC без звонка не создаётся вовсе. Даже пустой RTCPeerConnection заставляет WebKit опросить сеть:
+      // это способ узнать адреса домашней сети и повод для системного запроса macOS «найти устройства в локальной
+      // сети» от имени Ward. Сайт получает обычный с виду, но «закрытый» объект. Начался звонок (камера, микрофон,
+      // экран) — настоящий WebRTC; сайту, которому он нужен без звонка, домашняя сеть разрешается в щите.
       if (LAN && !pageLocal && typeof w.RTCPeerConnection === 'function') {
         let media = false;
         for (const key of ['getUserMedia', 'getDisplayMedia']) {
@@ -652,26 +653,20 @@ nonisolated enum Scripts {
             return result;
           });
         }
-        const relay = (config) => {
-          if (media) return config;
-          const c = Object.assign({}, config || {});
-          if (c.iceTransportPolicy !== 'relay') { c.iceTransportPolicy = 'relay'; signal('lan', 'WebRTC'); }
-          return c;
-        };
         const Native = w.RTCPeerConnection;
-        const Relayed = new Proxy(Native, {
+        const Guarded = new Proxy(Native, {
           construct(target, args, newTarget) {
-            const a = Array.from(args);
-            a[0] = relay(a[0]);
-            return Reflect.construct(target, a, newTarget === Relayed ? target : newTarget);
+            const real = newTarget === Guarded ? target : newTarget;
+            if (media) return Reflect.construct(target, args, real);
+            signal('lan', 'WebRTC');
+            return Object.create(real.prototype);
           },
         });
-        mask(Relayed, 'RTCPeerConnection');
-        try { Object.defineProperty(Native.prototype, 'constructor', { configurable: true, enumerable: false, writable: true, value: Relayed }); } catch (e) {}
-        replace(Native.prototype, 'setConfiguration', function (original, args) { args[0] = relay(args[0]); return original.apply(this, args); });
+        mask(Guarded, 'RTCPeerConnection');
+        try { Object.defineProperty(Native.prototype, 'constructor', { configurable: true, enumerable: false, writable: true, value: Guarded }); } catch (e) {}
         for (const name of ['RTCPeerConnection', 'webkitRTCPeerConnection']) {
           const d = Object.getOwnPropertyDescriptor(w, name);
-          if (d && d.value === Native) try { Object.defineProperty(w, name, Object.assign({}, d, { value: Relayed })); } catch (e) {}
+          if (d && d.value === Native) try { Object.defineProperty(w, name, Object.assign({}, d, { value: Guarded })); } catch (e) {}
         }
       }
 
