@@ -70,6 +70,9 @@ jobs:
       - name: Self-test WebKit (end-to-end)
         timeout-minutes: 20
         run: |
+          # Сначала просто запуск с пустой вкладкой (без сайтов и без самопроверки): есть ли запрос «локальная сеть» уже тут.
+          "$WARD_TEST" --demo-ui newtab > "$RUNNER_TEMP/render/pre-webkit-newtab.log" 2>&1 &
+          PRE=$!; sleep 12; screencapture -x "$RUNNER_TEMP/render/pre-webkit-newtab.png" || true; kill $PRE 2>/dev/null || true; sleep 2
           "$WARD_TEST" --selftest-webkit
           mkdir -p "$RUNNER_TEMP/render"; screencapture -x "$RUNNER_TEMP/render/after-selftest-webkit.png" || true
 
@@ -96,7 +99,7 @@ jobs:
         if: always()
         run: |
           # Кто и к какому адресу вызвал системный запрос «найти устройства в локальной сети».
-          log show --last 40m --style compact --predicate 'process == "nehelper" OR subsystem == "com.apple.networkextension" OR eventMessage CONTAINS[c] "local network" OR eventMessage CONTAINS[c] "LocalNetwork" OR eventMessage CONTAINS[c] "mdns" OR eventMessage CONTAINS[c] "multicast"' 2>/dev/null | grep -v '^Timestamp' | tail -400 > "$RUNNER_TEMP/render/local-network.log" || true
+          log show --last 50m --style compact --predicate 'process != "runningboardd" AND (process == "nehelper" OR subsystem == "com.apple.networkextension" OR eventMessage CONTAINS[c] "local network" OR eventMessage CONTAINS[c] "LocalNetwork")' 2>/dev/null | grep -v '^Timestamp' | cut -c1-600 | tail -1500 > "$RUNNER_TEMP/render/local-network.log" || true
           grep -i -E "ward|webkit|prompt|local network" "$RUNNER_TEMP/render/local-network.log" | tail -80 || true
 
       - name: Crash reports
