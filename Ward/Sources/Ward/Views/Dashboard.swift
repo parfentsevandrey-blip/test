@@ -72,6 +72,7 @@ struct SecurityDashboard: View {
             .frame(maxWidth: 1180)
             .frame(maxWidth: .infinity)
         }
+        .defaultScrollAnchor(DemoUI.dashboardBottom ? .bottom : .top)
         .background(DashboardBackground())
         .navigationTitle("Безопасность")
         .confirmationDialog("Сбросить всю статистику?", isPresented: $confirmReset) {

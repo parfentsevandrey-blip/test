@@ -26,6 +26,9 @@ enum DemoUI {
         }
     }
 
+    /// Панель безопасности, прокрученная вниз (для второго скриншота).
+    static var dashboardBottom: Bool { isOn && screen == "dashboard-bottom" }
+
     /// Открыть щит сразу (для скриншота).
     static var showsShield: Bool { isOn && screen == "shield" }
 
@@ -58,7 +61,11 @@ enum DemoUI {
             for delay in [0.5, 2.0, 5.0] {
                 try? await Task.sleep(for: .seconds(delay))
                 NSApp.activate()
-                if !screen.hasPrefix("settings") { browser.window?.makeKeyAndOrderFront(nil) }
+                // Экран раннера CI меньше окна по умолчанию — подогнать, чтобы панель была видна целиком.
+                if let window = browser.window, let frame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame {
+                    window.setFrame(frame, display: true)
+                }
+                if !screen.hasPrefix("settings") && !screen.hasPrefix("dashboard") && screen != "bookmarks" { browser.window?.makeKeyAndOrderFront(nil) }
             }
         }
         await model.blocker.waitReady(timeout: 90)
@@ -82,7 +89,7 @@ enum DemoUI {
         case "private":
             // В этом демо первое окно само частное (см. WardApp).
             browser.newTab(url: URL(string: "https://duckduckgo.com")!, select: false)
-        case "dashboard":
+        case "dashboard", "dashboard-bottom":
             // Настоящие счётчики: сначала открыть сайты, потом показать панель.
             for site in sites { browser.newTab(url: URL(string: site)!, select: false) }
             browser.selected?.load(URL(string: "https://www.theverge.com")!)
@@ -90,7 +97,10 @@ enum DemoUI {
             model.openWindow?("dashboard")
             try? await Task.sleep(for: .seconds(1))
             NSApp.activate()
-            NSApp.windows.first { $0.title == "Безопасность" }?.makeKeyAndOrderFront(nil)
+            if let window = NSApp.windows.first(where: { $0.title == "Безопасность" }) {
+                if let frame = window.screen?.visibleFrame ?? NSScreen.main?.visibleFrame { window.setFrame(frame, display: true) }
+                window.makeKeyAndOrderFront(nil)
+            }
         case "bookmarks":
             browser.selected?.load(URL(string: sites[0])!)
             try? await Task.sleep(for: .seconds(6))
