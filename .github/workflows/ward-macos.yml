@@ -59,7 +59,11 @@ jobs:
 
       # Логика — на самом Ward из образа: заодно видно, что в песочнице он читает списки из бандла.
       - name: Self-test logic (offline)
-        run: env -u WARD_HOME dist/Ward.app/Contents/MacOS/Ward --selftest-logic
+        run: |
+          env -u WARD_HOME dist/Ward.app/Contents/MacOS/Ward --selftest-logic
+          # Снимок экрана после каждой самопроверки: видно, не вызвала ли она системный запрос
+          # (например, «найти устройства в локальной сети»).
+          mkdir -p "$RUNNER_TEMP/render"; screencapture -x "$RUNNER_TEMP/render/after-selftest-logic.png" || true
 
       # Настоящий WebKit: сборка всех правил, стенд на этом Mac с рекламой и трекерами,
       # скриптлеты, отказ от cookie, подделки, строгий режим, контейнеры, прокси, песочница.
@@ -67,6 +71,7 @@ jobs:
         timeout-minutes: 20
         run: |
           "$WARD_TEST" --selftest-webkit
+          mkdir -p "$RUNNER_TEMP/render"; screencapture -x "$RUNNER_TEMP/render/after-selftest-webkit.png" || true
 
       - name: UI screenshots
         run: |
