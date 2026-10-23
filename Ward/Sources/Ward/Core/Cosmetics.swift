@@ -80,25 +80,52 @@ extension Scripts {
     return n;
     """
 
-    /// Мост для сигналов защиты от отпечатка: она работает в мире страницы и не может писать Ward напрямую
-    /// (иначе писать смогла бы и страница). Сигнал — событие на document со случайным для запуска именем;
-    /// страница его не знает, а слушатель живёт в отдельном мире Ward.
+    /// Мост для сигналов защиты от отпечатка и следов: они работают в мире страницы и не могут писать Ward
+    /// напрямую (иначе писать смогла бы и страница). Сигнал — событие на document со случайным для запуска
+    /// именем; страница его не знает, а слушатель живёт в отдельном мире Ward. В `detail` — чей скрипт
+    /// (для отпечатка) или что именно (адрес в домашней сети, имя cookie).
     nonisolated static func fingerprintRelay(token: String) -> String {
         """
         (() => {
+          const post = (body) => { try { window.webkit.messageHandlers.wardEvent.postMessage(body); } catch (e) {} };
+          const detail = (e) => (typeof e.detail === 'string' ? e.detail : '').slice(0, 200);
           for (const kind of [\(FingerprintTechnique.allCases.map { "'\($0.rawValue)'" }.joined(separator: ", "))]) {
-            document.addEventListener('\(token)-' + kind, () => {
-              try { window.webkit.messageHandlers.wardEvent.postMessage({ type: 'fingerprint', technique: kind }); } catch (e) {}
-            }, true);
+            document.addEventListener('\(token)-' + kind, (e) => post({ type: 'fingerprint', technique: kind, script: detail(e) }), true);
+          }
+          for (const kind of [\(TraceSignal.allCases.map { "'\($0.rawValue)'" }.joined(separator: ", "))]) {
+            document.addEventListener('\(token)-' + kind, (e) => post({ type: 'trace', what: kind, detail: detail(e) }), true);
           }
         })();
         """
     }
 }
 
+/// Следы, которые урезает скрипт приватности страницы.
+nonisolated enum TraceSignal: String, CaseIterable, Sendable {
+    /// Адрес, с которого вы пришли, отдан странице только как сайт.
+    case referrer
+    /// Cookie из скрипта страницы — с урезанным сроком жизни.
+    case cookie
+    /// Страница пыталась обратиться к устройству в вашей домашней сети.
+    case lan
+}
+
 /// Способы снять отпечаток браузера, которые Ward замечает (и подменяет).
 nonisolated enum FingerprintTechnique: String, CaseIterable, Sendable {
-    case canvas, webgl, audio, fonts, voices
+    case canvas, webgl, audio, fonts, voices, devices, storage, permissions
+
+    /// Вес способа для детектора: холст, звук и перебор шрифтов почти всегда означают сбор отпечатка,
+    /// список устройств и квота хранилища — бывают и по делу.
+    var weight: Int {
+        switch self {
+        case .canvas, .audio, .fonts: 3
+        case .webgl, .permissions: 2
+        case .voices, .devices, .storage: 1
+        }
+    }
+
+    /// С какого веса страница считается сборщиком отпечатка.
+    static let threshold = 6
 
     var title: String {
         switch self {
@@ -107,6 +134,9 @@ nonisolated enum FingerprintTechnique: String, CaseIterable, Sendable {
         case .audio: "Звуковой отпечаток"
         case .fonts: "Перебор шрифтов"
         case .voices: "Голоса синтеза речи"
+        case .devices: "Список камер и микрофонов"
+        case .storage: "Размер диска"
+        case .permissions: "Перебор разрешений"
         }
     }
 
@@ -117,6 +147,9 @@ nonisolated enum FingerprintTechnique: String, CaseIterable, Sendable {
         case .audio: "Обработка звука без звука"
         case .fonts: "Ширина текста в десятках шрифтов"
         case .voices: "Набор установленных голосов"
+        case .devices: "Сколько и каких устройств подключено"
+        case .storage: "Квота хранилища выдаёт объём диска"
+        case .permissions: "Что вы разрешали сайтам: геопозиция, уведомления…"
         }
     }
 
@@ -127,6 +160,9 @@ nonisolated enum FingerprintTechnique: String, CaseIterable, Sendable {
         case .audio: "waveform"
         case .fonts: "textformat"
         case .voices: "person.wave.2"
+        case .devices: "web.camera"
+        case .storage: "internaldrive"
+        case .permissions: "checklist"
         }
     }
 }

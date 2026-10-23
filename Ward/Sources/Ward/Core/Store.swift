@@ -85,6 +85,24 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
     /// Журнал безопасности: все события защиты в файлах на этом Mac.
     var securityLog = true
     var logRetentionDays = 30
+    /// Сигнал «не продавать мои данные» (Global Privacy Control): заголовок Sec-GPC и navigator.globalPrivacyControl.
+    var gpc = true
+    /// Другому сайту — только адрес сайта, с которого вы пришли, без страницы и параметров.
+    var trimReferrer = true
+    /// Срок жизни cookie, которые ставят скрипты страницы (0 — без ограничения).
+    var cookieLifetimeDays = 7
+    /// Хранилище скриптов (localStorage, IndexedDB, Service Worker) сайта, где вы ничего не делали N дней, удаляется.
+    var storageLifetimeDays = 7
+    /// Сайты из интернета не достучатся до устройств домашней сети и сервисов на этом Mac.
+    var blockLocalNetwork = true
+    /// Сайты, которым разрешена домашняя сеть.
+    var lanAllowedSites: Set<String> = []
+    /// Защита от «отскоков»: данные сайтов-прокладок, через которые вас перебрасывали, удаляются.
+    var bounceProtection = true
+    /// Незнакомые сайты и изолятор — без JIT-компиляции JavaScript (macOS 26.4+).
+    var noJIT = true
+    /// Страница, которая снимает отпечаток всерьёз, больше ничего не отправляет на сторонние адреса.
+    var fingerprintResponse = false
 
     init() {}
 
@@ -151,6 +169,15 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
         separateCircuits = v(.separateCircuits, d.separateCircuits)
         securityLog = v(.securityLog, d.securityLog)
         logRetentionDays = v(.logRetentionDays, d.logRetentionDays)
+        gpc = v(.gpc, d.gpc)
+        trimReferrer = v(.trimReferrer, d.trimReferrer)
+        cookieLifetimeDays = v(.cookieLifetimeDays, d.cookieLifetimeDays)
+        storageLifetimeDays = v(.storageLifetimeDays, d.storageLifetimeDays)
+        blockLocalNetwork = v(.blockLocalNetwork, d.blockLocalNetwork)
+        lanAllowedSites = v(.lanAllowedSites, d.lanAllowedSites)
+        bounceProtection = v(.bounceProtection, d.bounceProtection)
+        noJIT = v(.noJIT, d.noJIT)
+        fingerprintResponse = v(.fingerprintResponse, d.fingerprintResponse)
     }
 
     /// Включён ли строгий режим для сайта. `familiar` — сайт есть в истории или избранном.
@@ -216,6 +243,24 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
     var corporationBlocks: [String: Int] = [:]
     /// Сколько вымышленных личностей выдано «Маской».
     var masksIssued = 0
+    /// «Отскоки»: сколько раз вас перебрасывали через сайт-прокладку, через какие сайты, сколько их данных удалено.
+    var bounces = 0
+    var bounceSites: [String: Int] = [:]
+    var bouncePurged = 0
+    /// Обращения сайтов из интернета к устройствам домашней сети: всего и с каких сайтов.
+    var lanBlocked = 0
+    var lanSites: [String: Int] = [:]
+    /// Урезанные следы: адрес, откуда пришли, и cookie скриптов со сроком «навсегда».
+    var referrersTrimmed = 0
+    var cookiesCapped = 0
+    /// Сайты, чьё хранилище скриптов удалено по сроку (вы ничего не делали на них неделю).
+    var storagePurged = 0
+    /// Страницы, открытые без JIT.
+    var noJITPages = 0
+    /// Скрипты, которые снимали отпечаток (адрес скрипта → на скольких страницах).
+    var fingerprintScripts: [String: Int] = [:]
+    /// Какие метки вырезаны из ссылок и сколько раз.
+    var paramsRemoved: [String: Int] = [:]
 
     init() {}
 
@@ -244,6 +289,26 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
         isolation = v(.isolation, [:])
         corporationBlocks = v(.corporationBlocks, [:])
         masksIssued = v(.masksIssued, 0)
+        bounces = v(.bounces, 0)
+        bounceSites = v(.bounceSites, [:])
+        bouncePurged = v(.bouncePurged, 0)
+        lanBlocked = v(.lanBlocked, 0)
+        lanSites = v(.lanSites, [:])
+        referrersTrimmed = v(.referrersTrimmed, 0)
+        cookiesCapped = v(.cookiesCapped, 0)
+        storagePurged = v(.storagePurged, 0)
+        noJITPages = v(.noJITPages, 0)
+        fingerprintScripts = v(.fingerprintScripts, [:])
+        paramsRemoved = v(.paramsRemoved, [:])
+    }
+
+    /// Добавить к счётчику по ключу, не давая словарю разрастись.
+    static func bump(_ map: inout [String: Int], _ key: String, by n: Int = 1, limit: Int = 300) {
+        guard !key.isEmpty else { return }
+        map[key, default: 0] += n
+        if map.count > limit {
+            for (k, _) in map.sorted(by: { $0.value < $1.value }).prefix(map.count - limit * 2 / 3) { map[k] = nil }
+        }
     }
 
     static func dayKey(_ date: Date = Date()) -> String {

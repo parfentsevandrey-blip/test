@@ -141,6 +141,16 @@ enum DemoUI {
             model.openWindow?("bookmarks")
             try? await Task.sleep(for: .seconds(1))
             NSApp.windows.first { $0.title == "Закладки" }?.makeKeyAndOrderFront(nil)
+        case "newtab":
+            // Новая вкладка: курсор сразу в поле адреса — проверка для CI (в журнале демо).
+            browser.selected?.load(URL(string: sites[0])!)
+            try? await Task.sleep(for: .seconds(6))
+            browser.newTab()
+            try? await Task.sleep(for: .seconds(1.5))
+            let editor = browser.window?.firstResponder as? NSTextView
+            let field = editor?.delegate as? NSTextField
+            print("Ward demo: курсор в поле адреса новой вкладки: \((field?.placeholderString ?? field?.placeholderAttributedString?.string) == AddressFocus.placeholder)")
+            if let editor { editor.insertText("ward типизация", replacementRange: editor.selectedRange()) }
         case "downloads":
             browser.selected?.load(URL(string: sites[1])!)
             seedDownloads()

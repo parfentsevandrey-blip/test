@@ -171,6 +171,33 @@ setTimeout(()=>{const n=document.createElement('div');n.id='news';n.style.cssTex
 </script>
 </body></html>
 """#)
+        // Фоновые потоки: относительные адреса внутри потока, модульный поток и страница с CSP без blob:.
+        let js = "application/javascript"
+        set("/wk/w.js", type: js, body: Data("""
+        importScripts('helper.js');
+        fetch('data.json').then((r) => r.json()).then((d) => postMessage({ hc: navigator.hardwareConcurrency, gpc: navigator.globalPrivacyControl === true,
+          href: String(self.location.href), helper: self.helperLoaded === true, data: d.ok }), (e) => postMessage({ error: String(e) }));
+        """.utf8))
+        set("/wk/helper.js", type: js, body: Data("self.helperLoaded = true;".utf8))
+        set("/wk/data.json", type: "application/json", body: Data(#"{"ok": 1}"#.utf8))
+        set("/wk/m.js", type: js, body: Data("import { v } from './dep.js'; postMessage({ v, hc: navigator.hardwareConcurrency });".utf8))
+        set("/wk/dep.js", type: js, body: Data("export const v = 42;".utf8))
+        let workerPage = """
+        <!doctype html><html><body><script>
+        window.results = { hc: navigator.hardwareConcurrency };
+        const w = new Worker('w.js');
+        w.onmessage = (e) => { window.results.worker = e.data; };
+        w.onerror = (e) => { window.results.workerError = String(e.message || 'error'); };
+        try {
+          const m = new Worker('m.js', { type: 'module' });
+          m.onmessage = (e) => { window.results.module = e.data; };
+          m.onerror = (e) => { window.results.moduleError = String(e.message || 'error'); };
+        } catch (e) { window.results.moduleError = String(e); }
+        window.results.native = Function.prototype.toString.call(Worker).includes('[native code]') && (w instanceof Worker);
+        </script></body></html>
+        """
+        set("/wk/page.html", html: workerPage)
+        set("/wk/csp.html", headers: ["Content-Security-Policy": "worker-src 'self'; script-src 'self' 'unsafe-inline'"], body: Data(workerPage.utf8))
         // Как у Bloomberg: плашка в fixed-обёртке нулевой высоты, страница заперта классами на html и body,
         // «туман» — псевдоэлемент шапки, внизу плашки — десяток ссылок.
         set("/bbg.html", html: #"""

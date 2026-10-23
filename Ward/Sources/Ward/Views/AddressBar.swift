@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Состояние адресной строки окна: что введено и что подсказать.
@@ -51,7 +52,7 @@ struct AddressBar: View {
     var body: some View {
         HStack(spacing: 7) {
             securityIcon
-            TextField("Поиск или адрес сайта", text: $address.text)
+            TextField(AddressFocus.placeholder, text: $address.text)
                 .textFieldStyle(.plain)
                 .focused($focused)
                 .onSubmit(submit)
@@ -118,9 +119,11 @@ struct AddressBar: View {
     private func focusAddress() {
         focused = true
         Task {
-            for delay in [16, 60, 180] {
+            for delay in [16, 60, 180, 400] {
                 try? await Task.sleep(for: .milliseconds(delay))
                 if !focused { focused = true }
+                // Фокус SwiftUI у поля в панели окна срабатывает не всегда — ставим курсор и средствами AppKit.
+                if let window = browser.window { AddressFocus.focus(in: window) }
             }
         }
     }
@@ -254,5 +257,33 @@ struct SuggestionList: View {
         case .history: "clock"
         case .favorite: "bookmark"
         }
+    }
+}
+
+/// Курсор в поле адреса средствами AppKit: поле живёт в панели окна, и фокус SwiftUI до него доходит
+/// не всегда (новая вкладка, только что закрытая страница). Без курсора первые буквы уходят «в никуда»,
+/// и macOS отвечает звуком ошибки.
+enum AddressFocus {
+    static let placeholder = "Поиск или адрес сайта"
+
+    /// Поставить курсор в поле адреса, если вы сейчас не печатаете в другом поле.
+    @discardableResult
+    static func focus(in window: NSWindow) -> Bool {
+        if let editor = window.firstResponder as? NSTextView {
+            // Уже в поле адреса — или вы печатаете в другом поле (поиск по странице): не мешаем.
+            return (editor.delegate as? NSTextField).map(isAddressField) ?? false
+        }
+        guard let root = window.contentView?.superview, let field = find(in: root) else { return false }
+        return window.makeFirstResponder(field)
+    }
+
+    private static func isAddressField(_ field: NSTextField) -> Bool {
+        (field.placeholderString ?? field.placeholderAttributedString?.string) == placeholder
+    }
+
+    private static func find(in view: NSView) -> NSTextField? {
+        if let field = view as? NSTextField, field.isEditable, isAddressField(field) { return field }
+        for sub in view.subviews { if let field = find(in: sub) { return field } }
+        return nil
     }
 }

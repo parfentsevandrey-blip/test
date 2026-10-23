@@ -43,8 +43,20 @@ final class BrowserState {
         let tab = Tab(browser: self, url: url, container: container, ephemeral: ephemeral, jar: jar ?? self.jar(for: url, ephemeral: ephemeral))
         insert(tab, after: after)
         if select || tabs.count == 1 { self.select(tab) }
-        if url == nil { addressFocus += 1 }
+        if url == nil { focusAddressSoon() }
         return tab
+    }
+
+    /// Новая пустая вкладка: курсор сразу в поле адреса — можно печатать без щелчка.
+    func focusAddressSoon() {
+        addressFocus += 1
+        Task { @MainActor [weak self] in
+            for delay in [30, 120, 300, 600, 1000] {
+                try? await Task.sleep(for: .milliseconds(delay))
+                guard let window = self?.window else { continue }
+                if AddressFocus.focus(in: window) { return }
+            }
+        }
     }
 
     /// Окно, которое открыла страница (window.open, «Открыть в новом окне»): то же хранилище, что у неё.

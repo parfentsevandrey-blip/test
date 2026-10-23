@@ -638,6 +638,23 @@ enum SelfTest {
         ok = check(annoy["header"] as? Bool == true && annoy["bg"] as? Bool == true, "шапка сайта с меню и фон страницы не тронуты") && ok
         ok = check(tab.annoyancesHidden >= 3, "щит знает об убранных плашках (\(tab.annoyancesHidden))") && ok
 
+        // 12г. Фоновые потоки страницы получают ту же защиту и не ломаются (относительные адреса, модули, CSP).
+        for page in ["page", "csp"] {
+            _ = await open(tab, "http://localhost:\(p)/wk/\(page).html")
+            try? await Task.sleep(for: .seconds(2.5))
+            let wk = await evaluate(tab, "return window.results") as? [String: Any] ?? [:]
+            info("потоки (\(page)): \(wk)")
+            let worker = wk["worker"] as? [String: Any] ?? [:]
+            ok = check(worker["helper"] as? Bool == true && worker["data"] as? Int == 1 && (worker["href"] as? String)?.hasSuffix("/wk/w.js") == true,
+                       "поток (\(page)): importScripts, fetch и location — от настоящего адреса скрипта") && ok
+            ok = check(worker["hc"] as? Int == wk["hc"] as? Int, "поток (\(page)): число ядер то же, что у страницы (\(worker["hc"] ?? "-") / \(wk["hc"] ?? "-"))") && ok
+            if page == "page" {
+                ok = check(worker["gpc"] as? Bool == true || !model.prefs.fingerprint, "поток получил ту же защиту (GPC внутри потока)") && ok
+                ok = check((wk["module"] as? [String: Any])?["v"] as? Int == 42, "модульный поток работает") && ok
+                ok = check(wk["native"] as? Bool == true, "Worker выглядит встроенным") && ok
+            }
+        }
+
         // 12в. Плашка Bloomberg: обёртка нулевой высоты, запертые html и body, «туман» из псевдоэлемента.
         _ = await open(tab, "http://localhost:\(p)/bbg.html")
         try? await Task.sleep(for: .seconds(5))
