@@ -336,12 +336,13 @@ nonisolated final class UTPSocket {
             return
         case .synSent:
             if now > synSentAt + UInt64(timeoutMs * 1000) {
+                // SYN или ответ на него потерялся: повторяем 5 раз с паузами 1, 2, 3, 3, 3 с.
                 synRetries += 1
-                guard synRetries <= 3 else {
+                guard synRetries <= 5 else {
                     terminate(PeerError("uTP: пир не ответил"))
                     return
                 }
-                timeoutMs *= 2
+                timeoutMs = min(timeoutMs + 1000, 3000)
                 connect(now: now)
             }
             return

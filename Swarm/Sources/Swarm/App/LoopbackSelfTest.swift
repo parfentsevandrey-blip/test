@@ -142,7 +142,10 @@ nonisolated enum LoopbackSelfTest {
         // 8. DHT: узел-«роутер» N, сидер анонсирует раздачу, новый участник находит его без трекеров.
         var dhtSettings = plain
         dhtSettings.dhtEnabled = true
-        let n = await engine("N", dhtSettings)
+        // Узел-«роутер» не ходит в публичную DHT: иначе анонсы уйдут к настоящим узлам, ближе к хешу.
+        var isolated = EngineOptions()
+        isolated.dhtBootstrap = []
+        let n = await engine("N", dhtSettings, isolated)
         var dhtOptions = EngineOptions()
         dhtOptions.dhtBootstrap = [PeerAddress(host: "127.0.0.1", port: await n.port)]
         let s2 = await engine("S2", dhtSettings, dhtOptions)

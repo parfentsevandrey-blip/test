@@ -66,7 +66,7 @@ enum SelfTest {
         try? FileManager.default.createDirectory(at: dir.appendingPathComponent("Folder/sub"), withIntermediateDirectories: true)
         try? Data(repeating: 7, count: 100_000).write(to: dir.appendingPathComponent("Folder/a.bin"))
         try? Data(repeating: 9, count: 33_333).write(to: dir.appendingPathComponent("Folder/sub/b.bin"))
-        if let meta = try? TorrentCreator.create(from: dir.appendingPathComponent("Folder"), options: .init(pieceLength: 16384)),
+        if let meta = try? TorrentCreator.create(from: dir.appendingPathComponent("Folder"), options: .init(pieceLength: 16384, version: .v1)),
            let reparsed = try? Metainfo(torrentData: meta.torrentFileData()) {
             ok = check(reparsed.infoHash == meta.infoHash && reparsed.files.count == 2 && reparsed.totalLength == 133_333
                        && reparsed.pieceCount == 9, "создание .torrent и обратный разбор") && ok
