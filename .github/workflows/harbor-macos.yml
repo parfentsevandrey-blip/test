@@ -1,0 +1,116 @@
+name: Harbor (macOS)
+
+on:
+  push:
+    paths:
+      - "Harbor/**"
+      - ".github/workflows/harbor-macos.yml"
+      - ".github/workflows/harbor-catalog.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: harbor-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: Harbor
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"; sw_vers; swift --version
+
+      # Постоянный сертификат подписи из секретов (без них — ad-hoc).
+      - name: Signing identity
+        env:
+          HARBOR_SIGNING_P12: ${{ secrets.HARBOR_SIGNING_P12 }}
+          HARBOR_SIGNING_PASSWORD: ${{ secrets.HARBOR_SIGNING_PASSWORD }}
+        run: release/sign-setup.sh
+
+      - name: Build Harbor.app + DMG
+        run: ./scripts/build.sh
+
+      - name: Self-test core
+        run: dist/Harbor.app/Contents/MacOS/Harbor --selftest-core
+
+      # Полный цикл на подставном приложении: установка по HTTP со снятием карантина, обновление
+      # запущенного приложения с сохранением данных, отказ испорченным сборкам, откат, удаление.
+      - name: Self-test install / update / rollback
+        run: dist/Harbor.app/Contents/MacOS/Harbor --selftest-install "$RUNNER_TEMP"
+
+      # Тот же цикл через install.sh (curl | bash), как у пользователя без Harbor.
+      - name: Self-test install.sh
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/harbor-install"
+          export HARBOR_INSTALL_DIR="$RUNNER_TEMP/sh-apps" HARBOR_SUPPORT_DIR="$RUNNER_TEMP/sh-support" HARBOR_NO_LAUNCH=1
+          APP="$HARBOR_INSTALL_DIR/HarborDummy.app"
+          ver() { /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$APP/Contents/Info.plist"; }
+          ok() { if eval "$1"; then echo "✓ install.sh: $2"; else echo "✗ install.sh: $2"; exit 1; fi; }
+          HARBOR_CATALOG_URL="file://$ROOT/catalog-v1.json" bash install.sh --list
+          HARBOR_CATALOG_URL="file://$ROOT/catalog-v1.json" bash install.sh harbordummy
+          ok '[ "$(ver)" = 1 ]' "установлена сборка 1"
+          xattr -w com.apple.quarantine "0081;00000000;Safari;" "$APP"
+          HARBOR_CATALOG_URL="file://$ROOT/catalog-v1.json" bash install.sh harbordummy
+          ok '! xattr -p com.apple.quarantine "$APP" >/dev/null 2>&1' "метка карантина снята с уже установленной копии"
+          HARBOR_CATALOG_URL="file://$ROOT/catalog-v2.json" bash install.sh --update
+          ok '[ "$(ver)" = 2 ]' "обновление до сборки 2"
+          ok 'ls "$HARBOR_SUPPORT_DIR/Backups/app.harbor.selftest.dummy/" | grep -q "1.0.0.1"' "предыдущая версия в резервной копии"
+          ok 'codesign --verify --strict "$APP"' "подпись цела"
+
+      # Витрина с настоящими иконками всех приложений.
+      - name: UI screenshots
+        run: |
+          OUT="$RUNNER_TEMP/render"; ICONS="$RUNNER_TEMP/icons"; mkdir -p "$OUT" "$ICONS"
+          for d in Harbor Lumen Ward Veil Swarm Synapse Utter Sweep; do
+            swift "../$d/scripts/make-icon.swift" "$ICONS/$d" >/dev/null && cp "$ICONS/$d/AppIcon.iconset/icon_512x512.png" "$ICONS/$d.png" || true
+          done
+          shot() {
+            dist/Harbor.app/Contents/MacOS/Harbor --demo-ui Catalog/apps.json "$ICONS" "${@:2}" &
+            PID=$!; sleep 8
+            screencapture -x "$OUT/$1.png" || true
+            kill $PID 2>/dev/null || true; sleep 2
+          }
+          shot onboarding-1 --demo-onboarding 0
+          shot onboarding-3 --demo-onboarding 2
+          shot shelf
+          shot updates --demo-updates
+          shot detail --demo-detail ward
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Harbor-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Harbor-dmg
+          path: Harbor/dist/Harbor.dmg
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Publish to catalog
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: release/publish.sh harbor dist/Harbor.app "$RUNNER_TEMP/render/shelf.png" "$RUNNER_TEMP/render/detail.png" "$RUNNER_TEMP/render/updates.png"
+
+  catalog:
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/harbor-catalog.yml

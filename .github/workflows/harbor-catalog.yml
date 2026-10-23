@@ -1,0 +1,26 @@
+name: Harbor catalog
+
+# Пересборка catalog.json из манифестов опубликованных сборок. Вызывается из workflow каждого
+# приложения после публикации; задания идут строго по одному, поэтому одновременные публикации
+# не затирают друг друга (каждая пересборка читает все манифесты заново).
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: harbor-catalog
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: Harbor
+      - name: Build catalog.json
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: Harbor/release/build-catalog.sh
