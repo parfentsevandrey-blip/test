@@ -79,7 +79,7 @@ llama.cpp (MIT) для нейросетей в Synapse и Utter и Xray-core (MP
 | Приложение | Что заменяет | Статус |
 |---|---|---|
 | [**Lumen**](Lumen/) — видеоплеер | VLC, IINA, QuickTime | ✅ готов: Liquid Glass, свой демультиплексор MKV/WebM, HDR, живая подсветка |
-| [**Swarm**](Swarm/) — торрент/magnet-клиент | Transmission, qBittorrent, µTorrent | ✅ готов: BitTorrent, DHT, трекеры и magnet написаны с нуля, созвездие роя |
+| [**Swarm**](Swarm/) — торрент/magnet-клиент | Transmission, qBittorrent, µTorrent | ✅ готов: BitTorrent v1 и v2, uTP, полноценный DHT-узел, шифрование MSE, веб-сиды, LSD, проброс порта — всё с нуля; созвездие роя |
 | [**Sweep**](Sweep/) — очистка и удаление программ | CleanMyMac, CCleaner, AppCleaner | ✅ готов: политика безопасности с самопроверкой, следы программ по идентификаторам, журнал с возвратом, жидкая сфера и карта диска |
 | [**Synapse**](Synapse/) — локальные нейросети | Ollama, LM Studio, Jan | ✅ готов: анализ железа и подбор моделей, каталог Hugging Face с вердиктом для вашего Mac, установка в один клик с проверкой SHA-256, лента новых моделей, чат с размышлениями, API Ollama/OpenAI, нейросфера |
 | [**Utter**](Utter/) — диктовка в любое поле | «Диктовка» macOS, Superwhisper, Wispr Flow | ✅ готов: живёт в строке меню, своя горячая клавиша, русская речь печатается в поле ввода по мере речи, Qwen3-ASR на этом Mac, голосовые команды, свой словарь |

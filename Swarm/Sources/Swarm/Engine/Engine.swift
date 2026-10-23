@@ -182,9 +182,9 @@ actor Engine {
                 do {
                     let ranges = try await Blocklist.load(source)
                     list.replace(ranges)
-                    await self.setBlocklistMessage(nil)
+                    self.setBlocklistMessage(nil)
                 } catch {
-                    await self.setBlocklistMessage(error.localizedDescription)
+                    self.setBlocklistMessage(error.localizedDescription)
                 }
             }
         }

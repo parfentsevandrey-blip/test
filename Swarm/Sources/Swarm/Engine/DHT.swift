@@ -244,7 +244,7 @@ actor DHTNode {
         let message = [UInt8](BValue.dict(["t": .bytes(tid), "y": .str("q"), "q": .str(method), "a": .dict(a)]).encoded)
         let timer = Task {
             try? await Task.sleep(for: .seconds(timeout))
-            await self.expire(tid)
+            self.expire(tid)
         }
         let result: BValue? = await withCheckedContinuation { cont in
             pending[tid] = (cont, address)

@@ -79,7 +79,7 @@ enum SelfTest {
     }
 
     static func waitFor(_ engine: Engine, _ id: String, timeout: TimeInterval,
-                        _ condition: (TorrentSnapshot) -> Bool) async -> TorrentSnapshot? {
+                        _ condition: @Sendable (TorrentSnapshot) -> Bool) async -> TorrentSnapshot? {
         await LoopbackSelfTest.waitFor(engine, id, timeout: timeout, condition)
     }
 

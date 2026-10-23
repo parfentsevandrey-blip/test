@@ -228,7 +228,7 @@ nonisolated enum LoopbackSelfTest {
     }
 
     static func waitFor(_ engine: Engine, _ id: String, timeout: TimeInterval,
-                        _ condition: (TorrentSnapshot) -> Bool) async -> TorrentSnapshot? {
+                        _ condition: @Sendable (TorrentSnapshot) -> Bool) async -> TorrentSnapshot? {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             if let s = await engine.snapshots(detailed: id).first(where: { $0.id == id }) {

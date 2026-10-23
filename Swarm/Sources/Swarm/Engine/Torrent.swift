@@ -821,7 +821,7 @@ actor Torrent {
                     let data = try await WebSeed.fetch(base: url, meta: meta, piece: piece, anonymous: anonymous)
                     await self.webPiece(i, piece, data)
                 } catch {
-                    await self.webFailed(i, piece, error.localizedDescription)
+                    self.webFailed(i, piece, error.localizedDescription)
                 }
             }
         }
