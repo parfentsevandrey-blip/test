@@ -70,9 +70,6 @@ jobs:
       - name: Self-test WebKit (end-to-end)
         timeout-minutes: 20
         run: |
-          # Сначала просто запуск с пустой вкладкой (без сайтов и без самопроверки): есть ли запрос «локальная сеть» уже тут.
-          "$WARD_TEST" --demo-ui newtab > "$RUNNER_TEMP/render/pre-webkit-newtab.log" 2>&1 &
-          PRE=$!; sleep 12; screencapture -x "$RUNNER_TEMP/render/pre-webkit-newtab.png" || true; kill $PRE 2>/dev/null || true; sleep 2
           "$WARD_TEST" --selftest-webkit
           mkdir -p "$RUNNER_TEMP/render"; screencapture -x "$RUNNER_TEMP/render/after-selftest-webkit.png" || true
 
@@ -83,24 +80,11 @@ jobs:
           for S in start page shield dashboard dashboard-bottom dashboard-report bookmarks downloads newtab danger private settings settings-lists settings-data settings-sites settings-network; do
             "$WARD_TEST" --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
             PID=$!
-            if [ "$S" = start ]; then
-              # Когда появляется системный запрос «локальная сеть» — серия снимков в начале.
-              for T in 4 8 14 22; do sleep $([ $T = 4 ] && echo 4 || echo $((T - PREV))); PREV=$T; screencapture -x "$OUT/start-${T}s.png" || true; done
-              sleep 23
-            else
-            case $S in page) sleep 30;; shield) sleep 34;; dashboard*) sleep 42;; bookmarks) sleep 22;; settings*) sleep 14;; *) sleep 20;; esac
-            fi
+            case $S in start) sleep 45;; page) sleep 30;; shield) sleep 34;; dashboard*) sleep 42;; bookmarks) sleep 22;; settings*) sleep 14;; *) sleep 20;; esac
             screencapture -x "$OUT/window-$S.png" || echo "screencapture не сработал"
             kill $PID 2>/dev/null || true
             sleep 2
           done
-
-      - name: Local network diagnostics
-        if: always()
-        run: |
-          # Кто и к какому адресу вызвал системный запрос «найти устройства в локальной сети».
-          log show --last 50m --style compact --predicate 'process != "runningboardd" AND (process == "nehelper" OR subsystem == "com.apple.networkextension" OR eventMessage CONTAINS[c] "local network" OR eventMessage CONTAINS[c] "LocalNetwork")' 2>/dev/null | grep -v '^Timestamp' | cut -c1-600 | tail -1500 > "$RUNNER_TEMP/render/local-network.log" || true
-          grep -i -E "ward|webkit|prompt|local network" "$RUNNER_TEMP/render/local-network.log" | tail -80 || true
 
       - name: Crash reports
         if: always()
