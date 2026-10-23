@@ -145,6 +145,32 @@ nonisolated final class MiniHTTP: @unchecked Sendable {
         <button onclick="window.results.consent='rejected'">Отклонить все</button></div>
         </body></html>
         """)
+        // Плашки поверх статьи, как на новостных сайтах: шапка с меню остаётся, «Подпишитесь», затемнение,
+        // окно «отключите блокировщик» и форма рассылки убираются, прокрутка возвращается.
+        set("/annoy.html", html: #"""
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;font:16px sans-serif;overflow:hidden}
+#bg{position:fixed;inset:0;z-index:-1;background:linear-gradient(#eef,#fff)}
+header{position:fixed;top:0;left:0;right:0;height:120px;background:#000;color:#fff;z-index:10}
+header a{color:#fff;margin:8px}
+main{padding:140px 60px;height:3000px}
+#sheet{position:fixed;left:0;right:0;bottom:0;height:260px;background:#222;color:#fff;z-index:100;text-align:center}
+#fade{position:fixed;left:0;right:0;bottom:260px;height:300px;background:linear-gradient(transparent,#ddd);pointer-events:none;z-index:99}
+#dlg{position:fixed;top:30%;left:30%;width:40%;height:200px;background:#fff;border:1px solid;z-index:200;display:none}
+</style></head><body>
+<div id="bg"></div>
+<header><b>Bloomberg</b> <a href="#">Markets</a><a href="#">Finance</a><a href="#">Economics</a><a href="#">Industries</a><a href="#">Tech</a><a href="#">Politics</a><a href="#">Opinion</a><a href="#">Video</a><a href="#">More</a><button>Subscribe</button></header>
+<main><h1>In Riot-Hit Cities, the French Snap Up Weapons</h1><p>Article text...</p><button id="open" onclick="document.getElementById('dlg').style.display='block'">Share</button></main>
+<div id="fade"></div>
+<div id="sheet"><h2>Subscribe now for unlimited access to Bloomberg.com and the Bloomberg app</h2><p>Global news that uncovers a new tomorrow. Cancel anytime.</p><button>Claim This Offer</button></div>
+<div id="dlg"><h3>Sign up to share this article</h3><button>OK</button></div>
+<script>
+window.results = {};
+setTimeout(()=>{const m=document.createElement('div');m.id='adb';m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500';m.innerHTML='<div style="background:#fff;margin:20% auto;width:400px;padding:20px">Please disable your ad blocker to continue</div>';document.body.appendChild(m);},1500);
+setTimeout(()=>{const n=document.createElement('div');n.id='news';n.style.cssText='position:fixed;right:20px;bottom:300px;width:320px;height:180px;background:#fff;z-index:600;border:1px solid';n.innerHTML='Get our newsletter <input type=email><button>Go</button>';document.body.appendChild(n);},2500);
+</script>
+</body></html>
+"""#)
         set("/password.html", html: """
         <!doctype html><html><head><meta charset="utf-8"><title>Вход</title></head><body>
         <form><input id="login" type="text"><input id="pw" type="password"></form></body></html>

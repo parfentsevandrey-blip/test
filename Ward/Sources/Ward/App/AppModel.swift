@@ -22,6 +22,7 @@ final class AppModel {
                 || prefs.developerTools != oldValue.developerTools || prefs.blockAutoplay != oldValue.blockAutoplay
                 || prefs.unprotectedSites != oldValue.unprotectedSites || prefs.noScriptSites != oldValue.noScriptSites
                 || prefs.consentReject != oldValue.consentReject || prefs.sponsorBlock != oldValue.sponsorBlock
+                || prefs.blockAnnoyances != oldValue.blockAnnoyances
                 || prefs.spoofTimezone != oldValue.spoofTimezone || prefs.spoofLanguage != oldValue.spoofLanguage {
                 refreshAllTabs()
             }
@@ -181,6 +182,9 @@ final class AppModel {
         list.append(WKUserScript(source: Scripts.observer, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
         if protected && prefs.consentReject {
             list.append(WKUserScript(source: Scripts.consent, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
+        }
+        if protected && prefs.blockAnnoyances {
+            list.append(WKUserScript(source: Scripts.annoyances, injectionTime: .atDocumentEnd, forMainFrameOnly: true, in: .defaultClient))
         }
         if prefs.sponsorBlock {
             list.append(WKUserScript(source: Scripts.sponsorBlock, injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
@@ -434,6 +438,17 @@ final class AppModel {
         feed(.consent, "Отказ от cookie", [site, cmp].filter { !$0.isEmpty }.joined(separator: " · "))
     }
 
+    func recordAnnoyance(_ kind: String, site: String = "") {
+        stats.annoyancesHidden += 1
+        let what = switch kind {
+        case "modal": "Окно «подпишитесь»"
+        case "backdrop": "Затемнение поверх статьи"
+        case "bottom-sheet", "top-bar": "Плашка поверх статьи"
+        default: "Всплывающее окно"
+        }
+        feed(.annoyance, what + " убрано", site)
+    }
+
     func recordSponsor(seconds: Double, category: String = "") {
         stats.sponsorSeconds += seconds
         feed(.sponsor, "Вставка в ролике пропущена", "\(Int(seconds.rounded())) с")
@@ -628,7 +643,7 @@ final class AppModel {
 /// Событие защиты для живой ленты панели безопасности.
 struct SecurityEvent: Identifiable, Equatable {
     enum Kind {
-        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup
+        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup, annoyance
 
         var icon: String {
             switch self {
@@ -644,6 +659,7 @@ struct SecurityEvent: Identifiable, Equatable {
             case .sponsor: "forward.end.fill"
             case .phishing: "exclamationmark.shield.fill"
             case .cleanup: "trash.fill"
+            case .annoyance: "rectangle.on.rectangle.slash.fill"
             }
         }
 
@@ -658,6 +674,7 @@ struct SecurityEvent: Identifiable, Equatable {
             case .consent: .orange
             case .sponsor: .teal
             case .cleanup: .gray
+            case .annoyance: .mint
             }
         }
     }

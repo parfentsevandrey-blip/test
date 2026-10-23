@@ -72,6 +72,9 @@ struct ProtectionSettings: View {
                 SettingToggle(title: "Отклонять cookie за вас",
                               detail: "В окнах согласия (OneTrust, Cookiebot, Didomi, Google и других) Ward сам нажимает «Отклонить всё». Сайт получает именно отказ, а не «согласие по умолчанию».",
                               isOn: $model.prefs.consentReject)
+                SettingToggle(title: "Убирать назойливые плашки",
+                              detail: "Окна и полосы поверх статьи — «Подпишитесь», «Отключите блокировщик», рассылки, «Скачайте приложение» — и затемнение страницы под ними. Ward прячет их и возвращает прокрутку. Окна, которые вы открыли сами, и меню сайтов не трогаются.",
+                              isOn: $model.prefs.blockAnnoyances)
                 SettingToggle(title: "Находить скрытые трекеры",
                               detail: "Некоторые счётчики прячутся под поддоменом самого сайта (metrics.site.ru). Ward узнаёт у DNS настоящее имя такого поддомена и блокирует его, если это трекер.",
                               isOn: $model.prefs.cnameDetection)

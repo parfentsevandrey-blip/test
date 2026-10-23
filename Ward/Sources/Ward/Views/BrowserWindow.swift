@@ -16,10 +16,9 @@ struct BrowserWindow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if browser.tabs.count > 1 || browser.isPrivate || browser.usesProxy {
-                TabStrip(browser: browser)
-                Divider()
-            }
+            // Полоса вкладок видна всегда: «+» для новой вкладки — сразу за последней, как в Chrome и Safari.
+            TabStrip(browser: browser)
+            Divider()
             if model.prefs.showBookmarksBar {
                 BookmarksBar(browser: browser)
                 Divider()
@@ -77,6 +76,7 @@ struct BrowserWindow: View {
             Button { tab?.goForward() } label: { Image(systemName: "chevron.forward") }
                 .help("Вперёд")
                 .disabled(!(tab?.canGoForward ?? false))
+            ReloadButton(tab: tab)
         }
         ToolbarItem(placement: .principal) {
             if let tab = browser.selected {
@@ -95,9 +95,28 @@ struct BrowserWindow: View {
             if !model.downloads.items.isEmpty {
                 DownloadsButton()
             }
-            NewTabMenu(browser: browser)
             DashboardButton()
         }
+    }
+}
+
+/// Обновить страницу; пока она грузится — остановить. ⌥-щелчок — обновить без кэша.
+struct ReloadButton: View {
+    let tab: Tab?
+
+    var body: some View {
+        let loading = tab?.isLoading ?? false
+        Button {
+            guard let tab else { return }
+            if loading { tab.stop() }
+            else if NSEvent.modifierFlags.contains(.option) { tab.reloadFromOrigin() }
+            else { tab.reload() }
+        } label: {
+            Image(systemName: loading ? "xmark" : "arrow.clockwise")
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .help(loading ? "Остановить загрузку (⌘.)" : "Обновить страницу (⌘R, с ⌥ — без кэша)")
+        .disabled(tab == nil || (tab?.isStartPage ?? true))
     }
 }
 
@@ -115,13 +134,25 @@ struct DashboardButton: View {
     }
 }
 
-/// «+»: новая вкладка; из меню — в контейнере или одноразовая.
-struct NewTabMenu: View {
+/// «+» сразу за вкладками: щелчок — новая вкладка; правый щелчок — в контейнере или одноразовая.
+struct NewTabButton: View {
     @Environment(AppModel.self) private var model
     let browser: BrowserState
+    @State private var hover = false
 
     var body: some View {
-        Menu {
+        Button { browser.newTab() } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 13, weight: .semibold))
+                .frame(width: 28, height: 28)
+                .background(Circle().fill(Color.primary.opacity(hover ? 0.1 : 0)))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(.secondary)
+        .onHover { hover = $0 }
+        .help("Новая вкладка (⌘T). Правый щелчок — одноразовая или в контейнере")
+        .contextMenu {
             Button("Новая вкладка") { browser.newTab() }
             if !browser.isPrivate {
                 Button("Одноразовая вкладка") { browser.newTab(ephemeral: true) }
@@ -130,13 +161,7 @@ struct NewTabMenu: View {
                     Button("В контейнере «\(c.name)»") { browser.newTab(container: c) }
                 }
             }
-        } label: {
-            Image(systemName: "plus")
-        } primaryAction: {
-            browser.newTab()
         }
-        .menuIndicator(.hidden)
-        .help("Новая вкладка (⌘T). Удерживайте — контейнеры и одноразовая вкладка")
     }
 }
 
@@ -158,6 +183,10 @@ struct PageArea: View {
             }
             if tab.isLoading, tab.progress < 1 {
                 ProgressLine(progress: tab.progress)
+                LoadingStatus(tab: tab)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                    .padding(10)
+                    .transition(.opacity)
             }
             if tab.passwordWarning, tab.interstitial == nil {
                 PasswordBanner(tab: tab)
@@ -168,18 +197,59 @@ struct PageArea: View {
     }
 }
 
+/// Полоса загрузки над страницей: заметная, со свечением и бегущим бликом, пока сайт думает.
 struct ProgressLine: View {
     let progress: Double
 
     var body: some View {
         GeometryReader { geo in
-            Rectangle()
-                .fill(Color.accentColor)
-                .frame(width: max(24, geo.size.width * progress), height: 2)
-                .animation(.easeOut(duration: 0.25), value: progress)
+            let width = max(36, geo.size.width * progress)
+            ZStack(alignment: .leading) {
+                Rectangle().fill(Color.accentColor.opacity(0.15))
+                Capsule()
+                    .fill(LinearGradient(colors: [.accentColor.opacity(0.7), .accentColor], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: width)
+                    .shadow(color: .accentColor.opacity(0.7), radius: 4)
+                    .animation(.easeOut(duration: 0.3), value: progress)
+                TimelineView(.animation) { context in
+                    let t = context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.4) / 1.4
+                    Capsule()
+                        .fill(LinearGradient(colors: [.clear, .white.opacity(0.75), .clear], startPoint: .leading, endPoint: .trailing))
+                        .frame(width: 80)
+                        .offset(x: (width + 80) * t - 80)
+                }
+                .frame(width: width, alignment: .leading)
+                .clipped()
+            }
         }
-        .frame(height: 2)
+        .frame(height: 3)
         .allowsHitTesting(false)
+    }
+}
+
+/// Строка состояния в углу страницы, пока она грузится: какой сайт и сколько готово.
+struct LoadingStatus: View {
+    let tab: Tab
+
+    var body: some View {
+        HStack(spacing: 7) {
+            ProgressView().controlSize(.small)
+            Text(text)
+                .font(.callout)
+                .monospacedDigit()
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .glassEffect(.regular, in: Capsule())
+        .allowsHitTesting(false)
+    }
+
+    private var text: String {
+        let host = (tab.url ?? tab.pendingURL)?.host() ?? ""
+        let percent = Int((tab.progress * 100).rounded())
+        if percent < 10 { return host.isEmpty ? "Соединение…" : "Соединение с \(host)…" }
+        return host.isEmpty ? "Загрузка… \(percent) %" : "Загрузка \(host)… \(percent) %"
     }
 }
 

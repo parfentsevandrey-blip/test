@@ -29,6 +29,8 @@ struct SecurityDashboard: View {
                                title: "скрытых трекеров", caption: "Притворялись частью сайта (CNAME), но Ward их раскрыл")
                     MetricTile(icon: "hand.raised.fill", tint: .orange, value: stats.consentsRejected,
                                title: "отказов от cookie", caption: "Ward сам нажал «Отклонить» в окнах согласия")
+                    MetricTile(icon: "rectangle.on.rectangle.slash.fill", tint: .mint, value: stats.annoyancesHidden,
+                               title: "плашек убрано", caption: "«Подпишитесь», «Отключите блокировщик», рассылки — поверх статей")
                     MetricTile(icon: "scissors", tint: .mint, value: stats.cleanedLinks,
                                title: "ссылок очищено", caption: "Метки utm, fbclid, gclid убраны до перехода")
                     MetricTile(icon: "lock.fill", tint: .green, value: stats.upgraded,
@@ -449,6 +451,7 @@ struct ProtectionLevel: View {
             Item(id: "links", title: "Очистка ссылок", detail: "Метки слежки и переходники", on: p.cleanLinks) { model.prefs.cleanLinks = true },
             Item(id: "https", title: "Только HTTPS", detail: "Без незашифрованных страниц", on: p.httpsOnly) { model.prefs.httpsOnly = true },
             Item(id: "consent", title: "Отказ от cookie", detail: "Сам нажимает «Отклонить»", on: p.consentReject) { model.prefs.consentReject = true },
+            Item(id: "annoyances", title: "Назойливые плашки", detail: "«Подпишитесь», рассылки, запрет прокрутки", on: p.blockAnnoyances) { model.prefs.blockAnnoyances = true },
             Item(id: "cname", title: "Скрытые трекеры", detail: "Проверка поддоменов (CNAME)", on: p.cnameDetection) { model.prefs.cnameDetection = true },
             Item(id: "phishing", title: "Подделки под сайты", detail: "Похожие имена банков и почты", on: p.phishingWarnings) { model.prefs.phishingWarnings = true },
             Item(id: "closed", title: "Уборка за закрытыми сайтами", detail: "Cookie живут, пока открыта вкладка", on: p.cleanClosedSites) { model.prefs.cleanClosedSites = true },

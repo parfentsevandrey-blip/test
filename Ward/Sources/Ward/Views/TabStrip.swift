@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Полоса вкладок под панелью.
@@ -25,21 +26,32 @@ struct TabStrip: View {
                     .help("Cookie, история и кэш этого окна живут только в памяти и исчезнут, когда вы его закроете.")
             }
             GeometryReader { geo in
-                let width = chipWidth(geo.size.width)
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 4) {
-                        ForEach(browser.tabs) { tab in
-                            TabChip(tab: tab, browser: browser, selected: tab.id == browser.selected?.id)
-                                .frame(width: width)
+                let width = chipWidth(geo.size.width - 36)
+                ScrollViewReader { scroller in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 4) {
+                            ForEach(browser.tabs) { tab in
+                                TabChip(tab: tab, browser: browser, selected: tab.id == browser.selected?.id)
+                                    .frame(width: width)
+                                    .id(tab.id)
+                            }
+                            NewTabButton(browser: browser)
+                                .id("new-tab")
+                            // Двойной щелчок по пустому месту полосы — новая вкладка.
+                            Color.clear
+                                .frame(minWidth: 20, maxWidth: .infinity, minHeight: 28)
+                                .contentShape(Rectangle())
+                                .onTapGesture(count: 2) { browser.newTab() }
                         }
+                        .padding(.vertical, 4)
+                        .frame(minWidth: geo.size.width, alignment: .leading)
                     }
-                    .padding(.vertical, 4)
+                    .onChange(of: browser.selected?.id) { _, id in
+                        if let id { withAnimation(.smooth) { scroller.scrollTo(id) } }
+                    }
                 }
             }
             .frame(height: 36)
-            NewTabMenu(browser: browser)
-                .buttonStyle(.borderless)
-                .frame(width: 30)
         }
         .padding(.horizontal, 10)
         .background(browser.isPrivate ? AnyShapeStyle(Color.purple.opacity(0.06)) : AnyShapeStyle(.background.secondary))
@@ -47,7 +59,7 @@ struct TabStrip: View {
 
     private func chipWidth(_ total: CGFloat) -> CGFloat {
         let n = CGFloat(max(1, browser.tabs.count))
-        return max(130, min(240, (total - 4 * n) / n))
+        return max(120, min(240, (total - 4 * n) / n))
     }
 }
 
@@ -99,6 +111,8 @@ struct TabChip: View {
         }
         .contentShape(Rectangle())
         .onTapGesture { browser.select(tab) }
+        // Средняя кнопка мыши закрывает вкладку, как во всех браузерах.
+        .overlay(MiddleClick { browser.close(tab) })
         .onHover { hover = $0 }
         .contextMenu {
             Button("Обновить") { tab.reload() }
@@ -137,5 +151,33 @@ struct SiteTile: View {
         var h: UInt32 = 2166136261
         for b in site.utf8 { h = (h ^ UInt32(b)) &* 16777619 }
         return Color(hue: Double(h % 360) / 360, saturation: 0.55, brightness: 0.78)
+    }
+}
+
+/// Ловит только щелчок средней кнопкой мыши; обычные щелчки проходят сквозь.
+struct MiddleClick: NSViewRepresentable {
+    let action: () -> Void
+
+    final class Catcher: NSView {
+        var action: (() -> Void)?
+
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            let type = NSApp.currentEvent?.type
+            return type == .otherMouseDown || type == .otherMouseUp ? super.hitTest(point) : nil
+        }
+
+        override func otherMouseUp(with event: NSEvent) {
+            if event.buttonNumber == 2 { action?() }
+        }
+    }
+
+    func makeNSView(context: Context) -> Catcher {
+        let view = Catcher()
+        view.action = action
+        return view
+    }
+
+    func updateNSView(_ view: Catcher, context: Context) {
+        view.action = action
     }
 }

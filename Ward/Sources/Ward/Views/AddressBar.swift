@@ -64,17 +64,27 @@ struct AddressBar: View {
             if let url = tab.url, !focused {
                 BookmarkStar(url: url, title: tab.title)
             }
-            Button { tab.isLoading ? tab.stop() : tab.reload() } label: {
-                Image(systemName: tab.isLoading ? "xmark" : "arrow.clockwise")
+            if tab.isLoading, !focused {
+                ProgressView().controlSize(.small)
+                    .help("Страница загружается: \(Int((tab.progress * 100).rounded())) %")
             }
-            .buttonStyle(.borderless)
-            .foregroundStyle(.secondary)
-            .help(tab.isLoading ? "Остановить" : "Обновить (⌘R)")
-            .disabled(tab.isStartPage)
         }
         .padding(.horizontal, 12)
         .frame(height: 30)
         .background(.fill.tertiary, in: Capsule())
+        // Как в Safari: поле адреса заполняется цветом по мере загрузки страницы.
+        .background(alignment: .leading) {
+            if tab.isLoading, tab.progress < 1 {
+                GeometryReader { geo in
+                    Capsule()
+                        .fill(Color.accentColor.opacity(0.18))
+                        .frame(width: max(30, geo.size.width * tab.progress))
+                        .animation(.easeOut(duration: 0.3), value: tab.progress)
+                }
+                .transition(.opacity)
+            }
+        }
+        .clipShape(Capsule())
         .overlay(Capsule().strokeBorder(focused ? Color.accentColor.opacity(0.6) : .clear, lineWidth: 1.5))
         .onChange(of: focused) {
             if focused {

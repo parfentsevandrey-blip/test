@@ -92,6 +92,7 @@ struct BrowserCommands: Commands {
         }
         CommandGroup(after: .toolbar) {
             Button("Обновить страницу") { tab?.reload() }.keyboardShortcut("r").disabled(tab == nil)
+            Button("Обновить без кэша") { tab?.reloadFromOrigin() }.keyboardShortcut("r", modifiers: [.command, .shift]).disabled(tab == nil)
             Button("Остановить") { tab?.stop() }.keyboardShortcut(".").disabled(!(tab?.isLoading ?? false))
             Divider()
             Button("Увеличить") { if let t = tab { t.zoom = min(3, t.zoom + 0.1) } }.keyboardShortcut("+").disabled(tab == nil)

@@ -58,6 +58,8 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
     /// Сайт → контейнер, в котором он всегда открывается.
     var siteContainers: [String: UUID] = [:]
     var showBookmarksBar = true
+    /// Прятать плашки «Подпишитесь», «Отключите блокировщик», рассылки и возвращать прокрутку.
+    var blockAnnoyances = true
 
     init() {}
 
@@ -110,6 +112,7 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
         denyMediaByDefault = v(.denyMediaByDefault, d.denyMediaByDefault)
         siteContainers = v(.siteContainers, d.siteContainers)
         showBookmarksBar = v(.showBookmarksBar, d.showBookmarksBar)
+        blockAnnoyances = v(.blockAnnoyances, d.blockAnnoyances)
     }
 
     /// Включён ли строгий режим для сайта. `familiar` — сайт есть в истории или избранном.
@@ -167,6 +170,8 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
     var sitesCleaned = 0
     /// Страницы, открытые под защитой.
     var pages = 0
+    /// Плашки и окна поверх статьи: «Подпишитесь», «Отключите блокировщик», рассылки.
+    var annoyancesHidden = 0
 
     init() {}
 
@@ -191,6 +196,7 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
         dangerBlocked = v(.dangerBlocked, 0)
         sitesCleaned = v(.sitesCleaned, 0)
         pages = v(.pages, 0)
+        annoyancesHidden = v(.annoyancesHidden, 0)
     }
 
     static func dayKey(_ date: Date = Date()) -> String {

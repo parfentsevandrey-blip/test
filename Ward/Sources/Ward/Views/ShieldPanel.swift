@@ -177,6 +177,9 @@ struct ShieldPanel: View {
             if tab.scriptletCount > 0 && tab.protectedHere {
                 note("wand.and.stars", "Для этого сайта работают \(tab.scriptletCount) \(Format.plural(tab.scriptletCount, "скриптлет", "скриптлета", "скриптлетов")) uBlock Origin: против рекламы, встроенной в сам сайт, и стен «отключите блокировщик».")
             }
+            if tab.annoyancesHidden > 0 {
+                note("rectangle.on.rectangle.slash", "Убрано \(tab.annoyancesHidden) \(Format.plural(tab.annoyancesHidden, "окно", "окна", "окон")) поверх страницы («подпишитесь», рассылка, затемнение), прокрутка возвращена.")
+            }
             if tab.sponsorSkipped > 0 {
                 note("forward.end", "SponsorBlock пропустил \(tab.sponsorSkipped) \(Format.plural(tab.sponsorSkipped, "вставку", "вставки", "вставок")) в ролике.")
             }

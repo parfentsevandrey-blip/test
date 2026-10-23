@@ -49,6 +49,8 @@ final class Tab: NSObject, Identifiable {
     /// Окно согласия на cookie, в котором Ward нажал «Отклонить».
     var consentRejected: String?
     var sponsorSkipped = 0
+    /// Плашки поверх статьи, убранные на этой странице.
+    var annoyancesHidden = 0
     /// Способы снять отпечаток, которые пробовала эта страница.
     var fingerprinting: Set<String> = []
     /// Сколько рекламных блоков и баннеров скрыто на странице.
@@ -249,6 +251,13 @@ final class Tab: NSObject, Identifiable {
         view.reload()
     }
 
+    /// Обновить, не доверяя кэшу (⌥ + «Обновить»).
+    func reloadFromOrigin() {
+        guard let view = webViewIfLoaded, interstitial == nil else { reload(); return }
+        configureProtections(for: url, force: true)
+        view.reloadFromOrigin()
+    }
+
     func stop() { webViewIfLoaded?.stopLoading() }
     func goBack() {
         if interstitial != nil, webViewIfLoaded?.url != nil { interstitial = nil; sync(); return }
@@ -367,6 +376,9 @@ final class Tab: NSObject, Identifiable {
         case "consent":
             consentRejected = (body["cmp"] as? String) ?? "окно согласия"
             model.recordConsent(leavesNoTrace ? "" : consentRejected ?? "", site: leavesNoTrace ? "" : site)
+        case "annoyance":
+            annoyancesHidden += 1
+            if !leavesNoTrace { model.recordAnnoyance((body["kind"] as? String) ?? "", site: site) }
         case "sponsor":
             sponsorSkipped += 1
             model.recordSponsor(seconds: (body["seconds"] as? Double) ?? 0)
@@ -532,6 +544,7 @@ extension Tab: WKNavigationDelegate {
         consentRejected = nil
         passwordWarning = false
         sponsorSkipped = 0
+        annoyancesHidden = 0
         cnameChecks = 0
         fingerprinting = []
         hiddenCount = 0

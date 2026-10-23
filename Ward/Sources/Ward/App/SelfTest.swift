@@ -239,7 +239,7 @@ enum SelfTest {
                                ("сигналы отпечатка", Scripts.fingerprintRelay(token: "wtest")), ("учёт скрытого", Scripts.countHidden),
                                ("наблюдатель", Scripts.observer), ("проверка селекторов", Scripts.validateSelectors), ("отпечаток холста", MiniHTTP.canvasProbe),
                                ("скриптлеты", scriptlets), ("процедурная косметика", Scripts.procedural([".a:has-text(x)"]) ?? ""),
-                               ("отказ от cookie", Scripts.consent), ("SponsorBlock", Scripts.sponsorBlock)] {
+                               ("отказ от cookie", Scripts.consent), ("SponsorBlock", Scripts.sponsorBlock), ("плашки", Scripts.annoyances)] {
             js.exception = nil
             js.setObject(source, forKeyedSubscript: "src" as NSString)
             js.evaluateScript("new Function('list', src)")
@@ -581,6 +581,22 @@ enum SelfTest {
             info("состояние автоотказа: \(state.map { "\($0 ?? "nil")" } ?? "ошибка")")
             ok = check(r == "rejected" && tab.consentRejected == expected, "cookie: нажато «Отклонить» (\(page): \(r ?? "-"), \(tab.consentRejected ?? "-"))") && ok
         }
+
+        // 12б. Назойливые плашки: «Подпишитесь» снизу, затемнение, «отключите блокировщик», рассылка.
+        _ = await open(tab, "http://localhost:\(p)/annoy.html")
+        try? await Task.sleep(for: .seconds(4.5))
+        let annoy = await evaluate(tab, """
+        const shown = (id) => { const e = document.getElementById(id); return !!e && getComputedStyle(e).display !== 'none'; };
+        return { sheet: shown('sheet'), fade: shown('fade'), adb: shown('adb'), news: shown('news'), bg: shown('bg'),
+                 header: getComputedStyle(document.querySelector('header')).display !== 'none',
+                 overflow: getComputedStyle(document.body).overflowY };
+        """) as? [String: Any] ?? [:]
+        info("плашки: \(annoy), на вкладке убрано \(tab.annoyancesHidden)")
+        ok = check(annoy["sheet"] as? Bool == false && annoy["adb"] as? Bool == false && annoy["news"] as? Bool == false,
+                   "плашки «Подпишитесь», «отключите блокировщик» и рассылка убраны") && ok
+        ok = check(annoy["fade"] as? Bool == false && annoy["overflow"] as? String != "hidden", "затемнение снято, прокрутка возвращена") && ok
+        ok = check(annoy["header"] as? Bool == true && annoy["bg"] as? Bool == true, "шапка сайта с меню и фон страницы не тронуты") && ok
+        ok = check(tab.annoyancesHidden >= 3, "щит знает об убранных плашках (\(tab.annoyancesHidden))") && ok
 
         // 13. Подделка под известный сайт — предупреждение без единого запроса.
         tab.load(URL(string: "https://sberbamk.ru/login")!)
