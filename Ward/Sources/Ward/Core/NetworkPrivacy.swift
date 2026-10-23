@@ -14,13 +14,17 @@ enum NetworkPrivacy {
         }
     }
 
-    static func apply(to store: WKWebsiteDataStore, isPrivate: Bool, prefs: Prefs) {
+    /// `circuit` — имя «цепочки» для SOCKS: Tor (IsolateSOCKSAuth) по нему выдаёт каждой банке свой выход в сеть,
+    /// и сайты разных банок видят разные IP-адреса.
+    static func apply(to store: WKWebsiteDataStore, isPrivate: Bool, prefs: Prefs, circuit: String? = nil) {
         guard usesProxy(prefs, isPrivate: isPrivate), let port = NWEndpoint.Port(rawValue: UInt16(clamping: prefs.proxyPort)) else {
             store.proxyConfigurations = []
             return
         }
         let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(prefs.proxyHost), port: port)
-        store.proxyConfigurations = [ProxyConfiguration(socksv5Proxy: endpoint)]
+        var configuration = ProxyConfiguration(socksv5Proxy: endpoint)
+        if let circuit { configuration.applyCredential(username: circuit, password: "ward") }
+        store.proxyConfigurations = [configuration]
     }
 
     /// Сессия для собственных запросов Ward (SponsorBlock) — через тот же прокси, если он включён для всех окон.

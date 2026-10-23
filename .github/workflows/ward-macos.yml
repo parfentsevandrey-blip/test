@@ -72,7 +72,7 @@ jobs:
         run: |
           OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
           # Правила один раз собраны самопроверкой — демо берёт их готовыми (тот же WARD_HOME).
-          for S in start page shield dashboard dashboard-bottom bookmarks danger private settings settings-lists settings-data settings-sites settings-network; do
+          for S in start page shield dashboard dashboard-bottom dashboard-report bookmarks danger private settings settings-lists settings-data settings-sites settings-network; do
             "$WARD_TEST" --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
             PID=$!
             case $S in start) sleep 45;; page) sleep 30;; shield) sleep 34;; dashboard*) sleep 42;; bookmarks) sleep 22;; settings*) sleep 14;; *) sleep 20;; esac

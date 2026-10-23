@@ -68,6 +68,23 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
     var suggestIsolation = true
     /// Постоянный секрет «легенды» устройства в изоляторе (создаётся при первом запуске).
     var isolationSecret = ""
+    /// Корпоративные банки: каждая крупная корпорация (Google, Яндекс, VK, Microsoft…) — в своём хранилище,
+    /// без связи с другими корпорациями.
+    var corporateJars = true
+    /// «Маска»: у каждого сайта своя вымышленная личность и своё хранилище.
+    var maskMode = false
+    /// Номер маски: растёт при смене маски.
+    var maskEpoch = 0
+    /// Менять маску раз в N дней (0 — только вручную).
+    var maskRotation = 0
+    var maskRotatedAt: Date?
+    /// Хранилища масок текущего номера — чтобы удалить их при смене.
+    var maskStores: [String] = []
+    /// Отдельная цепочка прокси (Tor) для каждой банки.
+    var separateCircuits = false
+    /// Журнал безопасности: все события защиты в файлах на этом Mac.
+    var securityLog = true
+    var logRetentionDays = 30
 
     init() {}
 
@@ -125,6 +142,15 @@ nonisolated struct Prefs: Codable, Sendable, Equatable {
         isolationDeclined = v(.isolationDeclined, d.isolationDeclined)
         suggestIsolation = v(.suggestIsolation, d.suggestIsolation)
         isolationSecret = v(.isolationSecret, d.isolationSecret)
+        corporateJars = v(.corporateJars, d.corporateJars)
+        maskMode = v(.maskMode, d.maskMode)
+        maskEpoch = v(.maskEpoch, d.maskEpoch)
+        maskRotation = v(.maskRotation, d.maskRotation)
+        maskRotatedAt = try? c.decodeIfPresent(Date.self, forKey: .maskRotatedAt)
+        maskStores = v(.maskStores, d.maskStores)
+        separateCircuits = v(.separateCircuits, d.separateCircuits)
+        securityLog = v(.securityLog, d.securityLog)
+        logRetentionDays = v(.logRetentionDays, d.logRetentionDays)
     }
 
     /// Включён ли строгий режим для сайта. `familiar` — сайт есть в истории или избранном.
@@ -186,6 +212,10 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
     var annoyancesHidden = 0
     /// Изолятор: сайт → что он пытался получить → сколько раз.
     var isolation: [String: [String: Int]] = [:]
+    /// Корпоративные банки: корпорация → сколько её обращений к другим корпорациям не ушло.
+    var corporationBlocks: [String: Int] = [:]
+    /// Сколько вымышленных личностей выдано «Маской».
+    var masksIssued = 0
 
     init() {}
 
@@ -212,6 +242,8 @@ nonisolated struct Stats: Codable, Sendable, Equatable {
         pages = v(.pages, 0)
         annoyancesHidden = v(.annoyancesHidden, 0)
         isolation = v(.isolation, [:])
+        corporationBlocks = v(.corporationBlocks, [:])
+        masksIssued = v(.masksIssued, 0)
     }
 
     static func dayKey(_ date: Date = Date()) -> String {

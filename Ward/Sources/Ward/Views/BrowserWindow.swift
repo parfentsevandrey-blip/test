@@ -89,6 +89,9 @@ struct BrowserWindow: View {
                 Image(systemName: "gearshape")
             }
             .help("Настройки Ward (⌘,)")
+            if !browser.isPrivate {
+                MaskButton()
+            }
             if let tab = browser.selected {
                 ShieldButton(tab: tab)
             }
@@ -96,6 +99,69 @@ struct BrowserWindow: View {
                 DownloadsButton()
             }
             DashboardButton()
+        }
+    }
+}
+
+/// «Маска»: включить, сменить личность, настроить смену и отдельные цепочки.
+struct MaskButton: View {
+    @Environment(AppModel.self) private var model
+    @State private var shown = false
+
+    var body: some View {
+        Button { shown.toggle() } label: {
+            Image(systemName: model.prefs.maskMode ? "theatermasks.fill" : "theatermasks")
+                .foregroundStyle(model.prefs.maskMode ? Color.purple : Color.secondary)
+        }
+        .help(model.prefs.maskMode ? "Маска включена: каждый сайт видит отдельного вымышленного человека" : "Маска: несвязываемый след")
+        .popover(isPresented: $shown, arrowEdge: .bottom) {
+            MaskPanel().environment(model).frame(width: 380).padding(18)
+        }
+    }
+}
+
+struct MaskPanel: View {
+    @Environment(AppModel.self) private var model
+    @State private var rotating = false
+
+    var body: some View {
+        @Bindable var model = model
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "theatermasks.fill").font(.title).foregroundStyle(.purple)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Маска").font(.title3.weight(.semibold))
+                    Text("Ваш след в сети не связывается в одного человека").font(.callout).foregroundStyle(.secondary)
+                }
+            }
+            Toggle("Маска включена", isOn: $model.prefs.maskMode).toggleStyle(.switch)
+            Text("Каждый сайт живёт в своём хранилище и видит своё вымышленное устройство: свой отпечаток (холст, WebGL, звук, шрифты) и огрублённое время событий. Общих cookie между сайтами нет, поэтому рекламные сети и брокеры данных видят много разных несуществующих людей вместо вас. Сайты открываются как обычно; вход на сайтах «Помнить вход» сохраняется между сменами маски.")
+                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Divider()
+            HStack {
+                Button(rotating ? "Меняю…" : "Сменить маску сейчас") {
+                    rotating = true
+                    Task { await model.rotateMask(); rotating = false }
+                }
+                .disabled(!model.prefs.maskMode || rotating)
+                Spacer()
+                Picker("Менять", selection: $model.prefs.maskRotation) {
+                    Text("вручную").tag(0)
+                    Text("каждый день").tag(1)
+                    Text("раз в неделю").tag(7)
+                }
+                .frame(width: 190)
+            }
+            Toggle(isOn: $model.prefs.separateCircuits) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Свой выход в сеть у каждого сайта")
+                    Text("Нужен Tor как прокси Ward (SOCKS 127.0.0.1:9050): каждой банке — своя цепочка и свой IP. С обычным прокси без авторизации может не работать.")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .disabled(model.prefs.proxyMode == .off)
+            Text("Выдано личностей: \(Format.count(model.stats.masksIssued)) · маска № \(model.prefs.maskEpoch + 1)")
+                .font(.caption).foregroundStyle(.tertiary)
         }
     }
 }
@@ -176,6 +242,7 @@ struct PageArea: View {
                 StartPage(browser: browser)
             } else {
                 WebViewHost(tab: tab)
+                    .id(tab.webViewGeneration)
             }
             if let interstitial = tab.interstitial {
                 InterstitialView(tab: tab, kind: interstitial)
@@ -188,7 +255,7 @@ struct PageArea: View {
                     .padding(10)
                     .transition(.opacity)
             }
-            if tab.isolatedSite != nil, !tab.isStartPage {
+            if tab.inIsolator, !tab.isStartPage {
                 IsolationEdge()
             }
             if let kind = tab.isolationOffer, tab.interstitial == nil, !tab.passwordWarning {

@@ -6,6 +6,7 @@ import SwiftUI
 struct SecurityDashboard: View {
     @Environment(AppModel.self) private var model
     @State private var confirmReset = false
+    @State private var report: DashboardReport?
 
     private let tiles = [GridItem(.adaptive(minimum: 190, maximum: 320), spacing: 14)]
 
@@ -14,34 +15,39 @@ struct SecurityDashboard: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 DashboardHero(stats: stats)
+                    .opensReport(.overview)
                 LazyVGrid(columns: tiles, spacing: 14) {
-                    MetricTile(icon: "eye.slash.fill", tint: .purple, value: stats.byKind[TrackerKind.tracking.rawValue] ?? 0,
+                    MetricTile(report: .tracking, icon: "eye.slash.fill", tint: .purple, value: stats.byKind[TrackerKind.tracking.rawValue] ?? 0,
                                title: "трекеров слежки", caption: "Счётчики и аналитика не узнали, что вы делали")
-                    MetricTile(icon: "rectangle.slash.fill", tint: .blue, value: stats.byKind[TrackerKind.ads.rawValue] ?? 0,
+                    MetricTile(report: .ads, icon: "rectangle.slash.fill", tint: .blue, value: stats.byKind[TrackerKind.ads.rawValue] ?? 0,
                                title: "рекламных запросов", caption: "Не загрузились — страницы легче и быстрее")
-                    MetricTile(icon: "touchid", tint: .pink, value: stats.fingerprintPages,
+                    MetricTile(report: .fingerprint, icon: "touchid", tint: .pink, value: stats.fingerprintPages,
                                title: "попыток узнать вас", caption: "Страницы пытались снять отпечаток браузера — получили подделку")
-                    MetricTile(icon: "eye.trianglebadge.exclamationmark", tint: .cyan, value: stats.hiddenElements,
+                    MetricTile(report: .hidden, icon: "eye.trianglebadge.exclamationmark", tint: .cyan, value: stats.hiddenElements,
                                title: "элементов скрыто", caption: "Рекламные блоки, баннеры, кнопки «поделиться» и «подпишитесь»")
-                    MetricTile(icon: "exclamationmark.octagon.fill", tint: .red, value: stats.dangerBlocked + stats.phishingBlocked + (stats.byKind[TrackerKind.malware.rawValue] ?? 0),
+                    MetricTile(report: .danger, icon: "exclamationmark.octagon.fill", tint: .red, value: stats.dangerBlocked + stats.phishingBlocked + (stats.byKind[TrackerKind.malware.rawValue] ?? 0),
                                title: "опасных адресов", caption: "Вредоносные сайты и подделки под банки — до первого запроса")
-                    MetricTile(icon: "theatermasks.fill", tint: .indigo, value: stats.cloaked,
+                    MetricTile(report: .cloaked, icon: "theatermasks.fill", tint: .indigo, value: stats.cloaked,
                                title: "скрытых трекеров", caption: "Притворялись частью сайта (CNAME), но Ward их раскрыл")
-                    MetricTile(icon: "hand.raised.fill", tint: .orange, value: stats.consentsRejected,
+                    MetricTile(report: .consent, icon: "hand.raised.fill", tint: .orange, value: stats.consentsRejected,
                                title: "отказов от cookie", caption: "Ward сам нажал «Отклонить» в окнах согласия")
-                    MetricTile(icon: "rectangle.on.rectangle.slash.fill", tint: .mint, value: stats.annoyancesHidden,
+                    MetricTile(report: .annoyance, icon: "rectangle.on.rectangle.slash.fill", tint: .mint, value: stats.annoyancesHidden,
                                title: "плашек убрано", caption: "«Подпишитесь», «Отключите блокировщик», рассылки — поверх статей")
-                    MetricTile(icon: "cube.transparent.fill", tint: .teal, value: model.isolationAttemptsTotal,
+                    MetricTile(report: .isolation, icon: "cube.transparent.fill", tint: .teal, value: model.isolationAttemptsTotal,
                                title: "отказов в изоляторе", caption: "Геопозиция, камера, буфер обмена, отпечаток — запертые сайты получили отказ или подделку")
-                    MetricTile(icon: "scissors", tint: .mint, value: stats.cleanedLinks,
+                    MetricTile(report: .corporation, icon: "building.2.crop.circle.fill", tint: .orange, value: stats.corporationBlocks.values.reduce(0, +),
+                               title: "попыток корпораций", caption: "Обратиться из своей банки к другой корпорации — запрос не ушёл")
+                    MetricTile(report: .mask, icon: "theatermasks.fill", tint: .purple, value: stats.masksIssued,
+                               title: "вымышленных личностей", caption: model.prefs.maskMode ? "«Маска»: каждый сайт видит отдельного человека" : "Включите «Маску» — и каждый сайт увидит своего человека")
+                    MetricTile(report: .links, icon: "scissors", tint: .mint, value: stats.cleanedLinks,
                                title: "ссылок очищено", caption: "Метки utm, fbclid, gclid убраны до перехода")
-                    MetricTile(icon: "lock.fill", tint: .green, value: stats.upgraded,
+                    MetricTile(report: .https, icon: "lock.fill", tint: .green, value: stats.upgraded,
                                title: "переходов на HTTPS", caption: "Ссылка вела на незащищённую версию сайта")
-                    MetricTile(icon: "trash.fill", tint: .gray, value: stats.sitesCleaned,
+                    MetricTile(report: .cleanup, icon: "trash.fill", tint: .gray, value: stats.sitesCleaned,
                                title: "сайтов забыто", caption: "Их cookie и данные убраны после закрытия вкладки")
-                    MetricTile(icon: "forward.end.fill", tint: .teal, value: Int(stats.sponsorSeconds / 60),
+                    MetricTile(report: .sponsor, icon: "forward.end.fill", tint: .teal, value: Int(stats.sponsorSeconds / 60),
                                title: "минут без вставок", caption: "SponsorBlock пропустил рекламу внутри роликов")
-                    MetricTile(icon: "doc.text.magnifyingglass", tint: .brown, value: stats.pages,
+                    MetricTile(report: .pages, icon: "doc.text.magnifyingglass", tint: .brown, value: stats.pages,
                                title: "страниц под защитой", caption: "Открыто с включённой защитой Ward")
                 }
                 DashboardCard(title: "Остановлено за 30 дней", icon: "chart.bar.xaxis") {
@@ -51,21 +57,28 @@ struct SecurityDashboard: View {
                     DashboardCard(title: "Кто следил больше всех", icon: "building.2") {
                         CompanyBars(stats: stats)
                     }
+                    .opensReport(.tracking)
                     DashboardCard(title: "Что остановлено", icon: "chart.pie") {
                         KindDonut(stats: stats)
                     }
+                    .opensReport(.overview)
                     .frame(maxWidth: 340)
                 }
                 HStack(alignment: .top, spacing: 14) {
                     DashboardCard(title: "Как вас пытались узнать", icon: "touchid") {
                         FingerprintBreakdown(stats: stats)
                     }
+                    .opensReport(.fingerprint)
                     DashboardCard(title: "Прямо сейчас", icon: "dot.radiowaves.left.and.right") {
                         LiveFeed(events: model.recent)
                     }
                 }
                 DashboardCard(title: "Изолятор", icon: "cube.transparent.fill") {
                     IsolationBreakdown(stats: stats)
+                }
+                .opensReport(.isolation)
+                DashboardCard(title: "Журнал безопасности", icon: "list.bullet.rectangle.portrait") {
+                    SecurityLogCard()
                 }
                 ProtectionLevel()
                 HStack {
@@ -81,6 +94,16 @@ struct SecurityDashboard: View {
         }
         .defaultScrollAnchor(DemoUI.dashboardBottom ? .bottom : .top)
         .background(DashboardBackground())
+        .overlay {
+            if let report {
+                ReportOverlay(report: report) { withAnimation(.spring(duration: 0.35, bounce: 0.15)) { self.report = nil } }
+                    .transition(.asymmetric(insertion: .scale(scale: 0.92).combined(with: .opacity), removal: .scale(scale: 0.96).combined(with: .opacity)))
+            }
+        }
+        .environment(\.openReport) { r in withAnimation(.spring(duration: 0.4, bounce: 0.2)) { report = r } }
+        .task {
+            if let demo = DemoUI.dashboardReport { try? await Task.sleep(for: .seconds(2)); report = demo }
+        }
         .navigationTitle("Безопасность")
         .confirmationDialog("Сбросить всю статистику?", isPresented: $confirmReset) {
             Button("Сбросить", role: .destructive) { model.resetStats() }
@@ -176,6 +199,7 @@ struct ShieldPulse: View {
 // MARK: - Плитки
 
 struct MetricTile: View {
+    let report: DashboardReport
     let icon: String
     let tint: Color
     let value: Int
@@ -206,6 +230,7 @@ struct MetricTile: View {
         .scaleEffect(hover ? 1.02 : 1)
         .animation(.snappy(duration: 0.2), value: hover)
         .onHover { hover = $0 }
+        .opensReport(report)
     }
 }
 
@@ -491,6 +516,7 @@ struct LiveFeed: View {
                     Text(event.date, style: .relative).font(.caption2).foregroundStyle(.tertiary).monospacedDigit()
                 }
                 .padding(.vertical, 5)
+                .opensReport(DashboardReport.for(event.kind))
                 .transition(.asymmetric(insertion: .move(edge: .top).combined(with: .opacity), removal: .opacity))
             }
         }

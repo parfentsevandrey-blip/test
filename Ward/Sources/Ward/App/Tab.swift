@@ -25,8 +25,16 @@ final class Tab: NSObject, Identifiable {
     let container: Container?
     /// Одноразовая вкладка: своё хранилище в памяти, исчезает вместе с вкладкой.
     let ephemeral: Bool
-    /// Вкладка-изолятор: сайт, в чьей банке она живёт (см. `Isolation`).
-    let isolatedSite: String?
+    /// Банка, в которой сейчас живёт страница вкладки (см. `Jars`): изолятор, корпорация, маска — или nil
+    /// (общее хранилище окна или контейнер). Меняется при переходе на сайт из другой банки: страница переезжает.
+    private(set) var jar: String?
+    /// Номер текущей страницы WebKit: растёт при переезде в другую банку — по нему SwiftUI меняет вид.
+    private(set) var webViewGeneration = 0
+    /// Откуда приехали: банка и адрес — для кнопки «Назад» после переезда.
+    @ObservationIgnored private var jarHistory: [(jar: String?, url: URL)] = []
+    /// Окно, открытое страницей (window.open): живёт в банке открывшей страницы — иначе вход через
+    /// всплывающее окно не смог бы ответить ей.
+    @ObservationIgnored private var isPopup = false
 
     var title = ""
     var url: URL?
@@ -55,6 +63,8 @@ final class Tab: NSObject, Identifiable {
     var annoyancesHidden = 0
     /// Изолятор: что сайт пытался получить на этой вкладке.
     var isolationAttempts: [String: Int] = [:]
+    /// Корпоративная банка: адреса других корпораций, к которым страница пыталась обратиться → чьи они.
+    var corporationBlocked: [String: String] = [:]
     /// Предложить изолятор для этого сайта (банк, госсервис, магазин…): вид сайта.
     var isolationOffer: String?
     /// Способы снять отпечаток, которые пробовала эта страница.
@@ -88,14 +98,13 @@ final class Tab: NSObject, Identifiable {
     /// Вкладка, которая не оставляет следов: имена сайтов не попадают в ленту панели безопасности.
     var leavesNoTrace: Bool { isPrivate || ephemeral }
 
-    init(browser: BrowserState, url: URL? = nil, popup configuration: WKWebViewConfiguration? = nil, container: Container? = nil, ephemeral: Bool = false, isolated: String? = nil) {
+    init(browser: BrowserState, url: URL? = nil, popup configuration: WKWebViewConfiguration? = nil, container: Container? = nil, ephemeral: Bool = false, jar: String? = nil) {
         self.browser = browser
-        let jar = browser.isPrivate || ephemeral ? nil : isolated
-        isolatedSite = jar
-        // В банке изолятора — только её хранилище: ни контейнеров, ни общего.
-        self.container = browser.isPrivate || jar != nil ? nil : container
+        self.jar = browser.isPrivate || ephemeral ? nil : jar
+        self.container = browser.isPrivate ? nil : container
         self.ephemeral = ephemeral && !browser.isPrivate
         popupConfiguration = configuration
+        isPopup = configuration != nil
         super.init()
         if configuration != nil { _ = webView }
         if let url { load(url) }
@@ -129,7 +138,7 @@ final class Tab: NSObject, Identifiable {
             ephemeralStore = store
             return store
         }
-        if let isolatedSite { return AppModel.shared.isolationStore(for: isolatedSite) }
+        if let jar { return AppModel.shared.jarStore(for: jar) }
         if let container { return AppModel.shared.store(for: container) }
         return browser?.dataStore ?? .default()
     }
@@ -201,7 +210,7 @@ final class Tab: NSObject, Identifiable {
         if let u = view.url, u.absoluteString != "about:blank", interstitial == nil { url = u }
         progress = view.estimatedProgress
         isLoading = view.isLoading
-        canGoBack = view.canGoBack
+        canGoBack = view.canGoBack || !jarHistory.isEmpty
         canGoForward = view.canGoForward
         hasOnlySecureContent = view.hasOnlySecureContent
     }
@@ -216,9 +225,11 @@ final class Tab: NSObject, Identifiable {
         let controller = view.configuration.userContentController
         model.blocker.apply(to: controller, enabled: on)
         if on, let cname = model.cname.ruleList { controller.add(cname) }
+        // Корпоративная банка: запросы к другим корпорациям не уходят — даже там, где защита выключена.
+        if let jar, Jars.kind(of: jar) == .corporation, let rules = model.corporationRules(Jars.subject(of: jar)) { controller.add(rules) }
         controller.removeAllUserScripts()
         let proxied = NetworkPrivacy.usesProxy(model.prefs, isPrivate: isPrivate || ephemeral)
-        let scripts = model.pageScripts(host: host, protected: on, secret: browser?.secret ?? model.sessionSecret, proxied: proxied, isolated: isolatedSite)
+        let scripts = model.pageScripts(host: host, protected: on, secret: browser?.secret ?? model.sessionSecret, proxied: proxied, jar: jar)
         for script in scripts.list { controller.addUserScript(script) }
         scriptletCount = scripts.scriptlets
         appliedHost = host
@@ -234,6 +245,13 @@ final class Tab: NSObject, Identifiable {
     }
 
     func load(_ target: URL) {
+        // Адрес из другой банки: до первой страницы просто выбрать банку, потом — переезд.
+        if let scheme = target.scheme?.lowercased(), scheme == "http" || scheme == "https", !isPopup {
+            let wanted = AppModel.shared.jar(forHost: target.host?.lowercased() ?? "", privateWindow: isPrivate, ephemeral: ephemeral)
+            if wanted != jar {
+                if webViewIfLoaded == nil { jar = wanted } else { rehome(to: wanted, url: target); return }
+            }
+        }
         interstitial = nil
         pendingURL = nil
         url = target
@@ -269,8 +287,45 @@ final class Tab: NSObject, Identifiable {
     func stop() { webViewIfLoaded?.stopLoading() }
     func goBack() {
         if interstitial != nil, webViewIfLoaded?.url != nil { interstitial = nil; sync(); return }
-        webViewIfLoaded?.goBack()
+        if let view = webViewIfLoaded, view.canGoBack { view.goBack(); return }
+        // Начало истории этой банки — назад, в банку, откуда приехали.
+        if let previous = jarHistory.popLast() { rehome(to: previous.jar, url: previous.url, remember: false) }
     }
+
+    /// Переезд страницы в другую банку: прежняя страница WebKit закрывается, новая создаётся с хранилищем
+    /// нужной банки. Для вас это обычный переход в той же вкладке; «Назад» вернёт обратно.
+    func rehome(to newJar: String?, url target: URL, remember: Bool = true) {
+        if let view = webViewIfLoaded {
+            if remember, let from = url ?? view.url {
+                jarHistory.append((jar, from))
+                if jarHistory.count > 20 { jarHistory.removeFirst() }
+            }
+            retire(view)
+        }
+        jar = newJar
+        appliedHost = nil
+        appliedProtection = nil
+        trackers = [:]
+        fingerprinting = []
+        webViewGeneration += 1
+        load(target)
+    }
+
+    private func retire(_ view: WKWebView) {
+        view.stopLoading()
+        observations.removeAll()
+        view.configuration.userContentController.removeAllScriptMessageHandlers()
+        view.navigationDelegate = nil
+        view.uiDelegate = nil
+        view.removeFromSuperview()
+        webViewIfLoaded = nil
+    }
+
+    /// Банка изолятора (а не корпорации или маски).
+    var inIsolator: Bool { jar.map { Jars.kind(of: $0) == .isolator } ?? false }
+    var jarKind: JarKind? { jar.map(Jars.kind(of:)) }
+    /// «Гроб»: изолятор или банка корпорации — сайт заперт отдельно от всего остального.
+    var inCoffin: Bool { jarKind == .isolator || jarKind == .corporation }
     func goForward() { webViewIfLoaded?.goForward() }
 
     func printPage() {
@@ -357,8 +412,15 @@ final class Tab: NSObject, Identifiable {
         let model = AppModel.shared
         let index = model.blocker.index
         let pageSite = Hosts.site(page)
+        let myCorp = jar.flatMap { Jars.kind(of: $0) == .corporation ? Jars.subject(of: $0) : nil }
         for host in (hosts + failed).prefix(800) {
             let h = host.lowercased()
+            // Корпорация из своей банки стучится к другой корпорации — правила банки этот запрос не пустили.
+            if let myCorp, failed.contains(host), corporationBlocked[h] == nil,
+               let other = Jars.corporation(of: h), other.id != myCorp, !Jars.sharedInfrastructure.contains(where: { $0.hasPrefix(h) }) {
+                corporationBlocked[h] = other.name
+                if !leavesNoTrace { model.recordCorporationBlock(from: myCorp, to: other.name, host: h) }
+            }
             if Hosts.site(h) == pageSite {
                 // Поддомен самого сайта: проверить, не псевдоним ли это трекера.
                 if h != page, model.prefs.cnameDetection, cnameChecks < 40, !NetworkPrivacy.usesProxy(model.prefs, isPrivate: isPrivate || ephemeral) {
@@ -375,7 +437,7 @@ final class Tab: NSObject, Identifiable {
             guard trackers[h] == nil, let kind = index.classify(h, page: page, failed: failed.contains(host)) else { continue }
             trackers[h] = kind
             if !leavesNoTrace { model.record(kind, host: h, page: pageSite) }
-            if let isolatedSite { recordAttempt(.trackers, jar: isolatedSite) }
+            if let jar { recordAttempt(.trackers, jar: jar) }
         }
     }
 
@@ -386,7 +448,7 @@ final class Tab: NSObject, Identifiable {
             consentRejected = (body["cmp"] as? String) ?? "окно согласия"
             model.recordConsent(leavesNoTrace ? "" : consentRejected ?? "", site: leavesNoTrace ? "" : site)
         case "isolation":
-            guard let jar = isolatedSite, let what = (body["what"] as? String).flatMap(Isolation.Attempt.init(rawValue:)) else { return }
+            guard let jar = jar, let what = (body["what"] as? String).flatMap(Isolation.Attempt.init(rawValue:)) else { return }
             recordAttempt(what, jar: jar)
         case "annoyance":
             annoyancesHidden += 1
@@ -399,7 +461,7 @@ final class Tab: NSObject, Identifiable {
                   protectedHere, !fingerprinting.contains(technique) else { return }
             let first = fingerprinting.isEmpty
             fingerprinting.insert(technique)
-            if let isolatedSite { recordAttempt(.fingerprint, jar: isolatedSite) }
+            if let jar { recordAttempt(.fingerprint, jar: jar) }
             if !leavesNoTrace { model.recordFingerprint(technique, site: site, first: first) }
         case "password-http":
             if url?.scheme == "http", !Hosts.isLocal(host) { passwordWarning = true }
@@ -409,6 +471,7 @@ final class Tab: NSObject, Identifiable {
     }
 
     private func recordAttempt(_ what: Isolation.Attempt, jar: String) {
+        guard Jars.kind(of: jar) == .isolator else { return }
         isolationAttempts[what.rawValue, default: 0] += 1
         AppModel.shared.recordIsolation(what.rawValue, site: jar)
     }
@@ -462,22 +525,18 @@ extension Tab: WKNavigationDelegate {
         let web = scheme == "http" || scheme == "https"
         let protected = !model.isUnprotected(host)
 
-        // Изолятор. Сайт в изоляторе открывается только в своей банке. Из банки по ссылке, которую вы нажали сами,
-        // уходят на другие сайты уже вне её; переадресации сайта (вход через id.сайт и т. п.) остаются внутри.
-        if web, !isPrivate, !ephemeral, site != isolatedSite {
-            if model.isIsolated(site) {
-                browser?.newTab(url: target, select: true, after: self, isolated: site)
-                if url == nil && !canGoBack { browser?.close(self) }
-                return (.cancel, preferences)
-            }
-            if isolatedSite != nil, action.navigationType == .linkActivated {
-                browser?.newTab(url: target, select: true, after: self)
+        // Банки: сайт из другой банки (изолятор, корпорация, маска) — страница переезжает в неё, в той же вкладке.
+        // Отправка формы на другой сайт (POST) остаётся на месте: её данные нельзя перенести в другое хранилище.
+        if web, !isPopup, (action.request.httpMethod ?? "GET").uppercased() == "GET" {
+            let wanted = model.jar(forHost: host, privateWindow: isPrivate, ephemeral: ephemeral)
+            if wanted != jar {
+                Task { @MainActor in self.rehome(to: wanted, url: target) }
                 return (.cancel, preferences)
             }
         }
 
         // Сайт закреплён за контейнером — открыть его там.
-        if web, !isPrivate, !ephemeral, isolatedSite == nil, let wanted = model.container(forSite: site), wanted.id != container?.id {
+        if web, !isPrivate, !ephemeral, jar == nil, let wanted = model.container(forSite: site), wanted.id != container?.id {
             browser?.newTab(url: target, select: true, after: self, container: wanted)
             if url == nil && !canGoBack { browser?.close(self) }
             return (.cancel, preferences)
@@ -536,7 +595,7 @@ extension Tab: WKNavigationDelegate {
         javaScriptOn = jsOn
         // Строгий режим: WebKit без JIT, WebGL, сложных шрифтов и других путей для эксплойтов.
         // В изоляторе строгий режим не нужен: сайт и так заперт, а банкам и госуслугам без JIT и WebGL часто плохо.
-        let strict = web && isolatedSite == nil && model.prefs.strict(site: site, familiar: model.isFamiliar(site))
+        let strict = web && !inIsolator && model.prefs.strict(site: site, familiar: model.isFamiliar(site))
         preferences.isLockdownModeEnabled = strict
         strictHere = strict
         return (.allow, preferences)
@@ -574,13 +633,14 @@ extension Tab: WKNavigationDelegate {
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         trackers = [:]
         cloaked = [:]
+        corporationBlocked = [:]
         consentRejected = nil
         passwordWarning = false
         sponsorSkipped = 0
         annoyancesHidden = 0
         cnameChecks = 0
         isolationOffer = nil
-        if isolatedSite == nil, !leavesNoTrace, let host = webView.url?.host?.lowercased() {
+        if !inIsolator, !leavesNoTrace, let host = webView.url?.host?.lowercased() {
             let site = Hosts.site(host)
             let model = AppModel.shared
             if model.prefs.suggestIsolation, !model.prefs.isolationDeclined.contains(site), let kind = Isolation.category(of: site) {
@@ -762,9 +822,9 @@ extension Tab: WKUIDelegate {
     func webView(_ webView: WKWebView, decideMediaCapturePermissionsFor origin: WKSecurityOrigin, initiatedBy frame: WKFrameInfo, type: WKMediaCaptureType) async -> WKPermissionDecision {
         let model = AppModel.shared
         // В изоляторе — молчаливый отказ, без вопросов.
-        if let isolatedSite {
-            if type != .microphone { recordAttempt(.camera, jar: isolatedSite) }
-            if type != .camera { recordAttempt(.microphone, jar: isolatedSite) }
+        if let jar, Jars.kind(of: jar) == .isolator {
+            if type != .microphone { recordAttempt(.camera, jar: jar) }
+            if type != .camera { recordAttempt(.microphone, jar: jar) }
             return .deny
         }
         let site = Hosts.site(origin.host)

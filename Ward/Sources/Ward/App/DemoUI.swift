@@ -28,6 +28,8 @@ enum DemoUI {
 
     /// Панель безопасности, прокрученная вниз (для второго скриншота).
     static var dashboardBottom: Bool { isOn && screen == "dashboard-bottom" }
+    /// Панель с открытым отчётом по трекерам (скриншот «как в Quick Look»).
+    static var dashboardReport: DashboardReport? { isOn && screen == "dashboard-report" ? .tracking : nil }
 
     /// Открыть щит сразу (для скриншота).
     static var showsShield: Bool { isOn && screen == "shield" }
@@ -89,7 +91,7 @@ enum DemoUI {
         case "private":
             // В этом демо первое окно само частное (см. WardApp).
             browser.newTab(url: URL(string: "https://duckduckgo.com")!, select: false)
-        case "dashboard", "dashboard-bottom":
+        case "dashboard", "dashboard-bottom", "dashboard-report":
             // Настоящие счётчики: сначала открыть сайты, потом показать панель.
             for site in sites { browser.newTab(url: URL(string: site)!, select: false) }
             browser.selected?.load(URL(string: "https://www.theverge.com")!)

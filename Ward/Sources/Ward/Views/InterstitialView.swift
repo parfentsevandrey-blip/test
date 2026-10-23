@@ -113,7 +113,7 @@ struct InterstitialView: View {
         case .lookalike: "Это не подделка"
         case .insecure: "Открыть без защиты"
         case .blocked: "Открыть один раз"
-        case .failed: tab.isolatedSite == nil && !tab.isPrivate && !tab.site.isEmpty ? "Открыть в изоляторе" : nil
+        case .failed: !tab.inIsolator && !tab.isPrivate && !tab.site.isEmpty ? "Открыть в изоляторе" : nil
         }
     }
 

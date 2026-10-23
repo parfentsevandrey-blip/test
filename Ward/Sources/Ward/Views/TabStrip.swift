@@ -71,9 +71,12 @@ struct TabChip: View {
 
     var body: some View {
         HStack(spacing: 7) {
-            if tab.isolatedSite != nil {
+            if tab.inIsolator {
                 Image(systemName: "cube.transparent.fill").font(.caption).foregroundStyle(.teal)
                     .help("Изолятор: сайт заперт в своей банке с вымышленным устройством")
+            } else if tab.jarKind == .corporation, let jar = tab.jar {
+                Image(systemName: "building.2.crop.circle.fill").font(.caption).foregroundStyle(.orange)
+                    .help("Банка «\(Jars.title(of: jar))»: все её сервисы вместе, но без связи с другими корпорациями")
             } else if tab.ephemeral {
                 Image(systemName: "flame.fill").font(.caption).foregroundStyle(.orange)
             } else {
@@ -107,7 +110,11 @@ struct TabChip: View {
                 .shadow(color: .black.opacity(selected ? 0.12 : 0), radius: 2, y: 1)
         }
         .overlay(alignment: .bottom) {
-            if let c = tab.container {
+            if tab.inCoffin, let jar = tab.jar {
+                // Тонкая чёрная полоска: вкладка открыта «в гробу» — изоляторе или банке корпорации.
+                Capsule().fill(Color.black).frame(height: 3).padding(.horizontal, 8)
+                    .help(tab.inIsolator ? "Изолятор: сайт заперт отдельно от всего" : "Банка «\(Jars.title(of: jar))»: корпорация заперта отдельно от других")
+            } else if let c = tab.container {
                 Capsule().fill(ContainerPalette.color(c.color)).frame(height: 3).padding(.horizontal, 8)
                     .help("Контейнер «\(c.name)»")
             }
@@ -130,7 +137,7 @@ struct TabChip: View {
                     }
                 }
                 Button("Открыть в одноразовой вкладке") { browser.reopen(tab, container: nil, ephemeral: true) }
-                if tab.isolatedSite == nil, !tab.site.isEmpty {
+                if !tab.inIsolator, !tab.site.isEmpty {
                     Button("Открыть в изоляторе") { browser.isolate(tab) }
                 }
             }

@@ -13,7 +13,8 @@ final class AppModel {
             guard prefs != oldValue else { return }
             Storage.save(prefs, "prefs.json")
             if prefs.enabledLists != oldValue.enabledLists { blocker.prepare(lists: prefs.enabledFilterLists) }
-            if prefs.proxyMode != oldValue.proxyMode || prefs.proxyHost != oldValue.proxyHost || prefs.proxyPort != oldValue.proxyPort {
+            if prefs.proxyMode != oldValue.proxyMode || prefs.proxyHost != oldValue.proxyHost || prefs.proxyPort != oldValue.proxyPort
+                || prefs.separateCircuits != oldValue.separateCircuits {
                 applyProxyEverywhere()
                 refreshAllTabs()
             }
@@ -23,6 +24,7 @@ final class AppModel {
                 || prefs.unprotectedSites != oldValue.unprotectedSites || prefs.noScriptSites != oldValue.noScriptSites
                 || prefs.consentReject != oldValue.consentReject || prefs.sponsorBlock != oldValue.sponsorBlock
                 || prefs.blockAnnoyances != oldValue.blockAnnoyances
+                || prefs.maskMode != oldValue.maskMode || prefs.corporateJars != oldValue.corporateJars
                 || prefs.spoofTimezone != oldValue.spoofTimezone || prefs.spoofLanguage != oldValue.spoofLanguage {
                 refreshAllTabs()
             }
@@ -64,6 +66,10 @@ final class AppModel {
     private var saveTimer: Timer?
     private var cleanupTask: Task<Void, Never>?
     private var stores: [UUID: WKWebsiteDataStore] = [:]
+    /// Хранилище банки → её ключ (для прокси и смены маски).
+    private var jarIDs: [UUID: String] = [:]
+    private var corpRules: [String: WKContentRuleList] = [:]
+    private var corpRulesCompiling: Set<String> = []
     private var historySites: Set<String> = []
     /// Идёт «Стереть всё»: окна закрываются без сохранения вкладок.
     private(set) var wiping = false
@@ -89,6 +95,8 @@ final class AppModel {
         blocker.onChange = { [weak self] in self?.refreshAllTabs() }
         cname.onChange = { [weak self] in self?.refreshAllTabs() }
         blocker.prepare(lists: prefs.enabledFilterLists)
+        SecurityLog.shared.prune(keepingDays: prefs.logRetentionDays)
+        rotateMaskIfDue()
         cname.scheduleCompile(store: blocker.store)
         saveTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
             MainActor.assumeIsolated { AppModel.shared.saveState() }
@@ -161,17 +169,19 @@ final class AppModel {
 
     /// Скрипты для страницы хоста и сколько в них скриптлетов из списков.
     /// `proxied` — окно идёт через прокси: тогда WebRTC выключается сам, иначе он раскрыл бы настоящий IP в обход прокси.
-    func pageScripts(host: String, protected: Bool, secret: String, proxied: Bool = false, isolated: String? = nil) -> (list: [WKUserScript], scriptlets: Int) {
+    func pageScripts(host: String, protected: Bool, secret: String, proxied: Bool = false, jar: String? = nil) -> (list: [WKUserScript], scriptlets: Int) {
         var list: [WKUserScript] = []
         var scriptlets = 0
-        if let jar = isolated {
-            // Изолятор: вымышленное устройство, постоянное для сайта, и отказ во всех разрешениях —
-            // даже если на этом сайте защита выключена.
-            let legend = Isolation.legend(site: jar, secret: prefs.isolationSecret)
-            list.append(WKUserScript(source: Scripts.fingerprint(secret: legend.noiseSecret, blockWebRTC: true, event: signalToken),
+        if let jar {
+            // Банка: вымышленное устройство, постоянное для банки. Изолятор вдобавок отказывает во всех
+            // разрешениях — даже если на этом сайте защита выключена.
+            let kind = Jars.kind(of: jar)
+            let legend = jarLegend(jar)
+            let webRTCOff = kind != .corporation || prefs.blockWebRTC || proxied
+            list.append(WKUserScript(source: Scripts.fingerprint(secret: legend.noiseSecret, blockWebRTC: webRTCOff, event: signalToken),
                                      injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
             list.append(WKUserScript(source: Scripts.fingerprintRelay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
-            list.append(WKUserScript(source: Isolation.script(legend, event: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
+            list.append(WKUserScript(source: Isolation.script(legend, event: signalToken, deny: kind == .isolator), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .page))
             list.append(WKUserScript(source: Isolation.relay(token: signalToken), injectionTime: .atDocumentStart, forMainFrameOnly: false, in: .defaultClient))
         } else if protected && (prefs.fingerprint || proxied) {
             list.append(WKUserScript(source: Scripts.fingerprint(secret: secret, blockWebRTC: prefs.blockWebRTC || proxied,
@@ -306,7 +316,10 @@ final class AppModel {
 
     private func applyProxyEverywhere() {
         NetworkPrivacy.apply(to: .default(), isPrivate: false, prefs: prefs)
-        for (id, store) in stores { if containers.contains(where: { $0.id == id }) { NetworkPrivacy.apply(to: store, isPrivate: false, prefs: prefs) } }
+        for (id, store) in stores {
+            if containers.contains(where: { $0.id == id }) { NetworkPrivacy.apply(to: store, isPrivate: false, prefs: prefs) }
+            if let jar = jarIDs[id] { NetworkPrivacy.apply(to: store, isPrivate: false, prefs: prefs, circuit: circuitKey(jar)) }
+        }
         for browser in browsers where browser.isPrivate { NetworkPrivacy.apply(to: browser.dataStore, isPrivate: true, prefs: prefs) }
         for tab in allTabs where tab.ephemeral { NetworkPrivacy.apply(to: tab.dataStore, isPrivate: true, prefs: prefs) }
     }
@@ -416,8 +429,10 @@ final class AppModel {
     // MARK: Счётчики и лента событий
 
     private func feed(_ kind: SecurityEvent.Kind, _ title: String, _ detail: String = "") {
-        recent.insert(SecurityEvent(kind: kind, title: title, detail: detail), at: 0)
+        let event = SecurityEvent(kind: kind, title: title, detail: detail)
+        recent.insert(event, at: 0)
         if recent.count > 60 { recent.removeLast(recent.count - 60) }
+        if prefs.securityLog { SecurityLog.shared.append(LogEntry(date: event.date, kind: kind.rawValue, title: title, detail: detail)) }
     }
 
     func record(_ kind: TrackerKind, host: String, page: String = "") {
@@ -448,18 +463,118 @@ final class AppModel {
         feed(.consent, "Отказ от cookie", [site, cmp].filter { !$0.isEmpty }.joined(separator: " · "))
     }
 
-    // MARK: - Изолятор
+    // MARK: - Банки: изолятор, корпорации, маска
 
     func isIsolated(_ site: String) -> Bool { !site.isEmpty && prefs.isolatedSites.contains(site) }
 
-    /// Хранилище банки сайта: постоянное и ни с кем не общее.
-    func isolationStore(for site: String) -> WKWebsiteDataStore {
-        let id = Isolation.storeID(for: site)
+    /// В какой банке открывать адрес: изолятор сайта, банка корпорации, маска — или nil (обычное хранилище).
+    func jar(forHost host: String, privateWindow: Bool, ephemeral: Bool) -> String? {
+        guard !privateWindow, !ephemeral, !host.isEmpty, !Hosts.isLocal(host) || isIsolated(Hosts.site(host)) else { return nil }
+        let site = Hosts.site(host)
+        if isIsolated(site) { return site }
+        if prefs.corporateJars, let corp = Jars.corporation(of: host) { return "corp:" + corp.id }
+        if prefs.maskMode, !site.isEmpty, !Hosts.isLocal(host) { return "mask:" + site }
+        return nil
+    }
+
+    /// Идентификатор хранилища банки. Маски меняются при «смене маски», кроме сайтов «Помнить вход».
+    func jarStoreID(_ jar: String) -> UUID {
+        switch Jars.kind(of: jar) {
+        case .isolator: return Isolation.storeID(for: jar)
+        case .corporation: return Jars.uuid("ward-corp|" + Jars.subject(of: jar))
+        case .mask:
+            let site = Jars.subject(of: jar)
+            return prefs.rememberedSites.contains(site) ? Jars.uuid("ward-mask|" + site) : Jars.uuid("ward-mask|\(prefs.maskEpoch)|" + site)
+        }
+    }
+
+    /// Вымышленное устройство банки: постоянное для изолятора и корпорации, своё для каждой маски.
+    func jarLegend(_ jar: String) -> Isolation.Legend {
+        switch Jars.kind(of: jar) {
+        case .isolator: return Isolation.legend(site: jar, secret: prefs.isolationSecret)
+        case .corporation: return Isolation.legend(site: jar, secret: prefs.isolationSecret)
+        case .mask:
+            let site = Jars.subject(of: jar)
+            let epoch = prefs.rememberedSites.contains(site) ? 0 : prefs.maskEpoch
+            return Isolation.legend(site: site, secret: prefs.isolationSecret + "|mask|\(epoch)")
+        }
+    }
+
+    /// Хранилище банки: постоянное и ни с кем не общее.
+    func jarStore(for jar: String) -> WKWebsiteDataStore {
+        let id = jarStoreID(jar)
         if let store = stores[id] { return store }
         let store = WKWebsiteDataStore(forIdentifier: id)
-        NetworkPrivacy.apply(to: store, isPrivate: false, prefs: prefs)
+        NetworkPrivacy.apply(to: store, isPrivate: false, prefs: prefs, circuit: circuitKey(jar))
         stores[id] = store
+        jarIDs[id] = jar
+        if Jars.kind(of: jar) == .mask, !prefs.maskStores.contains(id.uuidString) {
+            prefs.maskStores.append(id.uuidString)
+            stats.masksIssued += 1
+        }
         return store
+    }
+
+    /// Имя «цепочки» для прокси: свой выход в сеть у каждой банки (Tor различает цепочки по имени SOCKS).
+    func circuitKey(_ jar: String) -> String? {
+        guard prefs.separateCircuits else { return nil }
+        return "ward-" + jarStoreID(jar).uuidString.prefix(12).lowercased()
+    }
+
+    /// Правила корпоративной банки: запросы к другим корпорациям не уходят. Собираются один раз и хранятся.
+    func corporationRules(_ corp: String) -> WKContentRuleList? {
+        if let list = corpRules[corp] { return list }
+        guard !corpRulesCompiling.contains(corp) else { return nil }
+        corpRulesCompiling.insert(corp)
+        let identifier = "ward-corp-\(corp)-\(Jars.rulesVersion)"
+        let json = Jars.ruleList(blockingAllBut: corp)
+        Task {
+            switch await blocker.compile(identifier, json) {
+            case .success(let list):
+                corpRules[corp] = list
+                refreshAllTabs()
+            case .failure(let error):
+                print("Ward: правила корпорации \(corp): \(error)")
+            }
+            corpRulesCompiling.remove(corp)
+        }
+        return nil
+    }
+
+    /// Корпорация из своей банки пыталась обратиться к другой корпорации — запрос не ушёл.
+    func recordCorporationBlock(from corp: String, to other: String, host: String) {
+        stats.corporationBlocks[corp, default: 0] += 1
+        feed(.corporation, "\(Jars.corporation(id: corp)?.name ?? corp) → \(other): запрос не ушёл", host)
+    }
+
+    /// Сменить маску: у всех сайтов — новые вымышленные личности и чистые хранилища (кроме «Помнить вход»).
+    func rotateMask() async {
+        let old = prefs.maskStores
+        prefs.maskEpoch += 1
+        prefs.maskStores = []
+        prefs.maskRotatedAt = Date()
+        for browser in browsers {
+            for tab in browser.tabs {
+                guard let jar = tab.jar, Jars.kind(of: jar) == .mask, let u = tab.url else { continue }
+                tab.rehome(to: jar, url: u, remember: false)
+            }
+        }
+        for raw in old {
+            guard let id = UUID(uuidString: raw), jarIDs[id].map({ !prefs.rememberedSites.contains(Jars.subject(of: $0)) }) ?? true else { continue }
+            stores[id] = nil
+            jarIDs[id] = nil
+            await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+                WKWebsiteDataStore.remove(forIdentifier: id) { _ in cont.resume() }
+            }
+        }
+        feed(.mask, "Маска сменена", "у всех сайтов новые личности")
+    }
+
+    /// Смена маски по расписанию — при запуске.
+    func rotateMaskIfDue() {
+        guard prefs.maskMode, prefs.maskRotation > 0 else { return }
+        let last = prefs.maskRotatedAt ?? .distantPast
+        if Date().timeIntervalSince(last) > Double(prefs.maskRotation) * 86_400 { Task { await rotateMask() } }
     }
 
     /// Поместить сайт в изолятор (открытые вкладки сайта переезжают в банку) или выпустить из него.
@@ -470,12 +585,14 @@ final class AppModel {
             prefs.isolatedSites.insert(site)
             prefs.isolationDeclined.remove(site)
             for browser in browsers where !browser.isPrivate {
-                for tab in browser.tabs where tab.site == site && tab.isolatedSite == nil && !tab.ephemeral { browser.isolate(tab) }
+                for tab in browser.tabs where tab.site == site && tab.jar != site && !tab.ephemeral { browser.isolate(tab) }
             }
         } else {
             prefs.isolatedSites.remove(site)
             for browser in browsers {
-                for tab in browser.tabs where tab.isolatedSite == site { browser.reopen(tab, container: nil); browser.close(tab) }
+                for tab in browser.tabs where tab.jar == site {
+                    if let u = tab.url { tab.rehome(to: jar(forHost: u.host?.lowercased() ?? "", privateWindow: false, ephemeral: false), url: u, remember: false) }
+                }
             }
             await removeIsolationStore(site)
         }
@@ -706,8 +823,30 @@ final class AppModel {
 
 /// Событие защиты для живой ленты панели безопасности.
 struct SecurityEvent: Identifiable, Equatable {
-    enum Kind {
-        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup, annoyance, isolation
+    enum Kind: String, CaseIterable {
+        case tracker, ad, danger, cloaked, fingerprint, hidden, link, https, consent, sponsor, phishing, cleanup, annoyance, isolation, corporation, mask
+
+        /// Название вида для журнала и фильтров.
+        var title: String {
+            switch self {
+            case .tracker: "Слежка"
+            case .ad: "Реклама"
+            case .danger: "Опасный сайт"
+            case .cloaked: "Скрытый трекер"
+            case .fingerprint: "Отпечаток"
+            case .hidden: "Скрытые элементы"
+            case .link: "Очистка ссылок"
+            case .https: "HTTPS"
+            case .consent: "Отказ от cookie"
+            case .sponsor: "SponsorBlock"
+            case .phishing: "Подделка сайта"
+            case .cleanup: "Уборка данных"
+            case .annoyance: "Плашки"
+            case .isolation: "Изолятор"
+            case .corporation: "Корпорации"
+            case .mask: "Маска"
+            }
+        }
 
         var icon: String {
             switch self {
@@ -725,6 +864,8 @@ struct SecurityEvent: Identifiable, Equatable {
             case .cleanup: "trash.fill"
             case .annoyance: "rectangle.on.rectangle.slash.fill"
             case .isolation: "cube.transparent.fill"
+            case .corporation: "building.2.crop.circle"
+            case .mask: "theatermasks.circle.fill"
             }
         }
 
@@ -741,6 +882,8 @@ struct SecurityEvent: Identifiable, Equatable {
             case .cleanup: .gray
             case .annoyance: .mint
             case .isolation: .teal
+            case .corporation: .orange
+            case .mask: .purple
             }
         }
     }

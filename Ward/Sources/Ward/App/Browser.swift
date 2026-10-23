@@ -39,8 +39,8 @@ final class BrowserState {
     var usesProxy: Bool { NetworkPrivacy.usesProxy(AppModel.shared.prefs, isPrivate: isPrivate) }
 
     @discardableResult
-    func newTab(url: URL? = nil, select: Bool = true, after: Tab? = nil, container: Container? = nil, ephemeral: Bool = false, isolated: String? = nil) -> Tab {
-        let tab = Tab(browser: self, url: url, container: container, ephemeral: ephemeral, isolated: isolated ?? jar(for: url, ephemeral: ephemeral))
+    func newTab(url: URL? = nil, select: Bool = true, after: Tab? = nil, container: Container? = nil, ephemeral: Bool = false, jar: String? = nil) -> Tab {
+        let tab = Tab(browser: self, url: url, container: container, ephemeral: ephemeral, jar: jar ?? self.jar(for: url, ephemeral: ephemeral))
         insert(tab, after: after)
         if select || tabs.count == 1 { self.select(tab) }
         if url == nil { addressFocus += 1 }
@@ -49,7 +49,7 @@ final class BrowserState {
 
     /// Окно, которое открыла страница (window.open, «Открыть в новом окне»): то же хранилище, что у неё.
     func popup(configuration: WKWebViewConfiguration, opener: Tab) -> Tab {
-        let tab = Tab(browser: self, popup: configuration, container: opener.container, ephemeral: opener.ephemeral, isolated: opener.isolatedSite)
+        let tab = Tab(browser: self, popup: configuration, container: opener.container, ephemeral: opener.ephemeral, jar: opener.jar)
         insert(tab, after: opener)
         select(tab)
         return tab
@@ -70,7 +70,7 @@ final class BrowserState {
         fresh.forEach { $0.close() }
         for item in saved {
             let container = item.container.flatMap { id in AppModel.shared.containers.first { $0.id == id } }
-            let tab = Tab(browser: self, container: container, isolated: jar(for: item.url, ephemeral: false))
+            let tab = Tab(browser: self, container: container, jar: jar(for: item.url, ephemeral: false))
             tab.pendingURL = item.url
             tabs.append(tab)
         }
@@ -132,21 +132,19 @@ final class BrowserState {
         newTab(url: saved.url, container: container)
     }
 
-    /// Сайт, в банку которого попадает адрес (сайт в изоляторе, окно не частное).
+    /// Банка, в которую попадает адрес (изолятор, корпорация, маска).
     func jar(for url: URL?, ephemeral: Bool) -> String? {
-        guard !isPrivate, !ephemeral, let host = url?.host?.lowercased() else { return nil }
-        let site = Hosts.site(host)
-        return AppModel.shared.isIsolated(site) ? site : nil
+        guard let host = url?.host?.lowercased() else { return nil }
+        return AppModel.shared.jar(forHost: host, privateWindow: isPrivate, ephemeral: ephemeral)
     }
 
-    /// Открыть страницу вкладки в изоляторе — на её месте.
+    /// Перенести страницу вкладки в её изолятор — на месте.
     func isolate(_ tab: Tab) {
         guard !isPrivate, let u = tab.url ?? tab.pendingURL else { return }
         let site = Hosts.site(u.host?.lowercased() ?? "")
         guard !site.isEmpty else { return }
-        let jarTab = newTab(url: u, select: selected === tab, after: tab, isolated: site)
-        _ = jarTab
-        close(tab)
+        if tab.webViewIfLoaded == nil, tab.pendingURL != nil { tab.wake(); return }
+        tab.rehome(to: site, url: u, remember: false)
     }
 
     /// Открыть ту же страницу в другом контейнере (или одноразовой вкладке).
@@ -164,13 +162,8 @@ final class BrowserState {
     /// Ввод из адресной строки.
     func go(_ input: String, in tab: Tab? = nil) {
         guard let target = Omnibox.url(from: input, search: AppModel.shared.prefs.search) else { return }
-        let into = tab ?? selected ?? newTab()
-        // Из банки изолятора введённый адрес другого сайта открывается рядом, вне банки.
-        if let jar = into.isolatedSite, Hosts.site(target.host?.lowercased() ?? "") != jar {
-            newTab(url: target, after: into)
-            return
-        }
-        into.load(target)
+        // Банку выбирает сама вкладка: адрес из другой банки — переезд на месте.
+        (tab ?? selected ?? newTab()).load(target)
     }
 
     func showFind() {

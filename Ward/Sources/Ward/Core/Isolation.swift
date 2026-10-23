@@ -6,7 +6,7 @@ import Foundation
 ///
 /// - Своё постоянное хранилище: вход и «доверенное устройство» сохраняются, но ни один другой сайт и ни один
 ///   контейнер этих cookie и данных не видят — и сам сайт не видит ничего за пределами банки.
-/// - Вымышленное устройство («легенда»): экран, число ядер, память, видеокарта и шум отпечатка выдуманы,
+/// - Вымышленное устройство («легенда»): свой постоянный шум отпечатка (холст, WebGL, звук, шрифты),
 ///   но правдоподобны и постоянны между запусками. Сайт узнаёт «своё устройство» и не просит лишних
 ///   подтверждений, но это устройство — не ваш Mac.
 /// - Все запросы доступа отклоняются молча и записываются: геопозиция, камера, микрофон, экран, уведомления,
@@ -22,24 +22,23 @@ nonisolated enum Isolation {
         return UUID(uuid: (b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7], b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15]))
     }
 
-    /// Вымышленное устройство для сайта. Значения — из самых распространённых у пользователей Mac,
-    /// чтобы «легенда» не выделялась; постоянны для пары «сайт + секрет изолятора».
+    /// Вымышленное устройство для сайта: свой детерминированный шум отпечатка (холст, WebGL, звук, шрифты)
+    /// и огрублённое время. Постоянно для пары «банка + секрет».
+    ///
+    /// Экран и число ядер нарочно не подменяются: детекторы сверяют screen.width с CSS-медиазапросами,
+    /// а hardwareConcurrency — с воркерами, куда скрипты страницы не попадают. Такая подмена выдала бы
+    /// «браузер с подделкой» — заметнее настоящего Mac. Шум же в стиле Safari 26 выглядит как обычный WebKit.
     nonisolated struct Legend: Sendable, Equatable {
-        var screenWidth: Int
-        var screenHeight: Int
-        var cores: Int
-        var memory: Int
         /// Секрет шума отпечатка: постоянный, чтобы сайт видел одно и то же «устройство».
         var noiseSecret: String
+        /// Короткий номер «устройства» — для щита и панели.
+        var tag: String
     }
 
     static func legend(site: String, secret: String) -> Legend {
         let digest = Array(SHA256.hash(data: Data("\(secret)|\(site)".utf8)))
-        let screens = [(1440, 900), (1512, 982), (1680, 1050), (1728, 1117), (1920, 1080), (2560, 1440)]
-        let screen = screens[Int(digest[0]) % screens.count]
-        let cores = [8, 8, 10, 12][Int(digest[1]) % 4]
-        return Legend(screenWidth: screen.0, screenHeight: screen.1, cores: cores, memory: 8,
-                      noiseSecret: digest[2..<14].map { String(format: "%02x", $0) }.joined())
+        return Legend(noiseSecret: digest[2..<14].map { String(format: "%02x", $0) }.joined(),
+                      tag: digest[0..<3].map { String(format: "%02X", $0) }.joined())
     }
 
     /// Что сайт пытался получить в изоляторе.
@@ -110,13 +109,12 @@ nonisolated enum Isolation {
 
     /// Скрипт изолятора — в мире страницы, до её собственных скриптов, во всех фреймах.
     /// `event` — имя сигнала (см. `relay`): страница не знает его и не может подделать.
-    static func script(_ legend: Legend, event: String) -> String {
+    /// `deny` — изолятор: отказ во всех разрешениях. Без него (корпорация, маска) — только вымышленное
+    /// устройство и огрублённое время.
+    static func script(_ legend: Legend, event: String, deny: Bool = true) -> String {
         source
+            .replacingOccurrences(of: "__WARD_DENY__", with: deny ? "true" : "false")
             .replacingOccurrences(of: "__WARD_EVENT__", with: event)
-            .replacingOccurrences(of: "__WARD_SW__", with: String(legend.screenWidth))
-            .replacingOccurrences(of: "__WARD_SH__", with: String(legend.screenHeight))
-            .replacingOccurrences(of: "__WARD_CORES__", with: String(legend.cores))
-            .replacingOccurrences(of: "__WARD_MEM__", with: String(legend.memory))
     }
 
     /// Переносит сигналы из мира страницы в мир Ward и дальше — в приложение.
@@ -167,18 +165,16 @@ nonisolated enum Isolation {
       };
       const denied = (name) => new DOMException('The request is not allowed by the user agent or the platform in the current context.', name || 'NotAllowedError');
 
-      // Устройство из «легенды»: правдоподобный Mac, а не ваш.
-      const W = __WARD_SW__, H = __WARD_SH__;
-      getter(Navigator.prototype, 'hardwareConcurrency', __WARD_CORES__);
-      if ('deviceMemory' in Navigator.prototype) getter(Navigator.prototype, 'deviceMemory', __WARD_MEM__);
-      getter(Screen.prototype, 'width', W);
-      getter(Screen.prototype, 'height', H);
-      getter(Screen.prototype, 'availWidth', W);
-      getter(Screen.prototype, 'availHeight', H - 25);
-      getter(Screen.prototype, 'availTop', 25);
-      getter(Screen.prototype, 'availLeft', 0);
-      getter(Screen.prototype, 'colorDepth', 30);
-      getter(Screen.prototype, 'pixelDepth', 30);
+      // Время: по ритму нажатий клавиш и точным таймерам узнают человека и устройство. Событиям — точность 8 мс,
+      // performance.now — 1 мс: для сайтов незаметно, для «биометрии печати» — шум.
+      const stamp = Object.getOwnPropertyDescriptor(Event.prototype, 'timeStamp');
+      if (stamp && stamp.get) getter(Event.prototype, 'timeStamp', function () { return Math.floor(stamp.get.call(this) / 8) * 8; });
+      if (typeof Performance !== 'undefined') {
+        const now = Performance.prototype.now;
+        method(Performance.prototype, 'now', function () { return Math.floor(now.call(this)); });
+      }
+
+      if (!__WARD_DENY__) return;
 
       // Геопозиция: «доступ запрещён», как если бы вы нажали «Не разрешать».
       if (typeof Geolocation !== 'undefined') {

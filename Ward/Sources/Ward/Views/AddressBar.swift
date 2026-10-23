@@ -154,9 +154,12 @@ struct AddressBar: View {
     private var securityIcon: some View {
         if focused || tab.url == nil {
             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-        } else if tab.isolatedSite != nil, tab.interstitial == nil {
+        } else if tab.inIsolator, tab.interstitial == nil {
             Image(systemName: "cube.transparent.fill").foregroundStyle(.teal)
                 .help("Изолятор: свои cookie и данные, вымышленное устройство, все разрешения отклоняются")
+        } else if tab.jarKind == .corporation, let jar = tab.jar, tab.interstitial == nil {
+            Image(systemName: "building.2.crop.circle.fill").foregroundStyle(.orange)
+                .help("Банка «\(Jars.title(of: jar))»: вход во все её сервисы, но ни к одной другой корпорации отсюда запросы не уходят")
         } else if tab.interstitial != nil {
             Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
         } else if Punycode.display(tab.host).suspicious {

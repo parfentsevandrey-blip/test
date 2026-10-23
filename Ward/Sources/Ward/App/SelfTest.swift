@@ -232,6 +232,36 @@ enum SelfTest {
         ok = check(!cosmeticIndex.selectors(for: "nogeneric.net").contains(".ad-box") && cosmeticIndex.selectors(for: "nogeneric.net").contains(".local"), "$generichide") && ok
         ok = check(!cosmeticIndex.selectors(for: "safe.org").contains(".sticky"), "«везде, кроме» не действует на исключённом сайте") && ok
 
+        // Банки: корпорации узнаются по всем своим доменам, чужие сайты — нет; маска даёт сайту свою личность.
+        let corpCases: [(String, String?)] = [("www.youtube.com", "google"), ("mail.google.ru", "google"), ("i.ytimg.com", "google"),
+                                              ("amazon.co.uk", "amazon"), ("music.yandex.ru", "yandex"), ("dzen.ru", "vk"),
+                                              ("github.com", "microsoft"), ("claude.ai", "anthropic"), ("example.com", nil),
+                                              ("notgoogle.com", nil), ("myapp.firebaseapp.com", nil), ("googlefan.ru", nil)]
+        let corpWrong = corpCases.filter { Jars.corporation(of: $0.0)?.id != $0.1 }
+        ok = check(corpWrong.isEmpty, "корпорации по доменам (\(corpWrong.map(\.0)))") && ok
+        let rules = Jars.ruleList(blockingAllBut: "google")
+        ok = check((try? JSONSerialization.jsonObject(with: Data(rules.utf8))) != nil && !rules.contains("youtube") && rules.contains("yandex"),
+                   "правила банки Google: другие корпорации — в блоке, свои домены — нет") && ok
+        let model0 = AppModel.shared
+        let savedMask = model0.prefs.maskMode, savedCorp = model0.prefs.corporateJars
+        model0.prefs.maskMode = true
+        model0.prefs.corporateJars = true
+        let mA = model0.jar(forHost: "news.example.com", privateWindow: false, ephemeral: false)
+        let mB = model0.jar(forHost: "shop.example.org", privateWindow: false, ephemeral: false)
+        let mG = model0.jar(forHost: "www.youtube.com", privateWindow: false, ephemeral: false)
+        let mP = model0.jar(forHost: "news.example.com", privateWindow: true, ephemeral: false)
+        ok = check(mA == "mask:example.com" && mB == "mask:example.org" && mG == "corp:google" && mP == nil,
+                   "маска: свой сайт — своя банка, корпорация — в своей, частное окно — без банок (\(mA ?? "-"), \(mB ?? "-"), \(mG ?? "-"))") && ok
+        let idBefore = model0.jarStoreID("mask:example.com")
+        let legendBefore = model0.jarLegend("mask:example.com")
+        model0.prefs.maskEpoch += 1
+        ok = check(model0.jarStoreID("mask:example.com") != idBefore && model0.jarLegend("mask:example.com") != legendBefore
+                   && model0.jarStoreID("corp:google") == model0.jarStoreID("corp:google"),
+                   "смена маски: новое хранилище и новое устройство; корпоративная банка постоянна") && ok
+        model0.prefs.maskEpoch -= 1
+        model0.prefs.maskMode = savedMask
+        model0.prefs.corporateJars = savedCorp
+
         // Скрипты: синтаксис в JavaScriptCore
         let js = JSContext()!
         let scriptlets = Scripts.scriptlets([#"0["set-constant","a","false"]"#, #"1["replace-fetch-response","x","y",""]"#]) ?? ""
@@ -667,7 +697,7 @@ enum SelfTest {
         // обычная вкладка, открывшая сайт из изолятора, отдаёт его в банку.
         let jar = "127.0.0.1"
         model.prefs.isolatedSites.insert(jar)
-        let iTab = browser.newTab(url: nil, select: false, isolated: jar)
+        let iTab = browser.newTab(url: nil, select: false, jar: jar)
         let iWeb = iTab.webView
         iWeb.frame = host.bounds
         host.addSubview(iWeb)
@@ -676,27 +706,37 @@ enum SelfTest {
         try? await Task.sleep(for: .seconds(1.5))
         let iso = await evaluate(iTab, "return window.results") as? [String: Any] ?? [:]
         let legend = Isolation.legend(site: jar, secret: model.prefs.isolationSecret)
-        info("изолятор: \(iso), попытки \(iTab.isolationAttempts), легенда \(legend.screenWidth)×\(legend.screenHeight), \(legend.cores) ядер")
+        info("изолятор: \(iso), попытки \(iTab.isolationAttempts), устройство \(legend.tag)")
         ok = check(iso["geo"] as? Int == 1 && iso["perm"] as? String == "denied", "изолятор: геопозиция — «запрещено», и опрос разрешений отвечает так же") && ok
         ok = check((iso["gum"] as? String).map { $0 == "NotAllowedError" || $0 == "none" } == true && (iso["devices"] as? Int ?? -1) == 0,
                    "изолятор: камера и микрофон — отказ, список устройств пуст") && ok
         ok = check((iso["clip"] as? String).map { $0 != "read" } == true && (iso["notif"] as? String).map { $0 == "denied" || $0 == "none" } == true,
                    "изолятор: буфер обмена не читается, уведомления запрещены") && ok
-        ok = check(iso["cores"] as? Int == legend.cores && iso["screen"] as? Int == legend.screenWidth && iso["native"] as? Bool == true,
-                   "изолятор: устройство из легенды, подменённые функции выглядят встроенными") && ok
+        ok = check(iso["native"] as? Bool == true, "изолятор: подменённые функции выглядят встроенными") && ok
         ok = check(iTab.isolationAttempts.keys.count >= 3, "изолятор записал попытки (\(iTab.isolationAttempts))") && ok
         let jarCookies = await cookies(iTab.dataStore)
         let defaultAfterJar = await cookies(WKWebsiteDataStore.default())
         ok = check(jarCookies.contains("ward_iso") && !defaultAfterJar.contains("ward_iso") && defaultAfterJar == defaultBeforeJar,
                    "cookie изолятора живут только в его банке") && ok
-        let jarTabsBefore = browser.tabs.filter { $0.isolatedSite == jar }.count
+        // Обычная вкладка открывает сайт из изолятора — страница переезжает в его банку на месте, «Назад» возвращает.
+        _ = await open(tab, "http://localhost:\(p)/clean.html?before")
+        let generation = tab.webViewGeneration
         tab.load(URL(string: "http://127.0.0.1:\(p)/clean.html?jar")!)
-        try? await Task.sleep(for: .seconds(2))
-        let jarTabsAfter = browser.tabs.filter { $0.isolatedSite == jar }.count
-        ok = check(jarTabsAfter == jarTabsBefore + 1, "сайт из изолятора, открытый в обычной вкладке, ушёл в свою банку") && ok
-        for t in browser.tabs where t.isolatedSite == jar { browser.close(t) }
+        for _ in 0..<40 where tab.webViewIfLoaded?.url?.host != "127.0.0.1" { try? await Task.sleep(for: .milliseconds(200)) }
+        ok = check(tab.jar == jar && tab.webViewGeneration > generation && tab.webViewIfLoaded?.url?.host == "127.0.0.1",
+                   "сайт из изолятора, открытый в обычной вкладке, переехал в свою банку на месте (\(tab.jar ?? "без банки"))") && ok
+        ok = check(tab.canGoBack, "после переезда «Назад» доступно") && ok
+        tab.goBack()
+        for _ in 0..<40 where tab.webViewIfLoaded?.url?.host != "localhost" { try? await Task.sleep(for: .milliseconds(200)) }
+        ok = check(tab.jar == nil && tab.webViewIfLoaded?.url?.host == "localhost", "«Назад» вернул страницу из банки обратно") && ok
+        for t in browser.tabs where t.jar == jar { browser.close(t) }
         await model.setIsolated(false, site: jar)
         _ = await open(tab, "http://localhost:\(p)/clean.html")
+
+        // 17в. Корпоративные банки: правила «никаких других корпораций» собираются WebKit.
+        _ = model.corporationRules("google")
+        for _ in 0..<50 where model.corporationRules("google") == nil { try? await Task.sleep(for: .milliseconds(200)) }
+        ok = check(model.corporationRules("google") != nil, "правила корпоративной банки Google собраны WebKit") && ok
 
         // 18. Уборка за закрытым сайтом: вкладки 127.0.0.1 закрыты — его данные удаляются, открытый localhost остаётся.
         _ = await open(tab, "http://localhost:\(p)/cookie.html?keep")

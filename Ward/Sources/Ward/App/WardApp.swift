@@ -51,6 +51,12 @@ struct WardApp: App {
         .defaultSize(width: 1180, height: 860)
         .restorationBehavior(.disabled)
 
+        Window("Журнал безопасности", id: "security-log") {
+            SecurityLogView().environment(AppModel.shared)
+        }
+        .defaultSize(width: 980, height: 680)
+        .restorationBehavior(.disabled)
+
         Settings {
             SettingsView().environment(AppModel.shared)
         }
@@ -193,6 +199,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         quitting = true
         Task {
             await AppModel.shared.shutdown()
+            SecurityLog.shared.flushNow()
             sender.reply(toApplicationShouldTerminate: true)
         }
         return .terminateLater

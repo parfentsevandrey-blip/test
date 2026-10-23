@@ -108,8 +108,12 @@ struct ShieldPanel: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(site.isEmpty ? "Новая вкладка" : Punycode.display(site).text).font(.title3.weight(.semibold)).lineLimit(1)
                 Text(summary).font(.callout).foregroundStyle(.secondary)
-                if tab.isolatedSite != nil {
+                if tab.inIsolator {
                     Label("Изолятор", systemImage: "cube.transparent.fill").font(.caption).foregroundStyle(.teal)
+                } else if tab.jarKind == .corporation, let jar = tab.jar {
+                    Label("Банка «\(Jars.title(of: jar))»", systemImage: "building.2.crop.circle.fill").font(.caption).foregroundStyle(.orange)
+                } else if tab.jarKind == .mask {
+                    Label("Маска: отдельная вымышленная личность", systemImage: "theatermasks.fill").font(.caption).foregroundStyle(.purple)
                 } else if let c = tab.container {
                     Label("Контейнер «\(c.name)»", systemImage: "square.stack.3d.up.fill").font(.caption).foregroundStyle(ContainerPalette.color(c.color))
                 } else if tab.ephemeral {
@@ -164,7 +168,20 @@ struct ShieldPanel: View {
     @ViewBuilder
     private var notes: some View {
         VStack(alignment: .leading, spacing: 7) {
-            if tab.isolatedSite != nil {
+            if tab.jarKind == .corporation, let jar = tab.jar {
+                let name = Jars.title(of: jar)
+                if tab.corporationBlocked.isEmpty {
+                    note("building.2", "\(name) живёт в своей банке: вход во все её сервисы работает, но другие корпорации её cookie не видят, а отсюда к ним запросы не уходят.", color: .orange)
+                } else {
+                    let others = Set(tab.corporationBlocked.values).sorted().joined(separator: ", ")
+                    note("building.2", "\(name) из своей банки пыталась обратиться к: \(others) — \(tab.corporationBlocked.count) \(Format.plural(tab.corporationBlocked.count, "запрос не ушёл", "запроса не ушли", "запросов не ушли")).", color: .orange)
+                }
+            }
+            if tab.jarKind == .mask {
+                let legend = model.jarLegend(tab.jar ?? "")
+                note("theatermasks", "Маска: этот сайт видит отдельного человека — устройство № \(legend.tag) со своим отпечатком, своё хранилище. С другими сайтами его не связать.", color: .purple)
+            }
+            if tab.inIsolator {
                 let tried = Isolation.Attempt.allCases.filter { (tab.isolationAttempts[$0.rawValue] ?? 0) > 0 && $0 != .trackers }
                 if tried.isEmpty {
                     note("cube.transparent", "Сайт в изоляторе: свои cookie и данные, вымышленное устройство. Пока он ничего лишнего не просил.", color: .teal)
