@@ -1,0 +1,31 @@
+{
+ "day": "2026-10-23",
+ "id_layer": {
+  "sec": {
+   "clusters": 11379,
+   "overflow_clusters": 3,
+   "count": 32403,
+   "ids": 32403
+  },
+  "new": {
+   "clusters": 1121,
+   "overflow_clusters": 111,
+   "count": 43886,
+   "ids": 43886
+  }
+ },
+ "ids": 76289,
+ "lots_with_card": 76219,
+ "sec": 32340,
+ "new": 43879,
+ "no_card_yet": 70,
+ "new_ids": 1943,
+ "since": "2026-10-22",
+ "checked_today": 24693,
+ "refresh_completeness": {
+  "expected": 11296,
+  "got": 11283
+ },
+ "failed_parts": [],
+ "minutes": 102.0
+}
