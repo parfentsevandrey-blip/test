@@ -640,6 +640,41 @@ nonisolated enum Scripts {
       if (LAN && w.XMLHttpRequest) replace(w.XMLHttpRequest.prototype, 'open', function (original, args) { lanCheck(args[1]); return original.apply(this, args); });
       if (LAN && w.navigator && w.Navigator) replace(w.Navigator.prototype, 'sendBeacon', function (original, args) { lanCheck(args[0]); return original.apply(this, args); });
 
+      // WebRTC без звонка — только через ретранслятор (TURN). Иначе сбор «кандидатов» перебирает адреса домашней
+      // сети и рассылает по ней объявления (mDNS): это и способ заглянуть в сеть, и системный запрос macOS
+      // «найти устройства в локальной сети» от имени Ward. Начался звонок (камера, микрофон, экран) — как обычно.
+      if (LAN && !pageLocal && typeof w.RTCPeerConnection === 'function') {
+        let media = false;
+        for (const key of ['getUserMedia', 'getDisplayMedia']) {
+          replace(w.MediaDevices && w.MediaDevices.prototype, key, function (original, args) {
+            const result = original.apply(this, args);
+            try { result.then(() => { media = true; }, () => {}); } catch (e) {}
+            return result;
+          });
+        }
+        const relay = (config) => {
+          if (media) return config;
+          const c = Object.assign({}, config || {});
+          if (c.iceTransportPolicy !== 'relay') { c.iceTransportPolicy = 'relay'; signal('lan', 'WebRTC'); }
+          return c;
+        };
+        const Native = w.RTCPeerConnection;
+        const Relayed = new Proxy(Native, {
+          construct(target, args, newTarget) {
+            const a = Array.from(args);
+            a[0] = relay(a[0]);
+            return Reflect.construct(target, a, newTarget === Relayed ? target : newTarget);
+          },
+        });
+        mask(Relayed, 'RTCPeerConnection');
+        try { Object.defineProperty(Native.prototype, 'constructor', { configurable: true, enumerable: false, writable: true, value: Relayed }); } catch (e) {}
+        replace(Native.prototype, 'setConfiguration', function (original, args) { args[0] = relay(args[0]); return original.apply(this, args); });
+        for (const name of ['RTCPeerConnection', 'webkitRTCPeerConnection']) {
+          const d = Object.getOwnPropertyDescriptor(w, name);
+          if (d && d.value === Native) try { Object.defineProperty(w, name, Object.assign({}, d, { value: Relayed })); } catch (e) {}
+        }
+      }
+
       // Cookie из скриптов страницы живут не дольше COOKIE_DAYS дней (как в Safari): «вечный» идентификатор
       // в cookie превращается в недельный. Cookie входа ставит сервер — их это не касается.
       if (COOKIE_DAYS > 0) {
