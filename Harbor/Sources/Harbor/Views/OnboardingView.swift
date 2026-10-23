@@ -114,7 +114,7 @@ struct OnboardingView: View {
     private func finish(autoUpdate: Binding<Bool>) -> some View {
         VStack(spacing: 22) {
             symbol("sailboat.fill", tint: Color(red: 0.1, green: 0.52, blue: 0.86))
-            title("Всё готово", "Harbor живёт в строке меню и следит за обновлениями, даже когда окно закрыто.")
+            title("Всё готово", "Закроете окно — Harbor продолжит тихо следить за обновлениями. Вернуться к нему можно из Dock.")
             VStack(spacing: 0) {
                 Toggle(isOn: autoUpdate) {
                     VStack(alignment: .leading, spacing: 2) {

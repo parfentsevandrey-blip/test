@@ -40,13 +40,6 @@ struct HarborApp: App {
             }
         }
 
-        MenuBarExtra {
-            MenuBarView().environment(store)
-        } label: {
-            Image(systemName: store.updates.isEmpty ? "sailboat" : "sailboat.fill")
-        }
-        .menuBarExtraStyle(.window)
-
         Settings {
             SettingsView().environment(store)
         }
