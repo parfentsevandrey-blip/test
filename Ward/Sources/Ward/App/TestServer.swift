@@ -266,6 +266,60 @@ setTimeout(() => {
 </script>
 </body></html>
 """#)
+        // Как у NYT: «ворота» регистрации стоят в разметке (не fixed) вместо продолжения статьи, сама статья
+        // «заморожена» (position: fixed), над воротами — градиент. Кнопка LOG IN открывает окно входа — его не трогать.
+        set("/nyt.html", html: #"""
+<!doctype html><html><head><meta charset="utf-8"><style>
+body{margin:0;font:17px Georgia,serif}
+#site-content{position:fixed;top:0;left:0;width:100%}
+header{height:60px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+header a{margin:0 6px}
+article{padding:30px 20%;min-height:2000px}
+article p{line-height:1.6}
+.css-mcm29f{position:absolute;top:40vh;left:0;right:0;min-height:60vh;z-index:5}
+.css-gx5sib{position:absolute;top:-140px;left:0;right:0;height:140px;background:linear-gradient(180deg,#fff0,#fff)}
+#gateway-content{background:#fff;text-align:center;padding:30px 0;min-height:60vh}
+#gateway-content input{display:block;margin:10px auto;width:400px;height:40px}
+#gateway-content button{display:block;margin:10px auto;width:400px;height:44px}
+.login{position:fixed;inset:20% 30%;background:#fff;border:1px solid #000;z-index:20;padding:20px}
+</style></head><body>
+<div id="site-content"><header><b>The Times</b><span><a href="/s">SUBSCRIBE FOR €0.50/WEEK</a><button id="login" onclick="openLogin()">LOG IN</button></span></header>
+<nav><a href="/w">World</a><a href="/u">U.S.</a><a href="/p">Politics</a></nav>
+<article><h1 id="headline">Lawmakers Plan to Block Trump</h1>
+<p id="first">Lawmakers from both parties said on Thursday that they were drafting legislation that would limit the ability of the president to act without the consent of Congress, in an unusual show of resolve.</p>
+<p>The measure, which has gathered support in recent weeks, would require a vote within thirty days on any decision of this kind and would give the courts a clearer role in reviewing such actions in the future.</p>
+<p>Supporters described the plan as a long-overdue correction, while critics warned that it could slow the government's response in a crisis and invite years of litigation over its exact meaning.</p>
+<p>Aides said the text was still being negotiated and that several details, including how the law would apply to agreements already in force, remained unresolved as of Thursday evening.</p>
+<p>The debate is likely to continue for weeks, with hearings planned in both chambers and a final vote not expected before the end of the session, according to people familiar with the schedule.</p>
+<p id="last">Still, the backers of the bill said they were confident that it would pass with a comfortable margin, citing private conversations with members who had not yet announced a position.</p></article></div>
+<div id="gate-root"></div>
+<script>
+window.openLogin = () => {
+  const d = document.createElement('div');
+  d.className = 'login'; d.id = 'loginbox';
+  d.innerHTML = '<h2>Log in to continue reading</h2><input type="email" placeholder="Email"><button>Continue</button><button>Continue with Google</button><a href="/c">Create a free account</a>';
+  document.body.appendChild(d);
+};
+setTimeout(() => {
+  document.getElementById('gate-root').innerHTML =
+    '<div class="css-mcm29f"><div class="css-gx5sib" id="fade"></div><div id="gateway-content">' +
+    '<h2>Create a free account, or log in.</h2><p>Gain access to limited free articles, news alerts, select newsletters, podcasts and some daily games.</p>' +
+    '<label>Email address<input type="email"></label><button>Continue</button><p>or</p>' +
+    '<p>By continuing, you agree to the <a href="/t">Terms of Sale</a>, <a href="/s">Terms of Service</a>, and <a href="/p">Privacy Policy</a>.</p>' +
+    '<button>Continue with Google</button><button>Continue with Apple</button><a href="/sso">Continue with work or school single sign-on</a></div></div>';
+}, 900);
+</script>
+</body></html>
+"""#)
+        // Страница входа: форма без статьи и запертая прокрутка — это не «ворота», форму не трогать.
+        set("/signin.html", html: #"""
+<!doctype html><html><head><meta charset="utf-8"><style>html,body{overflow:hidden;height:100%;margin:0}
+#box{width:420px;margin:12vh auto;padding:30px;border:1px solid #ccc;min-height:50vh;font:16px sans-serif}</style></head><body>
+<header><a href="/">Home</a></header>
+<div id="box"><h2>Log in or create a free account</h2><input type="email" placeholder="Email"><button>Continue</button>
+<button>Continue with Google</button><button>Continue with Apple</button><p>Don't have an account? <a href="/su">Sign up</a> and subscribe to our newsletter.</p></div>
+</body></html>
+"""#)
         // Изолятор: страница просит всё подряд и записывает, что получила.
         set("/iso.html", html: """
         <!doctype html><html><head><meta charset="utf-8"><title>Изолятор</title><script>

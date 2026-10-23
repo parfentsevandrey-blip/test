@@ -69,6 +69,8 @@ struct TabChip: View {
     let selected: Bool
     @State private var hover = false
 
+    private var accent: Color { browser.isPrivate ? .purple : .accentColor }
+
     var body: some View {
         HStack(spacing: 7) {
             if tab.inIsolator {
@@ -84,7 +86,7 @@ struct TabChip: View {
             }
             Text(tab.displayTitle)
                 .lineLimit(1)
-                .font(.callout)
+                .font(.callout.weight(selected ? .semibold : .regular))
                 .foregroundStyle(selected ? .primary : .secondary)
             Spacer(minLength: 0)
             if tab.isLoading {
@@ -104,11 +106,24 @@ struct TabChip: View {
         }
         .padding(.horizontal, 10)
         .frame(height: 28)
+        // Вкладка, на которой вы сейчас, видна сразу: светлая карточка с цветной рамкой и тенью,
+        // остальные — приглушённые, без фона.
         .background {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(selected ? AnyShapeStyle(.background) : AnyShapeStyle(hover ? Color.primary.opacity(0.06) : .clear))
-                .shadow(color: .black.opacity(selected ? 0.12 : 0), radius: 2, y: 1)
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(selected ? AnyShapeStyle(.background) : AnyShapeStyle(hover ? Color.primary.opacity(0.07) : .clear))
+                if selected {
+                    RoundedRectangle(cornerRadius: 8).fill(accent.opacity(0.14))
+                }
+            }
+            .shadow(color: selected ? accent.opacity(0.35) : .clear, radius: 4, y: 1)
         }
+        .overlay {
+            if selected {
+                RoundedRectangle(cornerRadius: 8).strokeBorder(accent, lineWidth: 2)
+            }
+        }
+        .opacity(selected || hover ? 1 : 0.78)
         .overlay(alignment: .bottom) {
             if tab.inCoffin, let jar = tab.jar {
                 // Тонкая чёрная полоска: вкладка открыта «в гробу» — изоляторе или банке корпорации.

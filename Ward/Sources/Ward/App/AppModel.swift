@@ -823,6 +823,7 @@ final class AppModel {
         case "modal": "Окно «подпишитесь»"
         case "backdrop": "Затемнение поверх статьи"
         case "bottom-sheet", "top-bar": "Плашка поверх статьи"
+        case "gate": "Окно «создайте аккаунт или войдите» вместо статьи"
         default: "Всплывающее окно"
         }
         feed(.annoyance, what + " убрано", site)

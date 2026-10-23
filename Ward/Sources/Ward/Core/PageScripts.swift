@@ -540,10 +540,21 @@ extension Scripts {
       // Классы, которыми сайты запирают страницу под плашкой: запрет прокрутки и «туман» над статьёй.
       const LOCK = /((stop|restrict|no|disable|lock|prevent|block)[-_]?scroll|scroll[-_]?(lock|block|disabled|restrict)|modal[-_]?open|overflow[-_]?hidden|is[-_]?locked|paywall)/i;
       let lastUser = 0;
-      for (const type of ['mousedown', 'keydown', 'touchstart']) addEventListener(type, () => { lastUser = Date.now(); }, true);
+      // Щелчок, касание или Enter — то, чем открывают окна. Клавиши прокрутки не считаются: плашки любят
+      // появляться как раз при прокрутке.
+      for (const type of ['mousedown', 'touchstart', 'keydown']) addEventListener(type, (e) => {
+        if (e.isTrusted && (type !== 'keydown' || e.key === 'Enter')) lastUser = Date.now();
+      }, true);
       // Решённые слои (убраны или точно не плашка) и сколько раз слой уже смотрели: плашки появляются
       // с анимацией и меняют размер, поэтому «пока не похоже» — не окончательный ответ.
       const decided = new WeakSet();
+      // Окно появилось сразу после вашего щелчка — значит, его открыли вы («Войти», «Подписаться»): не трогаем никогда.
+      const openedByUser = (el) => {
+        if (Date.now() - lastUser > 1500) return false;
+        decided.add(el);
+        state.skipped.push('user:' + (el.id || el.tagName));
+        return true;
+      };
       const looks = new WeakMap();
       const style = (el, pseudo) => { try { return getComputedStyle(el, pseudo || null); } catch (e) { return null; } };
       const textOf = (el) => (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 3000);
@@ -576,6 +587,7 @@ extension Scripts {
         if (el.matches('header, nav, [role="banner"], [role="navigation"], [role="menu"], [role="listbox"], [role="tooltip"]')) return true;
         if (el.querySelector('video, audio, [role="navigation"], nav')) return true;
         if (COOKIE.test(signature(el))) return true;   // окна согласия — забота автоотказа от cookie
+        if (storyIn(el)) return true;   // сама статья (бывает «заморожена» в fixed-слое)
         // Много ссылок — меню; но у плашки «подпишитесь» внизу бывают «Условия», «Конфиденциальность», тарифы.
         const links = el.querySelectorAll('a[href]').length;
         if ((links > 8 && !nag) || links > 30) return true;
@@ -605,10 +617,9 @@ extension Scripts {
         const n = (looks.get(root) || 0) + 1;
         looks.set(root, n);
         if (n > 25) return false;
-        // Вы только что что-то нажали — значит, окно, скорее всего, открыли сами.
-        if (Date.now() - lastUser < 1200) { state.skipped.push('user:' + (root.id || root.tagName)); return false; }
         const s = style(root);
         if (!s || notNow(root, s)) return false;
+        if (openedByUser(root)) return false;
         const text = textOf(root);
         const nag = NAG.test(text) || chain.some((el) => NAG.test(signature(el)));
         if (semanticallyProtected(root, nag)) { decided.add(root); return false; }
@@ -688,6 +699,7 @@ extension Scripts {
           const tall = parseFloat(s.height) >= innerHeight * 0.8 || (s.top === '0px' && s.bottom === '0px');
           if (kind === 'bar' && !tall) continue;
           if (kind === 'other' && !(s.position === 'fixed' && tall)) continue;
+          if (kind === 'gate' && parseFloat(s.height) < 40) continue;
           if (!fogSheet) {
             fogSheet = document.createElement('style');
             fogSheet.textContent = '[data-ward-unfog]::before,[data-ward-unfog]::after{display:none!important}';
@@ -716,7 +728,136 @@ extension Scripts {
         for (const el of document.querySelectorAll('body > *')) fogPseudo(el, 'other');
       };
 
-      const POINTS = [[0.5, 0.5], [0.5, 0.94], [0.5, 0.82], [0.2, 0.92], [0.8, 0.92], [0.5, 0.06], [0.5, 0.3], [0.5, 0.7],
+      // «Ворота» (как у NYT): окно «создайте аккаунт / войдите / подпишитесь» стоит не поверх страницы, а прямо
+      // в разметке вместо продолжения статьи, а саму статью сайт «замораживает» — делает fixed, чтобы она
+      // не прокручивалась. Убираем ворота, только если за ними есть статья и страница заперта: страница входа
+      // (форма без статьи) и форма, которую вы открыли сами, остаются.
+      const AUTH = /(continue\s+with|sign\s*in|log\s*in|sign\s*up|subscribe|create\s+(a\s+)?(free\s+)?account|войти|подпис|зарегистр|продолжить\s+с)/i;
+      const STORY = 'article, main, [role="main"], [itemprop="articleBody"], h1';
+      const BODY = 'article, main, [role="main"], [itemprop="articleBody"]';
+      // Внутри есть статья: её тело, её заголовок (не сам призыв) или несколько длинных абзацев.
+      const storyIn = (a) => {
+        if (a.matches(BODY) || a.querySelector(BODY)) return true;
+        if (a.tagName === 'H1' && !NAG.test(textOf(a))) return true;
+        for (const h of a.querySelectorAll('h1')) if (!NAG.test(textOf(h))) return true;
+        let long = 0;
+        for (const p of a.querySelectorAll('p')) { const t = textOf(p); if (t.length > 160 && !NAG.test(t) && ++long >= 3) return true; }
+        return false;
+      };
+      const gates = [];
+      const frozen = new Set();
+      const authControls = (el) => {
+        if (el.querySelector('input[type="email"], input[type="password"], input[autocomplete="email"], input[autocomplete="username"]')) return true;
+        let n = 0;
+        for (const b of el.querySelectorAll('button, a[href], [role="button"]')) if (AUTH.test(b.textContent || '') && ++n >= 2) return true;
+        return false;
+      };
+      // Самый внешний предок точки, который ещё не содержит статью: это и есть ворота целиком (с «туманом»).
+      // Размер — самого крупного слоя по пути: внешняя обёртка бывает нулевой высоты (содержимое в absolute).
+      const gateAround = (el) => {
+        let best = null, box = null, biggest = null;
+        for (let a = el, k = 0; a && a !== document.body && a !== document.documentElement && k < 25; a = a.parentElement, k++) {
+          if (decided.has(a)) return null;
+          if (storyIn(a)) break;
+          const text = textOf(a);
+          if (text.length > 2500 || a.querySelectorAll('a[href]').length > 30) break;
+          const b = visibleBox(a);
+          if (!biggest || b.w * b.h > biggest.w * biggest.h) biggest = b;
+          if (NAG.test(text) && authControls(a)) { best = a; box = biggest; }
+        }
+        return best && { gate: best, box };
+      };
+      // Статья, которую «заморозили»: fixed-слой во всю ширину с заголовком или длинным текстом.
+      const frozenStory = (gate) => {
+        const found = [];
+        const walk = (el, depth) => {
+          for (const child of el.children) {
+            if (child === gate) continue;
+            const s = style(child);
+            if (!s || s.display === 'none') continue;
+            if (s.position === 'fixed' && !child.contains(gate) && child.getBoundingClientRect().width >= innerWidth * 0.6
+                && (child.querySelector(STORY) || textOf(child).length > 1500)) { found.push(child); continue; }
+            if (depth < 4) walk(child, depth + 1);
+          }
+        };
+        if (document.body) walk(document.body, 0);
+        return found;
+      };
+      const locked = (story) => {
+        if (story.length) return true;
+        for (const el of [document.documentElement, document.body]) {
+          const s = el && style(el);
+          if (s && (s.overflowY === 'hidden' || s.overflowY === 'clip' || s.position === 'fixed')) return true;
+        }
+        return false;
+      };
+      // За воротами — статья, а не просто страница входа: заголовок или тело статьи и заметный текст вне ворот.
+      const storyOutside = (gate) => {
+        const heading = Array.from(document.querySelectorAll(STORY)).some((el) => !gate.contains(el) && !NAG.test(textOf(el)) && textOf(el).length > 20);
+        return heading && (document.body.innerText || '').length - (gate.innerText || '').length > 800;
+      };
+      const unfreeze = () => {
+        for (const el of frozen) {
+          const s = style(el);
+          if (!s || s.position !== 'fixed') continue;
+          const y = -parseFloat(s.top || '0') || 0;
+          el.style.setProperty('position', 'relative', 'important');
+          el.style.setProperty('top', 'auto', 'important');
+          el.style.setProperty('overflow', 'visible', 'important');
+          if (y > 0) scrollTo(0, y);
+        }
+      };
+      // Пустые слои с градиентом рядом с воротами — «туман» над концом статьи.
+      const clearGateFog = (gate) => {
+        const top = gate.getBoundingClientRect().top;
+        const near = new Set();
+        for (let a = gate.parentElement, k = 0; a && a !== document.body && k < 3; a = a.parentElement, k++) for (const c of a.children) near.add(c);
+        for (const el of frozen) for (const c of Array.from(el.querySelectorAll('*')).slice(0, 2000)) near.add(c);
+        for (const el of near) {
+          if (el === gate || el.contains(gate) || decided.has(el) || textOf(el).length) continue;
+          const s = style(el);
+          if (!s || !s.backgroundImage.includes('gradient') || (s.position !== 'absolute' && s.position !== 'fixed' && s.position !== 'sticky')) continue;
+          const r = el.getBoundingClientRect();
+          if (r.width < innerWidth * 0.5 || r.height < 40 || Math.abs(r.bottom - top) > 260 && r.bottom < innerHeight - 4) continue;
+          decided.add(el);
+          el.style.setProperty('display', 'none', 'important');
+        }
+        for (const el of frozen) fogPseudo(el, 'gate');
+      };
+      const GATE_POINTS = [[0.5, 0.55], [0.5, 0.7], [0.5, 0.85], [0.35, 0.65], [0.65, 0.65]];
+      let lastGates = 0;
+      const findGates = () => {
+        if (Date.now() - lastGates < 1500) return false;
+        lastGates = Date.now();
+        const seen = new Set();
+        const candidates = Array.from(document.querySelectorAll('#gateway-content, [data-testid*="gateway"], [id*="regwall"], [class*="regwall"], [id*="paywall"], [class*="paywall"]')).slice(0, 10);
+        for (const [x, y] of GATE_POINTS) {
+          let stack = [];
+          try { stack = document.elementsFromPoint(innerWidth * x, innerHeight * y); } catch (e) { continue; }
+          if (stack[0]) candidates.push(stack[0]);
+        }
+        let hid = false;
+        for (const el of candidates) {
+          const found = gateAround(el);
+          if (!found || seen.has(found.gate)) continue;
+          const gate = found.gate;
+          seen.add(gate);
+          const s = style(gate);
+          if (!s || notNow(gate, s) || openedByUser(gate)) continue;
+          const { w, h } = found.box;
+          if (w < innerWidth * 0.3 || h < innerHeight * 0.25) continue;
+          const story = frozenStory(gate);
+          if (!locked(story) || !(story.length || storyOutside(gate))) { state.skipped.push('gate:' + (gate.id || gate.tagName)); continue; }
+          for (const el of story) frozen.add(el);
+          clearGateFog(gate);
+          hide(gate, 'gate');
+          gates.push(gate);
+          hid = true;
+        }
+        return hid;
+      };
+
+      const POINTS = [[0.5, 0.5],[0.5, 0.94], [0.5, 0.82], [0.2, 0.92], [0.8, 0.92], [0.5, 0.06], [0.5, 0.3], [0.5, 0.7],
                       [0.88, 0.85], [0.12, 0.85], [0.85, 0.15], [0.15, 0.15], [0.85, 0.5], [0.15, 0.5], [0.85, 0.65], [0.15, 0.65]];
       // Второй путь — по самой разметке: fixed-слои в верхних уровнях страницы. Не зависит от того, как движок
       // отвечает на «что под точкой» (у запертой страницы с pointer-events: none ответ бывает пустым).
@@ -764,8 +905,10 @@ extension Scripts {
           }
         }
         if (structural(checked)) hid = true;
+        if (findGates()) hid = true;
         if (hid) clearFog();
         if (state.hidden > 0) unlock();   // и сразу, и если сайт вернул запрет прокрутки позже
+        if (frozen.size) unfreeze();
       };
 
       let timer = null;

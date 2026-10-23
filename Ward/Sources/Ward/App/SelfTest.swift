@@ -710,6 +710,39 @@ enum SelfTest {
         ok = check((wall["body"] as? String)?.hasPrefix("hidden") == false && (wall["body"] as? String)?.contains("none") == false && wall["fog"] as? Bool == false,
                    "Bloomberg: прокрутка и щелчки вернулись, серый «туман» над статьёй снят") && ok
 
+        // 12в². «Ворота» NYT: окно регистрации в разметке, статья заморожена; окно входа, открытое вами, остаётся.
+        _ = await open(tab, "http://localhost:\(p)/nyt.html")
+        try? await Task.sleep(for: .seconds(4))
+        let gate = await evaluate(tab, """
+        const shown = (id) => { let e = document.getElementById(id); if (!e) return null; for (; e; e = e.parentElement) if (getComputedStyle(e).display === 'none') return false; return true; };
+        const site = getComputedStyle(document.getElementById('site-content'));
+        return { gate: shown('gateway-content'), fade: shown('fade'), story: shown('last'), position: site.position,
+                 scrolls: document.documentElement.scrollHeight > innerHeight };
+        """) as? [String: Any] ?? [:]
+        let gateState = try? await tab.webViewIfLoaded?.callAsyncJavaScript("return JSON.stringify(window.__wardAnnoyances || null)", arguments: [:], in: nil, contentWorld: .defaultClient)
+        info("ворота NYT: \(gate), состояние: \(String(describing: gateState ?? nil))")
+        ok = check(gate["gate"] as? Bool == false && gate["fade"] as? Bool == false && gate["story"] as? Bool == true,
+                   "NYT: «Create a free account, or log in» и градиент убраны, статья на месте") && ok
+        ok = check(gate["position"] as? String != "fixed" && gate["scrolls"] as? Bool == true, "NYT: замороженная статья снова прокручивается") && ok
+        if let web = tab.webViewIfLoaded, let button = await evaluate(tab, "const r = document.getElementById('login').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]") as? [Double], button.count == 2 {
+            // Настоящий щелчок мышью (как у человека), а не click() из скрипта.
+            let point = NSPoint(x: button[0], y: web.isFlipped ? button[1] : web.bounds.height - button[1])
+            for type in [NSEvent.EventType.leftMouseDown, .leftMouseUp] {
+                if let event = NSEvent.mouseEvent(with: type, location: web.convert(point, to: nil), modifierFlags: [], timestamp: ProcessInfo.processInfo.systemUptime,
+                                                  windowNumber: web.window?.windowNumber ?? 0, context: nil, eventNumber: 0, clickCount: 1, pressure: 1) {
+                    if type == .leftMouseDown { web.mouseDown(with: event) } else { web.mouseUp(with: event) }
+                }
+            }
+            try? await Task.sleep(for: .seconds(3))
+            let login = await evaluate(tab, "const e = document.getElementById('loginbox'); return e ? getComputedStyle(e).display : 'missing'") as? String ?? "-"
+            info("окно входа после щелчка: \(login)")
+            if login != "missing" { ok = check(login != "none", "NYT: окно входа, которое вы открыли сами, не убрано") && ok }
+        }
+        _ = await open(tab, "http://localhost:\(p)/signin.html")
+        try? await Task.sleep(for: .seconds(3))
+        let signin = await evaluate(tab, "return getComputedStyle(document.getElementById('box')).display") as? String
+        ok = check(signin != nil && signin != "none", "страница входа (форма без статьи) не тронута") && ok
+
         // 12д. Следы: GPC в заголовке и в странице, Referer, cookie «навсегда».
         _ = await open(tab, "http://localhost:\(p)/gpc.html")
         let gpcHead = server.requestHead("/gpc.html") ?? ""
