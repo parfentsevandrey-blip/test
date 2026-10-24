@@ -58,6 +58,41 @@ nonisolated struct BlockState: Codable, Sendable {
     var stoppedLaunches: [String: Int] = [:]
     /// Правила, которые человек выбрал вручную (профиль «Своё»).
     var customSelection: Set<String> = []
+    /// Наблюдение: следить за соединениями процессов Apple.
+    var monitorOn = true
+    /// Закрывать подозрительные адреса сразу, как только увидены (через Veil — без пароля).
+    var monitorAuto = false
+    /// Адреса, закрытые по итогам наблюдения (группа «Найдено наблюдением»).
+    var observedHosts: Set<String> = []
+    /// Службы, найденные наблюдением: метка launchd → процесс.
+    var observedAgents: [String: String] = [:]
+    /// Соединения, которые человек разрешил («процесс|адрес»).
+    var allowedObservations: Set<String> = []
+
+    init() {}
+
+    /// Чтение с умолчаниями: новые поля не ломают состояние, сохранённое прежней версией Block.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = BlockState()
+        baseline = try c.decodeIfPresent([String: Snapshot].self, forKey: .baseline) ?? d.baseline
+        manualDone = try c.decodeIfPresent(Set<String>.self, forKey: .manualDone) ?? d.manualDone
+        veilGroups = try c.decodeIfPresent(Set<String>.self, forKey: .veilGroups) ?? d.veilGroups
+        journal = try c.decodeIfPresent([JournalEntry].self, forKey: .journal) ?? d.journal
+        answers = try c.decodeIfPresent(Answers.self, forKey: .answers) ?? d.answers
+        profile = try c.decodeIfPresent(Profile.self, forKey: .profile) ?? d.profile
+        onboarded = try c.decodeIfPresent(Bool.self, forKey: .onboarded) ?? d.onboarded
+        networkMethod = try c.decodeIfPresent(NetworkMethod.self, forKey: .networkMethod) ?? d.networkMethod
+        autoReapply = try c.decodeIfPresent(Bool.self, forKey: .autoReapply) ?? d.autoReapply
+        lastOS = try c.decodeIfPresent(String.self, forKey: .lastOS) ?? d.lastOS
+        stoppedLaunches = try c.decodeIfPresent([String: Int].self, forKey: .stoppedLaunches) ?? d.stoppedLaunches
+        customSelection = try c.decodeIfPresent(Set<String>.self, forKey: .customSelection) ?? d.customSelection
+        monitorOn = try c.decodeIfPresent(Bool.self, forKey: .monitorOn) ?? d.monitorOn
+        monitorAuto = try c.decodeIfPresent(Bool.self, forKey: .monitorAuto) ?? d.monitorAuto
+        observedHosts = try c.decodeIfPresent(Set<String>.self, forKey: .observedHosts) ?? d.observedHosts
+        observedAgents = try c.decodeIfPresent([String: String].self, forKey: .observedAgents) ?? d.observedAgents
+        allowedObservations = try c.decodeIfPresent(Set<String>.self, forKey: .allowedObservations) ?? d.allowedObservations
+    }
 
     static var directory: URL {
         if let custom = ProcessInfo.processInfo.environment["BLOCK_HOME"] { return URL(fileURLWithPath: custom) }

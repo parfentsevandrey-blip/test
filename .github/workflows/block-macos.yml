@@ -55,7 +55,7 @@ jobs:
         run: |
           OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
           export BLOCK_HOME="$RUNNER_TEMP/block-demo"
-          for S in overview apps settings services network replacements journal onboarding; do
+          for S in overview monitor apps settings services network replacements journal onboarding; do
             dist/Block.app/Contents/MacOS/Block --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
             PID=$!
             sleep 12
@@ -95,7 +95,7 @@ jobs:
       # Зелёная сборка сразу попадает в каталог Harbor (см. Harbor/README.md).
       - name: Publish to Harbor catalog
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        run: ../Harbor/release/publish.sh block dist/Block.app "$RUNNER_TEMP/render/window-overview.png" "$RUNNER_TEMP/render/window-apps.png" "$RUNNER_TEMP/render/window-network.png"
+        run: ../Harbor/release/publish.sh block dist/Block.app "$RUNNER_TEMP/render/window-overview.png" "$RUNNER_TEMP/render/window-monitor.png" "$RUNNER_TEMP/render/window-apps.png" "$RUNNER_TEMP/render/window-network.png"
 
   catalog:
     needs: build

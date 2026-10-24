@@ -9,6 +9,7 @@ struct OverviewView: View {
                 Constellation()
                     .frame(height: 430)
                 if !model.drift.isEmpty { driftBanner }
+                if !model.suspicious.isEmpty { monitorBanner }
                 tiles
                 profiles
             }
@@ -23,13 +24,29 @@ struct OverviewView: View {
             Image(systemName: "arrow.uturn.backward.circle.fill").font(.system(size: 22)).foregroundStyle(.orange)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Apple вернула своё: \(model.drift.count) \(model.plural(model.drift.count))").font(.system(size: 13, weight: .semibold))
-                Text(model.drift.compactMap { Catalog.rule($0)?.title }.prefix(3).joined(separator: " · ")).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                Text(model.drift.compactMap { model.rule($0)?.title }.prefix(3).joined(separator: " · ")).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer()
-            Button("Применить заново") { Task { await model.reapply(model.drift.compactMap(Catalog.rule)) } }.buttonStyle(.glassProminent)
+            Button("Применить заново") { Task { await model.reapply(model.drift.compactMap { model.rule($0) }) } }.buttonStyle(.glassProminent)
         }
         .padding(14)
         .glassEffect(.regular.tint(.orange.opacity(0.15)), in: .rect(cornerRadius: 18))
+    }
+
+    private var monitorBanner: some View {
+        let list = model.suspicious
+        return HStack(spacing: 12) {
+            Image(systemName: "dot.radiowaves.left.and.right").font(.system(size: 22)).foregroundStyle(.pink)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Процессы Apple ходят к подозрительным адресам: \(list.count)").font(.system(size: 13, weight: .semibold))
+                Text(Array(Set(list.map(\.endpoint))).sorted().prefix(3).joined(separator: " · ")).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer()
+            Button("Посмотреть") { model.screen = .monitor }.buttonStyle(.glass)
+            Button("Закрыть все") { Task { await model.blockHosts(list.map(\.endpoint)) } }.buttonStyle(.glassProminent)
+        }
+        .padding(14)
+        .glassEffect(.regular.tint(.pink.opacity(0.12)), in: .rect(cornerRadius: 18))
     }
 
     private var tiles: some View {

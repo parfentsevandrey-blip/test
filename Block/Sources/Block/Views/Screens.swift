@@ -262,7 +262,7 @@ private struct JournalRow: View {
             }
             Spacer()
             Text(entry.date, format: .dateTime.day().month().hour().minute()).font(.system(size: 11).monospacedDigit()).foregroundStyle(.secondary)
-            if entry.kind == .applied, model.state.baseline[entry.ruleID] != nil, let rule = Catalog.rule(entry.ruleID) {
+            if entry.kind == .applied, model.state.baseline[entry.ruleID] != nil, let rule = model.rule(entry.ruleID) {
                 Button("Вернуть") { Task { await model.revert([rule]) } }.buttonStyle(.link).font(.system(size: 11))
             }
         }
@@ -312,6 +312,9 @@ struct MenuBarView: View {
             }
             if !model.drift.isEmpty {
                 Label("Apple вернула своё: \(model.drift.count)", systemImage: "arrow.uturn.backward.circle").foregroundStyle(.orange).font(.system(size: 12))
+            }
+            if !model.suspicious.isEmpty {
+                Label("Подозрительных соединений Apple: \(model.suspicious.count)", systemImage: "dot.radiowaves.left.and.right").foregroundStyle(.pink).font(.system(size: 12))
             }
             Divider()
             Button("Открыть Block") {

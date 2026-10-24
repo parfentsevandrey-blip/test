@@ -71,6 +71,16 @@ nonisolated enum AppleNetwork {
 
     static let groups = [telemetry, ads, appStore, iCloud, siri, news]
 
+    /// Адреса, которые нашло наблюдение за соединениями: состав хранится в Block, а не в каталоге.
+    static let observed = NetGroup(id: "observed", title: "Найдено наблюдением",
+                                   detail: "Подозрительные адреса, к которым ходили процессы Apple: телеметрия, реклама, подсказки.",
+                                   hosts: [])
+
+    /// Адреса группы с учётом найденного наблюдением.
+    static func hosts(_ group: NetGroup, observed: Set<String>) -> [String] {
+        group.id == AppleNetwork.observed.id ? observed.sorted().filter { !isUntouchable($0) } : group.hosts
+    }
+
     /// Неприкосновенные адреса: без них Mac не обновляется, не проверяет подписи и сертификаты, сбивает время.
     /// Ни одна группа не закрывает их и их поддомены.
     static let untouchable: [(host: String, why: String)] = [

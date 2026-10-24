@@ -38,6 +38,17 @@ nonisolated enum Launchd {
 
     static func override(_ label: String) -> Override { overrides()[label] ?? .none }
 
+    /// Агент пользователя Apple, которому принадлежит процесс (по `launchctl list`: PID, статус, метка).
+    static func label(forPID pid: Int32) -> String? {
+        for line in Shell.run("/bin/launchctl", ["list"]).output.split(separator: "\n") {
+            let parts = line.split(separator: "\t")
+            guard parts.count == 3, Int32(parts[0]) == pid else { continue }
+            let label = String(parts[2])
+            if label.hasPrefix("com.apple."), plistPath(label)?.hasPrefix("/System/Library/LaunchAgents") == true { return label }
+        }
+        return nil
+    }
+
     static func isLoaded(_ label: String) -> Bool {
         Shell.run("/bin/launchctl", ["print", "\(domain)/\(label)"]).ok
     }

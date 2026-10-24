@@ -3,13 +3,14 @@ import ServiceManagement
 import SwiftUI
 
 enum Screen: String, CaseIterable, Identifiable {
-    case overview, apps, settings, services, network, replacements, journal
+    case overview, monitor, apps, settings, services, network, replacements, journal
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .overview: "Обзор"
+        case .monitor: "Наблюдение"
         case .apps: "Программы"
         case .settings: "Настройки Apple"
         case .services: "Службы"
@@ -22,6 +23,7 @@ enum Screen: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .overview: "circle.hexagongrid.fill"
+        case .monitor: "dot.radiowaves.left.and.right"
         case .apps: "hand.raised.fill"
         case .settings: "switch.2"
         case .services: "gearshape.2.fill"
@@ -34,6 +36,7 @@ enum Screen: String, CaseIterable, Identifiable {
     var tint: Color {
         switch self {
         case .overview: .indigo
+        case .monitor: .pink
         case .apps: .orange
         case .settings: .blue
         case .services: .purple
@@ -57,9 +60,20 @@ final class AppModel {
     /// Правила, которые Apple вернула после обновления или вручную.
     var drift: [String] = []
     let guardian = LaunchGuard()
+    let monitor = ConnectionMonitor()
     @ObservationIgnored private var driftTimer: Timer?
 
-    var rules: [Rule] { Catalog.rules.filter { state.answers.allows($0.condition) } }
+    /// Каталог и службы, найденные наблюдением.
+    var allRules: [Rule] {
+        let dynamic = state.observedAgents.keys.sorted().compactMap { label -> Rule? in
+            Catalog.rule("agent." + label) == nil ? Catalog.observedAgent(label, process: state.observedAgents[label] ?? label) : nil
+        }
+        return Catalog.rules + dynamic
+    }
+
+    var rules: [Rule] { allRules.filter { state.answers.allows($0.condition) } }
+
+    func rule(_ id: String) -> Rule? { allRules.first { $0.id == id } }
 
     // MARK: Запуск
 
@@ -88,11 +102,13 @@ final class AppModel {
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { _ in
             MainActor.assumeIsolated { AppModel.shared.checkDrift(reason: nil) }
         }
+        monitor.onNew = { [weak self] fresh in self?.considerAuto(fresh) }
+        if state.monitorOn && !DemoUI.isOn && !SelfTest.isRunning { monitor.start() }
     }
 
     func refresh() {
         var map: [String: RuleState] = [:]
-        for rule in Catalog.rules { map[rule.id] = RuleEngine.probe(rule, state) }
+        for rule in allRules { map[rule.id] = RuleEngine.probe(rule, state) }
         states = map
     }
 
@@ -209,7 +225,7 @@ final class AppModel {
             return g
         }
         let current = HostsFile.read()
-        let next = HostsFile.render(current, hosts: groups.flatMap(\.hosts))
+        let next = HostsFile.render(current, hosts: groups.flatMap { AppleNetwork.hosts($0, observed: s.observedHosts) })
         guard next != current else { return nil }
         let temp = FileManager.default.temporaryDirectory.appendingPathComponent("block-hosts-\(UUID().uuidString)")
         guard (try? next.write(to: temp, atomically: true, encoding: .utf8)) != nil else { return nil }
@@ -262,7 +278,7 @@ final class AppModel {
     }
 
     func revertAll() async {
-        await revert(Catalog.rules.filter { state.baseline[$0.id] != nil || state.manualDone.contains($0.id) })
+        await revert(allRules.filter { state.baseline[$0.id] != nil || state.manualDone.contains($0.id) })
     }
 
     func toggle(_ rule: Rule) async {
@@ -287,7 +303,7 @@ final class AppModel {
 
     func checkDrift(reason: String?) {
         refresh()
-        drift = Catalog.rules.filter { rule in
+        drift = allRules.filter { rule in
             guard state.baseline[rule.id] != nil else { return false }
             switch status(of: rule) {
             case .active, .partial: return true
@@ -295,10 +311,10 @@ final class AppModel {
             }
         }.map(\.id)
         guard !drift.isEmpty else { return }
-        for id in drift { if let rule = Catalog.rule(id) { state.log(.drift, rule, reason ?? "значение вернулось") } }
+        for id in drift { if let rule = rule(id) { state.log(.drift, rule, reason ?? "значение вернулось") } }
         state.save()
         if state.autoReapply {
-            let list = drift.compactMap(Catalog.rule)
+            let list = drift.compactMap { rule($0) }
             Task { await reapply(list) }
         }
     }
@@ -319,6 +335,91 @@ final class AppModel {
         NetworkMethod.current = method
         state.save()
         if !applied.isEmpty { await apply(applied) } else { refresh() }
+    }
+
+    // MARK: Наблюдение за соединениями
+
+    /// Найденные адреса, которые ждут решения (автоматический режим без Veil — одним паролем на всё).
+    var pendingHosts: [String] = []
+
+    var observedRule: Rule? { rule("net.observed") }
+
+    func setMonitor(_ on: Bool) {
+        state.monitorOn = on
+        state.save()
+        if on { monitor.start() } else { monitor.stop() }
+    }
+
+    /// Закрыт ли адрес соединения (группой Block или найденным наблюдением).
+    func isBlocked(_ o: Observation) -> Bool {
+        guard o.named else { return false }
+        if state.observedHosts.contains(o.endpoint) { return true }
+        return Catalog.network.contains { rule in
+            guard state.baseline[rule.id] != nil, case .network(let g) = rule.action else { return false }
+            return g.hosts.contains(o.endpoint) || (state.networkMethod == .veil && g.suffixes.contains { o.endpoint == $0 || o.endpoint.hasSuffix("." + $0) })
+        }
+    }
+
+    /// Можно ли закрыть адрес: есть имя, оно принадлежит Apple и не из неприкосновенных.
+    func canBlock(_ o: Observation) -> Bool {
+        o.named && o.verdict != .essential && AppleKnowledge.isAppleHost(o.endpoint) && !AppleNetwork.isUntouchable(o.endpoint)
+    }
+
+    /// Подозрительное и ещё открытое: телеметрия, реклама, подсказки — к адресам Apple.
+    var suspicious: [Observation] {
+        monitor.observations.filter { $0.verdict.suspicious && canBlock($0) && !isBlocked($0) && !state.allowedObservations.contains($0.id) }
+    }
+
+    func blockHosts(_ hosts: [String]) async {
+        let fresh = hosts.map { $0.lowercased() }.filter { AppleKnowledge.isAppleHost($0) && !AppleNetwork.isUntouchable($0) }
+        guard !fresh.isEmpty, let rule = observedRule else { return }
+        state.observedHosts.formUnion(fresh)
+        pendingHosts.removeAll { fresh.contains($0) }
+        state.save()
+        await apply([rule])
+    }
+
+    func unblockHost(_ host: String) async {
+        guard let rule = observedRule, state.observedHosts.remove(host) != nil else { return }
+        state.save()
+        if state.observedHosts.isEmpty { await revert([rule]) } else { await apply([rule]) }
+    }
+
+    func allow(_ o: Observation) {
+        state.allowedObservations.insert(o.id)
+        state.save()
+    }
+
+    /// Агент пользователя, которым можно остановить процесс (из базы знаний или по `launchctl list`).
+    func agentLabel(for o: Observation) -> String? {
+        if let cached = labelCache[o.process] { return cached.isEmpty ? nil : cached }
+        var label: String?
+        if let known = AppleKnowledge.process(o.process)?.agent, Launchd.exists(known) { label = known }
+        else { label = Launchd.label(forPID: o.pid) }
+        labelCache[o.process] = label ?? ""
+        return label
+    }
+
+    @ObservationIgnored private var labelCache: [String: String] = [:]
+
+    func stopAgent(for o: Observation) async {
+        guard o.verdict != .essential, let label = agentLabel(for: o) else { flash("У «\(o.process)» нет службы, которую можно остановить без пароля"); return }
+        if Catalog.rule("agent." + label) == nil { state.observedAgents[label] = o.process }
+        state.save()
+        refresh()
+        if let rule = rule("agent." + label) { await apply([rule]) }
+    }
+
+    /// Новые соединения: в автоматическом режиме подозрительное закрывается сразу (Veil) или копится к одному паролю.
+    func considerAuto(_ fresh: [Observation]) {
+        guard state.monitorAuto else { return }
+        let hosts = fresh.filter { $0.verdict.suspicious && canBlock($0) && !isBlocked($0) && !state.allowedObservations.contains($0.id) }.map(\.endpoint)
+        guard !hosts.isEmpty else { return }
+        if state.networkMethod == .veil && VeilRoutes.installed {
+            Task { await blockHosts(hosts) }
+        } else {
+            pendingHosts = Array(Set(pendingHosts + hosts)).sorted()
+        }
     }
 
     // MARK: Вход в систему

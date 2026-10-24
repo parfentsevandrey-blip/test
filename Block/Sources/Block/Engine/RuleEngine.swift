@@ -40,13 +40,23 @@ enum RuleEngine {
         case .network(let group):
             switch state.networkMethod {
             case .hosts:
+                let hosts = AppleNetwork.hosts(group, observed: state.observedHosts)
+                if hosts.isEmpty { return .unavailable("наблюдение пока ничего не нашло") }
                 let blocked = HostsFile.blockedHosts(in: HostsFile.read())
-                let done = group.hosts.filter { blocked.contains($0) }.count
-                return count(done, group.hosts.count)
+                let done = hosts.filter { blocked.contains($0) }.count
+                return count(done, hosts.count)
             case .veil:
                 guard VeilRoutes.installed else { return .unavailable("Veil не установлен") }
+                if AppleNetwork.hosts(group, observed: state.observedHosts).isEmpty { return .unavailable("наблюдение пока ничего не нашло") }
                 return state.veilGroups.contains(group.id) ? .blocked : .active
             }
+        }
+    }
+
+    /// Всё, что сейчас должно быть закрыто в Veil: группы и найденное наблюдением.
+    static func veilDomains(_ state: BlockState) -> [String] {
+        (AppleNetwork.groups + [AppleNetwork.observed]).filter { state.veilGroups.contains($0.id) }.flatMap { group in
+            group.id == AppleNetwork.observed.id ? AppleNetwork.hosts(group, observed: state.observedHosts) : group.hosts + group.suffixes
         }
     }
 
@@ -116,8 +126,7 @@ enum RuleEngine {
         case .network(let group):
             if state.networkMethod == .veil {
                 state.veilGroups.insert(group.id)
-                let groups = AppleNetwork.groups.filter { state.veilGroups.contains($0.id) }
-                return (before, VeilRoutes.send(groups) ? nil : "Veil не установлен")
+                return (before, VeilRoutes.send(veilDomains(state)) ? nil : "Veil не установлен")
             }
             return (before, nil)   // hosts — пачкой с правами администратора
 
@@ -160,7 +169,7 @@ enum RuleEngine {
 
         case (.network(let group), _):
             if state.networkMethod == .veil, state.veilGroups.remove(group.id) != nil {
-                VeilRoutes.send(AppleNetwork.groups.filter { state.veilGroups.contains($0.id) })
+                VeilRoutes.send(veilDomains(state))
             }
 
         default:

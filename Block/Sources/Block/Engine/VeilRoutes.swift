@@ -19,8 +19,8 @@ enum VeilRoutes {
     }
 
     @discardableResult
-    static func send(_ groups: [NetGroup]) -> Bool {
-        guard installed, let url = url(domains: domains(groups)) else { return false }
+    static func send(_ domains: [String]) -> Bool {
+        guard installed, let url = url(domains: domains) else { return false }
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = false
         NSWorkspace.shared.open(url, configuration: configuration)

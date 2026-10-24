@@ -165,5 +165,14 @@ nonisolated enum Catalog {
                     breaks: group.id == "icloud" ? "iCloud и «Найти Mac»" : group.id == "appstore" ? "App Store" : "",
                     surface: surface, level: .network, action: .network(group),
                     condition: group.id == "icloud" ? .noICloud : nil)
+    } + [Rule(id: "net.observed", title: "Адреса: найдено наблюдением", detail: AppleNetwork.observed.detail,
+              breaks: "", surface: .ads, level: .network, action: .network(AppleNetwork.observed))]
+
+    /// Служба, которую нашло наблюдение (её нет в каталоге): выключается и возвращается как остальные.
+    static func observedAgent(_ label: String, process: String) -> Rule {
+        let known = AppleKnowledge.process(process)
+        return Rule(id: "agent." + label, title: known?.title ?? process,
+                    detail: "Найдена наблюдением: ходила в сеть (\(label))", breaks: "", surface: .ads, level: .services,
+                    action: .agent(label: label), confidence: .experimental)
     }
 }

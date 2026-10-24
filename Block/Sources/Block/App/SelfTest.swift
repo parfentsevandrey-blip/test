@@ -135,6 +135,55 @@ enum SelfTest {
         ok = check(model.rules.contains { $0.id == "net.icloud" } && model.selection(for: .full).contains { $0.id == "net.icloud" },
                    "не пользуетесь iCloud — его адреса в «Полностью»") && ok
 
+        print("— Наблюдение за соединениями")
+        let fixture = """
+        time,,bytes_in,bytes_out,
+        12:00:01.000000,apsd.312,1200,800,
+        12:00:01.000000,tcp4 192.168.1.5:50123<->17.57.144.10:5223,1000,700,
+        12:00:01.000000,analyticsd.455,10,20,
+        12:00:01.000000,tcp6 2a01:e0a::1.50000<->2620:149:a44::1.443,5,7,
+        12:00:01.000000,udp4 *:*<->*:*,0,0,
+        12:00:01.000000,promotedcontentd.77,1,1,
+        12:00:01.000000,tcp4 10.0.0.2:61000<->10.0.0.1:53,1,1,
+        """
+        let parsedConnections = NettopParser.parse(fixture)
+        ok = check(parsedConnections.count == 3
+                   && parsedConnections[0] == ConnectionSample(process: "apsd", pid: 312, proto: "tcp4", ip: "17.57.144.10", port: 5223, bytesIn: 1000, bytesOut: 700)
+                   && parsedConnections[1].process == "analyticsd" && parsedConnections[1].ip == "2620:149:a44::1" && parsedConnections[1].port == 443
+                   && NettopParser.isPrivate(parsedConnections[2].ip),
+                   "nettop: процессы, IPv4 и IPv6 с портами, байты; «*:*» пропущено, домашняя сеть распознана") && ok
+        ok = check(AppleKnowledge.verdict(process: "analyticsd", host: nil) == .telemetry
+                   && AppleKnowledge.verdict(process: "promotedcontentd", host: "iadsdk.apple.com") == .ads
+                   && AppleKnowledge.verdict(process: "cloudd", host: "xp.apple.com") == .telemetry
+                   && AppleKnowledge.verdict(process: "trustd", host: "ocsp.apple.com") == .essential
+                   && AppleKnowledge.verdict(process: "analyticsd", host: "swscan.apple.com") == .essential
+                   && AppleKnowledge.verdict(process: "someone", host: "example.org") == .unknown
+                   && AppleKnowledge.verdict(process: "intelligenceplat", host: nil) == .suggestions,
+                   "вердикты: телеметрия, реклама, имя важнее процесса, неприкосновенное — всегда «нужно системе», обрезанные имена") && ok
+        ok = check(AppleKnowledge.isApple(path: "/usr/libexec/apsd", name: "apsd") && !AppleKnowledge.isApple(path: "/usr/bin/curl", name: "curl")
+                   && !AppleKnowledge.isApple(path: "/Applications/Telegram.app/Contents/MacOS/Telegram", name: "Telegram"),
+                   "процессы Apple — по системному пути; curl и чужие программы — нет") && ok
+        let probe = ConnectionMonitor()
+        probe.show([])
+        // Процесс, которого уже нет (путь не узнать), опознаётся по имени; сам Block — по пути, и это не Apple.
+        probe.ingest([ConnectionSample(process: "analyticsd", pid: 999_999, proto: "tcp4", ip: "17.253.144.10", port: 443, bytesIn: 1, bytesOut: 1),
+                      ConnectionSample(process: "curl", pid: getpid(), proto: "tcp4", ip: "17.253.144.10", port: 443, bytesIn: 1, bytesOut: 1)])
+        ok = check(probe.observations.count == 1 && probe.observations.first?.process == "analyticsd" && probe.observations.first?.verdict == .telemetry,
+                   "в журнал попадают только процессы Apple (analyticsd — да, Block — нет)") && ok
+        probe.clear()
+        let fake = Observation(process: "analyticsd", pid: 1, path: "/usr/libexec/analyticsd", endpoint: "ocsp.apple.com", ip: "17.0.0.1", port: 443,
+                               firstSeen: Date(), lastSeen: Date(), samples: 1, bytesIn: 0, bytesOut: 0, verdict: .telemetry)
+        var foreign = fake
+        foreign.endpoint = "tracker.example.com"
+        var nameless = fake
+        nameless.endpoint = nameless.ip
+        var xp = fake
+        xp.endpoint = "xp.apple.com"
+        ok = check(!model.canBlock(fake) && !model.canBlock(foreign) && !model.canBlock(nameless) && model.canBlock(xp),
+                   "закрыть можно только имя Apple: не неприкосновенное, не чужой домен, не голый адрес") && ok
+        ok = check(AppleNetwork.hosts(AppleNetwork.observed, observed: ["xp.apple.com", "swscan.apple.com"]) == ["xp.apple.com"],
+                   "найденное наблюдением не закрывает обновления, даже если попало в список") && ok
+
         print("— Значения и службы")
         ok = check(Preferences.matches(.int(0), .bool(false)) && Preferences.matches(.bool(true), .int(1)) && !Preferences.matches(nil, .bool(false)),
                    "0/1 и да/нет для системы одно и то же; нет ключа — не совпадение") && ok
@@ -236,7 +285,7 @@ enum SelfTest {
             info("шаг 2: права администратора")
             let hostsBefore = HostsFile.read()
             let diagnostics = Catalog.rules.filter(\.action.isSystemPlist)
-            let net = Catalog.network.filter { $0.id != "net.icloud" }
+            let net = Catalog.network.filter { $0.id != "net.icloud" && $0.id != "net.observed" }
             let adminBefore = diagnostics.map { RuleEngine.snapshot($0) }
             await model.apply(diagnostics + net)
             model.refresh()
@@ -252,6 +301,34 @@ enum SelfTest {
         }
 
         // 3. Программа по умолчанию: свой тип файла → TextEdit и обратно.
+        info("шаг 2½: наблюдение за соединениями")
+        // Своя нагрузка: медленная загрузка страницы apple.com, чтобы в выборке точно было соединение.
+        let curl = Process()
+        curl.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
+        curl.arguments = ["-s", "-o", "/dev/null", "--limit-rate", "3k", "-m", "40", "https://www.apple.com/"]
+        try? curl.run()
+        await wait(3) { false }
+        let raw = Shell.run("/usr/bin/nettop", ["-L", "1", "-n", "-x", "-t", "external", "-J", "bytes_in,bytes_out"], timeout: 15)
+        let connections = NettopParser.parse(raw.output)
+        let pids = Set(connections.map(\.pid))
+        info("nettop: строк \(raw.output.split(separator: "\n").count), соединений \(connections.count), процессов \(pids.count): \(Set(connections.map(\.process)).sorted().prefix(20))")
+        if connections.isEmpty { print(raw.output.split(separator: "\n").prefix(12).joined(separator: "\n")) }
+        ok = check(connections.contains { $0.process == "curl" && $0.port == 443 }, "nettop видит соединение curl к apple.com (без прав администратора)") && ok
+        ok = check(pids.contains { $0 != curl.processIdentifier && $0 != getpid() }, "видны и чужие процессы, не только свои") && ok
+        await model.monitor.sample()
+        let apple = model.monitor.observations
+        info("процессы Apple в сети: \(Set(apple.map(\.process)).sorted()); адреса: \(apple.prefix(8).map { "\($0.process)→\($0.endpoint) [\($0.verdict.title)]" })")
+        ok = check(model.monitor.lastError == nil && model.monitor.lastSample != nil, "наблюдение сделало выборку") && ok
+        curl.terminate()
+        if Privileged.usesSudo {
+            let before = HostsFile.read()
+            await model.blockHosts(["xp.apple.com", "swscan.apple.com"])
+            ok = check(HostsFile.resolvesToNowhere("xp.apple.com") && !HostsFile.resolvesToNowhere("swscan.apple.com"),
+                       "найденное наблюдением закрыто (xp.apple.com), обновления открыты") && ok
+            await model.unblockHost("xp.apple.com")
+            ok = check(HostsFile.read() == before && model.state.observedHosts.isEmpty, "и открыто обратно — hosts как был") && ok
+        }
+
         info("шаг 3: программа по умолчанию")
         // Своя пробная программа, которая объявляет проверочный тип файла (как Lumen объявляет видео).
         let handler = Handler(kind: .contentType, value: "app.block.selftest")
