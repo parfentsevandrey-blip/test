@@ -67,7 +67,7 @@ nonisolated enum HostsFile {
             any = true
             var buffer = [CChar](repeating: 0, count: Int(NI_MAXHOST))
             if getnameinfo(n.pointee.ai_addr, n.pointee.ai_addrlen, &buffer, socklen_t(buffer.count), nil, 0, NI_NUMERICHOST) == 0 {
-                let address = String(cString: buffer)
+                let address = String(decoding: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
                 if address != "0.0.0.0" && address != "::" { return false }
             }
             node = n.pointee.ai_next

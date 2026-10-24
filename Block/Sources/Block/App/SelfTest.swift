@@ -236,7 +236,7 @@ enum SelfTest {
             let map: [String: CatalogApp?] = [bundle: nil]
             model.guardian.update(map)
             let started = Date()
-            NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+            NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration(), completionHandler: nil)
             spin(8) { model.guardian.lastStop?.bundle == bundle }
             spin(2) { NSRunningApplication.runningApplications(withBundleIdentifier: bundle).allSatisfy(\.isTerminated) }
             let stop = model.guardian.lastStop
