@@ -33,6 +33,15 @@ enum Handlers {
         }
     }
 
+    /// Идентификатор программы, которая открывает тип или схему (по базе LaunchServices).
+    static func currentBundleID(_ handler: Handler) -> String? {
+        if handler.kind != .scheme, let type = type(handler),
+           let id = LSCopyDefaultRoleHandlerForContentType(type.identifier as CFString, .all)?.takeRetainedValue() as String? {
+            return id
+        }
+        return bundleID(of: current(handler))
+    }
+
     static func bundleID(of url: URL?) -> String? {
         url.flatMap { Bundle(url: $0)?.bundleIdentifier }
     }

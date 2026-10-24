@@ -22,7 +22,7 @@ enum RuleEngine {
         case .handlers(let handlers, let app):
             guard Handlers.appURL(app.bundleID) != nil else { return .unavailable("\(app.name) не установлен") }
             let known = handlers.filter { $0.kind == .scheme || Handlers.type($0) != nil }
-            let done = known.filter { Handlers.bundleID(of: Handlers.current($0)) == app.bundleID }.count
+            let done = known.filter { Handlers.currentBundleID($0) == app.bundleID }.count
             return count(done, known.count)
 
         case .launchGuard(let bundle, _):
