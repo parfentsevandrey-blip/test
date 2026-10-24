@@ -36,8 +36,8 @@ enum DemoUI {
         s.observedHosts = ["api-adservices.apple.com", "xp.apple.com"]
         model.state = s
         let now = Date()
-        func o(_ process: String, _ path: String, _ host: String?, _ ip: String, _ minutes: Double, _ kb: Int64) -> Observation {
-            Observation(process: process, pid: 400, path: path, endpoint: host ?? ip, ip: ip, port: 443, firstSeen: now.addingTimeInterval(-3600),
+        func o(_ process: String, _ path: String, _ host: String?, _ ip: String, _ minutes: Double, _ kb: Int64) -> Sighting {
+            Sighting(process: process, pid: 400, path: path, endpoint: host ?? ip, ip: ip, port: 443, firstSeen: now.addingTimeInterval(-3600),
                         lastSeen: now.addingTimeInterval(-minutes * 60), samples: 12, bytesIn: kb * 600, bytesOut: kb * 424,
                         verdict: AppleKnowledge.verdict(process: process, host: host))
         }

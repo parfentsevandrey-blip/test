@@ -17,8 +17,8 @@ struct MonitorView: View {
         }
     }
 
-    private var groups: [(process: String, items: [Observation])] {
-        let list: [Observation] = switch filter {
+    private var groups: [(process: String, items: [Sighting])] {
+        let list: [Sighting] = switch filter {
         case .suspicious: model.monitor.observations.filter { $0.verdict.suspicious && !model.isBlocked($0) && !model.state.allowedObservations.contains($0.id) }
         case .all: model.monitor.observations
         case .blocked: model.monitor.observations.filter { model.isBlocked($0) }
@@ -115,7 +115,7 @@ struct MonitorView: View {
 private struct ProcessCard: View {
     @Environment(AppModel.self) private var model
     let process: String
-    let items: [Observation]
+    let items: [Sighting]
 
     var body: some View {
         let known = AppleKnowledge.process(process)
@@ -162,7 +162,7 @@ private struct ProcessCard: View {
     }
 
     @ViewBuilder
-    private func action(_ o: Observation) -> some View {
+    private func action(_ o: Sighting) -> some View {
         if model.isBlocked(o) {
             if model.state.observedHosts.contains(o.endpoint) {
                 Button("Открыть") { Task { await model.unblockHost(o.endpoint) } }.buttonStyle(.link).font(.system(size: 11))

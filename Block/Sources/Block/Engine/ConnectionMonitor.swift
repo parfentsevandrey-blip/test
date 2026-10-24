@@ -72,7 +72,7 @@ nonisolated enum NettopParser {
 }
 
 /// Что Block увидел: процесс Apple → адрес. Хранится неделю, только на этом Mac.
-nonisolated struct Observation: Codable, Identifiable, Sendable, Equatable {
+nonisolated struct Sighting: Codable, Identifiable, Sendable, Equatable {
     var process: String
     var pid: Int32
     var path: String
@@ -96,7 +96,7 @@ nonisolated struct Observation: Codable, Identifiable, Sendable, Equatable {
 /// и спрашивает обратную запись DNS у остальных.
 @Observable
 final class ConnectionMonitor {
-    private(set) var observations: [Observation] = []
+    private(set) var observations: [Sighting] = []
     private(set) var running = false
     private(set) var lastSample: Date?
     private(set) var lastError: String?
@@ -107,12 +107,12 @@ final class ConnectionMonitor {
     @ObservationIgnored private var reverse: [String: String] = [:]
     @ObservationIgnored private var namesRefreshed = Date.distantPast
     @ObservationIgnored private var sampling = false
-    var onNew: (([Observation]) -> Void)?
+    var onNew: (([Sighting]) -> Void)?
 
     static var file: URL { BlockState.directory.appendingPathComponent("monitor.json") }
 
     init() {
-        if let data = try? Data(contentsOf: Self.file), let list = try? JSONDecoder().decode([Observation].self, from: data) {
+        if let data = try? Data(contentsOf: Self.file), let list = try? JSONDecoder().decode([Sighting].self, from: data) {
             observations = list
         }
     }
@@ -133,7 +133,7 @@ final class ConnectionMonitor {
     }
 
     /// Готовый список (демонстрация экрана) — без записи на диск.
-    func show(_ list: [Observation]) { observations = list }
+    func show(_ list: [Sighting]) { observations = list }
 
     func clear() {
         observations = []
@@ -165,7 +165,7 @@ final class ConnectionMonitor {
 
     func ingest(_ samples: [ConnectionSample], now: Date = Date()) {
         var map = Dictionary(uniqueKeysWithValues: observations.map { ($0.id, $0) })
-        var fresh: [Observation] = []
+        var fresh: [Sighting] = []
         var paths: [Int32: String] = [:]
         for s in samples {
             let path = paths[s.pid] ?? Self.path(of: s.pid)
@@ -183,7 +183,7 @@ final class ConnectionMonitor {
                 o.bytesOut = max(o.bytesOut, s.bytesOut)
                 map[id] = o
             } else {
-                let o = Observation(process: name, pid: s.pid, path: path, endpoint: endpoint, ip: s.ip, port: s.port, firstSeen: now, lastSeen: now,
+                let o = Sighting(process: name, pid: s.pid, path: path, endpoint: endpoint, ip: s.ip, port: s.port, firstSeen: now, lastSeen: now,
                                     samples: 1, bytesIn: s.bytesIn, bytesOut: s.bytesOut, verdict: AppleKnowledge.verdict(process: name, host: host))
                 map[id] = o
                 fresh.append(o)

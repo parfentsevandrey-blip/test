@@ -351,7 +351,7 @@ final class AppModel {
     }
 
     /// Закрыт ли адрес соединения (группой Block или найденным наблюдением).
-    func isBlocked(_ o: Observation) -> Bool {
+    func isBlocked(_ o: Sighting) -> Bool {
         guard o.named else { return false }
         if state.observedHosts.contains(o.endpoint) { return true }
         return Catalog.network.contains { rule in
@@ -361,12 +361,12 @@ final class AppModel {
     }
 
     /// Можно ли закрыть адрес: есть имя, оно принадлежит Apple и не из неприкосновенных.
-    func canBlock(_ o: Observation) -> Bool {
+    func canBlock(_ o: Sighting) -> Bool {
         o.named && o.verdict != .essential && AppleKnowledge.isAppleHost(o.endpoint) && !AppleNetwork.isUntouchable(o.endpoint)
     }
 
     /// Подозрительное и ещё открытое: телеметрия, реклама, подсказки — к адресам Apple.
-    var suspicious: [Observation] {
+    var suspicious: [Sighting] {
         monitor.observations.filter { $0.verdict.suspicious && canBlock($0) && !isBlocked($0) && !state.allowedObservations.contains($0.id) }
     }
 
@@ -385,13 +385,13 @@ final class AppModel {
         if state.observedHosts.isEmpty { await revert([rule]) } else { await apply([rule]) }
     }
 
-    func allow(_ o: Observation) {
+    func allow(_ o: Sighting) {
         state.allowedObservations.insert(o.id)
         state.save()
     }
 
     /// Агент пользователя, которым можно остановить процесс (из базы знаний или по `launchctl list`).
-    func agentLabel(for o: Observation) -> String? {
+    func agentLabel(for o: Sighting) -> String? {
         if let cached = labelCache[o.process] { return cached.isEmpty ? nil : cached }
         var label: String?
         if let known = AppleKnowledge.process(o.process)?.agent, Launchd.exists(known) { label = known }
@@ -402,7 +402,7 @@ final class AppModel {
 
     @ObservationIgnored private var labelCache: [String: String] = [:]
 
-    func stopAgent(for o: Observation) async {
+    func stopAgent(for o: Sighting) async {
         guard o.verdict != .essential, let label = agentLabel(for: o) else { flash("У «\(o.process)» нет службы, которую можно остановить без пароля"); return }
         if Catalog.rule("agent." + label) == nil { state.observedAgents[label] = o.process }
         state.save()
@@ -411,7 +411,7 @@ final class AppModel {
     }
 
     /// Новые соединения: в автоматическом режиме подозрительное закрывается сразу (Veil) или копится к одному паролю.
-    func considerAuto(_ fresh: [Observation]) {
+    func considerAuto(_ fresh: [Sighting]) {
         guard state.monitorAuto else { return }
         let hosts = fresh.filter { $0.verdict.suspicious && canBlock($0) && !isBlocked($0) && !state.allowedObservations.contains($0.id) }.map(\.endpoint)
         guard !hosts.isEmpty else { return }

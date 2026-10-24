@@ -171,7 +171,7 @@ enum SelfTest {
         ok = check(probe.observations.count == 1 && probe.observations.first?.process == "analyticsd" && probe.observations.first?.verdict == .telemetry,
                    "в журнал попадают только процессы Apple (analyticsd — да, Block — нет)") && ok
         probe.clear()
-        let fake = Observation(process: "analyticsd", pid: 1, path: "/usr/libexec/analyticsd", endpoint: "ocsp.apple.com", ip: "17.0.0.1", port: 443,
+        let fake = Sighting(process: "analyticsd", pid: 1, path: "/usr/libexec/analyticsd", endpoint: "ocsp.apple.com", ip: "17.0.0.1", port: 443,
                                firstSeen: Date(), lastSeen: Date(), samples: 1, bytesIn: 0, bytesOut: 0, verdict: .telemetry)
         var foreign = fake
         foreign.endpoint = "tracker.example.com"
