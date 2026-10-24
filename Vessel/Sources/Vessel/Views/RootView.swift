@@ -21,7 +21,7 @@ struct RootView: View {
                     row(.downloads, count: model.jobs.filter { $0.state != .done }.count)
                 }
             }
-            .navigationSplitViewColumnWidth(min: 210, ideal: 230)
+            .navigationSplitViewColumnWidth(230)
             .safeAreaInset(edge: .bottom) { macBadge }
         } detail: {
             NavigationStack(path: $model.path) {

@@ -22,6 +22,8 @@ struct VesselApp: App {
                     if DemoUI.isOn, let screen = window.screen ?? NSScreen.main {
                         let f = screen.visibleFrame
                         window.setFrame(NSRect(x: f.minX, y: f.minY, width: min(1360, f.width), height: min(860, f.height)), display: true)
+                        NSApp.activate(ignoringOtherApps: true)
+                        window.makeKeyAndOrderFront(nil)
                     }
                 })
         }

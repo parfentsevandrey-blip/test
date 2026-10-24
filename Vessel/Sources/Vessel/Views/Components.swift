@@ -34,13 +34,16 @@ struct ScreenshotImage: View {
     @State private var image: NSImage?
 
     var body: some View {
-        ZStack {
-            DistroCover(distro: distro)
-            if let image {
-                Image(nsImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: fill ? .fill : .fit)
-                    .transition(.opacity)
+        // Размер задаёт тот, кто вставил снимок: картинка в 2560 точек не должна раздвигать страницу.
+        Color.clear.overlay {
+            ZStack {
+                DistroCover(distro: distro)
+                if let image {
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: fill ? .fill : .fit)
+                        .transition(.opacity)
+                }
             }
         }
         .clipped()
@@ -117,7 +120,8 @@ struct FlowLayout: Layout {
     var spacing: CGFloat = 8
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? .infinity
+        // Без предложенной ширины — разумная «идеальная», а не все элементы в одну строку.
+        let width = proposal.width ?? 480
         var x: CGFloat = 0, y: CGFloat = 0, row: CGFloat = 0, widest: CGFloat = 0
         for view in subviews {
             let size = view.sizeThatFits(.unspecified)
