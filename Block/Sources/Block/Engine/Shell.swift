@@ -24,9 +24,10 @@ nonisolated enum Shell {
         }
         do { try process.run() } catch { return Result(status: -1, output: error.localizedDescription) }
         // Зависшая команда не держит Block: через timeout секунд процесс останавливается.
-        let pid = process.processIdentifier
+        // Проверяем сам процесс, а не номер: номер завершившегося процесса может достаться другому.
+        nonisolated(unsafe) let running = process
         DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
-            if kill(pid, 0) == 0 { kill(pid, SIGKILL) }
+            if running.isRunning { kill(running.processIdentifier, SIGKILL) }
         }
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
