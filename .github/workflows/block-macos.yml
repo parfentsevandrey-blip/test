@@ -50,19 +50,6 @@ jobs:
       - name: Self-test logic
         run: dist/Block.app/Contents/MacOS/Block --selftest-logic
 
-      # Настоящий Mac раннера: применить и вернуть правила (снимки до и после совпадают), /etc/hosts и
-      # аналитика через sudo -n, программа по умолчанию, сторож запуска на безопасной программе Apple.
-      - name: Self-test system
-        timeout-minutes: 12
-        env:
-          BLOCK_SUDO: "1"
-        run: |
-          export BLOCK_HOME="$RUNNER_TEMP/block-home"
-          export BLOCK_SHOTS="$RUNNER_TEMP/render"; mkdir -p "$BLOCK_SHOTS"
-          cp /etc/hosts "$RUNNER_TEMP/hosts.before"
-          dist/Block.app/Contents/MacOS/Block --selftest-system
-          cmp /etc/hosts "$RUNNER_TEMP/hosts.before" && echo "/etc/hosts не изменился"
-
       # Настоящее окно с выдуманным состоянием (в системе ничего не меняется) — проверяем раскладку глазами.
       - name: UI screenshots
         run: |
@@ -76,6 +63,20 @@ jobs:
             kill $PID 2>/dev/null || true
             sleep 2
           done
+
+      # Настоящий Mac раннера: применить и вернуть правила (снимки до и после совпадают), /etc/hosts и
+      # аналитика через sudo -n, программа по умолчанию, сторож запуска на безопасной программе Apple.
+      # После скриншотов: смена программы по умолчанию оставляет на экране вопрос macOS к человеку.
+      - name: Self-test system
+        timeout-minutes: 12
+        env:
+          BLOCK_SUDO: "1"
+        run: |
+          export BLOCK_HOME="$RUNNER_TEMP/block-home"
+          export BLOCK_SHOTS="$RUNNER_TEMP/render"; mkdir -p "$BLOCK_SHOTS"
+          cp /etc/hosts "$RUNNER_TEMP/hosts.before"
+          dist/Block.app/Contents/MacOS/Block --selftest-system
+          cmp /etc/hosts "$RUNNER_TEMP/hosts.before" && echo "/etc/hosts не изменился"
 
       - uses: actions/upload-artifact@v4
         if: always()
