@@ -46,20 +46,15 @@ enum Handlers {
         url.flatMap { Bundle(url: $0)?.bundleIdentifier }
     }
 
-    enum Failure: Error { case noBundle, status(OSStatus) }
-
     static func set(_ handler: Handler, to app: URL) async throws {
         switch handler.kind {
         case .scheme:
             // Браузер и почту macOS меняет только с подтверждением человека — это системное окно.
             try await NSWorkspace.shared.setDefaultApplication(at: app, toOpenURLsWithScheme: handler.value)
         case .contentType, .fileExtension:
-            // Типы файлов: сначала напрямую в базу LaunchServices (без окон). Если система это не приняла,
-            // — через NSWorkspace: тогда macOS может спросить подтверждение у человека.
+            // Типы файлов: macOS 26 спрашивает человека («Открывать все документы .mp4 в …?») — по одному
+            // окну на тип, поэтому Block меняет их по очереди и только основные.
             guard let type = type(handler) else { return }
-            guard let bundle = Bundle(url: app)?.bundleIdentifier else { throw Failure.noBundle }
-            let status = LSSetDefaultRoleHandlerForContentType(type.identifier as CFString, .all, bundle as CFString)
-            if status == noErr && currentBundleID(handler) == bundle { return }
             try await NSWorkspace.shared.setDefaultApplication(at: app, toOpen: type)
         }
     }

@@ -268,6 +268,8 @@ enum SelfTest {
             if !changed && !done {
                 // macOS спрашивает человека (системное окно) — в CI подтвердить некому; снимок экрана — в артефакте.
                 info("программа по умолчанию: macOS ждёт подтверждения человека (снимок default-handler.png)")
+                // Окно подтверждения закрывается без ответа — выбор остаётся прежним.
+                Shell.run("/usr/bin/killall", ["CoreServicesUIAgent"])
             } else {
                 ok = check(changed, "программа по умолчанию назначена (\(Handlers.currentBundleID(handler) ?? "никто"))") && ok
             }
