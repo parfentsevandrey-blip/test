@@ -3,7 +3,7 @@ import SwiftUI
 /// Наблюдение: куда ходят процессы Apple и что из этого подозрительно.
 struct MonitorView: View {
     @Environment(AppModel.self) private var model
-    @State private var filter: Filter = .suspicious
+    @State private var filter: Filter = DemoUI.isOn ? .all : .suspicious
 
     enum Filter: String, CaseIterable, Identifiable {
         case suspicious, all, blocked
@@ -89,13 +89,13 @@ struct MonitorView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .frame(width: 380)
+            .frame(width: 360)
             Spacer()
-            Toggle("Закрывать подозрительное само", isOn: Binding(get: { model.state.monitorAuto }, set: { model.state.monitorAuto = $0; model.state.save() }))
+            Toggle("Закрывать само", isOn: Binding(get: { model.state.monitorAuto }, set: { model.state.monitorAuto = $0; model.state.save() }))
                 .toggleStyle(.switch)
                 .help(model.state.networkMethod == .veil ? "Через Veil — сразу и без пароля." : "Через hosts — найденное копится, закрывается одним паролем.")
             let open = model.suspicious
-            Button("Закрыть подозрительное: \(open.count)") { Task { await model.blockHosts(open.map(\.endpoint)) } }
+            Button("Закрыть всё: \(open.count)") { Task { await model.blockHosts(open.map(\.endpoint)) } }
                 .buttonStyle(.glassProminent)
                 .disabled(open.isEmpty || model.busy)
         }
