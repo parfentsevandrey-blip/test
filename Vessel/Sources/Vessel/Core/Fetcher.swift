@@ -45,7 +45,7 @@ nonisolated final class FileFetcher: NSObject, URLSessionDataDelegate, @unchecke
         self.expectedSize = expectedSize ?? 0
         self.hashKind = hash
         self.digest = digest.lowercased()
-        self.hasher = StreamHasher(hashKind)
+        self.hasher = StreamHasher(hash)
         self.onProgress = onProgress
     }
 
