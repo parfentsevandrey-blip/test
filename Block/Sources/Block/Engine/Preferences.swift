@@ -53,11 +53,13 @@ nonisolated enum Preferences {
     /// Команда `defaults` для записи или удаления ключа системного файла.
     static func systemCommand(_ path: String, key: String, value: PlistValue?) -> String {
         let p = Shell.quote(path), k = Shell.quote(key)
-        guard let value else { return "(/usr/bin/defaults delete \(p) \(k) 2>/dev/null || true)" }
+        // defaults от root пересоздаёт файл только для root — возвращаем чтение всем, как у системы.
+        let readable = "(/bin/chmod a+r \(Shell.quote(path + ".plist")) 2>/dev/null || true)"
+        guard let value else { return "(/usr/bin/defaults delete \(p) \(k) 2>/dev/null || true) && \(readable)" }
         switch value {
-        case .bool(let b): return "/usr/bin/defaults write \(p) \(k) -bool \(b ? "true" : "false")"
-        case .int(let i): return "/usr/bin/defaults write \(p) \(k) -int \(i)"
-        case .string(let s): return "/usr/bin/defaults write \(p) \(k) -string \(Shell.quote(s))"
+        case .bool(let b): return "/usr/bin/defaults write \(p) \(k) -bool \(b ? "true" : "false") && \(readable)"
+        case .int(let i): return "/usr/bin/defaults write \(p) \(k) -int \(i) && \(readable)"
+        case .string(let s): return "/usr/bin/defaults write \(p) \(k) -string \(Shell.quote(s)) && \(readable)"
         }
     }
 }

@@ -24,6 +24,11 @@ enum Handlers {
             return NSWorkspace.shared.urlForApplication(toOpen: url)
         case .contentType, .fileExtension:
             guard let type = type(handler) else { return nil }
+            // Сначала база LaunchServices (без кэша NSWorkspace), затем — как решит система.
+            if let id = LSCopyDefaultRoleHandlerForContentType(type.identifier as CFString, .all)?.takeRetainedValue() as String?,
+               let url = appURL(id) {
+                return url
+            }
             return NSWorkspace.shared.urlForApplication(toOpen: type)
         }
     }

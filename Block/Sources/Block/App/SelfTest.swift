@@ -1,4 +1,5 @@
 import AppKit
+import CoreServices
 import Foundation
 
 /// Самопроверки, которые CI запускает прямо в собранном бинарнике.
@@ -146,6 +147,24 @@ enum SelfTest {
 
     // MARK: - Настоящая система
 
+    /// Пробная программа во временной папке: объявляет тип app.block.selftest, LaunchServices её знает.
+    static func probeApp() -> URL? {
+        let app = FileManager.default.temporaryDirectory.appendingPathComponent("BlockProbe-\(getpid()).app")
+        let contents = app.appendingPathComponent("Contents")
+        try? FileManager.default.createDirectory(at: contents.appendingPathComponent("MacOS"), withIntermediateDirectories: true)
+        let info: NSDictionary = [
+            "CFBundleIdentifier": "app.block.probe", "CFBundleName": "BlockProbe", "CFBundleExecutable": "probe",
+            "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "1.0", "CFBundleVersion": "1",
+            "CFBundleDocumentTypes": [["CFBundleTypeName": "Проверочный файл", "CFBundleTypeRole": "Viewer",
+                                       "LSHandlerRank": "Alternate", "LSItemContentTypes": ["app.block.selftest"]]],
+        ]
+        guard info.write(to: contents.appendingPathComponent("Info.plist"), atomically: true) else { return nil }
+        try? FileManager.default.copyItem(atPath: "/usr/bin/true", toPath: contents.appendingPathComponent("MacOS/probe").path)
+        let status = LSRegisterURL(app as CFURL, true)
+        if status != noErr { info("LSRegisterURL: \(status)") }
+        return app
+    }
+
     /// Всё, что Block может поменять без прав администратора: значения ключей, записи служб, Dock.
     struct Fingerprint: Equatable {
         var prefs: [String: String]
@@ -222,6 +241,7 @@ enum SelfTest {
             await model.apply(diagnostics + net)
             model.refresh()
             for rule in diagnostics + net { ok = check(model.status(of: rule) == .blocked, "\(rule.title): \(model.status(of: rule).label)") && ok }
+            info("аналитика: до \(adminBefore.map(\.summary)), сейчас \(diagnostics.map { RuleEngine.snapshot($0).summary })")
             ok = check(HostsFile.resolvesToNowhere("xp.apple.com"), "резолвер: xp.apple.com → 0.0.0.0") && ok
             ok = check(!HostsFile.resolvesToNowhere("swscan.apple.com"), "резолвер: обновления macOS (swscan.apple.com) открыты") && ok
             await model.revert(diagnostics + net)
@@ -233,17 +253,21 @@ enum SelfTest {
 
         // 3. Программа по умолчанию: свой тип файла → TextEdit и обратно.
         info("шаг 3: программа по умолчанию")
+        // Своя пробная программа, которая объявляет проверочный тип файла (как Lumen объявляет видео).
         let handler = Handler(kind: .contentType, value: "app.block.selftest")
+        let probe = probeApp()
         let previous = Handlers.current(handler)
-        let textEdit = URL(fileURLWithPath: "/System/Applications/TextEdit.app")
-        info("тип app.block.selftest открывает: \(previous?.path ?? "никто")")
-        let assigned = await withTimeout(15) { try? await Handlers.set(handler, to: textEdit) }
-        await wait(3) { Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit" }
-        ok = check(assigned && Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit", "программа по умолчанию назначена (TextEdit)") && ok
-        if let previous {
-            _ = await withTimeout(15) { try? await Handlers.set(handler, to: previous) }
-            await wait(3) { Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL }
-            ok = check(Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL, "и возвращена прежняя (\(previous.lastPathComponent))") && ok
+        info("тип app.block.selftest открывает: \(previous?.path ?? "никто"); пробная программа: \(probe?.path ?? "не создана")")
+        if let probe {
+            var error = ""
+            do { try await Handlers.set(handler, to: probe) } catch { error = "\(error)" }
+            await wait(3) { Handlers.bundleID(of: Handlers.current(handler)) == "app.block.probe" }
+            ok = check(Handlers.bundleID(of: Handlers.current(handler)) == "app.block.probe", "программа по умолчанию назначена (\(Handlers.current(handler)?.lastPathComponent ?? "никто")\(error.isEmpty ? "" : ", " + error))") && ok
+            if let previous {
+                try? await Handlers.set(handler, to: previous)
+                await wait(3) { Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL }
+                ok = check(Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL, "и возвращена прежняя (\(previous.lastPathComponent))") && ok
+            }
         }
 
         info("шаг 4: сторож запуска")
@@ -254,9 +278,12 @@ enum SelfTest {
             let map: [String: CatalogApp?] = [bundle: nil]
             model.guardian.update(map)
             let started = Date()
-            NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration(), completionHandler: nil)
+            NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration()) { app, error in
+                print("· запуск «\(name)»: \(app.map { "pid \($0.processIdentifier)" } ?? "нет") \(error.map { "\($0)" } ?? "")")
+            }
             await wait(8) { model.guardian.lastStop?.bundle == bundle }
             await wait(2) { NSRunningApplication.runningApplications(withBundleIdentifier: bundle).allSatisfy(\.isTerminated) }
+            info("запущено сейчас: \(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier).filter { $0.hasPrefix("com.apple.") }.suffix(8))")
             let stop = model.guardian.lastStop
             let alive = NSRunningApplication.runningApplications(withBundleIdentifier: bundle).filter { !$0.isTerminated }
             info("«\(name)»: закрыта через \(String(format: "%.2f", stop?.seconds ?? -1)) с после старта процесса, \(String(format: "%.2f", Date().timeIntervalSince(started))) с от запроса")

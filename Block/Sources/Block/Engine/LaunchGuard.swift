@@ -12,6 +12,7 @@ final class LaunchGuard {
     /// Уже обработанные процессы: о запуске сообщают дважды (начало и готовность).
     @ObservationIgnored private var handled: Set<pid_t> = []
     @ObservationIgnored private var observer: NSObjectProtocol?
+    @ObservationIgnored private var running: NSKeyValueObservation?
     @ObservationIgnored private var banner: NSPanel?
     @ObservationIgnored private var bannerTimer: Timer?
     /// Последняя остановка — для самопроверки (сколько прошло от запуска до закрытия).
@@ -28,11 +29,20 @@ final class LaunchGuard {
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
             MainActor.assumeIsolated { AppModel.shared.guardian.handle(app) }
         }
+        // Второй путь — список запущенных программ: он меняется, даже когда уведомление не пришло.
+        running = NSWorkspace.shared.observe(\.runningApplications, options: []) { _, _ in
+            DispatchQueue.main.async { MainActor.assumeIsolated { AppModel.shared.guardian.scan() } }
+        }
         // Ещё раньше: программа только начала запускаться (окна ещё нет).
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willLaunchApplicationNotification, object: nil, queue: .main) { note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else { return }
             MainActor.assumeIsolated { AppModel.shared.guardian.handle(app) }
         }
+    }
+
+    /// Проверить все запущенные программы (после изменения их списка).
+    func scan() {
+        for app in NSWorkspace.shared.runningApplications where !app.isTerminated { handle(app) }
     }
 
     func handle(_ app: NSRunningApplication) {
