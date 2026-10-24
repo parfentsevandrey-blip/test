@@ -147,6 +147,22 @@ enum SelfTest {
 
     // MARK: - Настоящая система
 
+    /// Закрыть системное окно-вопрос: его показывает служебный агент (не Finder, не Dock, не сам Block).
+    static func dismissSystemPrompt() {
+        let list = (CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]) ?? []
+        let keep: Set<String> = ["Finder", "Dock", "WindowServer", "SystemUIServer", "Control Center", "Block", "Window Manager", "Spotlight"]
+        var owners: [String: pid_t] = [:]
+        for window in list {
+            guard let name = window[kCGWindowOwnerName as String] as? String, let pid = window[kCGWindowOwnerPID as String] as? Int32 else { continue }
+            owners[name] = pid
+        }
+        info("окна на экране: \(owners.keys.sorted())")
+        for (name, pid) in owners where !keep.contains(name) && pid != getpid() && (name.contains("Agent") || name.contains("UserNotification") || name.contains("LaunchServices") || name.contains("Core")) {
+            info("закрываю окно-вопрос: \(name)")
+            kill(pid, SIGTERM)
+        }
+    }
+
     /// Пробная программа во временной папке: объявляет тип app.block.selftest, LaunchServices её знает.
     static func probeApp() -> URL? {
         let app = FileManager.default.temporaryDirectory.appendingPathComponent("BlockProbe-\(getpid()).app")
@@ -269,7 +285,7 @@ enum SelfTest {
                 // macOS спрашивает человека (системное окно) — в CI подтвердить некому; снимок экрана — в артефакте.
                 info("программа по умолчанию: macOS ждёт подтверждения человека (снимок default-handler.png)")
                 // Окно подтверждения закрывается без ответа — выбор остаётся прежним.
-                Shell.run("/usr/bin/killall", ["CoreServicesUIAgent"])
+                dismissSystemPrompt()
             } else {
                 ok = check(changed, "программа по умолчанию назначена (\(Handlers.currentBundleID(handler) ?? "никто"))") && ok
             }
