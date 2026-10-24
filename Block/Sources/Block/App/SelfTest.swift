@@ -382,6 +382,28 @@ enum SelfTest {
         } else {
             info("безопасной программы для проверки сторожа нет")
         }
+
+        info("шаг 5: плашка сторожа")
+        // 5. Плашка: показ, закрытие кнопкой, по таймеру и снова показ — окно одно и не освобождается
+        // (macOS 27 падал, когда окно уничтожалось во время обработки нажатия стеклянной кнопки).
+        let guardian = model.guardian
+        guardian.showBanner(name: "Проверка", bundle: "app.block.selftest", replacement: "Harbor", force: true)
+        await wait(1) { guardian.bannerWindow?.isVisible == true }
+        let first = guardian.bannerWindow
+        ok = check(first?.isVisible == true, "плашка показана") && ok
+        var reused = true
+        for i in 0..<25 {
+            guardian.showBanner(name: "Проверка \(i)", bundle: "app.block.selftest", replacement: nil, force: true)
+            try? await Task.sleep(for: .milliseconds(30))
+            if i.isMultiple(of: 2) { guardian.pressBannerClose() } else { guardian.hideBanner() }
+            try? await Task.sleep(for: .milliseconds(30))
+            reused = reused && guardian.bannerWindow === first
+        }
+        await wait(1) { guardian.bannerWindow?.isVisible == false }
+        ok = check(reused && guardian.bannerWindow?.isVisible == false, "25 раз показана и закрыта (кнопкой и напрямую) — окно то же, программа жива") && ok
+        guardian.showBanner(name: "Проверка", bundle: "app.block.selftest", replacement: nil, force: true)
+        await wait(8) { guardian.bannerWindow?.isVisible == false }
+        ok = check(guardian.bannerWindow?.isVisible == false && guardian.bannerWindow === first, "плашка спряталась сама через 6 с") && ok
         return ok
     }
 }

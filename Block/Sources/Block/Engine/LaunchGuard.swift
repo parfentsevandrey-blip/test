@@ -13,7 +13,11 @@ final class LaunchGuard {
     @ObservationIgnored private var handled: Set<pid_t> = []
     @ObservationIgnored private var observer: NSObjectProtocol?
     @ObservationIgnored private var running: NSKeyValueObservation?
+    /// Одна плашка на всё время работы: её только прячут и показывают с новым текстом.
+    /// Уничтожать окно нельзя — SwiftUI может ещё дорабатывать нажатие или анимацию стеклянной кнопки
+    /// в нём (так Block падал на macOS 27: вызов кода уже освобождённого окна).
     @ObservationIgnored private var banner: NSPanel?
+    @ObservationIgnored private var bannerHost: NSHostingView<GuardBanner>?
     @ObservationIgnored private var bannerTimer: Timer?
     /// Последняя остановка — для самопроверки (сколько прошло от запуска до закрытия).
     private(set) var lastStop: (bundle: String, seconds: Double)?
@@ -74,36 +78,53 @@ final class LaunchGuard {
 
     // MARK: Плашка
 
-    private func showBanner(name: String, bundle: String, replacement: String?) {
-        if SelfTest.isRunning { return }
-        hideBanner()
-        let view = GuardBanner(name: name, replacement: replacement, openOnce: { [weak self] in self?.openOnce(bundle) },
-                               close: { [weak self] in self?.hideBanner() })
-        let host = NSHostingView(rootView: view)
-        host.frame = NSRect(x: 0, y: 0, width: 360, height: 84)
-        let panel = NSPanel(contentRect: host.frame, styleMask: [.nonactivatingPanel, .borderless], backing: .buffered, defer: false)
-        panel.isFloatingPanel = true
-        panel.level = .statusBar
-        panel.backgroundColor = .clear
-        panel.isOpaque = false
-        panel.hasShadow = true
-        panel.contentView = host
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+    func showBanner(name: String, bundle: String, replacement: String?, force: Bool = false) {
+        if SelfTest.isRunning && !force { return }
+        bannerTimer?.invalidate()
+        // Кнопки плашки срабатывают после того, как SwiftUI закончит обработку нажатия.
+        let view = GuardBanner(name: name, replacement: replacement,
+                               openOnce: { DispatchQueue.main.async { AppModel.shared.guardian.openOnce(bundle) } },
+                               close: { DispatchQueue.main.async { AppModel.shared.guardian.hideBanner() } })
+        let panel: NSPanel
+        if let existing = banner, let host = bannerHost {
+            host.rootView = view
+            panel = existing
+        } else {
+            let host = NSHostingView(rootView: view)
+            host.frame = NSRect(x: 0, y: 0, width: 360, height: 84)
+            panel = NSPanel(contentRect: host.frame, styleMask: [.nonactivatingPanel, .borderless], backing: .buffered, defer: false)
+            panel.isReleasedWhenClosed = false
+            panel.isFloatingPanel = true
+            panel.level = .statusBar
+            panel.backgroundColor = .clear
+            panel.isOpaque = false
+            panel.hasShadow = true
+            panel.hidesOnDeactivate = false
+            panel.contentView = host
+            panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            banner = panel
+            bannerHost = host
+        }
         if let screen = NSScreen.main {
             let f = screen.visibleFrame
-            panel.setFrameOrigin(NSPoint(x: f.maxX - host.frame.width - 16, y: f.maxY - host.frame.height - 12))
+            panel.setFrameOrigin(NSPoint(x: f.maxX - panel.frame.width - 16, y: f.maxY - panel.frame.height - 12))
         }
         panel.orderFrontRegardless()
-        banner = panel
         bannerTimer = Timer.scheduledTimer(withTimeInterval: 6, repeats: false) { _ in
-            MainActor.assumeIsolated { AppModel.shared.guardian.hideBanner() }
+            DispatchQueue.main.async { AppModel.shared.guardian.hideBanner() }
         }
     }
 
+    /// Для самопроверки: окно плашки и нажатие её кнопок.
+    var bannerWindow: NSPanel? { banner }
+    func pressBannerClose() { bannerHost?.rootView.close() }
+    func pressBannerOpenOnce() { bannerHost?.rootView.openOnce() }
+
+    /// Спрятать плашку. Окно остаётся жить — его просто не видно.
     func hideBanner() {
         bannerTimer?.invalidate()
+        bannerTimer = nil
         banner?.orderOut(nil)
-        banner = nil
     }
 }
 
