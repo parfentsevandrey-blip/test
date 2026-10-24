@@ -58,6 +58,7 @@ jobs:
           BLOCK_SUDO: "1"
         run: |
           export BLOCK_HOME="$RUNNER_TEMP/block-home"
+          export BLOCK_SHOTS="$RUNNER_TEMP/render"; mkdir -p "$BLOCK_SHOTS"
           cp /etc/hosts "$RUNNER_TEMP/hosts.before"
           dist/Block.app/Contents/MacOS/Block --selftest-system
           cmp /etc/hosts "$RUNNER_TEMP/hosts.before" && echo "/etc/hosts не изменился"

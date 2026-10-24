@@ -54,11 +54,13 @@ enum Handlers {
             // Браузер и почту macOS меняет только с подтверждением человека — это системное окно.
             try await NSWorkspace.shared.setDefaultApplication(at: app, toOpenURLsWithScheme: handler.value)
         case .contentType, .fileExtension:
-            // Типы файлов — напрямую в базу LaunchServices: сразу и без окон (как «Изменить всё» в Finder).
+            // Типы файлов: сначала напрямую в базу LaunchServices (без окон). Если система это не приняла,
+            // — через NSWorkspace: тогда macOS может спросить подтверждение у человека.
             guard let type = type(handler) else { return }
             guard let bundle = Bundle(url: app)?.bundleIdentifier else { throw Failure.noBundle }
             let status = LSSetDefaultRoleHandlerForContentType(type.identifier as CFString, .all, bundle as CFString)
-            if status != noErr { throw Failure.status(status) }
+            if status == noErr && currentBundleID(handler) == bundle { return }
+            try await NSWorkspace.shared.setDefaultApplication(at: app, toOpen: type)
         }
     }
 }
