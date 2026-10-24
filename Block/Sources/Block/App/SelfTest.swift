@@ -490,8 +490,16 @@ enum SelfTest {
         let port = model.state.lock.port
         let curlBase = ["-sS", "-o", "/dev/null", "-w", "%{http_code}", "--max-time", "15"]
         // curl — вне главного потока: решения шлюза принимаются на главном.
+        // Сам example.com иногда на секунду-другую отвечает 503 — это не шлюз; повторить.
         func curl(_ args: [String]) async -> String {
-            await Task.detached { Shell.run("/usr/bin/curl", curlBase + args, timeout: 25).output.trimmingCharacters(in: .whitespacesAndNewlines) }.value
+            var out = ""
+            for attempt in 0..<4 {
+                if attempt > 0 { try? await Task.sleep(for: .seconds(2)) }
+                out = await Task.detached { Shell.run("/usr/bin/curl", curlBase + args, timeout: 25).output.trimmingCharacters(in: .whitespacesAndNewlines) }.value
+                guard out.suffix(3).hasPrefix("5") else { break }
+                info("сервер ответил \(out.suffix(3)) — повтор")
+            }
+            return out
         }
         func code(_ s: String) -> String { String(s.suffix(3)) }
 
