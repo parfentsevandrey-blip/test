@@ -89,6 +89,7 @@ struct MonitorView: View {
             Spacer()
             Toggle("Закрывать само", isOn: Binding(get: { model.state.monitorAuto }, set: { model.state.monitorAuto = $0; model.state.save() }))
                 .toggleStyle(.switch)
+                .fixedSize()
                 .help(model.state.networkMethod == .veil ? "Через Veil — сразу и без пароля." : "Через hosts — найденное копится, закрывается одним паролем.")
             let open = model.suspicious
             Button("Закрыть всё: \(open.count)") { Task { await model.blockHosts(open.map(\.endpoint)) } }
