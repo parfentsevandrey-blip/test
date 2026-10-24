@@ -227,8 +227,9 @@ enum SelfTest {
                    "SOCKS5: имя, IPv4, неполный запрос") && ok
         let chrome = ProcessFinder.app(path: "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper")
         let curlApp = ProcessFinder.app(path: "/usr/bin/curl")
-        ok = check(chrome.path == "/Applications/Google Chrome.app" && curlApp.name == "curl" && curlApp.isApple && !chrome.isApple,
-                   "помощник программы относится к самой программе; curl — программа командной строки") && ok
+        let daemon2 = ProcessFinder.app(path: "/usr/libexec/nsurlsessiond")
+        ok = check(chrome.path == "/Applications/Google Chrome.app" && curlApp.name == "curl" && !curlApp.isApple && !chrome.isApple && daemon2.isApple,
+                   "помощник программы относится к самой программе; curl — утилита, о ней спрашивают; nsurlsessiond — служба Apple") && ok
         let fields = NetLock.parseFields("Enabled: Yes\nServer: 127.0.0.1\nPort: 41080\nAuthenticated Proxy Enabled: 0\n")
         ok = check(fields["Enabled"] == "Yes" && fields["Server"] == "127.0.0.1" && fields["Port"] == "41080", "разбор networksetup") && ok
         let legacy = #"{"baseline":{},"journal":[],"monitorOn":true}"#

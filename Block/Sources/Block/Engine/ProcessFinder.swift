@@ -84,8 +84,10 @@ nonisolated enum ProcessFinder {
             bundlePath = parts.prefix(i + 1).joined(separator: "/")
             break
         }
-        let isApple = path.hasPrefix("/System/") || path.hasPrefix("/usr/") || path.hasPrefix("/bin/") || path.hasPrefix("/sbin/")
-            || path.hasPrefix("/Library/Apple/")
+        // Службы и программы Apple (их без спроса не выпускают). Утилиты из /usr/bin и /bin — нет:
+        // их запускает человек сам (git, curl) — о них спрашивают, как об обычных программах.
+        let isApple = path.hasPrefix("/System/") || path.hasPrefix("/usr/libexec/") || path.hasPrefix("/usr/sbin/")
+            || path.hasPrefix("/sbin/") || path.hasPrefix("/Library/Apple/")
         if let bundlePath, let bundle = Bundle(path: bundlePath) {
             let name = (bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
                 ?? (bundle.object(forInfoDictionaryKey: "CFBundleName") as? String)
