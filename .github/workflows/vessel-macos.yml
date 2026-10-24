@@ -1,0 +1,103 @@
+name: Vessel (macOS)
+
+on:
+  push:
+    paths:
+      - "Vessel/**"
+      - ".github/workflows/vessel-macos.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: vessel-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: Vessel
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE"
+          echo "Xcode: $XCODE"; sw_vers; swift --version
+
+      # Постоянный сертификат подписи из секретов (без них — ad-hoc), см. Harbor/README.md.
+      - name: Signing identity
+        env:
+          HARBOR_SIGNING_P12: ${{ secrets.HARBOR_SIGNING_P12 }}
+          HARBOR_SIGNING_PASSWORD: ${{ secrets.HARBOR_SIGNING_PASSWORD }}
+        run: ../Harbor/release/sign-setup.sh
+
+      - name: Build Vessel.app + DMG
+        run: ./scripts/build.sh
+
+      # BLAKE2b, разбор сумм и списков файлов, версии, каталог, адреса Commons — без сети.
+      - name: Self-test logic
+        run: dist/Vessel.app/Contents/MacOS/Vessel --selftest-logic
+
+      # Живой интернет: каждый вариант каждого дистрибутива находится на сервере проекта вместе с суммой;
+      # Alpine скачивается с обрывом и докачкой; скриншоты с Commons кэшируются для демо-экранов.
+      - name: Self-test net
+        timeout-minutes: 15
+        run: |
+          export VESSEL_HOME="$RUNNER_TEMP/vessel-home"
+          dist/Vessel.app/Contents/MacOS/Vessel --selftest-net
+
+      # Машина из скачанного образа: конфигурация Virtualization.framework, диск, запуск — если раннер умеет.
+      - name: Self-test vm
+        timeout-minutes: 6
+        run: |
+          export VESSEL_HOME="$RUNNER_TEMP/vessel-home"
+          dist/Vessel.app/Contents/MacOS/Vessel --selftest-vm
+
+      # Настоящее окно с выдуманными машинами и загрузками; снимки дистрибутивов — из кэша проверки сети.
+      - name: UI screenshots
+        run: |
+          OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
+          export VESSEL_HOME="$RUNNER_TEMP/vessel-home"
+          for S in hot popular catalog filtered family-arch detail-ubuntu detail-fedora detail-mint install-fedora machines downloads machine; do
+            dist/Vessel.app/Contents/MacOS/Vessel --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
+            PID=$!
+            sleep 12
+            screencapture -x "$OUT/window-$S.png" || echo "screencapture не сработал"
+            kill $PID 2>/dev/null || true
+            sleep 2
+          done
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Vessel-render
+          path: ${{ runner.temp }}/render
+          compression-level: 0
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Vessel-dmg
+          path: Vessel/dist/Vessel.dmg
+          if-no-files-found: error
+          compression-level: 0
+
+      # Зелёная сборка сразу попадает в каталог Harbor (см. Harbor/README.md).
+      - name: Publish to Harbor catalog
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: ../Harbor/release/publish.sh vessel dist/Vessel.app "$RUNNER_TEMP/render/window-hot.png" "$RUNNER_TEMP/render/window-detail-ubuntu.png" "$RUNNER_TEMP/render/window-catalog.png" "$RUNNER_TEMP/render/window-install-fedora.png" "$RUNNER_TEMP/render/window-machines.png"
+
+  catalog:
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/harbor-catalog.yml
