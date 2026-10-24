@@ -62,6 +62,26 @@ enum SelfTest {
         while Date() < deadline && !done() { try? await Task.sleep(for: .milliseconds(30)) }
     }
 
+    /// Что сейчас отвечает резолвер — для журнала проверки.
+    static func addresses(_ host: String) -> [String] {
+        var hints = addrinfo()
+        hints.ai_family = AF_UNSPEC
+        hints.ai_socktype = SOCK_STREAM
+        var result: UnsafeMutablePointer<addrinfo>?
+        guard getaddrinfo(host, nil, &hints, &result) == 0, let first = result else { return ["нет ответа"] }
+        defer { freeaddrinfo(first) }
+        var list: [String] = []
+        var node: UnsafeMutablePointer<addrinfo>? = first
+        while let n = node {
+            var buffer = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            if getnameinfo(n.pointee.ai_addr, n.pointee.ai_addrlen, &buffer, socklen_t(buffer.count), nil, 0, NI_NUMERICHOST) == 0 {
+                list.append(String(decoding: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self))
+            }
+            node = n.pointee.ai_next
+        }
+        return list
+    }
+
     static func spin(_ seconds: Double, until done: () -> Bool = { false }) {
         let deadline = Date().addingTimeInterval(seconds)
         while Date() < deadline && !done() { RunLoop.main.run(mode: .default, before: Date().addingTimeInterval(0.02)) }
@@ -369,15 +389,19 @@ enum SelfTest {
             await model.blockHosts(["xp.apple.com", "swscan.apple.com"])
             let inFile = HostsFile.blockedHosts(in: HostsFile.read())
             await wait(4) { HostsFile.resolvesToNowhere("xp.apple.com") }
-            if !HostsFile.resolvesToNowhere("xp.apple.com") {
-                // Резолвер иногда держит старый ответ дольше — сбросить кэш, как это делает и сам Block.
+            // Тот же адрес только что открывали на шаге 2 — резолвер может держать настоящий ответ.
+            // Сбросить кэш, как это делает и сам Block, и подождать; несколько попыток.
+            for _ in 0..<3 where !HostsFile.resolvesToNowhere("xp.apple.com") {
+                Shell.run("/usr/bin/sudo", ["-n", "/usr/bin/dscacheutil", "-flushcache"])
                 Shell.run("/usr/bin/sudo", ["-n", "/usr/bin/killall", "-HUP", "mDNSResponder"])
-                await wait(10) { HostsFile.resolvesToNowhere("xp.apple.com") }
+                await wait(8) { HostsFile.resolvesToNowhere("xp.apple.com") }
             }
-            info("найденное в hosts: \(inFile.sorted()); состояние правила: \(model.observedRule.map { model.status(of: $0).label } ?? "-")")
-            ok = check(inFile.contains("xp.apple.com") && !inFile.contains("swscan.apple.com") && HostsFile.resolvesToNowhere("xp.apple.com")
-                       && !HostsFile.resolvesToNowhere("swscan.apple.com"),
-                       "найденное наблюдением закрыто (xp.apple.com), обновления открыты") && ok
+            info("найденное в hosts: \(inFile.sorted()); состояние правила: \(model.observedRule.map { model.status(of: $0).label } ?? "-"); "
+                 + "xp.apple.com → \(addresses("xp.apple.com")), swscan.apple.com → \(addresses("swscan.apple.com"))")
+            ok = check(inFile.contains("xp.apple.com") && !inFile.contains("swscan.apple.com"),
+                       "найденное наблюдением записано в hosts (xp.apple.com), обновления — нет") && ok
+            ok = check(HostsFile.resolvesToNowhere("xp.apple.com") && !HostsFile.resolvesToNowhere("swscan.apple.com"),
+                       "резолвер: найденное закрыто, обновления открыты") && ok
             await model.unblockHost("xp.apple.com")
             ok = check(HostsFile.read() == before && model.state.observedHosts.isEmpty, "и открыто обратно — hosts как был") && ok
         }
