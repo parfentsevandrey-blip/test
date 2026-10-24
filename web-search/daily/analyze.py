@@ -46,6 +46,7 @@ from common import DATA, log, read_jsonl, today, write_jsonl
 FRESH_YEAR = 2012
 SEGS = ["застройщик", "переуступка", "свежая вторичка", "вторичка"]
 PAID = ["top3", "premium", "colorized", "auction"]
+MASS_GONE = 50  # столько лотов одного ЖК за день = отзыв фида, а не продажи
 
 
 def days_upto(day):
@@ -267,6 +268,9 @@ def outcomes(df, day, days):
     new_fp = set(fingerprint(df.loc[new]))  # перепубликация = новый id с тем же отпечатком (одинаковые планировки
     gone = prev.loc[prev.index.difference(df.index)].copy()  # на одном этаже не должны склеиваться с живыми лотами)
     gone["event"] = np.where(fingerprint(gone).isin(new_fp), "перепубликован", "снят")
+    # отзыв выгрузки застройщика: 50+ лотов одного ЖК за день (24.10: «Веер» -- 214) -- не продажи
+    batch = gone[gone["event"] == "снят"].groupby("jk_id")["id"].transform("count")
+    gone.loc[batch.index[batch >= MASS_GONE], "event"] = "снят пакетом"
     both = df.index.intersection(prev.index)
     ch = pd.DataFrame({"price_was": prev.loc[both, "price"], "price_now": df.loc[both, "price"],
                        "booked_was": prev.loc[both, "booked"], "booked_now": df.loc[both, "booked"]})
@@ -295,6 +299,11 @@ def validation(day, days, df):
         m = pd.DataFrame(read_jsonl(p)).set_index("id")
         new_fp = set(df.loc[~df.index.isin(m.index), "fp"])
         m["gone"] = ~m.index.isin(cur) & ~m["fp"].isin(new_fp)
+        if "jk_id" not in m and os.path.exists(os.path.join(DATA, d0, "lots.jsonl.gz")):  # метрики до 24.10 -- без ЖК
+            m["jk_id"] = m.index.map({r["id"]: r.get("jk_id") for r in read_jsonl(os.path.join(DATA, d0, "lots.jsonl.gz"))})
+        if "jk_id" in m:  # пакетные снятия (отзыв фида) не считаются уходом
+            per_jk = m[m["gone"] & m["jk_id"].notna()].groupby("jk_id").size()
+            m.loc[m["jk_id"].isin(per_jk[per_jk >= MASS_GONE].index), "gone"] = False
         was = m["booked"].eq(True) if "booked" in m else pd.Series(False, index=m.index)
         m["booked_new"] = m.index.map(booked_now).fillna(False).astype(bool) & ~was
         m["verdict"] = m["verdict"].fillna("").replace("", "не кандидат")
@@ -365,7 +374,7 @@ def main():
     hot = list(dict.fromkeys(list(v[v["candidate"]].sort_values("excess", ascending=False).index) +
                              list(v.sort_values("excess", ascending=False).index)))[: a.hot]
     json.dump([int(i) for i in hot], open(os.path.join(DATA, "hot.json"), "w"))
-    cols = ["id", "seg", "fp", "excess", "idx_peer", "vpd", "vpd_n", "rel_price", "verdict", "flags", "price", "booked"]
+    cols = ["id", "seg", "fp", "excess", "idx_peer", "vpd", "vpd_n", "rel_price", "verdict", "flags", "price", "booked", "jk_id"]
     write_jsonl(os.path.join(DATA, a.day, "metrics.jsonl.gz"),
                 (dict(zip(cols, (None if pd.isna(x) else x for x in r))) for r in v[cols].itertuples(index=False)))
 
