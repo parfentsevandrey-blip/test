@@ -246,7 +246,12 @@ nonisolated enum NetLock {
             let q = Shell.quote(p.service)
             func restore(_ set: String, _ state: String, _ e: ProxySnapshot.Entry) -> [String] {
                 var out: [String] = []
-                if !e.server.isEmpty { out.append("\(networksetup) \(set) \(q) \(Shell.quote(e.server)) \(e.port) off") }
+                if e.server.isEmpty {
+                    // Сервера не было: стереть адрес шлюза (если networksetup не примет пустой — не страшно, прокси выключен).
+                    out.append("(\(networksetup) \(set) \(q) '' 0 off 2>/dev/null || true)")
+                } else {
+                    out.append("\(networksetup) \(set) \(q) \(Shell.quote(e.server)) \(e.port) off")
+                }
                 out.append("\(networksetup) \(state) \(q) \(e.enabled ? "on" : "off")")
                 return out
             }

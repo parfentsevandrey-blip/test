@@ -36,7 +36,7 @@ enum DemoUI {
             rule(app("Harbor", "/Applications/Harbor.app", "app.harbor.store"), .allow, ["github.com:443", "objects.githubusercontent.com:443"], 12, 0, 22, 90),
             rule(app("Zoom", "/Applications/zoom.us.app", "us.zoom.xos"), .deny, ["log.zoom.us:443", "us05web.zoom.us:443"], 0, 31, 0, 12),
             rule(app("Microsoft AutoUpdate", "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app", "com.microsoft.autoupdate2"), .deny, ["officecdnmac.microsoft.com:443"], 0, 18, 0, 25),
-            rule(app("git", "/usr/bin/git", nil, apple: true), .allow, ["github.com:443"], 7, 0, 3, 55),
+            rule(app("git", "/usr/bin/git", nil), .allow, ["github.com:443"], 7, 0, 3, 55),
             rule(app("Notion", "/Applications/Notion.app", "notion.id"), .ask, ["www.notion.so:443"], 0, 2, 0, 5),
             rule(app("softwareupdated", "", nil, system: true, apple: true), .ask, ["swscan.apple.com:443"], 0, 9, 0, 30),
             rule(app("Помощь Apple", "/System/Library/CoreServices/HelpViewer.app", "com.apple.helpviewer", apple: true), .deny, ["help.apple.com:443"], 0, 4, 0, 70),

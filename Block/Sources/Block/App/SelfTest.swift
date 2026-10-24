@@ -526,6 +526,9 @@ enum SelfTest {
         ok = check(pfAfter == pfBefore, "pf как был: \(pfAfter ? "включён" : "выключен")") && ok
         let proxyAfter = services.map(NetLock.snapshot)
         ok = check(proxyAfter == proxyBefore, "прокси всех служб как были") && ok
+        if proxyAfter != proxyBefore {
+            for (a, b) in zip(proxyBefore, proxyAfter) where a != b { info("было: \(a)"); info("стало: \(b)") }
+        }
         r = await curl(["--noproxy", "*", "https://example.com"])
         ok = check(code(r) == "200", "после снятия прямой выход снова открыт (\(code(r)))") && ok
         guardNet.stopGateway()
