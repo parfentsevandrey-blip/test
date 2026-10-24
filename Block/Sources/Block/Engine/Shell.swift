@@ -9,7 +9,7 @@ nonisolated enum Shell {
     }
 
     @discardableResult
-    static func run(_ tool: String, _ args: [String], input: String? = nil) -> Result {
+    static func run(_ tool: String, _ args: [String], input: String? = nil, timeout: Double = 20) -> Result {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: tool)
         process.arguments = args
@@ -23,6 +23,11 @@ nonisolated enum Shell {
             try? inPipe.fileHandleForWriting.close()
         }
         do { try process.run() } catch { return Result(status: -1, output: error.localizedDescription) }
+        // Зависшая команда не держит Block: через timeout секунд процесс останавливается.
+        let pid = process.processIdentifier
+        DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
+            if kill(pid, 0) == 0 { kill(pid, SIGKILL) }
+        }
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         process.waitUntilExit()
         return Result(status: process.terminationStatus, output: String(decoding: data, as: UTF8.self))

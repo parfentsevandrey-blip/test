@@ -44,6 +44,16 @@ enum SelfTest {
 
     final class ResultBox { var value: Bool? }
 
+    /// Дождаться асинхронной операции, но не дольше `seconds` (LaunchServices иногда не отвечает).
+    static func withTimeout(_ seconds: Double, _ body: @escaping @MainActor () async -> Void) async -> Bool {
+        let box = ResultBox()
+        Task { @MainActor in await body(); box.value = true }
+        let deadline = Date().addingTimeInterval(seconds)
+        while box.value == nil && Date() < deadline { try? await Task.sleep(for: .milliseconds(50)) }
+        if box.value == nil { info("не дождались за \(Int(seconds)) с") }
+        return box.value == true
+    }
+
     static func spin(_ seconds: Double, until done: () -> Bool = { false }) {
         let deadline = Date().addingTimeInterval(seconds)
         while Date() < deadline && !done() { RunLoop.main.run(mode: .default, before: Date().addingTimeInterval(0.02)) }
@@ -169,8 +179,10 @@ enum SelfTest {
             default: return false
             }
         }
+        info("шаг 1: снимок")
         let before = fingerprint(local)
         info("правил без пароля: \(local.count); Apple в Dock: \(Dock.present(Set(Catalog.guardedBundles)))")
+        info("шаг 1: применение")
         await model.apply(local)
         model.refresh()
         for rule in local {
@@ -182,6 +194,7 @@ enum SelfTest {
                 ok = check(st == .blocked, "\(rule.title): \(st.label)") && ok
             }
         }
+        info("шаг 1: возврат")
         let during = fingerprint(local)
         ok = check(during != before || local.isEmpty, "изменения действительно дошли до системы") && ok
         await model.revertAll()
@@ -195,6 +208,7 @@ enum SelfTest {
 
         // 2. Права администратора: системные настройки и /etc/hosts (в CI — sudo -n).
         if Privileged.usesSudo {
+            info("шаг 2: права администратора")
             let hostsBefore = HostsFile.read()
             let diagnostics = Catalog.rules.filter(\.action.isSystemPlist)
             let net = Catalog.network.filter { $0.id != "net.icloud" }
@@ -212,23 +226,21 @@ enum SelfTest {
         }
 
         // 3. Программа по умолчанию: свой тип файла → TextEdit и обратно.
+        info("шаг 3: программа по умолчанию")
         let handler = Handler(kind: .contentType, value: "app.block.selftest")
         let previous = Handlers.current(handler)
         let textEdit = URL(fileURLWithPath: "/System/Applications/TextEdit.app")
         info("тип app.block.selftest открывает: \(previous?.path ?? "никто")")
-        do {
-            try await Handlers.set(handler, to: textEdit)
-            spin(3) { Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit" }
-            ok = check(Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit", "программа по умолчанию назначена (TextEdit)") && ok
-            if let previous {
-                try await Handlers.set(handler, to: previous)
-                spin(3) { Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL }
-                ok = check(Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL, "и возвращена прежняя (\(previous.lastPathComponent))") && ok
-            }
-        } catch {
-            ok = check(false, "LaunchServices: \(error.localizedDescription)") && ok
+        let assigned = await withTimeout(15) { try? await Handlers.set(handler, to: textEdit) }
+        spin(3) { Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit" }
+        ok = check(assigned && Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit", "программа по умолчанию назначена (TextEdit)") && ok
+        if let previous {
+            _ = await withTimeout(15) { try? await Handlers.set(handler, to: previous) }
+            spin(3) { Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL }
+            ok = check(Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL, "и возвращена прежняя (\(previous.lastPathComponent))") && ok
         }
 
+        info("шаг 4: сторож запуска")
         // 4. Сторож запуска: безопасная программа Apple закрывается почти сразу.
         let candidates = [("com.apple.tips", "Советы"), ("com.apple.Chess", "Шахматы"), ("com.apple.Stickies", "Записки")]
         if let candidate = candidates.first(where: { Handlers.appURL($0.0) != nil }), let url = Handlers.appURL(candidate.0) {
