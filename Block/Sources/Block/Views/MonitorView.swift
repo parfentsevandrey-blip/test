@@ -144,6 +144,10 @@ private struct ProcessCard: View {
                     HStack(spacing: 10) {
                         Text(o.endpoint).font(.system(size: 12, design: .monospaced)).lineLimit(1)
                         if o.named && o.endpoint != o.ip { Text(o.ip).font(.system(size: 10, design: .monospaced)).foregroundStyle(.tertiary).lineLimit(1) }
+                        if let shared = o.shared {
+                            Text("общий адрес Apple: \(shared.joined(separator: ", "))…").font(.system(size: 10)).foregroundStyle(.tertiary).lineLimit(1)
+                                .help("По адресу нельзя узнать, какое из имён спрашивал процесс: за ним стоит сеть доставки Apple.")
+                        }
                         Spacer()
                         if o.verdict != worst { VerdictBadge(verdict: o.verdict) }
                         Text(bytes(o.bytesIn + o.bytesOut)).font(.system(size: 11).monospacedDigit()).foregroundStyle(.secondary)

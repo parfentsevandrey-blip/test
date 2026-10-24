@@ -323,7 +323,11 @@ enum SelfTest {
         if Privileged.usesSudo {
             let before = HostsFile.read()
             await model.blockHosts(["xp.apple.com", "swscan.apple.com"])
-            ok = check(HostsFile.resolvesToNowhere("xp.apple.com") && !HostsFile.resolvesToNowhere("swscan.apple.com"),
+            let inFile = HostsFile.blockedHosts(in: HostsFile.read())
+            await wait(4) { HostsFile.resolvesToNowhere("xp.apple.com") }
+            info("найденное в hosts: \(inFile.sorted()); состояние правила: \(model.observedRule.map { model.status(of: $0).label } ?? "-")")
+            ok = check(inFile.contains("xp.apple.com") && !inFile.contains("swscan.apple.com") && HostsFile.resolvesToNowhere("xp.apple.com")
+                       && !HostsFile.resolvesToNowhere("swscan.apple.com"),
                        "найденное наблюдением закрыто (xp.apple.com), обновления открыты") && ok
             await model.unblockHost("xp.apple.com")
             ok = check(HostsFile.read() == before && model.state.observedHosts.isEmpty, "и открыто обратно — hosts как был") && ok

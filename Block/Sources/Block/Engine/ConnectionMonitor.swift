@@ -88,6 +88,8 @@ nonisolated struct Sighting: Codable, Identifiable, Sendable, Equatable {
     var bytesIn: Int64
     var bytesOut: Int64
     var verdict: Verdict
+    /// Общий адрес CDN Apple: за ним несколько известных имён — какое именно, по адресу не узнать.
+    var shared: [String]?
 
     var id: String { process + "|" + endpoint }
     var named: Bool { endpoint != ip }
@@ -105,7 +107,7 @@ final class ConnectionMonitor {
     /// Сколько процессов nettop показал в последней выборке (для проверки, что он видит не только свои).
     private(set) var lastProcessCount = 0
     @ObservationIgnored private var timer: Timer?
-    @ObservationIgnored private var names: [String: String] = [:]
+    @ObservationIgnored private var names: [String: [String]] = [:]
     @ObservationIgnored private var reverse: [String: String] = [:]
     @ObservationIgnored private var namesRefreshed = Date.distantPast
     @ObservationIgnored private var sampling = false
@@ -174,7 +176,9 @@ final class ConnectionMonitor {
             paths[s.pid] = path
             let name = path.isEmpty ? s.process : URL(fileURLWithPath: path).lastPathComponent
             guard AppleKnowledge.isApple(path: path, name: name) else { continue }
-            let host = names[s.ip] ?? reverse[s.ip]
+            // Имя — только если адрес однозначно его: общий адрес CDN честно остаётся адресом.
+            let known = names[s.ip] ?? []
+            let host = known.count == 1 ? known[0] : (known.isEmpty ? reverse[s.ip] : nil)
             let endpoint = host ?? s.ip
             let id = name + "|" + endpoint
             if var o = map[id] {
@@ -186,7 +190,8 @@ final class ConnectionMonitor {
                 map[id] = o
             } else {
                 let o = Sighting(process: name, pid: s.pid, path: path, endpoint: endpoint, ip: s.ip, port: s.port, firstSeen: now, lastSeen: now,
-                                    samples: 1, bytesIn: s.bytesIn, bytesOut: s.bytesOut, verdict: AppleKnowledge.verdict(process: name, host: host))
+                                    samples: 1, bytesIn: s.bytesIn, bytesOut: s.bytesOut, verdict: AppleKnowledge.verdict(process: name, host: host),
+                                    shared: known.count > 1 ? Array(known.prefix(4)) : nil)
                 map[id] = o
                 fresh.append(o)
             }
@@ -212,10 +217,10 @@ final class ConnectionMonitor {
     }
 
     /// Адреса известных имён Apple (одно имя может стоять за многими адресами CDN).
-    nonisolated static func resolveKnown() -> [String: String] {
-        var map: [String: String] = [:]
+    nonisolated static func resolveKnown() -> [String: [String]] {
+        var map: [String: [String]] = [:]
         for host in AppleKnowledge.knownHosts {
-            for ip in addresses(of: host) where map[ip] == nil { map[ip] = host }
+            for ip in Set(addresses(of: host)) { map[ip, default: []].append(host) }
         }
         return map
     }

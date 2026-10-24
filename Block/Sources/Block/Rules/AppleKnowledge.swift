@@ -118,6 +118,12 @@ nonisolated enum AppleKnowledge {
         AppleProcess(name: "adprivacyd", title: "Рекламная атрибуция", verdict: .ads, agent: "com.apple.ap.adprivacyd"),
         AppleProcess(name: "promotedcontentd", title: "Продвигаемый контент (реклама Apple)", verdict: .ads, agent: "com.apple.ap.promotedcontentd"),
         AppleProcess(name: "adservicesd", title: "Рекламные службы Apple", verdict: .ads),
+        AppleProcess(name: "amsengagementd", title: "Маркетинг App Store и Apple Music (предложения, баннеры)", verdict: .ads, agent: "com.apple.amsengagementd"),
+        AppleProcess(name: "amsaccountsd", title: "Учётная запись App Store и Apple Music", verdict: .service, agent: "com.apple.amsaccountsd"),
+        AppleProcess(name: "amsondevicestoraged", title: "Данные Apple Media Services на Mac", verdict: .telemetry),
+        AppleProcess(name: "biomesyncd", title: "Синхронизация данных об использовании (Biome)", verdict: .telemetry, agent: "com.apple.biomesyncd"),
+        AppleProcess(name: "duetexpertd", title: "Подсказки на основе ваших привычек", verdict: .suggestions, agent: "com.apple.duetexpertd"),
+        AppleProcess(name: "routined", title: "Значимые места (история перемещений)", verdict: .suggestions),
         // Подсказки и Siri.
         AppleProcess(name: "parsecd", title: "Подсказки Siri в поиске", verdict: .suggestions, agent: "com.apple.parsecd"),
         AppleProcess(name: "assistantd", title: "Siri", verdict: .suggestions, agent: "com.apple.assistantd"),
