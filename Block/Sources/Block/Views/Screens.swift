@@ -50,7 +50,7 @@ private struct GuardCard: View {
                     .opacity(state.isBlocked ? 0.55 : 1)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(rule.title.replacingOccurrences(of: " не запускается", with: "")).font(.system(size: 14, weight: .semibold))
-                    StateBadge(state: state)
+                    StateBadge(state: state, level: rule.level)
                 }
                 Spacer()
                 if state.counts || state.isBlocked {

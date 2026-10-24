@@ -4,9 +4,22 @@ import SwiftUI
 /// Значок состояния правила.
 struct StateBadge: View {
     let state: RuleState
+    /// Уровень правила: «выключено» по-разному звучит для настройки, программы по умолчанию и сторожа.
+    var level: Level?
+
+    private var text: String {
+        guard state == .blocked, let level else { return state.label }
+        switch level {
+        case .defaults: return "назначено"
+        case .launchGuard: return "закрывается при запуске"
+        case .network: return "адреса закрыты"
+        case .services: return "остановлена"
+        case .settings: return state.label
+        }
+    }
 
     var body: some View {
-        Label(state.label, systemImage: symbol)
+        Label(text, systemImage: symbol)
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(color)
             .padding(.horizontal, 8)
@@ -96,7 +109,7 @@ struct RuleRow: View {
             }
             Spacer(minLength: 12)
             VStack(alignment: .trailing, spacing: 8) {
-                StateBadge(state: state)
+                StateBadge(state: state, level: rule.level)
                 control(state)
             }
         }

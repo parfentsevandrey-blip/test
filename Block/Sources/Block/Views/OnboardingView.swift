@@ -58,10 +58,17 @@ struct OnboardingView: View {
 
     private func choice(_ title: String, _ selected: Bool, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 16, weight: .semibold)).frame(width: 120, height: 48)
+            HStack(spacing: 6) {
+                if selected { Image(systemName: "checkmark") }
+                Text(title)
+            }
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(selected ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
+            .frame(width: 120, height: 48)
+            .background(selected ? AnyShapeStyle(Color.indigo.gradient) : AnyShapeStyle(.clear), in: RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(.plain)
-        .glassEffect(selected ? .regular.tint(.indigo.opacity(0.35)).interactive() : .regular.interactive(), in: .rect(cornerRadius: 14))
+        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14))
     }
 
     private var changes: [Rule] { model.preview(for: profile) }
