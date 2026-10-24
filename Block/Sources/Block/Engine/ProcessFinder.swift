@@ -99,10 +99,16 @@ nonisolated enum ProcessFinder {
     }
 
     /// Программа за клиентом шлюза.
+    /// - внутри .app (помощники Chrome, Electron) — сама программа;
+    /// - служба XPC (сетевой процесс WebKit) — программа, для которой она работает;
+    /// - обычный исполняемый файл (curl, git, node) — он сам, а не Терминал, который его запустил.
     static func identify(clientPort: UInt16, serverPort: UInt16) -> NetApp {
         guard let pid = pid(clientPort: clientPort, serverPort: serverPort) else { return .unknownSystem }
-        let owner = responsible(pid)
-        let ownerPath = path(of: owner)
-        return app(path: ownerPath.isEmpty ? path(of: pid) : ownerPath)
+        let own = path(of: pid)
+        if own.contains(".xpc/") {
+            let ownerPath = path(of: responsible(pid))
+            if !ownerPath.isEmpty { return app(path: ownerPath) }
+        }
+        return app(path: own)
     }
 }
