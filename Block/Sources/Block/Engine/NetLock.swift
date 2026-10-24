@@ -286,17 +286,39 @@ nonisolated enum NetLock {
             _ = fcntl(fd, F_SETFL, flags | O_NONBLOCK)
             let r = withUnsafePointer(to: &addr) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { connect(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) } }
             if r == 0 { sawOpen = true; continue }
-            if errno == ECONNREFUSED { sawRefused = true; continue }
-            guard errno == EINPROGRESS else { continue }
+            guard errno == EINPROGRESS else { sawRefused = true; continue }
             var p = pollfd(fd: fd, events: Int16(POLLOUT), revents: 0)
             guard poll(&p, 1, timeout * 1000) == 1 else { continue }
             var code: Int32 = 0
             var size = socklen_t(MemoryLayout<Int32>.size)
             getsockopt(fd, SOL_SOCKET, SO_ERROR, &code, &size)
-            if code == 0 { sawOpen = true } else if code == ECONNREFUSED { sawRefused = true }
+            if code == 0 { sawOpen = true } else { sawRefused = true }
         }
         if sawOpen { return .open }
-        return sawRefused ? .closed : .offline
+        // Фильтр отвечает по-разному (отказ, «нет маршрута», «запрещено») или молчит — с VPN и без.
+        // «Сети нет» — только когда у Mac нет ни одного подключения с адресом.
+        return sawRefused || hasNetwork() ? .closed : .offline
+    }
+
+    /// Есть ли подключение с настоящим адресом (не петля и не 169.254 / fe80 без сети).
+    static func hasNetwork() -> Bool {
+        var list: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&list) == 0, let first = list else { return false }
+        defer { freeifaddrs(first) }
+        var node: UnsafeMutablePointer<ifaddrs>? = first
+        while let n = node {
+            node = n.pointee.ifa_next
+            let flags = Int32(n.pointee.ifa_flags)
+            guard flags & IFF_UP != 0, flags & IFF_RUNNING != 0, flags & IFF_LOOPBACK == 0, let addr = n.pointee.ifa_addr else { continue }
+            if addr.pointee.sa_family == sa_family_t(AF_INET) {
+                let ip = addr.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { UInt32(bigEndian: $0.pointee.sin_addr.s_addr) }
+                if ip >> 16 != 0xA9FE { return true }   // не 169.254.x.x
+            } else if addr.pointee.sa_family == sa_family_t(AF_INET6) {
+                let first = addr.withMemoryRebound(to: sockaddr_in6.self, capacity: 1) { $0.pointee.sin6_addr.__u6_addr.__u6_addr8.0 }
+                if first & 0xE0 == 0x20 { return true }  // глобальный адрес 2000::/3
+            }
+        }
+        return false
     }
 
     /// Системный прокси сейчас указывает на шлюз (его могла поменять другая программа).

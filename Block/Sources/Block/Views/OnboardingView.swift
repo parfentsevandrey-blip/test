@@ -75,10 +75,8 @@ struct OnboardingView: View {
 
     private var preview: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Picker("", selection: $profile) {
-                ForEach([Profile.gentle, .full]) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented).labelsHidden().frame(width: 260)
+            SegmentBar(items: [Profile.gentle, .full].map { (value: $0, title: $0.title) }, selection: $profile)
+                .frame(width: 280)
             Text(profile.subtitle).font(.system(size: 12)).foregroundStyle(.secondary)
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {

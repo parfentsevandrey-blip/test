@@ -215,3 +215,55 @@ struct RuleListScreen: View {
         }
     }
 }
+
+/// Переключатель из равных частей. Системный сегментный переключатель на macOS 26–27 растёт по тексту
+/// и вылезает за отведённую ему ширину; этот всегда ровно той ширины, что ему дали, и части у него одинаковые.
+struct SegmentBar<Value: Hashable>: View {
+    let items: [(value: Value, title: String)]
+    @Binding var selection: Value
+    let tint: (Value) -> Color
+    let count: ((Value) -> Int)?
+    @Namespace private var space
+
+    init(items: [(value: Value, title: String)], selection: Binding<Value>,
+         tint: @escaping (Value) -> Color = { _ in .accentColor }, count: ((Value) -> Int)? = nil) {
+        self.items = items
+        self._selection = selection
+        self.tint = tint
+        self.count = count
+    }
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(items.indices, id: \.self) { i in
+                segment(items[i].value, items[i].title)
+            }
+        }
+        .padding(3)
+        .background(.secondary.opacity(0.12), in: Capsule())
+    }
+
+    private func segment(_ value: Value, _ title: String) -> some View {
+        let on = value == selection
+        return Button {
+            withAnimation(.snappy(duration: 0.25)) { selection = value }
+        } label: {
+            HStack(spacing: 5) {
+                Text(title).lineLimit(1).minimumScaleFactor(0.75)
+                if let count {
+                    Text("\(count(value))").monospacedDigit().opacity(on ? 0.85 : 0.5)
+                }
+            }
+            .font(.system(size: 12, weight: on ? .semibold : .medium))
+            .foregroundStyle(on ? Color.white : Color.primary)
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: 26)
+            .background {
+                if on { Capsule().fill(tint(value).gradient).matchedGeometryEffect(id: "selection", in: space) }
+            }
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+}

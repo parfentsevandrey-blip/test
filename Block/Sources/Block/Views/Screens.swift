@@ -116,11 +116,8 @@ struct NetworkView: View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Как закрывать").font(.system(size: 15, weight: .bold, design: .rounded))
-                Picker("", selection: Binding(get: { model.state.networkMethod }, set: { m in Task { await model.setNetworkMethod(m) } })) {
-                    ForEach(NetworkMethod.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
+                SegmentBar(items: NetworkMethod.allCases.map { (value: $0, title: $0.title) },
+                           selection: Binding(get: { model.state.networkMethod }, set: { m in Task { await model.setNetworkMethod(m) } }))
                 .frame(maxWidth: 320)
                 .disabled(model.busy)
                 Text(model.state.networkMethod == .hosts

@@ -84,12 +84,8 @@ struct MonitorView: View {
 
     private var controls: some View {
         HStack(spacing: 12) {
-            Picker("", selection: $filter) {
-                ForEach(Filter.allCases) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: 360)
+            SegmentBar(items: Filter.allCases.map { (value: $0, title: $0.title) }, selection: $filter)
+                .frame(width: 380)
             Spacer()
             Toggle("Закрывать само", isOn: Binding(get: { model.state.monitorAuto }, set: { model.state.monitorAuto = $0; model.state.save() }))
                 .toggleStyle(.switch)

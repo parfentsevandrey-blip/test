@@ -23,7 +23,9 @@ struct LockView: View {
 
     private var lock: LockSettings { model.state.lock }
 
-    private var apps: [NetAppRule] {
+    private var apps: [NetAppRule] { rules(for: filter) }
+
+    private func rules(for filter: Filter) -> [NetAppRule] {
         lock.apps.values.filter { rule in
             switch filter {
             case .all: !rule.app.isSystem && !rule.app.isApple
@@ -162,16 +164,8 @@ struct LockView: View {
 
     private var appsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Программы").font(.system(size: 18, weight: .bold, design: .rounded))
-                Spacer()
-                Picker("", selection: $filter) {
-                    ForEach(Filter.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .frame(width: 470)
-            }
+            Text("Программы").font(.system(size: 18, weight: .bold, design: .rounded))
+            SegmentBar(items: Filter.allCases.map { (value: $0, title: $0.title) }, selection: $filter, count: { rules(for: $0).count })
             if apps.isEmpty {
                 Text(filter == .all ? "Программы появятся здесь, как только попросятся в сеть. Новую программу Block спросит: разрешить, только сейчас или запретить."
                                     : "Пусто.")
@@ -321,12 +315,10 @@ private struct AppRuleRow: View {
                     .font(.system(size: 10)).foregroundStyle(.tertiary)
             }
             Spacer()
-            Picker("", selection: Binding(get: { rule.decision }, set: { model.lock.setDecision(rule.app, $0) })) {
-                ForEach(NetDecision.allCases, id: \.self) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .frame(width: 260)
+            SegmentBar(items: NetDecision.allCases.map { (value: $0, title: $0.title) },
+                       selection: Binding(get: { rule.decision }, set: { model.lock.setDecision(rule.app, $0) }),
+                       tint: { $0 == .allow ? .green : ($0 == .deny ? .red : .blue) })
+                .frame(width: 300)
             Button { model.lock.forget(rule.id) } label: { Image(systemName: "trash") }
                 .buttonStyle(.plain).foregroundStyle(.secondary).help("Забыть программу")
         }
