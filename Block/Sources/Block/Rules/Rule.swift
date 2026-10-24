@@ -338,10 +338,11 @@ nonisolated enum Profile: String, Codable, CaseIterable, Sendable, Identifiable 
 }
 
 /// Ответы при первом запуске.
+/// Пока человек не ответил «нет», считается, что iCloud, «Найти Mac» и iPhone нужны, — их правила не трогаются.
 nonisolated struct Answers: Codable, Equatable, Sendable {
-    var usesICloud = false
-    var needsFindMy = false
-    var usesIPhone = false
+    var usesICloud = true
+    var needsFindMy = true
+    var usesIPhone = true
 
     func allows(_ condition: Condition?) -> Bool {
         switch condition {

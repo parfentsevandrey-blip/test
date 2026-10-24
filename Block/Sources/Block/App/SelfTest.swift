@@ -114,7 +114,7 @@ enum SelfTest {
         ok = check(!full.contains { $0.id == "net.icloud" || $0.id == "icloud.signout" }, "iCloud не трогается, пока вы не ответили, что он не нужен") && ok
         model.state.answers = Answers(usesICloud: true, needsFindMy: true, usesIPhone: true)
         ok = check(!model.rules.contains { $0.condition != nil }, "пользуетесь iCloud и iPhone — правила для них скрыты") && ok
-        model.state.answers = Answers()
+        model.state.answers = Answers(usesICloud: false, needsFindMy: false, usesIPhone: false)
         ok = check(model.rules.contains { $0.id == "net.icloud" } && model.selection(for: .full).contains { $0.id == "net.icloud" },
                    "не пользуетесь iCloud — его адреса в «Полностью»") && ok
 

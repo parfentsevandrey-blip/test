@@ -16,6 +16,7 @@ enum DemoUI {
         var s = BlockState()
         s.onboarded = true
         s.profile = .full
+        s.answers = Answers(usesICloud: false, needsFindMy: false, usesIPhone: false)
         for rule in Catalog.rules where rule.level != .network || rule.id != "net.icloud" {
             s.baseline[rule.id] = .flag
         }

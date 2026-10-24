@@ -127,7 +127,8 @@ final class AppModel {
     /// Правила профиля с учётом ответов. Ручные шаги и выход из Apple Account в профиль не входят — только по кнопке.
     func selection(for profile: Profile) -> [Rule] {
         if profile == .custom { return rules.filter { state.customSelection.contains($0.id) } }
-        return rules.filter { profile.levels.contains($0.level) && !$0.isManual && $0.confidence == .solid }
+        // «Мягко» — без пароля администратора.
+        return rules.filter { profile.levels.contains($0.level) && !$0.isManual && $0.confidence == .solid && (profile == .full || !$0.needsAdmin) }
     }
 
     /// Что изменится: правила профиля, которые сейчас не в нужном состоянии и применимы.
