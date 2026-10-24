@@ -25,7 +25,7 @@ nonisolated enum Shell {
         do { try process.run() } catch { return Result(status: -1, output: error.localizedDescription) }
         // Зависшая команда не держит Block: через timeout секунд процесс останавливается.
         // Проверяем сам процесс, а не номер: номер завершившегося процесса может достаться другому.
-        nonisolated(unsafe) let running = process
+        let running = process
         DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
             if running.isRunning { kill(running.processIdentifier, SIGKILL) }
         }

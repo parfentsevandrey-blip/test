@@ -259,10 +259,10 @@ enum SelfTest {
         let previous = Handlers.current(handler)
         info("тип app.block.selftest открывает: \(previous?.path ?? "никто"); пробная программа: \(probe?.path ?? "не создана")")
         if let probe {
-            var error = ""
-            do { try await Handlers.set(handler, to: probe) } catch { error = "\(error)" }
+            var failure = ""
+            do { try await Handlers.set(handler, to: probe) } catch { failure = "\(error)" }
             await wait(3) { Handlers.bundleID(of: Handlers.current(handler)) == "app.block.probe" }
-            ok = check(Handlers.bundleID(of: Handlers.current(handler)) == "app.block.probe", "программа по умолчанию назначена (\(Handlers.current(handler)?.lastPathComponent ?? "никто")\(error.isEmpty ? "" : ", " + error))") && ok
+            ok = check(Handlers.bundleID(of: Handlers.current(handler)) == "app.block.probe", "программа по умолчанию назначена (\(Handlers.current(handler)?.lastPathComponent ?? "никто")\(failure.isEmpty ? "" : ", " + failure))") && ok
             if let previous {
                 try? await Handlers.set(handler, to: previous)
                 await wait(3) { Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL }
