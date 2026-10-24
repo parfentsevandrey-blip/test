@@ -96,6 +96,20 @@ struct SettingsView: View {
                 Text("Домены (вместе с поддоменами) и IP-адреса или подсети, по одному на строку. Можно geosite:… и geoip:….")
                     .font(.system(size: 11)).foregroundStyle(.secondary)
             }
+            if let external = model.saved.routing.external, !external.isEmpty {
+                Section("Блокировка от других программ") {
+                    ForEach(external.keys.sorted(), id: \.self) { owner in
+                        LabeledContent(owner == "block" ? "Block — сервисы Apple" : owner) {
+                            HStack {
+                                Text("адресов: \(external[owner]?.count ?? 0)").foregroundStyle(.secondary)
+                                Button("Убрать") { model.setRouting { $0.external?[owner] = nil; if $0.external?.isEmpty == true { $0.external = nil } } }
+                            }
+                        }
+                    }
+                    Text("Эти адреса закрыты, пока Veil включён. Список присылает сама программа.")
+                        .font(.system(size: 11)).foregroundStyle(.secondary)
+                }
+            }
             Section("Базы сайтов") {
                 LabeledContent("Списки runetfreedom") {
                     HStack {

@@ -173,6 +173,18 @@ nonisolated enum SelfTest {
         let none = RoutingRules.rules(RoutingSettings(mode: .smart), available: GeoCategories())
         ok = check(!none.rules.contains { $0.domains.contains { $0.hasPrefix("geosite:") } } && none.rules.contains { $0.domains.contains("domain:ru") },
                    "без баз сайтов правила geosite не попадают в конфигурацию (ядро бы не запустилось)") && ok
+        let blockURL = "veil://block-list?owner=block&domains=" + Data(#"["XP.apple.com","metrics.icloud.com","geosite:google","1.2.3.4/8",""]"#.utf8).base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
+        if let list = ExternalBlockList.parse(blockURL) {
+            var withBlock = RoutingSettings(mode: .all)
+            withBlock.external = [list.owner: list.domains]
+            let r = RoutingRules.rules(withBlock, available: geo)
+            ok = check(list.owner == "block" && list.domains == ["metrics.icloud.com", "xp.apple.com"]
+                       && r.rules.contains { $0.outbound == "block" && $0.domains == ["domain:metrics.icloud.com", "domain:xp.apple.com"] },
+                       "список Block: только домены (без geosite и IP), правило block") && ok
+        } else {
+            ok = check(false, "ссылка veil://block-list разобрана") && ok
+        }
         var custom = RoutingSettings(mode: .all)
         custom.direct = ["https://sber.ru/", "10.0.0.0/8", "*.office.local"]
         let user = RoutingRules.rules(custom, available: geo)

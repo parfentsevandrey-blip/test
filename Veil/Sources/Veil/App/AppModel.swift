@@ -490,6 +490,15 @@ final class AppModel {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return "Пусто" }
         if SubscriptionLoader.isEncryptedHapp(text) { return SubscriptionLoader.Failure.encrypted.description }
+        if let list = ExternalBlockList.parse(text) {
+            setRouting { routing in
+                var external = routing.external ?? [:]
+                external[list.owner] = list.domains.isEmpty ? nil : list.domains
+                routing.external = external.isEmpty ? nil : external
+            }
+            let who = list.owner == "block" ? "Block" : list.owner
+            return list.domains.isEmpty ? "Правила \(who) убраны" : "\(who): закрыто адресов — \(list.domains.count)"
+        }
         if text.lowercased().hasPrefix("happ://routing/off") {
             setRouting { $0.mode = .smart }
             return "Профиль маршрутизации выключен"

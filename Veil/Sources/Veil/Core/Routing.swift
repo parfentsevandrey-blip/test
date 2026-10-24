@@ -49,6 +49,28 @@ nonisolated struct RoutingSettings: Codable, Hashable, Sendable {
     var proxy: [String] = []
     var block: [String] = []
     var profile: HappRoutingProfile?
+    /// Списки блокировки от других программ каталога (Block): программа → домены. Приходят ссылкой
+    /// veil://block-list и заменяются целиком; пустой список убирает правила программы.
+    var external: [String: [String]]?
+}
+
+/// veil://block-list?owner=block&domains=<base64url(JSON-массив доменов)>
+nonisolated enum ExternalBlockList {
+    static func parse(_ text: String) -> (owner: String, domains: [String])? {
+        guard let comps = URLComponents(string: text), comps.scheme == "veil", comps.host == "block-list" else { return nil }
+        let items = comps.queryItems ?? []
+        guard let owner = items.first(where: { $0.name == "owner" })?.value?.lowercased(),
+              !owner.isEmpty, owner.allSatisfy({ $0.isLetter || $0.isNumber || $0 == "-" }),
+              var encoded = items.first(where: { $0.name == "domains" })?.value else { return nil }
+        encoded = encoded.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        while encoded.count % 4 != 0 { encoded += "=" }
+        guard let data = Data(base64Encoded: encoded), let list = try? JSONDecoder().decode([String].self, from: data) else { return nil }
+        // Только имена доменов: ни geosite, ни IP, ни регулярных выражений — чужая программа не перенаправит трафик.
+        let domains = list.map { $0.lowercased().trimmingCharacters(in: .whitespaces) }.filter { d in
+            !d.isEmpty && d.count < 254 && d.contains(".") && d.allSatisfy { $0.isLetter || $0.isNumber || $0 == "." || $0 == "-" }
+        }
+        return (owner, Array(Set(domains)).sorted())
+    }
 }
 
 /// Профиль маршрутизации Happ: happ://routing/add/{base64(JSON)}.
@@ -140,6 +162,7 @@ nonisolated enum RoutingRules {
         }
         let blocked = user(settings.block), direct = user(settings.direct), proxied = user(settings.proxy)
         add(blocked.0, blocked.1, "block")
+        add((settings.external ?? [:]).keys.sorted().flatMap { settings.external?[$0] ?? [] }.map(domainRule), [], "block")
         add(direct.0, direct.1, "direct")
         add(proxied.0, proxied.1, "proxy")
         if settings.blockAds { add(["geosite:category-ads-all"], [], "block") }
