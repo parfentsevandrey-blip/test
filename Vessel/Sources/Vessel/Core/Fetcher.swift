@@ -22,7 +22,7 @@ nonisolated final class FileFetcher: NSObject, URLSessionDataDelegate, @unchecke
     let url: URL
     let destination: URL
     let expectedSize: Int64
-    let hash: HashKind
+    let hashKind: HashKind
     let digest: String
     private let onProgress: @Sendable (Int64, Int64) -> Void
 
@@ -43,9 +43,9 @@ nonisolated final class FileFetcher: NSObject, URLSessionDataDelegate, @unchecke
         self.url = url
         self.destination = destination
         self.expectedSize = expectedSize ?? 0
-        self.hash = hash
+        self.hashKind = hash
         self.digest = digest.lowercased()
-        self.hasher = StreamHasher(hash)
+        self.hasher = StreamHasher(hashKind)
         self.onProgress = onProgress
     }
 
@@ -129,7 +129,7 @@ nonisolated final class FileFetcher: NSObject, URLSessionDataDelegate, @unchecke
                 if startOffset > 0 {
                     // Сервер не умеет докачку — начинаем заново.
                     try? handle?.truncate(atOffset: 0)
-                    hasher = StreamHasher(hash)
+                    hasher = StreamHasher(hashKind)
                     received = 0
                     startOffset = 0
                 }
@@ -191,7 +191,7 @@ nonisolated final class FileFetcher: NSObject, URLSessionDataDelegate, @unchecke
         }
         guard hasher.hex() == digest else {
             try? FileManager.default.removeItem(at: part)
-            throw FetchError.corrupted(hash)
+            throw FetchError.corrupted(hashKind)
         }
         try? FileManager.default.removeItem(at: destination)
         try FileManager.default.moveItem(at: part, to: destination)
