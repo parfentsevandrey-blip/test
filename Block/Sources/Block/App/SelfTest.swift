@@ -369,6 +369,11 @@ enum SelfTest {
             await model.blockHosts(["xp.apple.com", "swscan.apple.com"])
             let inFile = HostsFile.blockedHosts(in: HostsFile.read())
             await wait(4) { HostsFile.resolvesToNowhere("xp.apple.com") }
+            if !HostsFile.resolvesToNowhere("xp.apple.com") {
+                // Резолвер иногда держит старый ответ дольше — сбросить кэш, как это делает и сам Block.
+                Shell.run("/usr/bin/sudo", ["-n", "/usr/bin/killall", "-HUP", "mDNSResponder"])
+                await wait(10) { HostsFile.resolvesToNowhere("xp.apple.com") }
+            }
             info("найденное в hosts: \(inFile.sorted()); состояние правила: \(model.observedRule.map { model.status(of: $0).label } ?? "-")")
             ok = check(inFile.contains("xp.apple.com") && !inFile.contains("swscan.apple.com") && HostsFile.resolvesToNowhere("xp.apple.com")
                        && !HostsFile.resolvesToNowhere("swscan.apple.com"),
