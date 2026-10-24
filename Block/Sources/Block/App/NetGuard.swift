@@ -325,12 +325,11 @@ struct NetPromptView: View {
                     }
                     HStack(spacing: 8) {
                         // Действие — после обработки нажатия: окно не трогается, пока SwiftUI с ним работает.
-                        Button("Запретить") { later(.never) }.buttonStyle(.glass)
+                        Button("Запретить") { later(.never) }.buttonStyle(PanelButton(color: .red))
                         Spacer()
-                        Button("Только сейчас") { later(.once) }.buttonStyle(.glass)
-                        Button("Разрешить") { later(.always) }.buttonStyle(.glassProminent).tint(.green)
+                        Button("Только сейчас") { later(.once) }.buttonStyle(PanelButton(color: .blue))
+                        Button("Разрешить") { later(.always) }.buttonStyle(PanelButton(color: .green, filled: true))
                     }
-                    .controlSize(.regular)
                 }
                 .padding(16)
             } else {
@@ -363,5 +362,23 @@ struct NetAppIcon: View {
                 .frame(width: size, height: size)
                 .background(RoundedRectangle(cornerRadius: size * 0.24).fill((app.isSystem ? Color.gray : Color.indigo).gradient))
         }
+    }
+}
+
+/// Кнопка плашки: цветная, даже когда Block не активен (обычные кнопки в неактивном окне серые —
+/// а вопрос приходит, пока человек работает в другой программе).
+struct PanelButton: ButtonStyle {
+    let color: Color
+    var filled = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(filled ? .white : color)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(filled ? AnyShapeStyle(color.gradient) : AnyShapeStyle(color.opacity(0.14))))
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
     }
 }

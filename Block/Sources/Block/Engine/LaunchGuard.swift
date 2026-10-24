@@ -146,7 +146,7 @@ struct GuardBanner: View {
                 Text(replacement.map { "Открыт \($0)" } ?? "Сервис Apple выключен").font(.system(size: 11)).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
-            Button("Один раз", action: openOnce).buttonStyle(.glass).controlSize(.small)
+            Button("Один раз", action: openOnce).buttonStyle(PanelButton(color: .orange))
             Button(action: close) { Image(systemName: "xmark") }.buttonStyle(.plain).foregroundStyle(.secondary)
         }
         .padding(.horizontal, 14)
