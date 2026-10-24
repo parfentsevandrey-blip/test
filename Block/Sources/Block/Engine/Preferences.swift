@@ -41,9 +41,13 @@ nonisolated enum Preferences {
 
     // MARK: Системные файлы (чтение без прав, запись — через Privileged)
 
+    /// Через `defaults read`: так значение приходит из cfprefsd, а файл на диске система обновляет с задержкой.
     static func readSystem(_ path: String, key: String) -> PlistValue? {
-        guard let dict = NSDictionary(contentsOfFile: path + ".plist"), let value = dict[key] else { return nil }
-        return plist(value)
+        let r = Shell.run("/usr/bin/defaults", ["read", path, key])
+        guard r.ok else { return nil }
+        let text = r.output.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let n = Int(text) { return .int(n) }
+        return .string(text)
     }
 
     /// Команда `defaults` для записи или удаления ключа системного файла.

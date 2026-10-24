@@ -54,6 +54,12 @@ enum SelfTest {
         return box.value == true
     }
 
+    /// Ожидание внутри асинхронной проверки: главный поток свободен, уведомления системы доходят.
+    static func wait(_ seconds: Double, until done: () -> Bool) async {
+        let deadline = Date().addingTimeInterval(seconds)
+        while Date() < deadline && !done() { try? await Task.sleep(for: .milliseconds(30)) }
+    }
+
     static func spin(_ seconds: Double, until done: () -> Bool = { false }) {
         let deadline = Date().addingTimeInterval(seconds)
         while Date() < deadline && !done() { RunLoop.main.run(mode: .default, before: Date().addingTimeInterval(0.02)) }
@@ -232,11 +238,11 @@ enum SelfTest {
         let textEdit = URL(fileURLWithPath: "/System/Applications/TextEdit.app")
         info("тип app.block.selftest открывает: \(previous?.path ?? "никто")")
         let assigned = await withTimeout(15) { try? await Handlers.set(handler, to: textEdit) }
-        spin(3) { Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit" }
+        await wait(3) { Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit" }
         ok = check(assigned && Handlers.bundleID(of: Handlers.current(handler)) == "com.apple.TextEdit", "программа по умолчанию назначена (TextEdit)") && ok
         if let previous {
             _ = await withTimeout(15) { try? await Handlers.set(handler, to: previous) }
-            spin(3) { Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL }
+            await wait(3) { Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL }
             ok = check(Handlers.current(handler)?.standardizedFileURL == previous.standardizedFileURL, "и возвращена прежняя (\(previous.lastPathComponent))") && ok
         }
 
@@ -249,8 +255,8 @@ enum SelfTest {
             model.guardian.update(map)
             let started = Date()
             NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration(), completionHandler: nil)
-            spin(8) { model.guardian.lastStop?.bundle == bundle }
-            spin(2) { NSRunningApplication.runningApplications(withBundleIdentifier: bundle).allSatisfy(\.isTerminated) }
+            await wait(8) { model.guardian.lastStop?.bundle == bundle }
+            await wait(2) { NSRunningApplication.runningApplications(withBundleIdentifier: bundle).allSatisfy(\.isTerminated) }
             let stop = model.guardian.lastStop
             let alive = NSRunningApplication.runningApplications(withBundleIdentifier: bundle).filter { !$0.isTerminated }
             info("«\(name)»: закрыта через \(String(format: "%.2f", stop?.seconds ?? -1)) с после старта процесса, \(String(format: "%.2f", Date().timeIntervalSince(started))) с от запроса")
