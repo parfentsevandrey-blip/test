@@ -152,13 +152,13 @@ enum SelfTest {
         let app = FileManager.default.temporaryDirectory.appendingPathComponent("BlockProbe-\(getpid()).app")
         let contents = app.appendingPathComponent("Contents")
         try? FileManager.default.createDirectory(at: contents.appendingPathComponent("MacOS"), withIntermediateDirectories: true)
-        let info: NSDictionary = [
+        let plist: NSDictionary = [
             "CFBundleIdentifier": "app.block.probe", "CFBundleName": "BlockProbe", "CFBundleExecutable": "probe",
             "CFBundlePackageType": "APPL", "CFBundleShortVersionString": "1.0", "CFBundleVersion": "1",
             "CFBundleDocumentTypes": [["CFBundleTypeName": "Проверочный файл", "CFBundleTypeRole": "Viewer",
                                        "LSHandlerRank": "Alternate", "LSItemContentTypes": ["app.block.selftest"]]],
         ]
-        guard info.write(to: contents.appendingPathComponent("Info.plist"), atomically: true) else { return nil }
+        guard plist.write(to: contents.appendingPathComponent("Info.plist"), atomically: true) else { return nil }
         try? FileManager.default.copyItem(atPath: "/usr/bin/true", toPath: contents.appendingPathComponent("MacOS/probe").path)
         let status = LSRegisterURL(app as CFURL, true)
         if status != noErr { info("LSRegisterURL: \(status)") }
