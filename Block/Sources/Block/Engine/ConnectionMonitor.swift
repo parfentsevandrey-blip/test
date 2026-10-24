@@ -42,7 +42,9 @@ nonisolated enum NettopParser {
 
     /// «apsd.312» → («apsd», 312).
     static func processID(_ s: String) -> (name: String, pid: Int32)? {
-        guard let dot = s.lastIndex(of: "."), let pid = Int32(s[s.index(after: dot)...]), !s[..<dot].isEmpty else { return nil }
+        // В имени должна быть буква: «12:00:01.000000» — это время, а не процесс.
+        guard let dot = s.lastIndex(of: "."), let pid = Int32(s[s.index(after: dot)...]), pid > 0,
+              s[..<dot].contains(where: \.isLetter) else { return nil }
         return (String(s[..<dot]), pid)
     }
 
