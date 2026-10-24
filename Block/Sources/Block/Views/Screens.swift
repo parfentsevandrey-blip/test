@@ -310,6 +310,16 @@ struct MenuBarView: View {
                     Text("Сторож остановил запусков: \(model.stoppedTotal)").font(.system(size: 11)).foregroundStyle(.secondary)
                 }
             }
+            if model.state.lock.on {
+                Label(model.lock.gateOpen ? "Сеть открыта на время" : "Замок закрыт", systemImage: model.lock.gateOpen ? "lock.open.fill" : "lock.fill")
+                    .foregroundStyle(model.lock.gateOpen ? .orange : .green).font(.system(size: 12, weight: .semibold))
+                if model.lock.gateOpen {
+                    Button("Закрыть сеть сейчас") { model.lock.closeGate() }
+                } else {
+                    Button("Открыть сеть на 15 минут") { model.lock.openGate(minutes: 15) }
+                    Button("Открыть сеть на час") { model.lock.openGate(minutes: 60) }
+                }
+            }
             if !model.drift.isEmpty {
                 Label("Apple вернула своё: \(model.drift.count)", systemImage: "arrow.uturn.backward.circle").foregroundStyle(.orange).font(.system(size: 12))
             }

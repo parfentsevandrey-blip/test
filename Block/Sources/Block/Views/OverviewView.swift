@@ -8,6 +8,7 @@ struct OverviewView: View {
             VStack(spacing: 22) {
                 Constellation()
                     .frame(height: 430)
+                lockBanner
                 if !model.drift.isEmpty { driftBanner }
                 if !model.suspicious.isEmpty { monitorBanner }
                 tiles
@@ -17,6 +18,32 @@ struct OverviewView: View {
             .frame(maxWidth: 1040)
             .frame(maxWidth: .infinity)
         }
+    }
+
+    private var lockBanner: some View {
+        let lock = model.state.lock
+        let allowed = lock.apps.values.filter { $0.decision == .allow }.count
+        let tint: Color = lock.on ? (model.lock.gateOpen ? .orange : .green) : .red
+        return HStack(spacing: 12) {
+            Image(systemName: lock.on ? (model.lock.gateOpen ? "lock.open.fill" : "lock.fill") : "lock.open")
+                .font(.system(size: 22)).foregroundStyle(tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(lock.on ? (model.lock.gateOpen ? "Сеть открыта на время" : "Замок закрыт: в сеть выходит только разрешённое")
+                             : "Mac выходит в сеть, когда хочет")
+                    .font(.system(size: 13, weight: .semibold))
+                Text(lock.on ? "Разрешено программ: \(allowed). Остальные — и службы macOS — без сети."
+                             : "Замок закроет все соединения, кроме программ, которые вы выберете.")
+                    .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+            }
+            Spacer()
+            if lock.on {
+                Button("Программы") { model.screen = .lock }.buttonStyle(.glass)
+            } else {
+                Button("Открыть «Замок»") { model.screen = .lock }.buttonStyle(.glassProminent)
+            }
+        }
+        .padding(14)
+        .glassEffect(.regular.tint(tint.opacity(0.12)), in: .rect(cornerRadius: 18))
     }
 
     private var driftBanner: some View {

@@ -3,13 +3,14 @@ import ServiceManagement
 import SwiftUI
 
 enum Screen: String, CaseIterable, Identifiable {
-    case overview, monitor, apps, settings, services, network, replacements, journal
+    case overview, lock, monitor, apps, settings, services, network, replacements, journal
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .overview: "Обзор"
+        case .lock: "Замок"
         case .monitor: "Наблюдение"
         case .apps: "Программы"
         case .settings: "Настройки Apple"
@@ -23,6 +24,7 @@ enum Screen: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .overview: "circle.hexagongrid.fill"
+        case .lock: "lock.shield.fill"
         case .monitor: "dot.radiowaves.left.and.right"
         case .apps: "hand.raised.fill"
         case .settings: "switch.2"
@@ -36,6 +38,7 @@ enum Screen: String, CaseIterable, Identifiable {
     var tint: Color {
         switch self {
         case .overview: .indigo
+        case .lock: .red
         case .monitor: .pink
         case .apps: .orange
         case .settings: .blue
@@ -61,6 +64,7 @@ final class AppModel {
     var drift: [String] = []
     let guardian = LaunchGuard()
     let monitor = ConnectionMonitor()
+    let lock = NetGuard()
     @ObservationIgnored private var driftTimer: Timer?
 
     /// Каталог и службы, найденные наблюдением.
@@ -103,6 +107,11 @@ final class AppModel {
             MainActor.assumeIsolated { AppModel.shared.checkDrift(reason: nil) }
         }
         monitor.onNew = { [weak self] fresh in self?.considerAuto(fresh) }
+        // Замок был включён: шлюз нужен сразу, иначе программы под замком останутся без сети.
+        if state.lock.on && !DemoUI.isOn && !SelfTest.isRunning {
+            lock.startGateway()
+            lock.watch()
+        }
         if state.monitorOn && !DemoUI.isOn && !SelfTest.isRunning { monitor.start() }
     }
 
@@ -278,7 +287,84 @@ final class AppModel {
     }
 
     func revertAll() async {
+        if state.lock.on { await setLock(false) }
         await revert(allRules.filter { state.baseline[$0.id] != nil || state.manualDone.contains($0.id) })
+    }
+
+    // MARK: Сетевой замок
+
+    /// Куда можно напрямую: свои адреса и серверы Veil (имена переводятся в адреса при включении).
+    func lockDirectItems() -> [String] {
+        var items = state.lock.direct
+        if state.lock.veilServers { items += NetLock.veil().servers }
+        return items
+    }
+
+    /// Включить, обновить или снять замок — одним паролем администратора.
+    @discardableResult
+    func setLock(_ on: Bool) async -> Bool {
+        guard !busy else { return false }
+        busy = true
+        defer { busy = false }
+        if on {
+            lock.startGateway()
+            if let error = lock.startError { flash(error); return false }
+            let items = lockDirectItems()
+            let direct = await Task.detached { NetLock.resolve(items) }.value
+            let services = NetLock.services()
+            var snapshots = state.lock.proxyBefore
+            if snapshots.isEmpty { snapshots = services.map(NetLock.snapshot) }
+            let temp = FileManager.default.temporaryDirectory
+            let rulesFile = temp.appendingPathComponent("block-netlock-\(UUID().uuidString).pf")
+            let plistFile = temp.appendingPathComponent("block-netlock-\(UUID().uuidString).plist")
+            do {
+                try NetLock.rules(direct: direct, allowLAN: state.lock.allowLAN).write(to: rulesFile, atomically: true, encoding: .utf8)
+                try NetLock.daemonPlist().write(to: plistFile)
+            } catch {
+                flash("Не удалось подготовить правила: \(error.localizedDescription)")
+                return false
+            }
+            defer { try? FileManager.default.removeItem(at: rulesFile); try? FileManager.default.removeItem(at: plistFile) }
+            let commands = [NetLock.enableCommands(rulesFile: rulesFile.path, plistFile: plistFile.path)]
+                + NetLock.proxyOnCommands(services: services, port: state.lock.port)
+            switch Privileged.run(commands, reason: "Block закрывает Mac от сети: в интернет выходит только то, что вы разрешили.") {
+            case .success:
+                let wasOn = state.lock.on
+                state.lock.on = true
+                state.lock.proxyBefore = snapshots
+                state.lock.directResolved = direct
+                state.log(.applied, id: "lock", title: "Сетевой замок",
+                          wasOn ? "обновлён: напрямую \(direct.count) адресов" : "включён: прокси \(services.joined(separator: ", ")) → шлюз; было: " + snapshots.map(\.summary).joined(separator: "; "))
+                state.save()
+                lock.applyUpstream()
+                try? await Task.sleep(for: .milliseconds(600))
+                lock.watch()
+                flash(wasOn ? "Замок обновлён" : "Замок закрыт: в сеть выходит только разрешённое")
+                return true
+            case .failure(let error):
+                if !state.lock.on { lock.stopGateway() }
+                flash(error.description)
+                return false
+            }
+        } else {
+            let commands = [NetLock.disableCommands()] + NetLock.proxyRestoreCommands(state.lock.proxyBefore)
+            switch Privileged.run(commands, reason: "Block снимает сетевой замок и возвращает прокси как было.") {
+            case .success:
+                state.lock.on = false
+                state.lock.proxyBefore = []
+                state.lock.directResolved = []
+                state.log(.reverted, id: "lock", title: "Сетевой замок", "снят: фильтр и прокси как были")
+                state.save()
+                lock.closeGate()
+                lock.stopGateway()
+                lock.watch()
+                flash("Замок снят")
+                return true
+            case .failure(let error):
+                flash(error.description)
+                return false
+            }
+        }
     }
 
     func toggle(_ rule: Rule) async {

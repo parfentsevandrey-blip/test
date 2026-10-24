@@ -68,6 +68,8 @@ nonisolated struct BlockState: Codable, Sendable {
     var observedAgents: [String: String] = [:]
     /// Соединения, которые человек разрешил («процесс|адрес»).
     var allowedObservations: Set<String> = []
+    /// Сетевой замок: программы, решения, настройки и прокси до замка.
+    var lock = LockSettings()
 
     init() {}
 
@@ -92,6 +94,7 @@ nonisolated struct BlockState: Codable, Sendable {
         observedHosts = try c.decodeIfPresent(Set<String>.self, forKey: .observedHosts) ?? d.observedHosts
         observedAgents = try c.decodeIfPresent([String: String].self, forKey: .observedAgents) ?? d.observedAgents
         allowedObservations = try c.decodeIfPresent(Set<String>.self, forKey: .allowedObservations) ?? d.allowedObservations
+        lock = try c.decodeIfPresent(LockSettings.self, forKey: .lock) ?? d.lock
     }
 
     static var directory: URL {
@@ -115,7 +118,11 @@ nonisolated struct BlockState: Codable, Sendable {
     }
 
     mutating func log(_ kind: JournalEntry.Kind, _ rule: Rule, _ note: String) {
-        journal.insert(JournalEntry(kind: kind, ruleID: rule.id, title: rule.title, note: note), at: 0)
+        log(kind, id: rule.id, title: rule.title, note)
+    }
+
+    mutating func log(_ kind: JournalEntry.Kind, id: String, title: String, _ note: String) {
+        journal.insert(JournalEntry(kind: kind, ruleID: id, title: title, note: note), at: 0)
         if journal.count > 2000 { journal.removeLast(journal.count - 2000) }
     }
 

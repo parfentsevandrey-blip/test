@@ -55,7 +55,7 @@ jobs:
         run: |
           OUT="$RUNNER_TEMP/render"; mkdir -p "$OUT"
           export BLOCK_HOME="$RUNNER_TEMP/block-demo"
-          for S in overview monitor apps settings services network replacements journal onboarding; do
+          for S in overview lock lockprompt monitor apps settings services network replacements journal onboarding; do
             dist/Block.app/Contents/MacOS/Block --demo-ui $S > "$OUT/demo-$S.log" 2>&1 &
             PID=$!
             sleep 12
@@ -78,6 +78,25 @@ jobs:
           dist/Block.app/Contents/MacOS/Block --selftest-system
           cmp /etc/hosts "$RUNNER_TEMP/hosts.before" && echo "/etc/hosts не изменился"
 
+      # Сетевой замок на настоящем Mac: шлюз узнаёт curl по сокету и слушается решений; фильтр pf закрывает
+      # прямой выход, через шлюз — выходит; после снятия pf, задание launchd и прокси служб — как были.
+      - name: Self-test lock
+        timeout-minutes: 8
+        env:
+          BLOCK_SUDO: "1"
+        run: |
+          export BLOCK_HOME="$RUNNER_TEMP/block-lock"
+          dist/Block.app/Contents/MacOS/Block --selftest-lock
+
+      # Если проверка замка упала посередине — раннер не должен остаться без сети.
+      - name: Lock cleanup
+        if: always()
+        run: |
+          sudo /sbin/pfctl -q -a com.apple/block -F all 2>/dev/null || true
+          sudo /bin/launchctl bootout system/app.block.netlock 2>/dev/null || true
+          sudo rm -f /Library/LaunchDaemons/app.block.netlock.plist
+          curl -sS -o /dev/null -w "сеть после проверки: %{http_code}\n" --max-time 10 https://example.com || true
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -95,7 +114,7 @@ jobs:
       # Зелёная сборка сразу попадает в каталог Harbor (см. Harbor/README.md).
       - name: Publish to Harbor catalog
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-        run: ../Harbor/release/publish.sh block dist/Block.app "$RUNNER_TEMP/render/window-overview.png" "$RUNNER_TEMP/render/window-monitor.png" "$RUNNER_TEMP/render/window-apps.png" "$RUNNER_TEMP/render/window-network.png"
+        run: ../Harbor/release/publish.sh block dist/Block.app "$RUNNER_TEMP/render/window-overview.png" "$RUNNER_TEMP/render/window-lock.png" "$RUNNER_TEMP/render/window-monitor.png" "$RUNNER_TEMP/render/window-apps.png" "$RUNNER_TEMP/render/window-network.png"
 
   catalog:
     needs: build

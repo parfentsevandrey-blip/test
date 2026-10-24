@@ -43,7 +43,7 @@ struct BlockApp: App {
         MenuBarExtra {
             MenuBarView().environment(model)
         } label: {
-            Image(systemName: model.score >= 0.999 ? "lock.shield.fill" : "lock.shield")
+            Image(systemName: model.state.lock.on ? (model.lock.gateOpen ? "lock.open.fill" : "lock.fill") : (model.score >= 0.999 ? "lock.shield.fill" : "lock.shield"))
         }
         .menuBarExtraStyle(.window)
     }
@@ -65,6 +65,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Окно закрыто — сторож продолжает работать из строки меню.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    /// Под замком без Block программы остаются без сети: предупредить, а не закрыться молча.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        let model = AppModel.shared
+        guard model.state.lock.on, !DemoUI.isOn, !SelfTest.isRunning else { return .terminateNow }
+        let alert = NSAlert()
+        alert.messageText = "Выйти из Block?"
+        alert.informativeText = "Замок останется закрытым, но без Block программы не смогут выйти в сеть, пока вы снова его не откроете."
+        alert.addButton(withTitle: "Выйти")
+        alert.addButton(withTitle: "Отмена")
+        guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+        model.lock.stopGateway()
+        return .terminateNow
+    }
 }
 
 struct WindowAccessor: NSViewRepresentable {

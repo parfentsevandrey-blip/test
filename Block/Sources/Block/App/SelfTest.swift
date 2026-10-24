@@ -19,6 +19,7 @@ enum SelfTest {
         switch mode {
         case "--selftest-logic": ok = logic()
         case "--selftest-system": ok = blocking { await system() }
+        case "--selftest-lock": ok = blocking { await lockTest() }
         default: print("Неизвестный режим \(mode)")
         }
         print(ok ? "SELFTEST OK" : "SELFTEST FAILED")
@@ -191,6 +192,48 @@ enum SelfTest {
         ok = check(parsed["com.apple.tipsd"] == .disabled && parsed["com.apple.gamed"] == .enabled && parsed["com.example.old"] == .disabled,
                    "список отключённых служб launchctl разобран (старый и новый вид)") && ok
         ok = check(model.plural(1) == "правило" && model.plural(3) == "правила" && model.plural(11) == "правил" && model.plural(22) == "правила", "склонения") && ok
+
+        print("— Сетевой замок")
+        let pf = NetLock.rules(direct: ["203.0.113.5", "10.8.0.0/16", "2001:db8::1", "example.com", "1.2.3.4/40"], allowLAN: true)
+        let pfLines = pf.split(separator: "\n").map(String.init).filter { !$0.hasPrefix("#") }
+        let blockAt = pfLines.firstIndex { $0.hasPrefix("block") } ?? -1
+        ok = check(pfLines.first == "pass out quick on lo0 all" && pfLines.contains("pass out quick proto { tcp, udp } from any port 30000:39999 to any keep state")
+                   && blockAt > 0 && pfLines[blockAt...].allSatisfy { $0.hasPrefix("block") } && pf.contains("flags S/SA"),
+                   "pf: сначала разрешения (шлюз, DNS, DHCP, время), в конце запрет новых соединений") && ok
+        ok = check(pf.contains("{ 203.0.113.5, 10.8.0.0/16, 2001:db8::1 }") && !pf.contains("example.com") && !pf.contains("1.2.3.4/40"),
+                   "pf: напрямую — только адреса и сети, имена и неверные маски не попадают в правило") && ok
+        ok = check(!NetLock.rules(direct: [], allowLAN: false).contains("192.168.0.0/16"), "pf: домашняя сеть — только если разрешена") && ok
+        ok = check(NetLock.isAddress("192.168.1.1") && NetLock.isAddress("fe80::/10") && !NetLock.isAddress("10.0.0.0/33") && !NetLock.isAddress("host"), "адреса и маски проверяются") && ok
+        let daemon = (try? PropertyListSerialization.propertyList(from: NetLock.daemonPlist(), format: nil)) as? [String: Any]
+        let daemonScript = ((daemon?["ProgramArguments"] as? [String]) ?? []).joined(separator: " ")
+        ok = check(daemon?["Label"] as? String == NetLock.daemonLabel && daemonScript.contains("-a com.apple/block -f") && daemon?["RunAtLoad"] as? Bool == true,
+                   "задание launchd загружает якорь com.apple/block при старте") && ok
+        let enable = NetLock.enableCommands(rulesFile: "/tmp/r.pf", plistFile: "/tmp/p.plist")
+        ok = check(enable.contains("pf-was-enabled") && !enable.contains("/etc/pf.conf'") && !enable.contains("> /etc/pf.conf"),
+                   "включение не трогает /etc/pf.conf и запоминает, был ли pf включён") && ok
+        ok = check(NetLock.disableCommands().contains("-F all") && NetLock.disableCommands().contains("bootout"), "снятие очищает якорь и убирает задание") && ok
+
+        print("— Шлюз")
+        let connect = HTTPParser.parse(Array("CONNECT github.com:443 HTTP/1.1\r\nHost: github.com:443\r\n\r\nTLS".utf8))
+        ok = check(connect?.isConnect == true && connect?.host == "github.com" && connect?.port == 443 && connect?.length == 57, "HTTP CONNECT: адрес, порт, длина заголовка") && ok
+        let get = HTTPParser.parse(Array("GET http://example.com:8080/a?b=1 HTTP/1.1\r\nHost: example.com:8080\r\nProxy-Connection: keep-alive\r\n\r\n".utf8))
+        let forwarded = get.map { String(decoding: $0.forwarded, as: UTF8.self) } ?? ""
+        ok = check(get?.host == "example.com" && get?.port == 8080 && forwarded.hasPrefix("GET /a?b=1 HTTP/1.1\r\n") && !forwarded.contains("Proxy-") && forwarded.contains("Connection: close"),
+                   "обычный HTTP: запрос в форме для сервера, без заголовков прокси") && ok
+        ok = check(HTTPParser.hostPort("[2001:db8::1]:443", defaultPort: 80).map { $0.0 == "2001:db8::1" && $0.1 == 443 } == true, "адрес IPv6 в CONNECT") && ok
+        let socksName = SOCKSParser.request([5, 1, 0, 3, 11] + Array("example.com".utf8) + [1, 187])
+        let socksV4 = SOCKSParser.request([5, 1, 0, 1, 93, 184, 216, 34, 0, 80])
+        ok = check(socksName?.0 == "example.com" && socksName?.1 == 443 && socksV4?.0 == "93.184.216.34" && socksV4?.1 == 80 && SOCKSParser.request([5, 1, 0, 3, 11, 0x65]) == nil,
+                   "SOCKS5: имя, IPv4, неполный запрос") && ok
+        let chrome = ProcessFinder.app(path: "/Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Helpers/Google Chrome Helper.app/Contents/MacOS/Google Chrome Helper")
+        let curlApp = ProcessFinder.app(path: "/usr/bin/curl")
+        ok = check(chrome.path == "/Applications/Google Chrome.app" && curlApp.name == "curl" && curlApp.isApple && !chrome.isApple,
+                   "помощник программы относится к самой программе; curl — программа командной строки") && ok
+        let fields = NetLock.parseFields("Enabled: Yes\nServer: 127.0.0.1\nPort: 41080\nAuthenticated Proxy Enabled: 0\n")
+        ok = check(fields["Enabled"] == "Yes" && fields["Server"] == "127.0.0.1" && fields["Port"] == "41080", "разбор networksetup") && ok
+        let legacy = #"{"baseline":{},"journal":[],"monitorOn":true}"#
+        let decoded = try? JSONDecoder().decode(BlockState.self, from: Data(legacy.utf8))
+        ok = check(decoded?.lock.on == false && decoded?.lock.port == 41080 && decoded?.lock.allowLAN == true, "состояние прежней версии читается: замок выключен, умолчания на месте") && ok
         return ok
     }
 
@@ -404,6 +447,87 @@ enum SelfTest {
         guardian.showBanner(name: "Проверка", bundle: "app.block.selftest", replacement: nil, force: true)
         await wait(8) { guardian.bannerWindow?.isVisible == false }
         ok = check(guardian.bannerWindow?.isVisible == false && guardian.bannerWindow === first, "плашка спряталась сама через 6 с") && ok
+        return ok
+    }
+
+    // MARK: - Замок (на настоящем Mac раннера, BLOCK_SUDO=1)
+
+    static func lockTest() async -> Bool {
+        var ok = true
+        let model = AppModel.shared
+        model.state = BlockState()
+        let guardNet = model.lock
+        let port = model.state.lock.port
+        let curlBase = ["-sS", "-o", "/dev/null", "-w", "%{http_code}", "--max-time", "15"]
+        // curl — вне главного потока: решения шлюза принимаются на главном.
+        func curl(_ args: [String]) async -> String {
+            await Task.detached { Shell.run("/usr/bin/curl", curlBase + args, timeout: 25).output.trimmingCharacters(in: .whitespacesAndNewlines) }.value
+        }
+        func code(_ s: String) -> String { String(s.suffix(3)) }
+
+        info("шаг 1: шлюз и программы")
+        guardNet.startGateway()
+        ok = check(guardNet.running, "шлюз слушает 127.0.0.1:\(port)") && ok
+        guardNet.autoAnswer = { _ in .always }
+        var r = await curl(["-x", "http://127.0.0.1:\(port)", "https://example.com"])
+        let curlRule = model.state.lock.apps.values.first { $0.app.name == "curl" }
+        ok = check(code(r) == "200", "HTTPS через шлюз: \(code(r))") && ok
+        ok = check(curlRule?.decision == .allow && curlRule?.app.path == "/usr/bin/curl", "шлюз узнал программу по сокету: \(curlRule?.app.name ?? "?") (\(curlRule?.app.path ?? "—"))") && ok
+        guard let curlApp = curlRule?.app else { return false }
+        guardNet.setDecision(curlApp, .deny)
+        r = await curl(["-x", "http://127.0.0.1:\(port)", "https://example.com"])
+        ok = check(code(r) != "200", "запрещённой программе шлюз отказывает (\(code(r)))") && ok
+        guardNet.setDecision(curlApp, .allow)
+        r = await curl(["--socks5-hostname", "127.0.0.1:\(port)", "https://example.com"])
+        ok = check(code(r) == "200", "SOCKS5 через шлюз: \(code(r))") && ok
+        r = await curl(["-x", "http://127.0.0.1:\(port)", "http://example.com/"])
+        ok = check(code(r) == "200", "обычный HTTP через шлюз: \(code(r))") && ok
+        guardNet.forget(curlApp.key)
+        guardNet.autoAnswer = { _ in .once }
+        r = await curl(["-x", "http://127.0.0.1:\(port)", "https://example.com"])
+        ok = check(code(r) == "200" && model.state.lock.apps[curlApp.key]?.decision == .ask, "«Только сейчас»: пропущено, решение не запомнено") && ok
+        guardNet.forget(curlApp.key)
+        guardNet.autoAnswer = { _ in .never }
+        r = await curl(["-x", "http://127.0.0.1:\(port)", "https://example.com"])
+        ok = check(code(r) != "200" && model.state.lock.apps[curlApp.key]?.decision == .deny, "«Запретить»: отказ и решение запомнено") && ok
+        guardNet.openGate(minutes: 1)
+        r = await curl(["-x", "http://127.0.0.1:\(port)", "https://example.com"])
+        ok = check(code(r) == "200", "«Открыть сеть на время»: запрещённая программа проходит") && ok
+        guardNet.closeGate()
+        guardNet.setDecision(curlApp, .allow)
+        // Остальной трафик раннера (если он идёт через системный прокси) не должен застрять на вопросе.
+        guardNet.autoAnswer = { _ in .always }
+
+        info("шаг 2: замок на этом Mac")
+        let services = NetLock.services()
+        let proxyBefore = services.map(NetLock.snapshot)
+        let pfBefore = Shell.run("/usr/bin/sudo", ["-n", "/sbin/pfctl", "-s", "info"]).output.contains("Status: Enabled")
+        info("службы: \(services.joined(separator: ", ")); pf до замка: \(pfBefore ? "включён" : "выключен")")
+        r = await curl(["--noproxy", "*", "https://example.com"])
+        ok = check(code(r) == "200", "до замка прямой выход открыт (\(code(r)))") && ok
+        let locked = await model.setLock(true)
+        ok = check(locked && model.state.lock.on, "замок включён (пароль — sudo -n)") && ok
+        let rules = Shell.run("/usr/bin/sudo", ["-n", "/sbin/pfctl", "-a", NetLock.anchor, "-s", "rules"]).output
+        ok = check(rules.contains("30000:39999") && rules.contains("flags S/SA"), "правила в якоре \(NetLock.anchor)") && ok
+        ok = check(FileManager.default.fileExists(atPath: NetLock.daemonPath), "задание launchd на месте") && ok
+        let probe = await Task.detached { NetLock.probeDirect() }.value
+        ok = check(probe == .closed, "проверка Block: прямой выход закрыт (\(probe))") && ok
+        r = await curl(["--noproxy", "*", "--max-time", "6", "https://example.com"])
+        ok = check(code(r) != "200", "curl мимо шлюза не выходит (\(r.prefix(80)))") && ok
+        r = await curl(["-x", "http://127.0.0.1:\(port)", "https://example.com"])
+        ok = check(code(r) == "200", "через шлюз выходит (\(code(r))) — имена находятся, порты шлюза открыты") && ok
+        ok = check(NetLock.systemProxyPointsTo(port: port), "системный прокси указывает на шлюз") && ok
+        let unlocked = await model.setLock(false)
+        ok = check(unlocked && !model.state.lock.on, "замок снят") && ok
+        let rulesAfter = Shell.run("/usr/bin/sudo", ["-n", "/sbin/pfctl", "-a", NetLock.anchor, "-s", "rules"]).output
+        ok = check(!rulesAfter.contains("flags S/SA") && !FileManager.default.fileExists(atPath: NetLock.daemonPath), "якорь пуст, задания нет") && ok
+        let pfAfter = Shell.run("/usr/bin/sudo", ["-n", "/sbin/pfctl", "-s", "info"]).output.contains("Status: Enabled")
+        ok = check(pfAfter == pfBefore, "pf как был: \(pfAfter ? "включён" : "выключен")") && ok
+        let proxyAfter = services.map(NetLock.snapshot)
+        ok = check(proxyAfter == proxyBefore, "прокси всех служб как были") && ok
+        r = await curl(["--noproxy", "*", "https://example.com"])
+        ok = check(code(r) == "200", "после снятия прямой выход снова открыт (\(code(r)))") && ok
+        guardNet.stopGateway()
         return ok
     }
 }

@@ -11,6 +11,57 @@ enum DemoUI {
         return args[i + 1]
     }
 
+    static func app(_ name: String, _ path: String, _ id: String?, system: Bool = false, apple: Bool = false) -> NetApp {
+        NetApp(key: id ?? path, name: name, path: path, bundleID: id, isSystem: system, isApple: apple)
+    }
+
+    static func demoLock() -> LockSettings {
+        var lock = LockSettings()
+        lock.on = true
+        lock.directResolved = ["185.199.110.40", "203.0.113.17"]
+        let now = Date()
+        func rule(_ a: NetApp, _ d: NetDecision, _ hosts: [String], _ ok: Int, _ no: Int, _ mb: Int64, _ minutes: Double) -> NetAppRule {
+            var r = NetAppRule(app: a, decision: d)
+            r.hosts = hosts
+            r.allowed = ok
+            r.denied = no
+            r.bytes = mb * 1_048_576
+            r.lastSeen = now.addingTimeInterval(-minutes * 60)
+            return r
+        }
+        let list = [
+            rule(app("Ward", "/Applications/Ward.app", "app.ward.browser"), .allow, ["github.com:443", "duckduckgo.com:443", "ru.wikipedia.org:443"], 412, 0, 186, 1),
+            rule(app("Telegram", "/Applications/Telegram.app", "org.telegram.desktop"), .allow, ["149.154.167.51:443"], 96, 0, 54, 3),
+            rule(app("Veil", "/Applications/Veil.app", "app.veil.client"), .allow, ["sub.example.net:443"], 4, 0, 1, 40),
+            rule(app("Harbor", "/Applications/Harbor.app", "app.harbor.store"), .allow, ["github.com:443", "objects.githubusercontent.com:443"], 12, 0, 22, 90),
+            rule(app("Zoom", "/Applications/zoom.us.app", "us.zoom.xos"), .deny, ["log.zoom.us:443", "us05web.zoom.us:443"], 0, 31, 0, 12),
+            rule(app("Microsoft AutoUpdate", "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app", "com.microsoft.autoupdate2"), .deny, ["officecdnmac.microsoft.com:443"], 0, 18, 0, 25),
+            rule(app("git", "/usr/bin/git", nil, apple: true), .allow, ["github.com:443"], 7, 0, 3, 55),
+            rule(app("Notion", "/Applications/Notion.app", "notion.id"), .ask, ["www.notion.so:443"], 0, 2, 0, 5),
+            rule(app("softwareupdated", "", nil, system: true, apple: true), .ask, ["swscan.apple.com:443"], 0, 9, 0, 30),
+            rule(app("Помощь Apple", "/System/Library/CoreServices/HelpViewer.app", "com.apple.helpviewer", apple: true), .deny, ["help.apple.com:443"], 0, 4, 0, 70),
+        ]
+        for r in list { lock.apps[r.id] = r }
+        return lock
+    }
+
+    static func demoFeed() -> [NetFeedItem] {
+        let now = Date()
+        func item(_ a: NetApp, _ host: String, _ ok: Bool, _ kb: Int64, _ s: Double) -> NetFeedItem {
+            NetFeedItem(date: now.addingTimeInterval(-s), app: a, host: host, port: 443, allowed: ok, bytes: kb * 1024, failure: nil)
+        }
+        let ward = app("Ward", "/Applications/Ward.app", "app.ward.browser")
+        let zoom = app("Zoom", "/Applications/zoom.us.app", "us.zoom.xos")
+        let tg = app("Telegram", "/Applications/Telegram.app", "org.telegram.desktop")
+        let sys = app("Системная служба macOS", "", nil, system: true, apple: true)
+        return [
+            item(ward, "github.com", true, 840, 4), item(zoom, "log.zoom.us", false, 0, 9), item(tg, "149.154.167.51", true, 120, 14),
+            item(sys, "gateway.icloud.com", false, 0, 21), item(ward, "ru.wikipedia.org", true, 410, 33),
+            item(app("Microsoft AutoUpdate", "/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app", "com.microsoft.autoupdate2"), "officecdnmac.microsoft.com", false, 0, 48),
+            item(ward, "duckduckgo.com", true, 96, 61), item(sys, "xp.apple.com", false, 0, 75),
+        ]
+    }
+
     static func prepare(_ model: AppModel) async {
         // Как будто профиль «Полностью» уже применён: состояние только в памяти, система не трогается.
         var s = BlockState()
@@ -34,6 +85,7 @@ enum DemoUI {
             if let rule = Catalog.rule(id) { s.log(kind, rule, note) }
         }
         s.observedHosts = ["api-adservices.apple.com", "xp.apple.com"]
+        s.lock = demoLock()
         model.state = s
         let now = Date()
         func o(_ process: String, _ path: String, _ host: String?, _ ip: String, _ minutes: Double, _ kb: Int64) -> Sighting {
@@ -65,7 +117,14 @@ enum DemoUI {
         states["net.observed"] = .blocked
         states["dock.clean"] = .blocked
         model.states = states
-        model.screen = Screen(rawValue: screen) ?? .overview
+        let feed = demoFeed()
+        let prompt = screen == "lockprompt"
+            ? NetPrompt(app: NetApp(key: "org.telegram.desktop", name: "Telegram", path: "/Applications/Telegram.app", bundleID: "org.telegram.desktop", isSystem: false, isApple: false),
+                        host: "api.telegram.org", port: 443)
+            : nil
+        model.lock.showDemo(feed: feed, prompt: prompt)
+        if prompt != nil { NetPromptPanel.shared.show() }
+        model.screen = Screen(rawValue: screen == "lockprompt" ? "lock" : screen) ?? .overview
         if screen == "onboarding" { model.showOnboarding = true }
     }
 }

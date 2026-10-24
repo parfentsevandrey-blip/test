@@ -30,7 +30,7 @@ nonisolated enum Level: Int, Codable, CaseIterable, Comparable, Sendable, Identi
 
 /// «Поверхность Apple» — сервис, как его видит человек. На ней строится созвездие на главном экране.
 nonisolated enum Surface: String, Codable, CaseIterable, Sendable, Identifiable {
-    case appStore, iCloud, siri, intelligence, media, news, games, home, messages, safari, ads, photos, search
+    case appStore, iCloud, siri, intelligence, media, news, games, home, messages, safari, ads, photos, search, quiet
 
     var id: String { rawValue }
 
@@ -49,6 +49,7 @@ nonisolated enum Surface: String, Codable, CaseIterable, Sendable, Identifiable 
         case .ads: "Реклама и аналитика"
         case .photos: "«Фото» с iPhone"
         case .search: "Подсказки поиска"
+        case .quiet: "Сеть без спроса"
         }
     }
 
@@ -67,6 +68,7 @@ nonisolated enum Surface: String, Codable, CaseIterable, Sendable, Identifiable 
         case .ads: "chart.bar.xaxis"
         case .photos: "photo.on.rectangle"
         case .search: "magnifyingglass"
+        case .quiet: "antenna.radiowaves.left.and.right.slash"
         }
     }
 
@@ -78,7 +80,7 @@ nonisolated enum Surface: String, Codable, CaseIterable, Sendable, Identifiable 
         case .safari: .ward
         case .siri: .utter
         case .intelligence: .synapse
-        case .iCloud, .news, .games, .home, .messages, .ads, .photos, .search: nil
+        case .iCloud, .news, .games, .home, .messages, .ads, .photos, .search, .quiet: nil
         }
     }
 }

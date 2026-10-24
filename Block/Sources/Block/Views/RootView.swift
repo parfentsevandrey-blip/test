@@ -31,6 +31,7 @@ struct RootView: View {
     private var detail: some View {
         switch model.screen {
         case .overview: OverviewView()
+        case .lock: LockView()
         case .monitor: MonitorView()
         case .apps: AppsView()
         case .settings:
@@ -95,6 +96,7 @@ struct RootView: View {
         default: nil
         }
         if screen == .monitor { return model.suspicious.isEmpty ? nil : "\(model.suspicious.count)" }
+        if screen == .lock { return model.state.lock.on ? (model.lock.gateOpen ? "открыт" : "закрыт") : nil }
         guard let level else { return screen == .journal && !model.drift.isEmpty ? "!" : nil }
         let list = model.rules.filter { $0.level == level && model.status(of: $0).counts }
         guard !list.isEmpty else { return nil }
