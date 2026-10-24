@@ -103,6 +103,9 @@ enum SelfTest {
                    "точечный выпуск 26.04.1 старше 26.04") && ok
         ok = check(Resolver.highest(["9-stream", "10-stream"], matching: #"[0-9]+-stream"#) == "10-stream", "10-stream старше 9-stream (числа, а не буквы)") && ok
         ok = check(Resolver.version(in: "debian-13.7.0-arm64-netinst.iso") == "13.7.0", "версия из имени файла") && ok
+        ok = check(Resolver.version(in: "void-live-aarch64-20250202-xfce.iso") == "20250202" && Resolver.version(in: "openSUSE-Tumbleweed-DVD-aarch64-Current.iso").isEmpty
+                   && Resolver.version(in: "install-arm64-minimal-20261018T231554Z.iso") == "20261018T231554Z" && Resolver.version(in: "Rocky-10-latest-aarch64-dvd.iso") == "10",
+                   "«64» из «aarch64» не принимается за версию") && ok
         let channels = Resolver.nixChannels(now: ISO8601DateFormatter().date(from: "2026-10-24T00:00:00Z")!)
         ok = check(channels.prefix(3) == ["26.11", "26.05", "25.11"], "каналы NixOS от новых к старым") && ok
         let yaml = "-\n  title: \"Virtual\"\n  flavor: alpine-virt\n  version: 3.24.3\n  iso: alpine-virt-3.24.3-aarch64.iso\n  sha256: e34603\n-\n  flavor: alpine-standard\n  iso: alpine-standard-3.24.3-aarch64.iso\n"

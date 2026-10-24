@@ -166,6 +166,10 @@ nonisolated enum Resolver {
         image.hash = kind
         image.digest = Checksums.find(image.fileName, in: text, kind: kind)
         if image.digest == nil { throw ResolveError.noChecksum(image.fileName) }
+        // У постоянной ссылки («…-Current.iso») версия — в имени снимка внутри файла суммы.
+        if version(in: image.fileName).isEmpty, let date = text.range(of: #"\d{8}"#, options: .regularExpression) {
+            image.version = String(text[date])
+        }
     }
 
     // MARK: Списки файлов
@@ -228,12 +232,15 @@ nonisolated enum Resolver {
         return out
     }
 
-    /// Версия из имени файла: первая группа «цифры с точками».
+    /// Версия из имени файла: «цифры с точками», иначе дата сборки, иначе номер — но не «64» из «aarch64».
     static func version(in name: String) -> String {
-        let regex = try! NSRegularExpression(pattern: #"\d+(?:\.\d+)+|\d{8}(?:T\d{6}Z)?|\d+"#)
-        let ns = name as NSString
-        guard let m = regex.firstMatch(in: name, range: NSRange(location: 0, length: ns.length)) else { return "" }
-        return ns.substring(with: m.range)
+        let cleaned = name.replacingOccurrences(of: #"(aarch|arm|x86_|amd)64"#, with: "", options: .regularExpression)
+        let ns = cleaned as NSString
+        for pattern in [#"\d+(?:\.\d+)+"#, #"\d{8}(?:T\d{6}Z)?"#, #"(?<![A-Za-z])\d+(?![A-Za-z])"#] {
+            let regex = try! NSRegularExpression(pattern: pattern)
+            if let m = regex.firstMatch(in: cleaned, range: NSRange(location: 0, length: ns.length)) { return ns.substring(with: m.range) }
+        }
+        return ""
     }
 
     /// Каналы NixOS от новых к старым: ГГ.11 и ГГ.05 за два года.
